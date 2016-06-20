@@ -76,7 +76,7 @@ save(HSMM_gene_annotationRAW,file=file.path(getwd(),"PseudoDE_HSMM_gene_annotati
 save(dfCountsHSMM_SC,file=file.path(getwd(),"PseudoDE_dfCountsHSMM_SC.RData"))
 save(dfFpkmHSMM_SC,file=file.path(getwd(),"PseudoDE_dfFpkmHSMM_SC.RData"))
 if(FALSE){
-  setwd("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out")
+  setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
   load("PseudoDE_HSMM.RData")
   load("PseudoDE_HSMM_sample_sheetRAW.RData")
   load("PseudoDE_HSMM_gene_annotationRAW.RData")
@@ -124,18 +124,19 @@ matCountsRed <- matCountsRed[1:200,]
 matCountsRed <- round(matCountsRed)
 
 nProc=3
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/PseudoDE_main.R")
-setwd("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out")
+source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(matCounts=matCountsRed,
   vecPseudotime=vecPT,
   K=NULL,
+  scaSmallRun=20,
   boolPseudotime = TRUE,
   boolContPseudotimeFit=TRUE,
-  boolPlotZINBfits=FALSE,
+  boolPlotZINBfits=TRUE,
   boolDEAnalysisImpulseModel = TRUE,
-  boolDEAnalysisModelFree = TRUE,
+  boolDEAnalysisModelFree = FALSE,
   nProc=nProc,
-  scaMaxiterEM=5)
+  scaMaxiterEM=20)
 
 dfDEImpulse <- data.frame( lsDEresults$lsImpulseDE2results$dfImpulseResults[c("Gene","adj.p")], stringsAsFactors = FALSE)
 dfDEModelfree <- data.frame( lsDEresults$dfModelFreeDEAnalysis[c("Gene","adj.p")], stringsAsFactors = FALSE)
@@ -144,15 +145,17 @@ dfComparison <- cbind(dfDEImpulse,dfDEModelfree)
 dfComparison
 
 if(FALSE){
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_dfAnnotation.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_lsZINBparam.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_matCountsProc.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_lsResultsClustering.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_matProbNB.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_matDropout.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_vecDispersions.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/PseudoDE_matMuCluster.RData")
-  setwd( "/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_dfAnnotation.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_lsZINBparam.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matCountsProc.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_lsResultsClustering.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matProbNB.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matDropout.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_vecDispersions.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_vecSizeFactors.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matMuCluster.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matMu.RData")
+  setwd( "/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
   load("ImpulseDE2_matCountDataProc.RData")
   load("ImpulseDE2_dfAnnotationProc.RData")
   # Load Impulse output
@@ -160,10 +163,10 @@ if(FALSE){
   load("ImpulseDE2_vecDEGenes.RData")
   load("ImpulseDE2_lsImpulseFits.RData")
   load("ImpulseDE2_dfDESeq2Results.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/ImpulseDE2_lsMatTranslationFactors.RData")
-  load("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out/ImpulseDE2_matSizeFactors.RData")
-  source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/PseudoDE_main.R")
-  setwd( "/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out")
+  load("ImpulseDE2_lsMatTranslationFactors.RData")
+  load("ImpulseDE2_matSizeFactors.RData")
+  source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
+  setwd( "/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
   graphics.off()
   plotDEGenes(vecGeneIDs=vecDEGenes, 
     matCountDataProc=matCountDataProc, 

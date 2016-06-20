@@ -19,7 +19,9 @@
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
-#' 
+#' @param scaSmallRun: (integer) [Default NULL] Number of rows
+#'    on which ImpulseDE2 is supposed to be run, the full
+#'    data set is only used for size factor estimation.
 #' @return matCountsProc: (matrix genes x samples)
 #'    Processed count data of all cells, unobserved entries are NA.
 #' @return vecPseudotimeProc: (numerical vector length number of cells)
@@ -29,6 +31,7 @@
 
 processSCData <- function(matCounts,
   vecPseudotime,
+  scaSmallRun=scaSmallRun,
   boolDEAnalysisImpulseModel,
   boolDEAnalysisModelFree,
   verbose ){
@@ -85,7 +88,16 @@ processSCData <- function(matCounts,
     stop("ERROR: Not all cells in vecPseudotime are given matCounts.")
   }
   
-  # 3. boolDEAnalysisImpulseModel and boolDEAnalysisModelFree
+  # 3. Check scaSmallRun
+  if(!is.null(scaSmallRun)){
+    checkCounts(scaSmallRun, "scaSmallRun")
+    if(scaSmallRun > dim(matCounts)[1]){
+      stop(paste0( "ERROR: scaSmallRun (",scaSmallRun,
+        ") larger then data set (",dim(matCounts)[1]," genes)."))
+    }
+  }
+  
+  # 4. boolDEAnalysisImpulseModel and boolDEAnalysisModelFree
   if(!boolDEAnalysisImpulseModel & !boolDEAnalysisModelFree){
     stop(paste0("ERROR: No differential analysis mode selected.",
       "Set either boolDEAnalysisImpulseModel or boolDEAnalysisModelFree as TRUE."))
@@ -103,18 +115,28 @@ processSCData <- function(matCounts,
   # Remove all zero or NA genes/cells
   vecidxGenes <- apply(matCountsProc, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
   vecidxCells <- apply(matCountsProc, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
-  
   vecPseudotimeProc <- vecPseudotimeProc[vecidxCells]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
+  # Reduce data set to small run size if required.
+  # Keep full data set for size factor estimation.
+  matCountDataProcFull <- matCountDataProc
+  if(!is.null(scaSmallRun)){
+    scaNRows <- min(scaSmallRun,dim(matCountDataProc)[1])
+    matCountDataProc <- matCountDataProc[1:scaNRows,]
+  }
   
   # Print summary of processing
   print(paste0(sum(!vecidxPT), " out of ", length(vecidxPT), " cells did not have a pseudotime coordinate and were excluded."))
   print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
   print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
+  if(!is.null(scaSmallRun)){
+    print(paste0("Operating on subset of data, set by scaSmallRun: ",scaSmallRun," out of ",dim(matCountsProc)[1]," genes."))
+  }
   
   # Name nameless gene:
   matCountsProc <- nameGenes(matCountsProc)
   
   return(list(matCountsProc=matCountsProc,
+    matCountDataProcFull=matCountDataProcFull,
     vecPseudotimeProc=vecPseudotimeProc))
 }

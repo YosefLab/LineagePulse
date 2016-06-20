@@ -19,6 +19,10 @@
 #' @param vecMuEst: (vector number of cells) Negative binomial
 #'    mean parameter estimate of clusters to which cells
 #'    belong.
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell. 
 #' @param vecboolObserved: (bool vector number of samples)
 #'    Whether sample is not NA (observed).
@@ -32,23 +36,26 @@
 evalLogLikDispNB <- function(scaTheta,
   vecY,
   vecMuEst,
+  vecSizeFactors,
   vecDropoutRateEst,
   vecboolNotZeroObserved, 
   vecboolZero){ 
   
   scaDispEst <- exp(scaTheta)
-  # Compute log likelihood under impulse model by
-  # adding log likelihood of model at each timepoint.
-  # Likelihood function of hurdle modle differs between
-  # zero and non-zero counts: Add likelihood of both together.
-  # Note that the log is taken over the sum of mixture model 
-  # components of the likelihood model and accordingly log=FALSE
-  # inside dnbinom.
+  # Note on handling very low probabilities: vecLikZeros
+  # typically does not have zero elements as it has the 
+  # the summand drop-out rate. Also the log cannot be
+  # broken up over the sum to dnbinom. In contrast to that,
+  # the log is taken in dnbinom for vecLikNonzeros to avoid 
+  # zero probabilities. Zero probabilities are handled
+  # through substitution of the minimal probability under
+  # machine precision. The model is scaled according to the
+  # size factors which are used for mean parameter inference.
   # Likelihood of zero counts:
   vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
     dnbinom(
       vecY[vecboolZero], 
-      mu=vecMuEst[vecboolZero], 
+      mu=vecMuEst[vecboolZero]*vecSizeFactors[vecboolZero], 
       size=scaDispEst, 
       log=FALSE) +
     vecDropoutRateEst[vecboolZero]
@@ -60,7 +67,7 @@ evalLogLikDispNB <- function(scaTheta,
   vecLikNonzeros <- (1-vecDropoutRateEst[vecboolNotZeroObserved])*
     dnbinom(
       vecY[vecboolNotZeroObserved], 
-      mu=vecMuEst[vecboolNotZeroObserved], 
+      mu=vecMuEst[vecboolNotZeroObserved]*vecSizeFactors[vecboolNotZeroObserved], 
       size=scaDispEst, 
       log=FALSE)
   # Replace zero likelihood observation with machine precision
@@ -98,17 +105,21 @@ evalLogLikDispNB <- function(scaTheta,
 #'        one scalar per centroid.
 #'      \item   K: (scalar) Number of clusters selected.
 #'      }
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
 #' @param boolOneDispPerGene: (bool) [Default TRUE]
 #'    Whether one negative binomial dispersion factor is fitted
 #'    per gene or per gene for each cluster.
-#' @param nProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
 #' @param scaMaxiterEM: (scalar) Maximum number of EM-iterations to
 #'    be performed in ZINB model fitting.
 #' @param verbose: (bool) Whether to follow EM-algorithm
 #'    convergence.
 #' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
 #'    progress in high detail with local convergence flags. 
+#' @param nProc: (scalar) [Default 1] Number of processes for 
+#'    parallelisation.
 #' 
 #' @return (list length 6)
 #'    \itemize{
@@ -131,19 +142,22 @@ evalLogLikDispNB <- function(scaTheta,
 
 fitZINB <- function(matCountsProc, 
   lsResultsClustering,
-  nProc=1,
+  vecSizeFactors,
   strDropoutTrainingSet="PoissonVar",
   vecHousekeepingGenes=NULL,
   vecSpikeInGenes=NULL,
   boolOneDispPerGene=TRUE,
   scaMaxiterEM=20,
   verbose=FALSE,
-  boolSuperVerbose=FALSE ){
+  boolSuperVerbose=FALSE,
+  nProc=1){
   
-  # Parameters
+  # Parameters:
   # Minimim fractional liklihood increment necessary to
-  # continue EM-iterations.
+  # continue EM-iterations:
   scaPrecEM <- 1-10^(-4)
+  # Interval length for mean paramter estimation:
+  scaNCellsInterval <- 40
   
   # Store EM convergence
   vecEMLogLik <- array(NA,scaMaxiterEM)
@@ -163,7 +177,8 @@ fitZINB <- function(matCountsProc,
   # The initial model is estimated under the assumption that all zero-counts
   # are drop-outs.
   matMuCluster <- array(NA,c(scaNumGenes,lsResultsClustering$K))
-  lsPiCoefs <- NULL
+  matMu <- array(NA,c(scaNumGenes,scaNumCells))
+  matSizeFactors <- matrix(vecSizeFactors, nrow=scaNumGenes, ncol=scaNumCells, byrow=TRUE)
   
   # E-step:
   # Posterior of dropout: matZ
@@ -174,25 +189,44 @@ fitZINB <- function(matCountsProc,
   scaIter <- 1
   scaLogLikNew <- 0
   scaLogLikOld <- 0
-  while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
+  while(scaIter == 1 | scaIter == 2 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
     # M-step:
     # a) Negative binomial mean parameter
-    # Use MLE of mean parameter of negative binomial distribution: weighted average
+    # Use MLE of mean parameter of negative binomial distribution: weighted average.
+    # Data are scaled by size factors.
     if(boolSuperVerbose){print("M-step: Estimtate negative binomial mean parameters")}
+    
+    # Old code estimating mu by cluster, keep for downstream
     for(k in seq(1,max(vecindClusterAssign))){
       matMuCluster[,k] <- rowSums(
-        matCountsProc[,vecindClusterAssign==k]*(1-matZ)[,vecindClusterAssign==k],
+        matCountsProc[,vecindClusterAssign==k]/
+          matSizeFactors[vecindClusterAssign==k]*
+          (1-matZ)[,vecindClusterAssign==k],
         na.rm=TRUE) / rowSums((1-matZ)[,vecindClusterAssign==k])
     }
     # Add pseudocounts to zeros
     matMuCluster[matMuCluster==0 | is.na(matMuCluster)] <- 1/scaNumCells
-    matMu <- matMuCluster[,vecindClusterAssign]
+    #matMu <- matMuCluster[,vecindClusterAssign]
+    
+    # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
+    # interval with cell density centred at target cell.
+    for(j in seq(1,scaNumCells)){
+      scaindIntervalStart <- max(1,j-scaNCellsInterval)
+      scaindIntervalEnd <- min(scaNumCells,j+scaNCellsInterval)
+      vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+      matMu[,j] <- rowSums(
+        matCountsProc[,vecInterval]/
+          matSizeFactors[vecInterval]*
+          (1-matZ)[,vecInterval],
+        na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
+    }
+    matMu[matMu==0 | is.na(matMu)] <- 1/scaNumCells
     
     # b) Dropout rate
     # Fit dropout rate with GLM
     if(boolSuperVerbose){print("M-step: Estimtate dropout rate")}
     vecPiFit <- lapply(seq(1,scaNumCells), function(j) {
-      glm( matZ[,j] ~ log(matMu[,j]),
+      glm( matZ[,j] ~ round(matMu[,j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
       )[c("converged","fitted.values")]
@@ -217,6 +251,7 @@ fitZINB <- function(matCountsProc,
           fn=evalLogLikDispNB,
           vecY=matCountsProc[i,],
           vecMuEst=matMu[i,],
+          vecSizeFactors=vecSizeFactors,
           vecDropoutRateEst=matDropout[i,],
           vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
           vecboolZero=matboolZero[i,],
@@ -262,7 +297,7 @@ fitZINB <- function(matCountsProc,
     scaIter <- scaIter+1
   }
   # Evaluate convergence
-  if(all(vecboolConvergedGLMdisp) & all(vecboolConvergedGLMpi) &
+  if(all(as.logical(vecboolConvergedGLMdisp)) & all(as.logical(vecboolConvergedGLMpi)) &
       scaLogLikNew < scaLogLikOld*scaPrecEM & scaLogLikNew > scaLogLikOld){
     boolConvergence <- TRUE
   } else {
@@ -276,6 +311,8 @@ fitZINB <- function(matCountsProc,
   rownames(matDropout) <- rownames(matCountsProc)
   colnames(matDropout) <- colnames(matCountsProc)
   rownames(matMuCluster) <- rownames(matCountsProc)
+  rownames(matMu) <- rownames(matCountsProc)
+  colnames(matMu) <- colnames(matCountsProc)
   names(vecDispersions) <- rownames(matCountsProc)
   rownames(matDispersions) <- rownames(matCountsProc)
   colnames(matDispersions) <- colnames(matCountsProc)
@@ -293,6 +330,7 @@ fitZINB <- function(matCountsProc,
     matDropout=matDropout, 
     matProbNB=matProbNB,
     matMuCluster=matMuCluster,
+    matMu=matMu,
     boolConvergence=boolConvergence,
     vecEMLogLik=vecEMLogLik ))
 }

@@ -14,18 +14,20 @@ library(compiler)
 library(ggplot2)
 library(scone)
 library(MASS)
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/code_files/ImpulseDE2_main.R")
+source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/building/code_files/ImpulseDE2_main.R")
 
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_evalLogLikZINB.R")
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files")
+source("srcPseudoDE_evalLogLikZINB.R")
 # Compile function
 evalLogLikZINB_PseudoDE_comp <- cmpfun(evalLogLikZINB_PseudoDE)
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_clusterCellsInPseudotime.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_createAnnotation.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_fitZINB.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_plotZINBfits.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_plotPseudotimeClustering.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_processSCData.R")
-source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/PseudoDE/building/code_files/srcPseudoDE_runModelFreeDEAnalysis.R")
+source("srcPseudoDE_clusterCellsInPseudotime.R")
+source("srcPseudoDE_createAnnotation.R")
+source("srcPseudoDE_computeSizeFactors.R")
+source("srcPseudoDE_fitZINB.R")
+source("srcPseudoDE_plotZINBfits.R")
+source("srcPseudoDE_plotPseudotimeClustering.R")
+source("srcPseudoDE_processSCData.R")
+source("srcPseudoDE_runModelFreeDEAnalysis.R")
 
 ################################################################################
 ### Main function
@@ -70,6 +72,12 @@ source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/Pseudo
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
+#' @param K: (integer) [Default NULL] Forces number of centroids
+#'    in K-means to be K: setting this to not NULL skips model
+#'    selection in clusterting.
+#' @param scaSmallRun: (integer) [Default NULL] Number of rows
+#'    on which ImpulseDE2 is supposed to be run, the full
+#'    data set is only used for size factor estimation.
 #' @param boolPseudotime: (bool) [Default TRUE]
 #'    Whether to treat time as pseudotime or real time. If FALSE,
 #'    time points are treated as clusters. This means that the time
@@ -130,6 +138,7 @@ source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/building/Pseudo
 runPseudoDE <- function(matCounts, 
   vecPseudotime,
   K=NULL,
+  scaSmallRun=NULL,
   boolPseudotime = TRUE,
   boolContPseudotimeFit = FALSE,
   boolOneDispPerGene = TRUE,
@@ -142,17 +151,21 @@ runPseudoDE <- function(matCounts,
   
   # 1. Data preprocessing
   print("1. Data preprocessing:")
-  tm_preproc <- system.time({
-    lsProcessedSCData <- processSCData(matCounts=matCounts,
-      vecPseudotime=vecPseudotime,
-      boolDEAnalysisImpulseModel=boolDEAnalysisImpulseModel,
-      boolDEAnalysisModelFree=boolDEAnalysisModelFree )
-    matCountsProc <- lsProcessedSCData$matCountsProc
-    vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
-    if(boolContPseudotimeFit){strSCMode="continuous"
-    }else{strSCMode="clustered"}
-  })
+  lsProcessedSCData <- processSCData(matCounts=matCounts,
+    vecPseudotime=vecPseudotime,
+    scaSmallRun=scaSmallRun,
+    boolDEAnalysisImpulseModel=boolDEAnalysisImpulseModel,
+    boolDEAnalysisModelFree=boolDEAnalysisModelFree )
+  matCountsProc <- lsProcessedSCData$matCountsProc
+  vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
+  matCountDataProcFull <- lsProcessedSCData$matCountDataProcFull
+  
+  # Set fitting mode
+  if(boolContPseudotimeFit){strSCMode="continuous"
+  }else{strSCMode="clustered"}
+  
   save(matCountsProc,file=file.path(getwd(),"PseudoDE_matCountsProc.RData"))
+  save(matCountsProc,file=file.path(getwd(),"PseudoDE_matCountsProcFull.RData"))
   save(vecPseudotimeProc,file=file.path(getwd(),"PseudoDE_vecPseudotimeProc.RData"))
   
   # 2. Cluster cells in pseudo-time
@@ -193,11 +206,17 @@ runPseudoDE <- function(matCounts,
   }
   save(dfAnnotation,file=file.path(getwd(),"PseudoDE_dfAnnotation.RData"))
   
-  # 4. Fit mixture model
-  print("4. Fit mixture model:")
+  # 4. Compute size factors
+  print("4. Compute size factors:")
+  vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
+  save(vecSizeFactors,file=file.path(getwd(),"PseudoDE_vecSizeFactors.RData"))
+  
+  # 5. Fit mixture model
+  print("5. Fit mixture model:")
   tm_fitmm <- system.time({
     lsResZINBFits <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClustering,
+      vecSizeFactors=vecSizeFactors,
       strDropoutTraining="PoissonVar",
       vecHousekeepingGenes=NULL,
       vecSpikeInGenes=NULL,
@@ -209,6 +228,7 @@ runPseudoDE <- function(matCounts,
     matDropout <- lsResZINBFits$matDropout
     matProbNB  <- lsResZINBFits$matProbNB
     matMuCluster  <- lsResZINBFits$matMuCluster
+    matMu  <- lsResZINBFits$matMu
     boolConvergenceZINB <- lsResZINBFits$boolConvergence
     vecEMLogLik <- lsResZINBFits$vecEMLogLik
   })
@@ -216,15 +236,17 @@ runPseudoDE <- function(matCounts,
   save(matDropout,file=file.path(getwd(),"PseudoDE_matDropout.RData"))
   save(matProbNB,file=file.path(getwd(),"PseudoDE_matProbNB.RData"))
   save(matMuCluster,file=file.path(getwd(),"PseudoDE_matMuCluster.RData"))
+  save(matMu,file=file.path(getwd(),"PseudoDE_matMu.RData"))
   save(vecEMLogLik,file=file.path(getwd(),"PseudoDE_vecEMLogLik.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
-  
+
   graphics.off()
-  # 5. Plot ZINB fits to data.
+  # 6. Plot ZINB fits to data.
   if(boolPlotZINBfits){
-    print("5. Plot ZINB fits to data.")
-    vecZINBfitPlotIDs <- names(sort(apply(matCountsProc, 1, mean),decreasing=TRUE)[1:50])
+    print("6. Plot ZINB fits to data.")
+    vecZINBfitPlotIDs <- names(sort(apply(matCountsProc, 1, mean),
+      decreasing=TRUE)[1:min(20,dim(matCountsProc)[1])])
     plotZINBfits(vecGeneIDs=vecZINBfitPlotIDs, 
       matCounts=matCountsProc,
       matMuCluster=matMuCluster, 
@@ -236,11 +258,11 @@ runPseudoDE <- function(matCounts,
       strPDFname="PseudoDE_ZINBfits.pdf" )
   }
   
-  # 6. Differential expression analysis:
-  print("6. Differential expression analysis:")
+  # 7. Differential expression analysis:
+  print("7. Differential expression analysis:")
   if(boolDEAnalysisImpulseModel){
     # a) Model-based: Impulse model
-    print("Differential expression analysis: Model-based (Impulse model)")
+    print("a) Differential expression analysis: Model-based (Impulse model)")
     print("### Begin ImpulseDE2 output ################################")
     tm_deanalysis_impulse <- system.time({
       vecClusterAssignments <- lsResultsClustering$Assignments
@@ -262,6 +284,7 @@ runPseudoDE <- function(matCounts,
         boolPlotting = TRUE,
         lsPseudo = lsInputToImpulseDE2,
         vecDispersionsExternal = vecDispersions,
+        vecSizeFactorsExternal = vecSizeFactors,
         boolRunDESeq2 = FALSE,
         boolSimplePlot = FALSE, 
         boolLogPlot = TRUE )
@@ -275,7 +298,7 @@ runPseudoDE <- function(matCounts,
   }
   if(boolDEAnalysisModelFree){
     # b) Model-free
-    print("Differential expression analysis: Model-free")
+    print("b) Differential expression analysis: Model-free")
     tm_deanalysis_mf <- system.time({
       dfModelFreeDEAnalysis <- runModelFreeDEAnalysis(
         matCountsProc = matCountsProc,
