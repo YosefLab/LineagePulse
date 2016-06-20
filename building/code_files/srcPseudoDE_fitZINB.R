@@ -109,6 +109,9 @@ evalLogLikDispNB <- function(scaTheta,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
+#' @param vecSpikeInGenes: (string vector) Names of genes
+#'    which correspond to external RNA spike-ins. Currently
+#'    not used.
 #' @param boolOneDispPerGene: (bool) [Default TRUE]
 #'    Whether one negative binomial dispersion factor is fitted
 #'    per gene or per gene for each cluster.
@@ -143,8 +146,6 @@ evalLogLikDispNB <- function(scaTheta,
 fitZINB <- function(matCountsProc, 
   lsResultsClustering,
   vecSizeFactors,
-  strDropoutTrainingSet="PoissonVar",
-  vecHousekeepingGenes=NULL,
   vecSpikeInGenes=NULL,
   boolOneDispPerGene=TRUE,
   scaMaxiterEM=20,
@@ -157,7 +158,7 @@ fitZINB <- function(matCountsProc,
   # continue EM-iterations:
   scaPrecEM <- 1-10^(-4)
   # Interval length for mean paramter estimation:
-  scaNCellsInterval <- 40
+  scaNCellsInterval <- 20
   
   # Store EM convergence
   vecEMLogLik <- array(NA,scaMaxiterEM)
@@ -226,7 +227,7 @@ fitZINB <- function(matCountsProc,
     # Fit dropout rate with GLM
     if(boolSuperVerbose){print("M-step: Estimtate dropout rate")}
     vecPiFit <- lapply(seq(1,scaNumCells), function(j) {
-      glm( matZ[,j] ~ round(matMu[,j]),
+      glm( matZ[,j] ~ log(matMu[,j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
       )[c("converged","fitted.values")]
@@ -323,7 +324,6 @@ fitZINB <- function(matCountsProc,
   if(any(is.na(matDispersions) | !is.finite(matDispersions))){
     matDispersions[is.na(matDispersions) | !is.finite(matDispersions)] <- 1
     print("WARNING: Found NA/inf dispersions")
-    print(matDispersions)
   }
   
   return(list( vecDispersions=vecDispersions,

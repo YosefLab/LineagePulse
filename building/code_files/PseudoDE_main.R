@@ -157,15 +157,15 @@ runPseudoDE <- function(matCounts,
     boolDEAnalysisImpulseModel=boolDEAnalysisImpulseModel,
     boolDEAnalysisModelFree=boolDEAnalysisModelFree )
   matCountsProc <- lsProcessedSCData$matCountsProc
+  matCountsProcFull <- lsProcessedSCData$matCountsProcFull
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
-  matCountDataProcFull <- lsProcessedSCData$matCountDataProcFull
   
   # Set fitting mode
   if(boolContPseudotimeFit){strSCMode="continuous"
   }else{strSCMode="clustered"}
   
   save(matCountsProc,file=file.path(getwd(),"PseudoDE_matCountsProc.RData"))
-  save(matCountsProc,file=file.path(getwd(),"PseudoDE_matCountsProcFull.RData"))
+  save(matCountsProcFull,file=file.path(getwd(),"PseudoDE_matCountsProcFull.RData"))
   save(vecPseudotimeProc,file=file.path(getwd(),"PseudoDE_vecPseudotimeProc.RData"))
   
   # 2. Cluster cells in pseudo-time
@@ -209,6 +209,8 @@ runPseudoDE <- function(matCounts,
   # 4. Compute size factors
   print("4. Compute size factors:")
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
+  print("WARNING: set all size factors to 1")
+  vecSizeFactors[] <- 1
   save(vecSizeFactors,file=file.path(getwd(),"PseudoDE_vecSizeFactors.RData"))
   
   # 5. Fit mixture model
@@ -217,8 +219,6 @@ runPseudoDE <- function(matCounts,
     lsResZINBFits <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
-      strDropoutTraining="PoissonVar",
-      vecHousekeepingGenes=NULL,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       nProc=nProc,

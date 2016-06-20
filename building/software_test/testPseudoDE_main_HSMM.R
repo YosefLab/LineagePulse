@@ -118,15 +118,13 @@ plotEDF <- ggplot() +
   ylab("empirical probability density")
 print(plotEDF)
 
-matCountsRed <- matCounts[apply(matCounts,1,function(gene){any(gene>10) & mean(gene)>=1}),]
-matCountsRed <- matCountsRed[1:200,]
-#matCountsRed <- matCounts[1:500,]
-matCountsRed <- round(matCountsRed)
+matCountsRd <- matCounts[apply(matCounts,1,function(gene){any(gene>10) & mean(gene)>=1}),]
+matCountsRd <- round(matCountsRed)
 
 nProc=3
 source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
-lsDEresults <- runPseudoDE(matCounts=matCountsRed,
+lsDEresults <- runPseudoDE(matCounts=matCountsRd,
   vecPseudotime=vecPT,
   K=NULL,
   scaSmallRun=20,
@@ -148,6 +146,7 @@ if(FALSE){
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_dfAnnotation.RData")
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_lsZINBparam.RData")
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matCountsProc.RData")
+  load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matCountsProcFull.RData")
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_lsResultsClustering.RData")
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matProbNB.RData")
   load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matDropout.RData")
@@ -176,7 +175,7 @@ if(FALSE){
     lsImpulseFits=lsImpulseFits, 
     matMuCluster=matMuCluster,
     vecClusterAssignments=lsResultsClustering$Assignments,
-    dfImpulseResults, 
+    dfImpulseResults=dfImpulseResults, 
     vecRefPval=NULL, 
     strCaseName="case", 
     strControlName=NULL, 

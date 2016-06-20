@@ -119,10 +119,10 @@ processSCData <- function(matCounts,
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Reduce data set to small run size if required.
   # Keep full data set for size factor estimation.
-  matCountDataProcFull <- matCountDataProc
+  matCountsProcFull <- matCountsProc
   if(!is.null(scaSmallRun)){
-    scaNRows <- min(scaSmallRun,dim(matCountDataProc)[1])
-    matCountDataProc <- matCountDataProc[1:scaNRows,]
+    scaNRows <- min(scaSmallRun,dim(matCountsProc)[1])
+    matCountsProc <- matCountsProc[1:scaNRows,]
   }
   
   # Print summary of processing
@@ -137,6 +137,6 @@ processSCData <- function(matCounts,
   matCountsProc <- nameGenes(matCountsProc)
   
   return(list(matCountsProc=matCountsProc,
-    matCountDataProcFull=matCountDataProcFull,
+    matCountsProcFull=matCountsProcFull,
     vecPseudotimeProc=vecPseudotimeProc))
 }
