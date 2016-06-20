@@ -126,10 +126,10 @@ source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/cod
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(matCounts=matCountsRd,
   vecPseudotime=vecPT,
-  K=NULL,
+  K=6,
   scaSmallRun=20,
   boolPseudotime = TRUE,
-  boolContPseudotimeFit=TRUE,
+  boolContPseudotimeFit=FALSE,
   boolPlotZINBfits=TRUE,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,

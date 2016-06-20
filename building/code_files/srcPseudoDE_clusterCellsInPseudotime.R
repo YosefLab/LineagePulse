@@ -41,9 +41,9 @@ clusterCellsInPseudotime <- function(vecPseudotime,
     }
     # Summarise output:
     lsResultsKhat <- list()
-    lsResultsKhat[[1]] <- matAssignments[Khat,]
-    lsResultsKhat[[2]] <- sort( lsCentroids[[Khat]] )
-    lsResultsKhat[[3]] <- Khat
+    lsResultsKhat[[1]] <- lsKmeansResults$cluster
+    lsResultsKhat[[2]] <- lsKmeansResults$centers
+    lsResultsKhat[[3]] <- Kexternal
   } else {
     # (I) Run K-means on range of K and do model selection
     # Range of K for K-means is number of unique cells
