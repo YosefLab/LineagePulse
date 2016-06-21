@@ -227,7 +227,7 @@ fitZINB <- function(matCountsProc,
     # Fit dropout rate with GLM
     if(boolSuperVerbose){print("M-step: Estimtate dropout rate")}
     vecPiFit <- lapply(seq(1,scaNumCells), function(j) {
-      glm( matZ[,j] ~ log(matMu[,j]),
+      glm( matZ[,j] ~ log(matMu[,j]*vecSizeFactors[j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
       )[c("converged","fitted.values")]

@@ -119,7 +119,7 @@ plotEDF <- ggplot() +
 print(plotEDF)
 
 matCountsRd <- matCounts[apply(matCounts,1,function(gene){any(gene>10) & mean(gene)>=1}),]
-matCountsRd <- round(matCountsRed)
+matCountsRd <- round(matCountsRd)
 
 nProc=3
 source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
@@ -129,8 +129,8 @@ lsDEresults <- runPseudoDE(matCounts=matCountsRd,
   K=6,
   scaSmallRun=20,
   boolPseudotime = TRUE,
-  boolContPseudotimeFit=FALSE,
-  boolPlotZINBfits=TRUE,
+  boolContPseudotimeFit=TRUE,
+  boolPlotZINBfits=FALSE,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   nProc=nProc,
