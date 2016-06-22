@@ -120,6 +120,8 @@ print(plotEDF)
 
 matCountsRd <- matCounts[apply(matCounts,1,function(gene){any(gene>10) & mean(gene)>=1}),]
 matCountsRd <- round(matCountsRd)
+save(matCountsRd,file=file.path(getwd(),"PseudoDE_matCountsRd.RData"))
+save(vecPT,file=file.path(getwd(),"PseudoDE_vecPT.RData"))
 
 nProc=3
 source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
