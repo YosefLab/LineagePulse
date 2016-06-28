@@ -138,7 +138,7 @@ dfAnnotationNoState3 <- pData(Lung_filtered3)
 plot_cell_trajectory(Lung, color_by="Pseudotime") 
 # Find pseudotime coordinate of branch opint visually
 Lung_filtered1Cont <- LungRev[expressed_genes, pData(Lung)$Pseudotime > 13.7]
-matCountsNoState1Cont <- matCountsLung[,rownames(pData(LungRev[,pData(LungRev)$State != 2]))]
+matCountsNoState1Cont <- matCountsLung[,rownames(pData(LungRev[,pData(Lung)$Pseudotime > 13.7]))]
 dfAnnotationNoState1Cont <- pData(Lung_filtered1Cont)
 plot_cell_trajectory(Lung_filtered1Cont, color_by="Pseudotime")
 

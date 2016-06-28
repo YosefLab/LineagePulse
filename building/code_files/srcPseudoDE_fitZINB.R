@@ -7,7 +7,12 @@
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow numerical optimisation
 #' of negative binomial overdispersion on single gene given
-#' the drop-out rate and negative binomial mean parameter.
+#' the drop-out rate and negative binomial mean parameter. The
+#' dispersion parameter is fit in log space and is therefore fit
+#' as a positive scalar. The cost function is insensitive to the
+#' dispersion factor shrinking beyond a numerical threshold to zero
+#' to avoid shrinkage of the dispersion factor to zero which 
+#' may cause numerical errors.
 #' 
 #' @aliases evalLogLikHurdleNB_com
 #' 
@@ -41,7 +46,13 @@ evalLogLikDispNB <- function(scaTheta,
   vecboolNotZeroObserved, 
   vecboolZero){ 
   
+  # Log linker function to fit positive dispersions
   scaDispEst <- exp(scaTheta)
+  
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  scaDispEst[scaDispEst < .Machine$double.eps] <- .Machine$double.eps
+  
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
   # the summand drop-out rate. Also the log cannot be
@@ -207,18 +218,17 @@ fitZINB <- function(matCountsProc,
         scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
         vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
         matMu[,j] <- rowSums(
-          matCountsProc[,vecInterval]/
-            matSizeFactors[vecInterval]*
+          matCountsProc[,vecInterval]*
             (1-matZ)[,vecInterval],
           na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
       }
       matMu[matMu==0 | is.na(matMu)] <- 1/scaNumCells
     } else {
       # Estimate mean parameter by cluster.
+      print("only valid for size factors==1")
       for(k in seq(1,max(vecindClusterAssign))){
         matMuCluster[,k] <- rowSums(
-          matCountsProc[,vecindClusterAssign==k]/
-            matSizeFactors[vecindClusterAssign==k]*
+          matCountsProc[,vecindClusterAssign==k]*
             (1-matZ)[,vecindClusterAssign==k],
           na.rm=TRUE) / rowSums((1-matZ)[,vecindClusterAssign==k])
       }
@@ -251,7 +261,7 @@ fitZINB <- function(matCountsProc,
     scaDispGues <- 1
     if(boolOneDispPerGene){  
       vecDispFit <- lapply(seq(1,scaNumGenes), function(i){
-        unlist(optim(
+        tryCatch({ unlist(optim(
           par=log(scaDispGues),
           fn=evalLogLikDispNB,
           vecY=matCountsProc[i,],
@@ -263,6 +273,19 @@ fitZINB <- function(matCountsProc,
           method="BFGS",
           control=list(maxit=1000, fnscale=-1)
         )[c("par","convergence")] )
+        }, error=function(strErrorMsg){
+          print(paste0("ERROR: Fitting negative binomial dispersion parameter: fitZINB().",
+            " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
+          print(paste0("vecCounts ", paste(matCountsProc[i,],sep=" ")))
+          print(paste0("vecMeans ", paste(matMu[i,],sep=" ")))
+          print(paste0("scaDispEst ", paste(scaDispGues,sep=" ")))
+          print(paste0("vecDropout ", paste(matDropout[i,],sep=" ")))
+          print(paste0("vecSizeFactors ", paste(vecSizeFactors,sep=" ")))
+          lsErrorCausingGene <- list(matCountsProc[i,], matMu[i,], log(scaDispGues), vecSizeFactors, matDropout[i,])
+          names(lsErrorCausingGene) <- c("vecCounts", "veMu", "logscaDispEst", "vecSizeFactors", "vecDropout")
+          save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+          stop(strErrorMsg)
+        })
       })
     } else {
       #  not coded
