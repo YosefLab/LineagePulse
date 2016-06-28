@@ -24,7 +24,7 @@ lsDEresults <- runPseudoDE(
   boolPseudotime = TRUE,
   boolContPseudotimeFit=TRUE,
   boolOneDispPerGene = TRUE,
-  scaWindowRadius=5,
+  scaWindowRadius=20,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = TRUE,
   boolPlotZINBfits=TRUE,

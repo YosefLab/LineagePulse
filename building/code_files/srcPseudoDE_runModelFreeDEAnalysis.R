@@ -40,6 +40,7 @@
 
 runModelFreeDEAnalysis <- function(matCountsProc,
   vecPseudotime,
+  vecSizeFactors,
   lsResultsClusteringH1,
   vecDispersionsH1,
   matMuClusterH1,
@@ -61,6 +62,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   # Fit zero-inflated negative binomial null model
   lsResZINBFitsH0 <- fitZINB( matCountsProc=matCountsProc, 
     lsResultsClustering=lsH0Clustering,
+    vecSizeFactors=vecSizeFactors,
     vecSpikeInGenes=NULL,
     boolOneDispPerGene=boolOneDispPerGene,
     scaWindowRadius=NULL,
@@ -90,6 +92,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
     # by cluster.
     lsResZINBFitsH1 <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClusteringH1,
+      vecSizeFactors=vecSizeFactors,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=NULL,
@@ -111,7 +114,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   matboolZero <- matCountsProc==0
   vecLogLikFull <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
     evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
-      vecMu=matMuH1[i,],
+      vecMu=matMuH1[i,]*vecSizeFactors,
       vecDispEst=matDispersionsH1[i,], 
       vecDropoutRateEst=matDropoutH1[i,],
       vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
@@ -119,7 +122,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   })
   vecLogLikRed <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
     evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
-      vecMu=matMuH0[i,],
+      vecMu=matMuH0[i,]*vecSizeFactors,
       vecDispEst=matDispersionsH0[i,], 
       vecDropoutRateEst=matDropoutH0[i,],
       vecboolNotZeroObserved=matboolNotZeroObserved[i,], 

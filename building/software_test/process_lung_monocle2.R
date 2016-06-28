@@ -135,6 +135,18 @@ Lung_filtered3 <- Lung[expressed_genes, pData(Lung)$State != 3]
 matCountsNoState3 <- matCountsLung[,rownames(pData(Lung[,pData(Lung)$State != 3]))]
 dfAnnotationNoState3 <- pData(Lung_filtered3)
 
+plot_cell_trajectory(Lung, color_by="Pseudotime") 
+# Find pseudotime coordinate of branch opint visually
+Lung_filtered1Cont <- LungRev[expressed_genes, pData(Lung)$Pseudotime > 13.7]
+matCountsNoState1Cont <- matCountsLung[,rownames(pData(LungRev[,pData(LungRev)$State != 2]))]
+dfAnnotationNoState1Cont <- pData(Lung_filtered1Cont)
+plot_cell_trajectory(Lung_filtered1Cont, color_by="Pseudotime")
+
+Lung_filtered3Rev <- LungRev[expressed_genes, pData(LungRev)$State != 3]
+matCountsNoState3Rev <- matCountsLung[,rownames(pData(LungRev[,pData(LungRev)$State != 3]))]
+dfAnnotationNoState3Rev <- pData(Lung_filtered3Rev)
+plot_cell_trajectory(Lung_filtered3Rev, color_by="Pseudotime")
+
 write.table(matCountsNoState1, row.names = FALSE, col.names = FALSE, sep="\t",
   file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1.tab")
 write.table(as.vector(rownames(matCountsNoState1)), sep="\t",  row.names = FALSE, col.names = FALSE,
@@ -162,11 +174,43 @@ write.table(as.vector(colnames(matCountsNoState3)), sep="\t", row.names = FALSE,
 write.table(dfAnnotationNoState3, sep="\t", row.names = TRUE, col.names = TRUE,
   file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState3.tab")
 
+write.table(matCountsNoState1Cont, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1Cont.tab")
+write.table(as.vector(rownames(matCountsNoState1Cont)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1Cont_genes.tab")
+write.table(as.vector(colnames(matCountsNoState1Cont)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1Cont_samples.tab")
+write.table(dfAnnotationNoState1Cont, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState1Cont.tab")
+
+write.table(matCountsNoState3Rev, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3Rev.tab")
+write.table(as.vector(rownames(matCountsNoState3Rev)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3Rev_genes.tab")
+write.table(as.vector(colnames(matCountsNoState3Rev)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3Rev_samples.tab")
+write.table(dfAnnotationNoState3Rev, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState3Rev.tab")
 
 lung_genes <- row.names(subset(fData(Lung), gene_short_name %in% c("Ccnd2", "Sftpb", "Pdpn")))
 plot_genes_jitter(Lung[lung_genes,], grouping="State")
-cds_subset <- Lung_filtered[row.names(subset(fData(Lung_filtered), gene_short_name %in% c("Ccnd2", "Sftpb", "Pdpn","Cdk1"))),]
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Ccnd2", "Sftpb", "Pdpn","Cdk1"))),]
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Scgb1a1", "Foxj1", "Pdpn","Ager","Sftpc","Sftpb"))),]
 plot_genes_in_pseudotime(cds_subset, color_by="State")
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_MarkerGenesInPT.pdf")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Scgb1a1"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Foxj1"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Pdpn"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Ager"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Sftpc"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+cds_subset <- Lung[row.names(subset(fData(Lung), gene_short_name %in% c("Sftpb"))),]
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+dev.off()
 
 BEAM_res <- BEAM(Lung, branch_point=1, cores = 3)
 BEAM_res <- BEAM_res[order(BEAM_res$qval),]

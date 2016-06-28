@@ -1,0 +1,57 @@
+rm(list=ls())
+library(gplots)
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1/ImpulseDE2_dfImpulseResults.RData")
+dfImpulseResultsNo1 <- dfImpulseResults
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState2/ImpulseDE2_dfImpulseResults.RData")
+dfImpulseResultsNo2 <- dfImpulseResults
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState3/ImpulseDE2_dfImpulseResults.RData")
+dfImpulseResultsNo3 <- dfImpulseResults
+
+scaThres <- 10^(-10)
+sum(dfImpulseResultsNo1$adj.p < scaThres)
+sum(dfImpulseResultsNo2$adj.p < scaThres)
+sum(dfImpulseResultsNo3$adj.p < scaThres)
+
+# CDF q-values
+vecX <- seq(-50,-1,by=1)
+vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo1$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF2 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo2$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF3 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo3$adj.p))/log(10) <= thres, na.rm=TRUE)})
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/ECDF-pvalues_DropStates.pdf",width=7,height=7)
+plot(vecX,vecCDF1,
+  col="red",pch=4,type="l",
+  ylim=c(0,max(max(vecCDF1,na.rm=TRUE),max(vecCDF2,na.rm=TRUE))),
+  xlab="-log_10(p-value)", 
+  ylab=paste0("Cumulative p-value distribution"),
+  main=paste0("Lungeputhelium scRNA-seq"))
+points(vecX,vecCDF2,
+  col="green",pch=4,type="l")
+points(vecX,vecCDF3,
+  col="blue",pch=4,type="l")
+legend(x="topleft",
+  legend=c("Drop state 1","Drop state 2","Drop state 3"),
+  fill=c("red","green","blue"))
+dev.off()
+graphics.off()
+
+hist(log(dfImpulseResults$adj.p)/log(10))
+
+# Enrichment analysis
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
+load("PseudoDE_HSMM.RData")
+load("PseudoDE_HSMM_sample_sheetRAW.RData")
+load("PseudoDE_HSMM_gene_annotationRAW.RData")
+load("PseudoDE_dfCountsHSMM_SC.RData")
+load("PseudoDE_dfFpkmHSMM_SC.RData")
+
+N<-500
+vecIDsTopHitsrsem <- as.vector(dfImpulseResults[1:N,"Gene"])
+vecIDsTopHitsname <- as.vector(HSMM_gene_annotationRAW[rownames(HSMM_gene_annotationRAW) %in% vecIDsTopHitsrsem,"gene_short_name"])
+write(vecIDsTopHitsname, file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/clusterruns/output/vecIDsTopHitsname.tab")
+# to GO enrichment
+
+# manual inspection
+N<-5
+vecIDsTopHitsrsem <- as.vector(dfImpulseResults[1:N,"Gene"])
+vecIDsTopHitsname <- as.vector(HSMM_gene_annotationRAW[rownames(HSMM_gene_annotationRAW) %in% vecIDsTopHitsrsem,"gene_short_name"])
+write(vecIDsTopHitsname, file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/clusterruns/output/vecIDsTopHitsnameManual.tab")

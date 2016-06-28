@@ -1,6 +1,6 @@
 rm(list=ls())
 library(gplots)
-load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/clusterruns/output/PseudoDE_lsImpulseDE2results.RData")
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/outputLineagePulse/NoState3/PseudoDE_lsImpulseDE2results.RData")
 dfImpulseResults <- lsImpulseDE2results$dfImpulseResults
 hist(log(dfImpulseResults$adj.p)/log(10))
 
