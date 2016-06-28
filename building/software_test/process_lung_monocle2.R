@@ -1,3 +1,6 @@
+detach("package:monocle", unload=TRUE)
+library(Biobase)
+devtools::install_github("cole-trapnell-lab/monocle-release@monocle2")
 library(monocle)
 
 rm(list = ls())
@@ -23,7 +26,7 @@ vecSCSamples <- dfSampleAnnot$Run_s
 dfCountsLung_SC <- dfCountsLung[,vecSCSamples]
 dfFpkmLung_SC <- dfFpkmLung[,vecSCSamples]
 
-# Make monolcle annotation
+# Make monocle annotation
 Lung_gene_annotationRAW <- data.frame( gene_short_name=dfGenesLung[,2], Media="M" )
 rownames(Lung_gene_annotationRAW) <- dfGenesLung[,1]
 Lung_sample_sheetRAW <- data.frame( Library=dfSampleAnnot[dfSampleAnnot$Run_s%in% vecSCSamples,]$SRA_Study_s, 
@@ -88,16 +91,77 @@ Lung <- reduceDimension(Lung, reduction_method="ICA")
 # Note that we're allowing a branch with two outcomes in the biological process
 Lung <- orderCells(Lung, num_paths=2)
 
-setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pseudotime")
 lsMonocole2input <- list(Lung, expressed_genes, diff_test_res, ordering_genes)
-save(lsMonocole2input, file="lsMonocole2input.RData")
+save(lsMonocole2input, file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/data/lsMonocole2input.RData")
+
+### SAVE PROGRESS UP TO HERE
+#load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/data/lsMonocole2input_v1.RData")
+Lung <- lsMonocole2input[[1]]
+expressed_genes <- lsMonocole2input[[2]]
+diff_test_res <- lsMonocole2input[[3]]
+ordering_genes <- lsMonocole2input[[4]]
+
+LungRev <- orderCells(Lung, num_paths=2, reverse=T)
 
 plot_cell_trajectory(Lung, color_by="Hours")
 plot_cell_trajectory(Lung, color_by="Pseudotime")
-# Done! Let's see what the tree and its ordering backbone look like
-pdf("mst_plot.pdf")
-plot_spanning_tree(Lung)
+plot_cell_trajectory(Lung, color_by="State")
+plot_cell_trajectory(LungRev, color_by="Pseudotime")
+plot_cell_trajectory(LungRev, color_by="State")
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_pseudotime.pdf")
+plot_cell_trajectory(Lung, color_by="Pseudotime")
 dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_pseudotimeReverse.pdf")
+plot_cell_trajectory(LungRev, color_by="Pseudotime")
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_time.pdf")
+plot_cell_trajectory(Lung, color_by="Hours")
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_state.pdf")
+plot_cell_trajectory(Lung, color_by="State")
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_stateReverse.pdf")
+plot_cell_trajectory(LungRev, color_by="State")
+dev.off()
+
+# State 1 in Lung is state 2 in LungRev
+Lung_filtered1 <- LungRev[expressed_genes, pData(LungRev)$State != 2]
+matCountsNoState1 <- matCountsLung[,rownames(pData(LungRev[,pData(LungRev)$State != 2]))]
+dfAnnotationNoState1 <- pData(Lung_filtered1)
+Lung_filtered2 <- Lung[expressed_genes, pData(Lung)$State != 2]
+matCountsNoState2 <- matCountsLung[,rownames(pData(Lung[,pData(Lung)$State != 2]))]
+dfAnnotationNoState2 <- pData(Lung_filtered2)
+Lung_filtered3 <- Lung[expressed_genes, pData(Lung)$State != 3]
+matCountsNoState3 <- matCountsLung[,rownames(pData(Lung[,pData(Lung)$State != 3]))]
+dfAnnotationNoState3 <- pData(Lung_filtered3)
+
+write.table(matCountsNoState1, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1.tab")
+write.table(as.vector(rownames(matCountsNoState1)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1_genes.tab")
+write.table(as.vector(colnames(matCountsNoState1)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState1_samples.tab")
+write.table(dfAnnotationNoState1, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState1.tab")
+
+write.table(matCountsNoState2, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState2.tab")
+write.table(as.vector(rownames(matCountsNoState2)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState2_genes.tab")
+write.table(as.vector(colnames(matCountsNoState2)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState2_samples.tab")
+write.table(dfAnnotationNoState2, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState2.tab")
+
+write.table(matCountsNoState3, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3.tab")
+write.table(as.vector(rownames(matCountsNoState3)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3_genes.tab")
+write.table(as.vector(colnames(matCountsNoState3)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_matCountsNoState3_samples.tab")
+write.table(dfAnnotationNoState3, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/inputLineagePulse/Lung_dfAnnotationNoState3.tab")
+
 
 lung_genes <- row.names(subset(fData(Lung), gene_short_name %in% c("Ccnd2", "Sftpb", "Pdpn")))
 plot_genes_jitter(Lung[lung_genes,], grouping="State")

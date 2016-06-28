@@ -51,7 +51,7 @@ fd <- new("AnnotatedDataFrame", data=HSMM_gene_annotationRAW)
 HSMM <- newCellDataSet( cellData=as.matrix(dfFpkmHSMM_SC), phenoData=pd, featureData=fd )
 print(head(fData(HSMM)))
 
-# filer
+# filter
 HSMM <- detectGenes(HSMM, min_expr=0.1)
 expressed_genes <- row.names(subset(fData(HSMM), num_cells_expressed >= 50))
 diff_test_res <- differentialGeneTest(HSMM[expressed_genes,], fullModelFormulaStr="expression~Media",cores=NCORES)
@@ -87,22 +87,22 @@ matCountsNoState3 <- dfCountsHSMM_SC[,rownames(pData(HSMM[,pData(HSMM)$State != 
 dfAnnotationNoState3 <- pData(HSMM_filtered)
 
 write.table(matCountsAll, row.names = FALSE, col.names = FALSE, sep="\t",
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsAll.tab")
 write.table(as.vector(rownames(matCountsAll)), sep="\t",  row.names = FALSE, col.names = FALSE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll_genes.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsAll_genes.tab")
 write.table(as.vector(colnames(matCountsAll)), sep="\t", row.names = FALSE, col.names = FALSE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll_samples.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsAll_samples.tab")
 write.table(dfAnnotationAllMonocle, sep="\t", row.names = TRUE, col.names = TRUE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/dfAnnotationAllMonocle.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_dfAnnotationAllMonocle.tab")
 
 write.table(matCountsNoState3, row.names = FALSE, col.names = FALSE, sep="\t",
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsNoState3.tab")
 write.table(as.vector(rownames(matCountsNoState3)), sep="\t",  row.names = FALSE, col.names = FALSE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3_genes.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsNoState3_genes.tab")
 write.table(as.vector(colnames(matCountsNoState3)), sep="\t", row.names = FALSE, col.names = FALSE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3_samples.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_matCountsNoState3_samples.tab")
 write.table(dfAnnotationNoState3, sep="\t", row.names = TRUE, col.names = TRUE,
-  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/dfAnnotationNoState3.tab")
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/HSMM_dfAnnotationNoState3.tab")
 
 if(FALSE){
   setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/data")

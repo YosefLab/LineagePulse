@@ -14,7 +14,7 @@ library(compiler)
 library(ggplot2)
 library(MASS)
 source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/building/code_files/ImpulseDE2_main.R")
-#source("/data/yosef2/users/fischerd/code/ImpulseDE2/building/code_files/ImpulseDE2_main.R")
+#source("/data/yosef2/users/fischerd/code/ImpulseDE2/R/ImpulseDE2_main.R")
 
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/building/code_files")
