@@ -12,7 +12,9 @@
 #' as a positive scalar. The cost function is insensitive to the
 #' dispersion factor shrinking beyond a numerical threshold to zero
 #' to avoid shrinkage of the dispersion factor to zero which 
-#' may cause numerical errors.
+#' may cause numerical errors. Accordingly, growth above a numerical
+#' threshold to infinity (this correponds to Poissonian noise) is 
+#' also guarded against.
 #' 
 #' @aliases evalLogLikHurdleNB_com
 #' 
@@ -52,6 +54,9 @@ evalLogLikDispNB <- function(scaTheta,
   # Prevent dispersion estimate from shrinking to zero
   # to avoid numerical errors:
   scaDispEst[scaDispEst < .Machine$double.eps] <- .Machine$double.eps
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  scaDispEst[scaDispEst < 1/.Machine$double.eps] <- 1/.Machine$double.eps
   
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
@@ -178,7 +183,7 @@ fitZINB <- function(matCountsProc,
   # Set number of processes to be used for parallelisation
   # This function is currently not parallelised to reduce memory usage.
   # Read function description for further information.
-  # register(MulticoreParam(nProc))
+  register(MulticoreParam(nProc))
   
   vecClusterAssign <- paste0(rep("cluster_",length(lsResultsClustering$Assignments)),lsResultsClustering$Assignments)
   vecClusters <- unique(vecClusterAssign)
@@ -240,7 +245,7 @@ fitZINB <- function(matCountsProc,
     # b) Dropout rate
     # Fit dropout rate with GLM
     if(boolSuperVerbose){print("M-step: Estimtate dropout rate")}
-    vecPiFit <- lapply(seq(1,scaNumCells), function(j) {
+    vecPiFit <- bplapply(seq(1,scaNumCells), function(j) {
       glm( matZ[,j] ~ log(matMu[,j]*vecSizeFactors[j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
@@ -260,7 +265,7 @@ fitZINB <- function(matCountsProc,
     matboolZero <- matCountsProc == 0
     scaDispGues <- 1
     if(boolOneDispPerGene){  
-      vecDispFit <- lapply(seq(1,scaNumGenes), function(i){
+      vecDispFit <- bplapply(seq(1,scaNumGenes), function(i){
         tryCatch({ unlist(optim(
           par=log(scaDispGues),
           fn=evalLogLikDispNB,
@@ -350,7 +355,7 @@ fitZINB <- function(matCountsProc,
   # Check dispersions
   if(any(is.na(matDispersions) | !is.finite(matDispersions))){
     matDispersions[is.na(matDispersions) | !is.finite(matDispersions)] <- 1
-    print("WARNING: Found NA/inf dispersions")
+    print("WARNING: Found NA/inf dispersions. Set to 1.")
   }
   
   return(list( vecDispersions=vecDispersions,
