@@ -202,7 +202,9 @@ fitZINB <- function(matCountsProc,
   # E-step:
   # Posterior of dropout: matZ
   if(boolSuperVerbose){print("Initialisation E-step: Estimtate posterior of dropout")}
-  matZ <- t(apply(matCountsProc==0, 1, as.numeric))
+  matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+    as.numeric(matCountsProc[i,]==0)
+  }))
   
   # (II) EM itertion
   scaIter <- 1
