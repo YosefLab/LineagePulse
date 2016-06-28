@@ -51,19 +51,34 @@ library(Biobase)
 
 pd <- new("AnnotatedDataFrame", data=Lung_sample_sheetRAW)
 fd <- new("AnnotatedDataFrame", data=Lung_gene_annotationRAW)
-Lung <- newCellDataSet( cellData=as.matrix(dfFpkmLung_SC), phenoData=pd, featureData=fd )
-print(head(fData(Lung)))
+Lung <- newCellDataSet( cellData=as(as.matrix(dfFpkmLung_SC), "sparseMatrix"), 
+  phenoData=pd, 
+  featureData=fd,
+  expressionFamily=negbinomial.size())
+Lung <- estimateSizeFactors(Lung,method="blind")
 
 # filter
 Lung <- detectGenes(Lung, min_expr=0.1)
-expressed_genes <- row.names(subset(fData(Lung), num_cells_expressed >= 50))
-diff_test_res <- differentialGeneTest(Lung[expressed_genes,], fullModelFormulaStr="expression~Media",cores=NCORES)
+print(head(fData(Lung)))
+print(head(pData(Lung)))
+expressed_genes <- row.names(subset(fData(Lung), num_cells_expressed >= 10))
+
+pData(Lung)$Total_mRNAs <- Matrix::colSums(exprs(Lung))
+Lung <- Lung[,row.names(subset(pData(Lung), Total_mRNAs >= 10000 & Total_mRNAs <= 40000))]
+Lung <- detectGenes(Lung, min_expr = 0.1)
+
+diff_test_res <- differentialGeneTest(Lung[expressed_genes,], fullModelFormulaStr="expression~Hours",cores=NCORES)
 ordering_genes <- row.names(subset(diff_test_res, qval < 0.01))
 ordering_genes <- intersect(ordering_genes, expressed_genes)
 Lung <- setOrderingFilter(Lung, ordering_genes)
 Lung <- reduceDimension(Lung)
 # num_paths is number of leaves of tree
 Lung <- orderCells(Lung, num_paths=2, reverse=F)
+
+plot_cell_trajectory(Lung, color_by="Hours")
+
+
+
 plot_spanning_tree(Lung)
 print(pData(Lung))
 

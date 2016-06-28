@@ -112,6 +112,8 @@ evalLogLikDispNB <- function(scaTheta,
 #' @param vecSpikeInGenes: (string vector) Names of genes
 #'    which correspond to external RNA spike-ins. Currently
 #'    not used.
+#' @param scaWindowRadius: (integer) 
+#'    Interval length for mean paramter estimation 
 #' @param boolOneDispPerGene: (bool) [Default TRUE]
 #'    Whether one negative binomial dispersion factor is fitted
 #'    per gene or per gene for each cluster.
@@ -148,7 +150,8 @@ fitZINB <- function(matCountsProc,
   vecSizeFactors,
   vecSpikeInGenes=NULL,
   boolOneDispPerGene=TRUE,
-  scaMaxiterEM=20,
+  scaWindowRadius=NULL,
+  scaMaxiterEM=100,
   verbose=FALSE,
   boolSuperVerbose=FALSE,
   nProc=1){
@@ -156,9 +159,7 @@ fitZINB <- function(matCountsProc,
   # Parameters:
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations:
-  scaPrecEM <- 1-10^(-4)
-  # Interval length for mean paramter estimation:
-  scaNCellsInterval <- 20
+  scaPrecEM <- 1-10^(-5)
   
   # Store EM convergence
   vecEMLogLik <- array(NA,scaMaxiterEM)
@@ -197,31 +198,34 @@ fitZINB <- function(matCountsProc,
     # Data are scaled by size factors.
     if(boolSuperVerbose){print("M-step: Estimtate negative binomial mean parameters")}
     
-    # Old code estimating mu by cluster, keep for downstream
-    for(k in seq(1,max(vecindClusterAssign))){
-      matMuCluster[,k] <- rowSums(
-        matCountsProc[,vecindClusterAssign==k]/
-          matSizeFactors[vecindClusterAssign==k]*
-          (1-matZ)[,vecindClusterAssign==k],
-        na.rm=TRUE) / rowSums((1-matZ)[,vecindClusterAssign==k])
+    if(!is.null(scaWindowRadius)){
+      # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
+      # interval with cell density centred at target cell.
+      print("only valid for size factors==1")
+      for(j in seq(1,scaNumCells)){
+        scaindIntervalStart <- max(1,j-scaWindowRadius)
+        scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+        vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+        matMu[,j] <- rowSums(
+          matCountsProc[,vecInterval]/
+            matSizeFactors[vecInterval]*
+            (1-matZ)[,vecInterval],
+          na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
+      }
+      matMu[matMu==0 | is.na(matMu)] <- 1/scaNumCells
+    } else {
+      # Estimate mean parameter by cluster.
+      for(k in seq(1,max(vecindClusterAssign))){
+        matMuCluster[,k] <- rowSums(
+          matCountsProc[,vecindClusterAssign==k]/
+            matSizeFactors[vecindClusterAssign==k]*
+            (1-matZ)[,vecindClusterAssign==k],
+          na.rm=TRUE) / rowSums((1-matZ)[,vecindClusterAssign==k])
+      }
+      # Add pseudocounts to zeros
+      matMuCluster[matMuCluster==0 | is.na(matMuCluster)] <- 1/scaNumCells
+      matMu <- matMuCluster[,vecindClusterAssign]
     }
-    # Add pseudocounts to zeros
-    matMuCluster[matMuCluster==0 | is.na(matMuCluster)] <- 1/scaNumCells
-    #matMu <- matMuCluster[,vecindClusterAssign]
-    
-    # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
-    # interval with cell density centred at target cell.
-    for(j in seq(1,scaNumCells)){
-      scaindIntervalStart <- max(1,j-scaNCellsInterval)
-      scaindIntervalEnd <- min(scaNumCells,j+scaNCellsInterval)
-      vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-      matMu[,j] <- rowSums(
-        matCountsProc[,vecInterval]/
-          matSizeFactors[vecInterval]*
-          (1-matZ)[,vecInterval],
-        na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
-    }
-    matMu[matMu==0 | is.na(matMu)] <- 1/scaNumCells
     
     # b) Dropout rate
     # Fit dropout rate with GLM

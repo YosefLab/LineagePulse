@@ -36,21 +36,16 @@ HSMM_sample_sheetRAW[sapply(dfSampleAnnot[dfSampleAnnot$Run_s %in% rownames(HSMM
 HSMM_sample_sheetRAW[sapply(dfSampleAnnot[dfSampleAnnot$Run_s %in% rownames(HSMM_sample_sheetRAW),]$source_name_s, function(x){unlist(strsplit(x, split="_"))[2]}) == "Cell T72",]$Hours <- 72
 
 # Get pseudotime
-#biocLite("monocle")
 #source("http://bioconductor.org/biocLite.R")
+#biocLite("monocle")
 #biocLite(c("Biobase"))
 #devtools::install_github("cole-trapnell-lab/monocle-release@monocle2")
 #source("https://bioconductor.org/biocLite.R")
 
 detach("package:monocle", unload=TRUE)
 library(monocle)
-#library(HSMMSingleCell)
-#library(data.table)
 library(Biobase)
 
-#data(HSMM_expr_matrix)
-#data(HSMM_gene_annotation)
-#data(HSMM_sample_sheet)
 pd <- new("AnnotatedDataFrame", data=HSMM_sample_sheetRAW)
 fd <- new("AnnotatedDataFrame", data=HSMM_gene_annotationRAW)
 HSMM <- newCellDataSet( cellData=as.matrix(dfFpkmHSMM_SC), phenoData=pd, featureData=fd )
@@ -65,16 +60,101 @@ ordering_genes <- intersect(ordering_genes, expressed_genes)
 HSMM <- setOrderingFilter(HSMM, ordering_genes)
 HSMM <- reduceDimension(HSMM, use_irlba=F)
 # num_paths is number of leaves of tree
-HSMM <- orderCells(HSMM, num_paths=2, reverse=F)
-plot_spanning_tree(HSMM)
+HSMM <- orderCells(HSMM, num_paths=2, reverse=T)
 print(pData(HSMM))
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/MST_state.pdf")
+plot_spanning_tree(HSMM)
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/MST_time.pdf")
+plot_spanning_tree(HSMM, color_by ="Hours")
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/MST_pseudotime.pdf")
+plot_spanning_tree(HSMM, color_by ="Pseudotime")
+dev.off()
+plot_spanning_tree(HSMM, color_by ="State")
 
-setwd("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE/software_test_out")
+setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/data")
 save(HSMM,file=file.path(getwd(),"PseudoDE_HSMM.RData"))
 save(HSMM_sample_sheetRAW,file=file.path(getwd(),"PseudoDE_HSMM_sample_sheetRAW.RData"))
 save(HSMM_gene_annotationRAW,file=file.path(getwd(),"PseudoDE_HSMM_gene_annotationRAW.RData"))
 save(dfCountsHSMM_SC,file=file.path(getwd(),"PseudoDE_dfCountsHSMM_SC.RData"))
 save(dfFpkmHSMM_SC,file=file.path(getwd(),"PseudoDE_dfFpkmHSMM_SC.RData"))
+
+matCountsAll <- dfCountsHSMM_SC
+dfAnnotationAllMonocle <- pData(HSMM)
+HSMM_filtered <- HSMM[expressed_genes, pData(HSMM)$State != 3]
+matCountsNoState3 <- dfCountsHSMM_SC[,rownames(pData(HSMM[,pData(HSMM)$State != 3]))]
+dfAnnotationNoState3 <- pData(HSMM_filtered)
+
+write.table(matCountsAll, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll.tab")
+write.table(as.vector(rownames(matCountsAll)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll_genes.tab")
+write.table(as.vector(colnames(matCountsAll)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsAll_samples.tab")
+write.table(dfAnnotationAllMonocle, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/dfAnnotationAllMonocle.tab")
+
+write.table(matCountsNoState3, row.names = FALSE, col.names = FALSE, sep="\t",
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3.tab")
+write.table(as.vector(rownames(matCountsNoState3)), sep="\t",  row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3_genes.tab")
+write.table(as.vector(colnames(matCountsNoState3)), sep="\t", row.names = FALSE, col.names = FALSE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/matCountsNoState3_samples.tab")
+write.table(dfAnnotationNoState3, sep="\t", row.names = TRUE, col.names = TRUE,
+  file="/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/inputLineagePulse/dfAnnotationNoState3.tab")
+
+if(FALSE){
+  setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/data")
+  load("PseudoDE_HSMM.RData")
+  load("PseudoDE_HSMM_sample_sheetRAW.RData")
+  load("PseudoDE_HSMM_gene_annotationRAW.RData")
+  load("PseudoDE_dfCountsHSMM_SC.RData")
+  load("PseudoDE_dfFpkmHSMM_SC.RData")
+}
+
+# Find contaminating
+HSMM_filtered <- HSMM[expressed_genes,]
+cds_subset <- HSMM_filtered[row.names(subset(fData(HSMM_filtered), gene_short_name %in% c("PDGFRA", "SPHK1", "CDK1", "MEF2C", "MYH3"))),]
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/MarkerGenesInPT_pseudotime.pdf")
+plot_genes_in_pseudotime(cds_subset, color_by="Hours")
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/MarkerGenesInPT_state.pdf")
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+dev.off()
+plot_genes_in_pseudotime(cds_subset, color_by="State")
+# No clear separation into contamined and not contaminated?
+
+# DE analysis all cells
+HSMM_filtered <- HSMM[expressed_genes,]
+
+full_model_fits <- fitModel(HSMM_filtered,  modelFormulaStr="expression~VGAM::bs(Pseudotime)", cores=3)
+reduced_model_fits <- fitModel(HSMM_filtered, modelFormulaStr="expression~1", cores=3)
+pseudotime_test_res <- compareModels(full_model_fits, reduced_model_fits)
+# Merge the test results with the metadata for each gene, including HUGO symbol, etc.
+pseudotime_test_res <- merge(fData(HSMM), pseudotime_test_res, by="row.names")
+
+lsDEAnalysisAllCells <- list(HSMM_filtered=HSMM_filtered,
+  full_model_fits=full_model_fits,
+  reduced_model_fits=reduced_model_fits,
+  pseudotime_test_res=pseudotime_test_res)
+save(lsDEAnalysisAllCells, "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/data/lsDEAnalysisAllCells.RData")
+
+# DE analysis without state 3
+HSMM_filtered <- HSMM[expressed_genes, pData(HSMM)$State != 3]
+
+full_model_fits <- fitModel(HSMM_filtered,  modelFormulaStr="expression~VGAM::bs(Pseudotime)", cores=3)
+reduced_model_fits <- fitModel(HSMM_filtered, modelFormulaStr="expression~1", cores=3)
+pseudotime_test_res <- compareModels(full_model_fits, reduced_model_fits)
+# Merge the test results with the metadata for each gene, including HUGO symbol, etc.
+pseudotime_test_res <- merge(fData(HSMM), pseudotime_test_res, by="row.names")
+
+lsDEAnalysisNoState3 <- list(HSMM_filtered=HSMM_filtered,
+  full_model_fits=full_model_fits,
+  reduced_model_fits=reduced_model_fits,
+  pseudotime_test_res=pseudotime_test_res)
+save(lsDEAnalysisNoState3, "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/monocle/data/lsDEAnalysisNoState3.RData")
+
 if(FALSE){
   setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
   load("PseudoDE_HSMM.RData")

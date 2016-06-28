@@ -141,8 +141,9 @@ runPseudoDE <- function(matCounts,
   K=NULL,
   scaSmallRun=NULL,
   boolPseudotime = TRUE,
-  boolContPseudotimeFit = FALSE,
+  boolContPseudotimeFit = TRUE,
   boolOneDispPerGene = TRUE,
+  scaWindowRadius=5,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits = TRUE,
@@ -210,8 +211,6 @@ runPseudoDE <- function(matCounts,
   # 4. Compute size factors
   print("4. Compute size factors:")
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
-  print("WARNING: set all size factors to 1")
-  vecSizeFactors[] <- 1
   save(vecSizeFactors,file=file.path(getwd(),"PseudoDE_vecSizeFactors.RData"))
   
   # 5. Fit mixture model
@@ -222,6 +221,7 @@ runPseudoDE <- function(matCounts,
       vecSizeFactors=vecSizeFactors,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
+      scaWindowRadius=scaWindowRadius,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
       verbose=verbose )
@@ -280,6 +280,7 @@ runPseudoDE <- function(matCounts,
         strControlName = NULL, 
         strMode = "singlecell",
         strSCMode = strSCMode,
+        scaWindowRadius=scaWindowRadius,
         nProc = nProc, 
         Q_value = 10^(-5),
         boolPlotting = TRUE,
@@ -309,6 +310,7 @@ runPseudoDE <- function(matCounts,
         matMuClusterH1=matMuCluster,
         matDropoutH1=matDropout,
         boolConvergenceZINBH1=boolConvergenceZINB,
+        scaWindowRadius=scaWindowRadius,
         nProc = nProc,
         boolOneDispPerGene=boolOneDispPerGene,
         scaMaxiterEM=scaMaxiterEM,

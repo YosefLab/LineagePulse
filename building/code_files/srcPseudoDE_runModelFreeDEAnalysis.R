@@ -45,42 +45,68 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   matMuClusterH1,
   matDropoutH1,
   boolConvergenceZINBH1,
+  scaWindowRadius=NULL,
   boolOneDispPerGene=TRUE,
   nProc=1,
-  scaMaxiterEM = 20,
+  scaMaxiterEM = 100,
   verbose=TRUE ){
   
   # (I) Fit null model
   # Null model is a single cluster: Create Clustering.
   lsH0Clustering <- list()
-  lsH0Clustering[[1]] <- rep(1,dim(matCountsProc)[2])
-  lsH0Clustering[[2]] <- max(vecPseudotime)-min(vecPseudotime)
-  lsH0Clustering[[3]] <- 1
-  names(lsH0Clustering) <- c("Assignments","Centroids","K")
+  lsH0Clustering$Assignments <- rep(1,dim(matCountsProc)[2])
+  lsH0Clustering$Centroids <- mean(vecPseudotime, na.rm=TRUE)
+  lsH0Clustering$K <- 1
   
   # Fit zero-inflated negative binomial null model
   lsResZINBFitsH0 <- fitZINB( matCountsProc=matCountsProc, 
     lsResultsClustering=lsH0Clustering,
     vecSpikeInGenes=NULL,
     boolOneDispPerGene=boolOneDispPerGene,
+    scaWindowRadius=NULL,
     nProc=nProc,
     scaMaxiterEM=scaMaxiterEM,
     verbose=verbose )
+  vecMuClusterH0  <- lsResZINBFitsH0$matMuCluster
   vecDispersionsH0 <- lsResZINBFitsH0$vecDispersions
   matDropoutH0 <- lsResZINBFitsH0$matDropout
-  matProbNBH0  <- lsResZINBFitsH0$matProbNB
-  vecMuClusterH0  <- lsResZINBFitsH0$matMuCluster
   boolConvergenceZINBH0 <- lsResZINBFitsH0$boolConvergence
   matMuH0 <- matrix(vecMuClusterH0, nrow=dim(matCountsProc)[1], 
     ncol=dim(matCountsProc)[2], byrow=FALSE)
   matDispersionsH0 <- matrix(vecDispersionsH0, nrow=dim(matCountsProc)[1], 
     ncol=dim(matCountsProc)[2], byrow=FALSE)
   
-  matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
-  matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
-    ncol=dim(matCountsProc)[2], byrow=FALSE)
+  # (II) Fit alternative model
+  # Alternative model was fit furing hyperparameter estimation
+  # if clusters were used for mean estimation during hyperparameter
+  # estimation.
+  if(is.null(scaWindowRadius)){
+    matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
+    matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
+      ncol=dim(matCountsProc)[2], byrow=FALSE)
+  } else {
+    # Fit zero-inflated negative binomial alternative model
+    # without sliding mean estimation but with mean estimation
+    # by cluster.
+    lsResZINBFitsH1 <- fitZINB( matCountsProc=matCountsProc, 
+      lsResultsClustering=lsResultsClusteringH1,
+      vecSpikeInGenes=NULL,
+      boolOneDispPerGene=boolOneDispPerGene,
+      scaWindowRadius=NULL,
+      nProc=nProc,
+      scaMaxiterEM=scaMaxiterEM,
+      verbose=verbose )
+    vecMuClusterH1  <- lsResZINBFitsH1$matMuCluster
+    vecDispersionsH1 <- lsResZINBFitsH1$vecDispersions
+    matDropoutH1 <- lsResZINBFitsH1$matDropout
+    boolConvergenceZINBH1 <- lsResZINBFitsH1$boolConvergence
+    matMuH1 <- matrix(vecMuClusterH1, nrow=dim(matCountsProc)[1], 
+      ncol=dim(matCountsProc)[2], byrow=FALSE)
+    matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
+      ncol=dim(matCountsProc)[2], byrow=FALSE)
+  }
   
-  # (II) Compute log likelihoods
+  # (III) Compute log likelihoods
   matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
   matboolZero <- matCountsProc==0
   vecLogLikFull <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
@@ -100,13 +126,15 @@ runModelFreeDEAnalysis <- function(matCountsProc,
       vecboolZero=matboolZero[i,])
   })
   
-  # (III) Differential expression analysis
+  # (IV) Differential expression analysis
   # scaK: Number of clusters used in full model
   scaK <- lsResultsClusteringH1$K
-  # K x mean and 1 or K x dispersion parameters
+  # Dropout rate models are shared and do not influence
+  # the difference in degrees of freedom of the model.
+  # Full model: K x mean and 1 or K x dispersion parameters.
   if(boolOneDispPerGene){ scaDegFreedomFull <- scaK + 1
   }else{ scaDegFreedomFull <- scaK*2 }
-  # One dispersion estimate and one overall mean estimate
+  # Null model: One dispersion estimate and one overall mean estimate
   scaDegFreedomRed <- 2
   # Compute difference in degrees of freedom between null model and alternative model.
   scaDeltaDegFreedom <- scaDegFreedomFull - scaDegFreedomRed

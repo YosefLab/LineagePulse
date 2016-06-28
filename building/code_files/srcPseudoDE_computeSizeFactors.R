@@ -28,11 +28,19 @@
 
 computeSizeFactors_LineagePulse <- function(matCountsProc){
   
-  # Size factors directly represent sequencing depth:
-  # Normalised relative sequencing depth.
-  vecSeqDepth <- apply(matCountsProc, 2,
-    function(cell){ sum(cell, na.rm=TRUE) })
-  vecSizeFactors <- vecSeqDepth/sum(vecSeqDepth)*length(vecSeqDepth)
+  boolDepth = FALSE
+  if(boolDepth){
+    # Size factors directly represent sequencing depth:
+    # Normalised relative sequencing depth.
+    vecSeqDepth <- apply(matCountsProc, 2,
+      function(cell){ sum(cell, na.rm=TRUE) })
+    vecSizeFactors <- vecSeqDepth/sum(vecSeqDepth)*length(vecSeqDepth)
+    names(vecSizeFactors) <- colnames(matCountsProc)
+  } else {
+    print("All size factors set to one.")
+    vecSizeFactors <- array(1, dim(matCountsProc)[2])
+    names(vecSizeFactors) <- colnames(matCountsProc)
+  }
   
   if(any(vecSizeFactors==0)){
     warning("WARNING IN LINEAGEPULSE: Found size factors==0, setting these to 1.")
