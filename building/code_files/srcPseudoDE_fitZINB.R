@@ -56,7 +56,7 @@ evalLogLikDispNB <- function(scaTheta,
   scaDispEst[scaDispEst < .Machine$double.eps] <- .Machine$double.eps
   # Prevent dispersion estimate from growing to infinity
   # to avoid numerical errors:
-  scaDispEst[scaDispEst < 1/.Machine$double.eps] <- 1/.Machine$double.eps
+  scaDispEst[scaDispEst > 1/.Machine$double.eps] <- 1/.Machine$double.eps
   
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
@@ -218,15 +218,20 @@ fitZINB <- function(matCountsProc,
       # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
       # interval with cell density centred at target cell.
       print("only valid for size factors==1")
-      for(j in seq(1,scaNumCells)){
-        scaindIntervalStart <- max(1,j-scaWindowRadius)
-        scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-        vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-        matMu[,j] <- rowSums(
-          matCountsProc[,vecInterval]*
-            (1-matZ)[,vecInterval],
-          na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
-      }
+      #for(j in seq(1,scaNumCells)){
+      do.call(cbind, bplapply(seq(1,scaNumCells), 
+        function(j){
+          scaindIntervalStart <- max(1,j-scaWindowRadius)
+          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+          #matMu[,j] <- rowSums(
+          return( rowSums(
+            matCountsProc[,vecInterval]*
+              (1-matZ)[,vecInterval],
+            na.rm=TRUE) / rowSums((1-matZ)[,vecInterval])
+          )
+        })
+      )
       matMu[matMu==0 | is.na(matMu)] <- 1/scaNumCells
     } else {
       # Estimate mean parameter by cluster.
