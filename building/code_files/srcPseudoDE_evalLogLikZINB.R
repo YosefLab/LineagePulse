@@ -2,6 +2,37 @@
 #++++++++++++++++++++++++++    Likelihood ZINB    +++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
+#' Compute log likelihood of negative binomial model for a vector of 
+#' zero observations
+#' 
+#' This is a custom version of dnbinom only valid for x=0 which is hopefully
+#' faster. The likihood is computed for zero observations, with the number
+#' of observations assumed to be the number of reported means and dispersions.
+#' Guards against numerical errors.
+#' 
+#' @aliases evalLogLikNBZero_comp
+#' 
+#' @seealso Called by \code{fitZINB} and
+#' \code{runModelFreeDEAnalysis}.
+#'
+#' @param vecMu (vector number of observations) Negative binomial
+#'    mean parameter for each observation in gene.
+#' @param vecDispEst: (vector number of observations) Negative binomial  
+#'    dispersion parameter for each observation in gene.
+#'    
+#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @export
+
+evalLogLikNBZero <- function(vecMu,
+  vecDispEst){
+  
+  vecLogLik <- vecDispEst*(log(vecDispEst) - log(vecDispEst + vecMu))
+  scaLogLik <- sum( log(vecLogLik[vecLogLik!=0]) +
+      sum(vecLogLik==0)*log(.Machine$double.eps) )
+  
+  return(scaLogLik)
+}
+
 #' Compute log likelihood of zero-inflated negative binomial model for one gene
 #' 
 #' This liklihood function is appropriate for sequencing data with high drop 
@@ -45,17 +76,19 @@ evalLogLikZINB_PseudoDE <- function(vecY,
   # machine precision.
   
   # Likelihood of zero counts:
-  vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
-    dnbinom(
-      vecY[vecboolZero], 
-      mu=vecMu[vecboolZero], 
-      size=vecDispEst[vecboolZero], 
-      log=FALSE) +
-    vecDropoutRateEst[vecboolZero]
+  #vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
+  #  dnbinom(
+  #    vecY[vecboolZero], 
+  #    mu=vecMu[vecboolZero], 
+  #    size=vecDispEst[vecboolZero], 
+  #    log=FALSE) +
+  #  vecDropoutRateEst[vecboolZero]
   # Replace zero likelihood observation with machine precision
   # for taking log.
-  scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros!=0]) +
-      sum(vecLikZeros==0)*log(.Machine$double.eps) )
+  #scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros!=0]) +
+  #    sum(vecLikZeros==0)*log(.Machine$double.eps) )
+  scaLogLikZeros <- evalLogLikNBZero_comp(vecMu=vecMu[vecboolZero],
+    vecDispEst=vecDispEst[vecboolZero])
   # Likelihood of non-zero counts:
   vecLikNonzeros <- log(1-vecDropoutRateEst[vecboolNotZeroObserved]) +
     dnbinom(

@@ -21,6 +21,7 @@ setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code
 source("srcPseudoDE_evalLogLikZINB.R")
 # Compile function
 evalLogLikZINB_PseudoDE_comp <- cmpfun(evalLogLikZINB_PseudoDE)
+evalLogLikNBZero_comp <- cmpfun(evalLogLikNBZero)
 source("srcPseudoDE_clusterCellsInPseudotime.R")
 source("srcPseudoDE_createAnnotation.R")
 source("srcPseudoDE_computeSizeFactors.R")

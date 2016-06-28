@@ -316,8 +316,15 @@ fitZINB <- function(matCountsProc,
     
     # E-step:
     if(boolSuperVerbose){print("E-step: Estimtate posterior of dropout")}
-    matZ <- matDropout/(matDropout + (1-matDropout)*
-        dnbinom(0, mu = matMu, size = matDispersions) )
+    # Use closed form expression of negative binomial density at x=0:
+    matNBZero <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+      (matDispersions[i,]/(matDispersions[i,]+matMu[i,]))^matDispersions[i,]
+    }))
+    matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+      matDropout[i,]/(matDropout[i,] + (1-matDropout[i,])*matNBZero[i,])
+    }))
+    #matZ <- matDropout/(matDropout + (1-matDropout)*
+    #    dnbinom(0, mu = matMu, size = matDispersions) )
     matZ[matCountsProc > 0] <- 0
     
     # Evaluate Likelihood
