@@ -53,6 +53,7 @@ evalLogLikDispNB <- function(scaTheta,
   
   # Prevent dispersion estimate from shrinking to zero
   # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
   scaDispEst[scaDispEst < .Machine$double.eps] <- .Machine$double.eps
   # Prevent dispersion estimate from growing to infinity
   # to avoid numerical errors:
@@ -303,6 +304,9 @@ fitZINB <- function(matCountsProc,
     }
     vecboolConvergedGLMdisp <- sapply(vecDispFit, function(x) x["convergence"])
     vecDispersions <- sapply(vecDispFit, function(fit){ exp(fit["par"]) })
+    # Account for dispersion parameter bounds implemented in cost function
+    vecDispersions[vecDispersions < .Machine$double.eps] <- .Machine$double.eps
+    vecDispersions[vecDispersions > 1/.Machine$double.eps] <- 1/.Machine$double.eps
     matDispersions <- matrix(vecDispersions, nrow=length(vecDispersions), ncol=scaNumCells, byrow=FALSE)
     matDispersions[matDispersions<=0] <- min(matDispersions[matDispersions>0])
     if(boolSuperVerbose){
@@ -320,14 +324,16 @@ fitZINB <- function(matCountsProc,
     scaLogLikOld <- scaLogLikNew
     matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
     matboolZero <- matCountsProc==0
-    scaLogLikNew <- sum(sapply( seq(1,scaNumGenes), function(i){
-      evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
-        vecMu=matMu[i,],
-        vecDispEst=matDispersions[i,], 
-        vecDropoutRateEst=matDropout[i,],
-        vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-        vecboolZero=matboolZero[i,])
-    }))
+    scaLogLikNew <- sum(unlist(
+      bplapply( seq(1,scaNumGenes), function(i){
+        evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
+          vecMu=matMu[i,],
+          vecDispEst=matDispersions[i,], 
+          vecDropoutRateEst=matDropout[i,],
+          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
+          vecboolZero=matboolZero[i,])
+      })
+    ))
     
     # EM-iteration complete
     if(verbose){print(paste0("Completed Iteration ", scaIter, " with data log likelihood of ", scaLogLikNew))}
