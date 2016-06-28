@@ -16,8 +16,8 @@
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
-#' @param scaDispEst: (scalar) Negative binomial dispersion 
-#'    parameter for given gene.
+#' @param vecDispEst: (scalar vector number of samples) Negative binomial dispersion 
+#'    parameter for given gene and observations.
 #' @param vecDropoutRateEst: (probability vector number of samples) 
 #'    Dropout rate estimate for each cell for given gene.
 #' @param vecboolNotZeroObserved: (bool vector number of samples)
@@ -57,7 +57,8 @@ evalLogLikZINB_PseudoDE <- function(vecY,
   #scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros!=0]) +
   #    sum(vecLikZeros==0)*log(.Machine$double.eps) )
   vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
-      (scaDispEst/(scaDispEst + vecMu[vecboolZero]))^scaDispEst +
+      (vecDispEst[vecboolZero]/(vecDispEst[vecboolZero] + 
+          vecMu[vecboolZero]))^vecDispEst[vecboolZero] +
       vecDropoutRateEst[vecboolZero]
   # Replace zero likelihood observation with machine precision
   # for taking log.
@@ -72,8 +73,8 @@ evalLogLikZINB_PseudoDE <- function(vecY,
       log=TRUE)
   # Replace zero likelihood observation with machine precision
   # for taking log.
-  scaLogLikNonzeros <- sum( vecLogLikNonzeros[vecLogLik > log(.Machine$double.eps)] ) +
-      sum(vecLogLik <= log(.Machine$double.eps))*log(.Machine$double.eps)
+  scaLogLikNonzeros <- sum( vecLogLikNonzeros[vecLogLikNonzeros > log(.Machine$double.eps)] ) +
+      sum(vecLogLikNonzeros <= log(.Machine$double.eps))*log(.Machine$double.eps)
   # Compute likelihood of all data:
   scaLogLik <- scaLogLikZeros + scaLogLikNonzeros
   # Maximise log likelihood: Return likelihood as value to optimisation routine
