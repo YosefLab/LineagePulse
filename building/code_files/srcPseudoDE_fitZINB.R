@@ -196,13 +196,11 @@ fitZINB <- function(matCountsProc,
       # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
       # interval with cell density centred at target cell.
       print("only valid for size factors==1")
-      #for(j in seq(1,scaNumCells)){
       do.call(cbind, bplapply(seq(1,scaNumCells), 
         function(j){
           scaindIntervalStart <- max(1,j-scaWindowRadius)
           scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
           vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-          #matMu[,j] <- rowSums(
           return( rowSums(
             matCountsProc[,vecInterval]*
               (1-matZ)[,vecInterval],
@@ -285,7 +283,7 @@ fitZINB <- function(matCountsProc,
     vecDispersions[vecDispersions < .Machine$double.eps] <- .Machine$double.eps
     vecDispersions[vecDispersions > 1/.Machine$double.eps] <- 1/.Machine$double.eps
     matDispersions <- matrix(vecDispersions, nrow=length(vecDispersions), ncol=scaNumCells, byrow=FALSE)
-    matDispersions[matDispersions<=0] <- min(matDispersions[matDispersions>0])
+    #matDispersions[matDispersions<=0] <- min(matDispersions[matDispersions>0])
     if(boolSuperVerbose){
       print(paste0("GLM to estimate drop-out rate for cells did not converge in ", 
         sum(vecboolConvergedGLMdisp), " cases."))
@@ -320,7 +318,7 @@ fitZINB <- function(matCountsProc,
     ))
     
     # EM-iteration complete
-    if(verbose){print(paste0("Completed Iteration ", scaIter, " with data log likelihood of ", scaLogLikNew))}
+    if(verbose){print(paste0("Completed iteration ", scaIter, " with log likelihood of ", scaLogLikNew))}
     vecEMLogLik[scaIter] <- scaLogLikNew
     scaIter <- scaIter+1
   }

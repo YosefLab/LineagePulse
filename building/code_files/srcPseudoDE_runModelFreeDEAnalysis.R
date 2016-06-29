@@ -99,12 +99,11 @@ runModelFreeDEAnalysis <- function(matCountsProc,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
       verbose=verbose )
-    vecMuClusterH1  <- lsResZINBFitsH1$matMuCluster
+    matMuClusterH1  <- lsResZINBFitsH1$matMuCluster
     vecDispersionsH1 <- lsResZINBFitsH1$vecDispersions
     matDropoutH1 <- lsResZINBFitsH1$matDropout
     boolConvergenceZINBH1 <- lsResZINBFitsH1$boolConvergence
-    matMuH1 <- matrix(vecMuClusterH1, nrow=dim(matCountsProc)[1], 
-      ncol=dim(matCountsProc)[2], byrow=FALSE)
+    matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
     matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
       ncol=dim(matCountsProc)[2], byrow=FALSE)
   }

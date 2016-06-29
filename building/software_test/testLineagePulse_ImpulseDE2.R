@@ -19,7 +19,7 @@ names(lsInputToImpulseDE2) <- c("matDropout", "matProbNB", "matMuCluster",
 
 nProc <- 4
 strSCMode <- "continuous"
-scaWindowRadius <- 5
+scaWindowRadius <- 20
 
 source("/data/yosef2/users/fischerd/code/ImpulseDE2/R/ImpulseDE2_main.R")
 lsImpulseDE2results <- runImpulseDE2(
