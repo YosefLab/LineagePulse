@@ -196,7 +196,7 @@ fitZINB <- function(matCountsProc,
       # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
       # interval with cell density centred at target cell.
       print("only valid for size factors==1")
-      do.call(cbind, bplapply(seq(1,scaNumCells), 
+      matMu <- do.call(cbind, bplapply(seq(1,scaNumCells), 
         function(j){
           scaindIntervalStart <- max(1,j-scaWindowRadius)
           scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)

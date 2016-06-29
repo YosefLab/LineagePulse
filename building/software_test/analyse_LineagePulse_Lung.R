@@ -6,6 +6,15 @@ load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepi
 dfImpulseResultsNo2 <- dfImpulseResults
 load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState3/ImpulseDE2_dfImpulseResults.RData")
 dfImpulseResultsNo3 <- dfImpulseResults
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState3Rev/ImpulseDE2_dfImpulseResults.RData")
+dfImpulseResultsNo3Rev <- dfImpulseResults
+load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1Cont/ImpulseDE2_dfImpulseResults.RData")
+dfImpulseResultsNo1Cont <- dfImpulseResults
+
+# Plot highly expressed genes
+source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/R/ImpulseDE2_main.R")
+setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1")
+folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState1"
 
 scaThres <- 10^(-10)
 sum(dfImpulseResultsNo1$adj.p < scaThres)
@@ -13,10 +22,12 @@ sum(dfImpulseResultsNo2$adj.p < scaThres)
 sum(dfImpulseResultsNo3$adj.p < scaThres)
 
 # CDF q-values
-vecX <- seq(-50,-1,by=1)
+vecX <- seq(-300,-1,by=1)
 vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo1$adj.p))/log(10) <= thres, na.rm=TRUE)})
-vecCDF2 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo2$adj.p))/log(10) <= thres, na.rm=TRUE)})
-vecCDF3 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo3$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF2 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo1Cont$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF3 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo2$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF4 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo3$adj.p))/log(10) <= thres, na.rm=TRUE)})
+vecCDF5 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo3Rev$adj.p))/log(10) <= thres, na.rm=TRUE)})
 pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/ECDF-pvalues_DropStates.pdf",width=7,height=7)
 plot(vecX,vecCDF1,
   col="red",pch=4,type="l",
@@ -28,9 +39,49 @@ points(vecX,vecCDF2,
   col="green",pch=4,type="l")
 points(vecX,vecCDF3,
   col="blue",pch=4,type="l")
+points(vecX,vecCDF4,
+  col="black",pch=4,type="l")
+points(vecX,vecCDF5,
+  col="orange",pch=4,type="l")
 legend(x="topleft",
-  legend=c("Drop state 1","Drop state 2","Drop state 3"),
-  fill=c("red","green","blue"))
+  legend=c("Drop state 1",
+    "Drop state 1 (continuous branch)",
+    "Drop state 2",
+    "Drop state 3", 
+    "Drop state 3 (reversed pseudotime)"),
+  fill=c("red",
+    "green",
+    "blue",
+    "black",
+    "orange"))
+dev.off()
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/ECDF-pvalues_DropStates_IntervallowQval.pdf",width=7,height=7)
+plot(vecX,vecCDF1,
+  col="red",pch=4,type="l",
+  xlim=c(-20,-1),
+  ylim=c(0,max(max(vecCDF1,na.rm=TRUE),max(vecCDF2,na.rm=TRUE))),
+  xlab="-log_10(p-value)",
+  ylab=paste0("Cumulative p-value distribution"),
+  main=paste0("Lungeputhelium scRNA-seq"))
+points(vecX,vecCDF2,
+  col="green",pch=4,type="l")
+points(vecX,vecCDF3,
+  col="blue",pch=4,type="l")
+points(vecX,vecCDF4,
+  col="black",pch=4,type="l")
+points(vecX,vecCDF5,
+  col="orange",pch=4,type="l")
+legend(x="topleft",
+  legend=c("Drop state 1",
+    "Drop state 1 (continuous branch)",
+    "Drop state 2",
+    "Drop state 3", 
+    "Drop state 3 (reversed pseudotime)"),
+  fill=c("red",
+    "green",
+    "blue",
+    "black",
+    "orange"))
 dev.off()
 graphics.off()
 
