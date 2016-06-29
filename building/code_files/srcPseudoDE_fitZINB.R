@@ -59,40 +59,15 @@ evalLogLikDispNB <- function(scaTheta,
   # to avoid numerical errors:
   scaDispEst[scaDispEst > 1/.Machine$double.eps] <- 1/.Machine$double.eps
   
-  # Note on handling very low probabilities: vecLikZeros
-  # typically does not have zero elements as it has the 
-  # the summand drop-out rate. Also the log cannot be
-  # broken up over the sum to dnbinom. In contrast to that,
-  # the log is taken in dnbinom for vecLikNonzeros to avoid 
-  # zero probabilities. Zero probabilities are handled
-  # through substitution of the minimal probability under
-  # machine precision. The model is scaled according to the
-  # size factors which are used for mean parameter inference.
-  # Likelihood of zero counts:
-  vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
-    dnbinom(
-      vecY[vecboolZero], 
-      mu=vecMuEst[vecboolZero]*vecSizeFactors[vecboolZero], 
-      size=scaDispEst, 
-      log=FALSE) +
-    vecDropoutRateEst[vecboolZero]
-  # Replace zero likelihood observation with machine precision
-  # for taking log.
-  scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros!=0]) +
-      sum(vecLikZeros==0)*log(.Machine$double.eps) )
-  # Likelihood of non-zero counts:
-  vecLikNonzeros <- (1-vecDropoutRateEst[vecboolNotZeroObserved])*
-    dnbinom(
-      vecY[vecboolNotZeroObserved], 
-      mu=vecMuEst[vecboolNotZeroObserved]*vecSizeFactors[vecboolNotZeroObserved], 
-      size=scaDispEst, 
-      log=FALSE)
-  # Replace zero likelihood observation with machine precision
-  # for taking log.
-  scaLogLikNonzeros <- sum( log(vecLikNonzeros[vecLikNonzeros!=0]) +
-      sum(vecLikNonzeros==0)*log(.Machine$double.eps) )
-  # Compute likelihood of all data:
-  scaLogLik <- scaLogLikZeros + scaLogLikNonzeros
+  vecDispersions <- rep(scaDispEst, length(vecY))
+  
+  scaLogLik <- evalLogLikZINB_PseudoDE_comp( vecY=vecY,
+    vecMu=vecMuEst*vecSizeFactors,
+    vecDispEst=vecDispersions, 
+    vecDropoutRateEst=vecDropoutRateEst,
+    vecboolNotZeroObserved=vecboolNotZeroObserved, 
+    vecboolZero=vecboolZero )
+  
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
 }

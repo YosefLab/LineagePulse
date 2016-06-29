@@ -140,7 +140,9 @@ plot_cell_trajectory(Lung, color_by="Pseudotime")
 Lung_filtered1Cont <- LungRev[expressed_genes, pData(Lung)$Pseudotime > 13.7]
 matCountsNoState1Cont <- matCountsLung[,rownames(pData(LungRev[,pData(Lung)$Pseudotime > 13.7]))]
 dfAnnotationNoState1Cont <- pData(Lung_filtered1Cont)
+pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/monocle2/MST_monocle2_PathBetweenTerminalLeaves_PseudotimeRev.pdf")
 plot_cell_trajectory(Lung_filtered1Cont, color_by="Pseudotime")
+dev.off()
 
 Lung_filtered3Rev <- LungRev[expressed_genes, pData(LungRev)$State != 3]
 matCountsNoState3Rev <- matCountsLung[,rownames(pData(LungRev[,pData(LungRev)$State != 3]))]
