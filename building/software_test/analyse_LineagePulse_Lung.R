@@ -13,9 +13,43 @@ dfImpulseResultsNo1Cont <- dfImpulseResults
 
 # Plot highly expressed genes
 source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/R/ImpulseDE2_main.R")
-setwd("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1")
+source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/srcPseudoDE_analyseOutput.R")
+folderLineagePulseOutput <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1"
 folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState1"
-
+anlayseOuput(
+  folderLineagePulseOutput=folderLineagePulseOutput,
+  folderPDFs=folderPDFs,
+  strSCMode="continuous",
+  scaWindowRadis=20)
+folderLineagePulseOutput <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState2"
+folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState2"
+anlayseOuput(
+  folderLineagePulseOutput=folderLineagePulseOutput,
+  folderPDFs=folderPDFs,
+  strSCMode="continuous",
+  scaWindowRadis=20)
+folderLineagePulseOutput <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState3"
+folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState3"
+anlayseOuput(
+  folderLineagePulseOutput=folderLineagePulseOutput,
+  folderPDFs=folderPDFs,
+  strSCMode="continuous",
+  scaWindowRadis=20)
+folderLineagePulseOutput <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState1Cont"
+folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState1Cont"
+anlayseOuput(
+  folderLineagePulseOutput=folderLineagePulseOutput,
+  folderPDFs=folderPDFs,
+  strSCMode="continuous",
+  scaWindowRadis=20)
+folderLineagePulseOutput <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/outputLineagePulse/NoState3Rev"
+folderPDFs <- "/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/NoState3Rev"
+anlayseOuput(
+  folderLineagePulseOutput=folderLineagePulseOutput,
+  folderPDFs=folderPDFs,
+  strSCMode="continuous",
+  scaWindowRadis=20)
+  
 scaThres <- 10^(-10)
 sum(dfImpulseResultsNo1$adj.p < scaThres)
 sum(dfImpulseResultsNo2$adj.p < scaThres)
@@ -31,6 +65,7 @@ vecCDF5 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResultsNo3Re
 pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/ECDF-pvalues_DropStates.pdf",width=7,height=7)
 plot(vecX,vecCDF1,
   col="red",pch=4,type="l",
+  xlim=c(-30,-1),
   ylim=c(0,max(max(vecCDF1,na.rm=TRUE),max(vecCDF2,na.rm=TRUE))),
   xlab="-log_10(p-value)", 
   ylab=paste0("Cumulative p-value distribution"),
@@ -39,8 +74,8 @@ points(vecX,vecCDF2,
   col="green",pch=4,type="l")
 points(vecX,vecCDF3,
   col="blue",pch=4,type="l")
-points(vecX,vecCDF4,
-  col="black",pch=4,type="l")
+#points(vecX,vecCDF4,
+#  col="black",pch=4,type="l")
 points(vecX,vecCDF5,
   col="orange",pch=4,type="l")
 legend(x="topleft",
@@ -62,7 +97,7 @@ plot(vecX,vecCDF1,
   ylim=c(0,max(max(vecCDF1,na.rm=TRUE),max(vecCDF2,na.rm=TRUE))),
   xlab="-log_10(p-value)",
   ylab=paste0("Cumulative p-value distribution"),
-  main=paste0("Lungeputhelium scRNA-seq"))
+  main=paste0("Lungepithelium scRNA-seq"))
 points(vecX,vecCDF2,
   col="green",pch=4,type="l")
 points(vecX,vecCDF3,

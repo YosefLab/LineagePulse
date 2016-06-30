@@ -2,6 +2,80 @@
 #+++++++++++++++++++++++++     Fit ZINB model    ++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
+#' Cost function zero-inflated negative binomial model for mean fitting
+#' 
+#' Log likelihood of zero inflated  negative binomial model. 
+#' This function is designed to allow numerical optimisation
+#' of negative binomial mean paramater on single gene given
+#' the drop-out rate and negative binomial dispersion parameter. The
+#' mean parameter is fit in log space and is therefore fit
+#' as a positive scalar. The cost function is insensitive to the
+#' dispersion factor shrinking beyond a numerical threshold to zero
+#' to avoid shrinkage of the dispersion factor to zero which 
+#' may cause numerical errors. Accordingly, growth above a numerical
+#' threshold to infinity (this correponds to Poissonian noise) is 
+#' also guarded against.
+#' 
+#' @seealso Called by \code{fitZINB}.
+#' 
+#' @param scaTheta: (scalar) Log of mean parameter estimate.
+#' @param vecY: (vector number of cells) Observed expression values 
+#'    of gene in cells in cluster.
+#' @param scaDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
+#' @param matDropoutLinMod: (matrix number of cells x 2) Logistic linear
+#'    model parameters of the dropout rate as a function of the mean.
+#' @param vecboolObserved: (bool vector number of samples)
+#'    Whether sample is not NA (observed).
+#' @param vecboolZero: (bool vector number of samples)
+#'    Whether sample has zero count.
+#' 
+#' @return scaLogLik: (scalar) Value of cost function:
+#'    zero-inflated negative binomial likelihood.
+#' @export
+
+evalLogLikDispNB <- function(scaTheta,
+  vecY,
+  scaDisp,
+  vecSizeFactors,
+  vecDropoutRateEst,
+  matDropoutLinMod=NULL,
+  vecboolNotZeroObserved,
+  vecboolZero){ 
+  
+  # Log linker function to fit positive means
+  scaMu <- exp(scaTheta)
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  if(scaMu < .Machine$double.eps){ scaMu <- .Machine$double.eps }
+  
+  if(is.null(matDropoutLinMod)){
+    scaLogLik <- evalLogLikZINB_PseudoDE_comp( vecY=vecY,
+      vecMu=scaMu*vecSizeFactors,
+      vecDispEst=scaDisp, 
+      vecDropoutRateEst=vecDropoutRateEst,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero )
+  } else {
+    vecDropoutRateEst <- 1/(1+exp(-matDropoutLinMod[,1]-log(scaMu)*matDropoutLinMod[,2]))
+    scaLogLik <- evalLogLikZINB_PseudoDE_comp( vecY=vecY,
+      vecMu=scaMu*vecSizeFactors,
+      vecDispEst=scaDisp, 
+      vecDropoutRateEst=vecDropoutRateEst,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero )
+  }
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
+}
+
 #' Cost function zero-inflated negative binomial model for dispersion fitting
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
@@ -15,8 +89,6 @@
 #' may cause numerical errors. Accordingly, growth above a numerical
 #' threshold to infinity (this correponds to Poissonian noise) is 
 #' also guarded against.
-#' 
-#' @aliases evalLogLikHurdleNB_com
 #' 
 #' @seealso Called by \code{fitZINB}.
 #' 
@@ -230,10 +302,11 @@ fitZINB <- function(matCountsProc,
       glm( matZ[,j] ~ log(matMu[,j]*vecSizeFactors[j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
-      )[c("converged","fitted.values")]
+      )[c("converged","fitted.values","coefficients")]
     })
     vecboolConvergedGLMpi <- sapply(vecPiFit, function(x) x[[1]])
     matDropout <- sapply(vecPiFit, function(x) x[[2]])
+    #matDropoutLinModel <- do.call(rbind, lapply(vecPiFit, function(x) x[[3]]))
     if(boolSuperVerbose){
       print(paste0("GLM to estimate drop-out rate for cells did not converge in ", 
         sum(!vecboolConvergedGLMpi), " cases."))

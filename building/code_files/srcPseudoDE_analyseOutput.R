@@ -24,12 +24,14 @@ library(reshape2)
 anlayseOuput <- function(
   folderLineagePulseOutput,
   folderPDFs,
-  strSCMode="batch",
-  scaWindowRadis=20){
+  strSCMode="continuous",
+  scaWindowRadis=20,
+  dfGeneAnnotation=NULL){
   
   graphics.off()
   
   # Load data
+  setwd(folderLineagePulseOutput)
   load("PseudoDE_matCountsProc.RData")
   load("PseudoDE_matDropout.RData")
   load("PseudoDE_matProbNB.RData")
@@ -43,16 +45,33 @@ anlayseOuput <- function(
   load("ImpulseDE2_lsImpulseFits.RData")
   load("ImpulseDE2_matSizeFactors.RData")
   
-  # 1. CDF p-values
+  if(!is.null(dfGeneAnnotation)){
+    rownames(matCountsProcLP) <- as.vector(dfGeneAnnotation[match(rownames(matCountsProcLP), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(matDropout) <- as.vector(dfGeneAnnotation[match(rownames(matDropout), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(matProbNB) <- as.vector(dfGeneAnnotation[match(rownames(matProbNB), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(matMu) <- as.vector(dfGeneAnnotation[match(rownames(matMu), rownames(dfGeneAnnotation)),"gene_short_name"])
+    
+    rownames(matCountDataProc) <- as.vector(dfGeneAnnotation[match(rownames(matCountDataProc), rownames(dfGeneAnnotation)),"gene_short_name"])
+    dfImpulseResults$Gene <- as.vector(dfGeneAnnotation[match(rownames(dfImpulseResults), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(dfImpulseResults) <- as.vector(dfGeneAnnotation[match(rownames(dfImpulseResults), rownames(dfGeneAnnotation)),"gene_short_name"])
+    names(vecDEGenes) <- as.vector(dfGeneAnnotation[match(names(vecDEGenes), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(lsImpulseFits$parameters_case) <- as.vector(dfGeneAnnotation[match(rownames(lsImpulseFits$parameters_case), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(lsImpulseFits$values_case) <- as.vector(dfGeneAnnotation[match(rownames(lsImpulseFits$values_case), rownames(dfGeneAnnotation)),"gene_short_name"])
+    rownames(matSizeFactors) <- as.vector(dfGeneAnnotation[match(rownames(matSizeFactors), rownames(dfGeneAnnotation)),"gene_short_name"])
+  }
+  
+  # Plot
+  setwd(folderPDFs)
+  # 1. CDF q-values
   vecX <- seq(-100,-1,by=0.5)
   vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResults$adj.p))/log(10) <= thres, na.rm=TRUE)})
   pdf(paste0(folderPDFs,"/LineagePulse_ECDF-pvalues.pdf"),width=7,height=7)
   plot(vecX,vecCDF1,
     col="black",pch=4,type="l",
     ylim=c(0,max(vecCDF1,na.rm=TRUE)),
-    xlab="log_10(p-value)", 
-    ylab=paste0("Cumulative p-value distribution"),
-    main=paste0("Cumulative p-values distribution LineagePulse"),
+    xlab="log_10 adjusted p-value", 
+    ylab=paste0("Cumulative adjusted p-value distribution"),
+    main=paste0("Cumulative adjusted p-values distribution LineagePulse"),
     cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
   legend(x="topleft",
     legend=c("LineagePulse"),
@@ -60,13 +79,34 @@ anlayseOuput <- function(
   dev.off()
   graphics.off()
   
+  # Additional: histogram p-value distribution
+  pdf(paste0(folderPDFs,"/LineagePulse_Histogram-logpvalues.pdf"),width=7,height=7)
+  hist(log(as.numeric(as.vector(dfImpulseResults$p)))/log(10),
+    breaks=20,
+    xlab="log_10 adjusted p-value)", 
+    ylab=paste0("Number of observations"),
+    main=paste0("Histogram of adjusted p-value"),
+    cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
+  dev.off()
+  graphics.off()
+  pdf(paste0(folderPDFs,"/LineagePulse_Histogram-pvalues.pdf"),width=7,height=7)
+  hist(as.numeric(as.vector(dfImpulseResults$p)),
+    breaks=20,
+    xlab="log_10 adjusted p-value)", 
+    ylab=paste0("Number of observations"),
+    main=paste0("Histogram of adjusted p-value"),
+    cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
+  dev.off()
+  graphics.off()
+  
   scaNumGenes <- dim(matCountDataProc)[1]
   scaNumCells <- dim(matCountDataProc)[2]
   scaNIDs <- 200
-  scaFracExprIsHigh <- 0.2
+  scaFracExprIsHigh <- 0.5
   # 2. Plot highly expressed genes
   vecIDsHighExpr <- apply(matCountDataProc, 1, function(gene){sum(gene > 10) >= scaFracExprIsHigh*scaNumCells})
-  vecIDsTopQvalHighExpre <- (dfImpulseResults[rownames(matCountDataProc[vecIDsHighExpr,]),]$Gene)[1:scaNIDs]
+  vecIDsTopQvalHighExpre <- as.vector(dfImpulseResults[match(rownames(dfImpulseResults), rownames(matCountDataProc[vecIDsHighExpr,])),]$Gene)
+  vecIDsTopQvalHighExpre <- (vecIDsTopQvalHighExpre[!is.na(vecIDsTopQvalHighExpre)])[1:scaNIDs]
   plotDEGenes( vecGeneIDs=vecIDsTopQvalHighExpre,
     matCountDataProc=matCountDataProc,
     matTranslationFactors=NULL,
@@ -75,7 +115,7 @@ anlayseOuput <- function(
     lsImpulseFits=lsImpulseFits,
     strCaseName="case", 
     strControlName=NULL, 
-    strFileNameSuffix=paste0("_LineagePulseFits_HighExpr"), 
+    strFileNameSuffix=paste0("_ImpulseTraces_HighlyExpressedLowQval"), 
     strPlotTitleSuffix="", 
     strPlotSubtitle="",
     dfImpulseResults=dfImpulseResults,
@@ -83,10 +123,12 @@ anlayseOuput <- function(
     strNameMethod2=NULL,
     strMode="singlecell",
     strSCMode="continuous",
+    boolLogPlot=TRUE,
     NPARAM=6)
+  graphics.off()
   
   # 3. Plot top q-val
-  vecIDsTopQval <- dfImpulseResults[1:scaNIDs,]$Gene
+  vecIDsTopQval <- as.vector(dfImpulseResults[1:scaNIDs,]$Gene)
   plotDEGenes( vecGeneIDs=vecIDsTopQval,
     matCountDataProc=matCountDataProc,
     matTranslationFactors=NULL,
@@ -95,7 +137,7 @@ anlayseOuput <- function(
     lsImpulseFits=lsImpulseFits,
     strCaseName="case", 
     strControlName=NULL, 
-    strFileNameSuffix=paste0("_LineagePulseFits_TopQval"), 
+    strFileNameSuffix=paste0("_LineagePulse_ImpulseTraces_LowQval"), 
     strPlotTitleSuffix="", 
     strPlotSubtitle="",
     dfImpulseResults=dfImpulseResults,
@@ -103,12 +145,14 @@ anlayseOuput <- function(
     strNameMethod2=NULL,
     strMode="singlecell",
     strSCMode="continuous",
+    boolLogPlot=TRUE,
     NPARAM=6)
+  graphics.off()
   
   # 4. Plot worst significant q-val
   scaThres <- 10^(-3)
   idxIDatThres <- min(which(dfImpulseResults$adj.p > scaThres))-1
-  vecIDsWorstQval <- dfImpulseResults[max(1,idxIDatThres-scaNIDs):idxIDatThres,]$Gene
+  vecIDsWorstQval <- as.vector(dfImpulseResults[max(1,idxIDatThres-scaNIDs):idxIDatThres,]$Gene)
   plotDEGenes( vecGeneIDs=vecIDsWorstQval,
     matCountDataProc=matCountDataProc,
     matTranslationFactors=NULL,
@@ -117,7 +161,7 @@ anlayseOuput <- function(
     lsImpulseFits=lsImpulseFits,
     strCaseName="case", 
     strControlName=NULL, 
-    strFileNameSuffix=paste0("_LineagePulseFits_WorstQval"), 
+    strFileNameSuffix=paste0("_LineagePulse_ImpulseTraces_HighButSignificantQval"), 
     strPlotTitleSuffix="", 
     strPlotSubtitle="",
     dfImpulseResults=dfImpulseResults,
@@ -125,13 +169,14 @@ anlayseOuput <- function(
     strNameMethod2=NULL,
     strMode="singlecell",
     strSCMode="continuous",
+    boolLogPlot=TRUE,
     NPARAM=6)
+  graphics.off()
   
   # 5. Look at drop out rate vs mean fitting
   vecSumNotDropout <- apply(matDropout, 2, function(cell){sum(1-cell, na.rm=TRUE)})
   vecSumProbNBRates <- apply(matProbNB, 2, function(cell){sum(cell, na.rm=TRUE)})
   vecDepth <- apply(matCountsProcLP, 2, function(cell){sum(cell, na.rm=TRUE)})
-  plot(log(vecDepth), vecSumNotDropout)
   dfScatter <- data.frame(
     x=log(vecDepth),
     y=log(vecSumNotDropout))
@@ -145,20 +190,10 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0("CumulNBProb-Depth_scatter.pdf"),width=7,height=7)
+  pdf(paste0(folderPDFs,"/LineagePulse_Scatter_CumulativeNBProbvsDepth.pdf"),width=7,height=7)
   print(g)
   dev.off()
   graphics.off()
-  
-  # Plot full lines coloured by depth
-  g <- ggplot() + geom_line()
-  for(cell in 1:scNumCells){
-    dfLogisticScatter <- data.frame(
-      x=log(matMu[,cell]),
-      y=log(matDropout[,cell]))
-    g <- g + geom_point(data=dfLogisticScatter, aes(x=x, y=y),  size=4)
-  }
-  print(g)
   
   return(NULL)
 }
