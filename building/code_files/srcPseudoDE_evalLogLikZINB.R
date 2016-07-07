@@ -108,7 +108,7 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
   scaWindowRadius=NULL ){
   
   scaNumCells <- length(vecCounts)
-  scaLogLik <- sum(lapply(seq(1,scaNumCells), 
+  scaLogLik <- sum(sapply(seq(1,scaNumCells), 
     function(j){
       scaindIntervalStart <- max(1,j-scaWindowRadius)
       scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
