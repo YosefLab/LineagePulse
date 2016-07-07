@@ -12,7 +12,7 @@
 #' @seealso Called by \code{fitZINB} and
 #' \code{runModelFreeDEAnalysis}.
 #'
-#' @param vecY (count vector number of amples)
+#' @param vecCounts (count vector number of amples)
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
@@ -28,7 +28,7 @@
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #' @export
 
-evalLogLikZINB_PseudoDE <- function(vecY,
+evalLogLikZINB_LinPulse <- function(vecCounts,
   vecMu,
   vecDispEst, 
   vecDropoutRateEst, 
@@ -56,7 +56,7 @@ evalLogLikZINB_PseudoDE <- function(vecY,
   # Likelihood of non-zero counts:
   vecLogLikNonzeros <- log(1-vecDropoutRateEst[vecboolNotZeroObserved]) +
     dnbinom(
-      vecY[vecboolNotZeroObserved], 
+      vecCounts[vecboolNotZeroObserved], 
       mu=vecMu[vecboolNotZeroObserved], 
       size=vecDispEst[vecboolNotZeroObserved], 
       log=TRUE)
@@ -81,7 +81,7 @@ evalLogLikZINB_PseudoDE <- function(vecY,
 #' @seealso Called by \code{fitZINB} and
 #' \code{runModelFreeDEAnalysis}.
 #'
-#' @param vecY (count vector number of amples)
+#' @param vecCounts (count vector number of amples)
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
@@ -99,7 +99,7 @@ evalLogLikZINB_PseudoDE <- function(vecY,
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #' @export
 
-evalLogLikSmoothZINB_PseudoDE <- function(vecY,
+evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
   vecMu,
   vecDispEst, 
   vecDropoutRateEst, 
@@ -107,12 +107,13 @@ evalLogLikSmoothZINB_PseudoDE <- function(vecY,
   vecboolZero,
   scaWindowRadius=NULL ){
   
+  scaNumCells <- length(vecCounts)
   scaLogLik <- sum(lapply(seq(1,scaNumCells), 
     function(j){
       scaindIntervalStart <- max(1,j-scaWindowRadius)
       scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
       vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-      scaLogLikCell <- evalLogLikZINB_PseudoDE(vecY=vecY[vecInterval],
+      scaLogLikCell <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts[vecInterval],
         vecMu=rep(vecMu[j], length(vecInterval)),
         vecDispEst=rep(vecDispEst[j], length(vecInterval)), 
         vecDropoutRateEst=vecDropoutRateEst[vecInterval], 

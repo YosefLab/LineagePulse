@@ -112,7 +112,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
   matboolZero <- matCountsProc==0
   vecLogLikFull <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
-    evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
+    evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
       vecMu=matMuH1[i,]*vecSizeFactors,
       vecDispEst=matDispersionsH1[i,], 
       vecDropoutRateEst=matDropoutH1[i,],
@@ -120,7 +120,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
       vecboolZero=matboolZero[i,])
   })
   vecLogLikRed <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
-    evalLogLikZINB_PseudoDE_comp(vecY=matCountsProc[i,],
+    evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
       vecMu=matMuH0[i,]*vecSizeFactors,
       vecDispEst=matDispersionsH0[i,], 
       vecDropoutRateEst=matDropoutH0[i,],

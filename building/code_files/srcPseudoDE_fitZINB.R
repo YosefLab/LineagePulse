@@ -121,7 +121,7 @@ fitMuZINB_LinPulse <- function(vecCounts,
     # Numerical maximum likelihood estimator
     scaMu <- tryCatch({
       exp(unlist(optimise(
-        evalLogLikMuZINB_comp,
+        evalLogLikMuZINB_LinPulse_comp,
         vecCounts=vecCounts,
         vecDisp=vecDisp,
         vecDropoutRateEst=vecDropoutRateEst,
