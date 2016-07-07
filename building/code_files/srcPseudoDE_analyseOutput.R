@@ -64,14 +64,14 @@ anlayseOuput <- function(
   setwd(folderPDFs)
   # 1. CDF q-values
   vecX <- seq(-100,-1,by=0.5)
-  vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(dfImpulseResults$adj.p))/log(10) <= thres, na.rm=TRUE)})
+  vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(as.vector(dfImpulseResults$p)))/log(10) <= thres, na.rm=TRUE)})
   pdf(paste0(folderPDFs,"/LineagePulse_ECDF-pvalues.pdf"),width=7,height=7)
   plot(vecX,vecCDF1,
     col="black",pch=4,type="l",
     ylim=c(0,max(vecCDF1,na.rm=TRUE)),
-    xlab="log_10 adjusted p-value", 
-    ylab=paste0("Cumulative adjusted p-value distribution"),
-    main=paste0("Cumulative adjusted p-values distribution LineagePulse"),
+    xlab="log_10 p-value", 
+    ylab=paste0("Cumulative p-value distribution"),
+    main=paste0("Cumulative p-values distribution LineagePulse"),
     cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
   legend(x="topleft",
     legend=c("LineagePulse"),

@@ -20,7 +20,10 @@ setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/building/code_files")
 source("srcPseudoDE_evalLogLikZINB.R")
 # Compile function
-evalLogLikZINB_PseudoDE_comp <- cmpfun(evalLogLikZINB_PseudoDE)
+evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
+evalLogLikSmoothZINB_PseudoDE_comp <- cmpfun(evalLogLikSmoothZINB_PseudoDE)
+evalLogLikMuNB_LinPulse_comp <- cmpfun(evalLogLikMuZINB_LinPulse)
+evalLogLikDispNB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 source("srcPseudoDE_clusterCellsInPseudotime.R")
 source("srcPseudoDE_createAnnotation.R")
 source("srcPseudoDE_computeSizeFactors.R")
@@ -227,6 +230,7 @@ runPseudoDE <- function(matCounts,
       verbose=verbose )
     vecDispersions <- lsResZINBFits$vecDispersions
     matDropout <- lsResZINBFits$matDropout
+    matDropoutLinModel <- lsResZINBFits$matDropoutLinModel
     matProbNB  <- lsResZINBFits$matProbNB
     matMuCluster  <- lsResZINBFits$matMuCluster
     matMu  <- lsResZINBFits$matMu
@@ -235,6 +239,7 @@ runPseudoDE <- function(matCounts,
   })
   save(vecDispersions,file=file.path(getwd(),"PseudoDE_vecDispersions.RData"))
   save(matDropout,file=file.path(getwd(),"PseudoDE_matDropout.RData"))
+  save(matDropoutLinModel,file=file.path(getwd(),"PseudoDE_matDropoutLinModel.RData"))
   save(matProbNB,file=file.path(getwd(),"PseudoDE_matProbNB.RData"))
   save(matMuCluster,file=file.path(getwd(),"PseudoDE_matMuCluster.RData"))
   save(matMu,file=file.path(getwd(),"PseudoDE_matMu.RData"))
