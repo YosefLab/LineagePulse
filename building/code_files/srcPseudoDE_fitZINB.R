@@ -251,7 +251,7 @@ evalLogLikDispZINB_LinPulse <- function(scaTheta,
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-fitDispZINB_LinPulse <- function( scaDispGues,
+fitDispZINB_LinPulse <- function( scaDispGuess,
   vecCounts,
   vecMuEst,
   vecSizeFactors,
@@ -260,7 +260,7 @@ fitDispZINB_LinPulse <- function( scaDispGues,
   vecboolZero){ 
   
   fitDisp <- tryCatch({ unlist(optim(
-    par=log(scaDispGues),
+    par=log(scaDispGuess),
     fn=evalLogLikDispZINB_LinPulse_comp,
     vecCounts=vecCounts,
     vecMuEst=vecMuEst,
@@ -278,7 +278,7 @@ fitDispZINB_LinPulse <- function( scaDispGues,
     print(paste0("vecMuEst ", paste(vecMuEst,collapse=" ")))
     print(paste0("vecDropout ", paste(vecDropout,collapse=" ")))
     print(paste0("vecSizeFactors ", paste(vecSizeFactors,collapse=" ")))
-    lsErrorCausingGene <- list(vecCounts, vecMuEst, log(scaDispGues), vecSizeFactors, vecDropout)
+    lsErrorCausingGene <- list(vecCounts, vecMuEst, log(scaDispGuess), vecSizeFactors, vecDropout)
     names(lsErrorCausingGene) <- c("vecCounts", "vecMuEst", "logscaDispEst", "vecSizeFactors", "vecDropout")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
@@ -434,15 +434,15 @@ fitZINB <- function(matCountsProc,
       }))
     } else {
       # Estimate mean parameter by cluster.
-      matMuCluster <- do.call(cbind, bplapply(seq(1,max(vecindClusterAssign)), function(k){
-        vecMu <- sapply(seq(1,scaNumGenes), function(i){
+      matMuCluster <- do.call(cbind, lapply(seq(1,max(vecindClusterAssign)), function(k){
+        vecMu <- unlist(bplapply(seq(1,scaNumGenes), function(i){
           scaMu <- fitMuZINB_LinPulse(vecCounts=matCountsProc[i,vecindClusterAssign==k],
             vecDisp=matDispersions[i,vecindClusterAssign==k],
             vecNormConst=vecSizeFactors[vecindClusterAssign==k],
             vecDropoutRateEst=matDropout[i,vecindClusterAssign==k],
             vecProbNB=1-matZ[i,vecindClusterAssign==k])
           return(scaMu)
-        })
+        }))
         return(vecMu)
       }))
       matMu <- matMuCluster[,vecindClusterAssign]
@@ -473,13 +473,13 @@ fitZINB <- function(matCountsProc,
     scaDispGues <- 1
     if(boolOneDispPerGene){  
       vecDispFit <- bplapply(seq(1,scaNumGenes), function(i){
-        fitDispZINB_LinPulse(scaDispGues=scaDispGues,
+        fitDispZINB_LinPulse(scaDispGuess=scaDispGuess,
           vecCounts=matCountsProc[i,],
           vecMuEst=matMu[i,],
           vecSizeFactors=vecSizeFactors,
           vecDropoutRateEst=matDropout[i,],
           vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-          vecboolZero=matboolZero[i,],)
+          vecboolZero=matboolZero[i,])
       })
     } else {
       #  not coded
