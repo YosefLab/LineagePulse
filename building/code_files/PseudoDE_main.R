@@ -249,7 +249,7 @@ runPseudoDE <- function(matCounts,
 
   graphics.off()
   # 6. Plot ZINB fits to data.
-  if(boolPlotZINBfits){
+  if(boolPlotZINBfits & FALSE){
     print("6. Plot ZINB fits to data.")
     vecZINBfitPlotIDs <- names(sort(apply(matCountsProc, 1, mean),
       decreasing=TRUE)[1:min(20,dim(matCountsProc)[1])])

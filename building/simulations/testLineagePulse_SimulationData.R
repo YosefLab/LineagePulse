@@ -102,7 +102,7 @@ lsDEresults <- runPseudoDE(
   K=6,
   scaSmallRun=NULL,
   boolPseudotime = TRUE,
-  boolContPseudotimeFit=FALSE,
+  boolContPseudotimeFit=TRUE,
   boolOneDispPerGene = TRUE,
   scaWindowRadius=20,
   boolDEAnalysisImpulseModel = TRUE,

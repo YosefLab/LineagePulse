@@ -1,3 +1,4 @@
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 load("PseudoDE_matCountsProc.RData")
 load("PseudoDE_matCountsProcFull.RData")
 load("PseudoDE_vecPseudotimeProc.RData")  
@@ -17,11 +18,12 @@ lsInputToImpulseDE2 <- list(matDropout, matProbNB, matMuCluster,
 names(lsInputToImpulseDE2) <- c("matDropout", "matProbNB", "matMuCluster", 
   "vecClusterAssignments", "vecCentroids")
 
-nProc <- 4
+nProc <- 2
 strSCMode <- "continuous"
 scaWindowRadius <- 20
 
-source("/data/yosef2/users/fischerd/code/ImpulseDE2/R/ImpulseDE2_main.R")
+source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/R/ImpulseDE2_main.R")
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsImpulseDE2results <- runImpulseDE2(
   matCountData = matCountsProc, 
   dfAnnotation = dfAnnotation,
