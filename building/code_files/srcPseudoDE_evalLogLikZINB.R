@@ -34,7 +34,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   vecDropoutRateEst, 
   vecboolNotZeroObserved, 
   vecboolZero){  
-
+  
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
   # the summand drop-out rate. Also the log cannot be
@@ -46,9 +46,9 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   
   # Likelihood of zero counts:
   vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
-      (vecDispEst[vecboolZero]/(vecDispEst[vecboolZero] + 
-          vecMu[vecboolZero]))^vecDispEst[vecboolZero] +
-      vecDropoutRateEst[vecboolZero]
+    (vecDispEst[vecboolZero]/(vecDispEst[vecboolZero] + 
+        vecMu[vecboolZero]))^vecDispEst[vecboolZero] +
+    vecDropoutRateEst[vecboolZero]
   # Replace zero likelihood observation with machine precision
   # for taking log.
   scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros > .Machine$double.eps]) +
@@ -60,6 +60,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
       mu=vecMu[vecboolNotZeroObserved], 
       size=vecDispEst[vecboolNotZeroObserved], 
       log=TRUE)
+
   # Replace zero likelihood observation with machine precision
   # for taking log.
   scaLogLikNonzeros <- sum( vecLogLikNonzeros[vecLogLikNonzeros > log(.Machine$double.eps)] ) +
