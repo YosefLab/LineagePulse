@@ -86,6 +86,10 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
 #' @param vecDispEst: (scalar vector number of samples) Negative binomial dispersion 
 #'    parameter for given gene and observations.
 #' @param vecDropoutRateEst: (probability vector number of samples) 
@@ -102,6 +106,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 
 evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
   vecMu,
+  vecSizeFactors,
   vecDispEst, 
   vecDropoutRateEst, 
   vecboolNotZeroObserved, 
@@ -115,7 +120,7 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
       scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
       vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
       scaLogLikCell <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts[vecInterval],
-        vecMu=rep(vecMu[j], length(vecInterval)),
+        vecMu=vecMu[j]*vecSizeFactors[vecInterval],
         vecDispEst=rep(vecDispEst[j], length(vecInterval)), 
         vecDropoutRateEst=vecDropoutRateEst[vecInterval], 
         vecboolNotZeroObserved[vecInterval], 

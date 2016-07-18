@@ -221,7 +221,8 @@ evalLogLikDispZINB_LinPulse <- function(scaTheta,
       vecboolZero=vecboolZero )
   } else {
     scaLogLik <- evalLogLikSmoothZINB_LinPulse( vecCounts=vecCounts,
-      vecMu=vecMuEst*vecSizeFactors,
+      vecMu=vecMuEst,
+      vecSizeFactors=vecSizeFactors,
       vecDispEst=vecDispersions, 
       vecDropoutRateEst=vecDropoutRateEst,
       vecboolNotZeroObserved=vecboolNotZeroObserved, 
@@ -344,7 +345,7 @@ fitDispZINB_LinPulse <- function( scaDispGuess,
 #'    which correspond to external RNA spike-ins. Currently
 #'    not used.
 #' @param scaWindowRadius: (integer) 
-#'    Smoothing interval length.
+#'    Smoothing interval radius.
 #' @param boolOneDispPerGene: (bool) [Default TRUE]
 #'    Whether one negative binomial dispersion factor is fitted
 #'    per gene or per gene for each cluster.
@@ -533,7 +534,7 @@ fitZINB <- function(matCountsProc,
       scaLogLikNew <- sum(unlist(
         bplapply( seq(1,scaNumGenes), function(i){
           evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
-            vecMu=matMu[i,],
+            vecMu=matMu[i,]*vecSizeFactors,
             vecDispEst=matDispersions[i,], 
             vecDropoutRateEst=matDropout[i,],
             vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
@@ -545,6 +546,7 @@ fitZINB <- function(matCountsProc,
         bplapply( seq(1,scaNumGenes), function(i){
           evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
             vecMu=matMu[i,],
+            vecSizeFactors=vecSizeFactors,
             vecDispEst=matDispersions[i,], 
             vecDropoutRateEst=matDropout[i,],
             vecboolNotZeroObserved=matboolNotZeroObserved[i,], 

@@ -130,7 +130,7 @@ processSCData <- function(matCounts,
   print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
   print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
   if(!is.null(scaSmallRun)){
-    print(paste0("Operating on subset of data, set by scaSmallRun: ",scaSmallRun," out of ",dim(matCountsProc)[1]," genes."))
+    print(paste0("Operating on subset of data, set by scaSmallRun: ",scaSmallRun," out of ",dim(matCountsProcFull)[1]," genes."))
   }
   
   # Name nameless gene:

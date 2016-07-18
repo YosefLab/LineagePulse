@@ -63,31 +63,33 @@ vecCDF3 <- sapply(vecX, function(thres){sum(log(as.numeric(as.vector(dfImpulseRe
 vecCDF4 <- sapply(vecX, function(thres){sum(log(as.numeric(as.vector(dfImpulseResultsNo3$p)))/log(10) <= thres, na.rm=TRUE)})
 vecCDF5 <- sapply(vecX, function(thres){sum(log(as.numeric(as.vector(dfImpulseResultsNo3Rev$p)))/log(10) <= thres, na.rm=TRUE)})
 pdf("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/Lungepithelium/pdfs/ECDF-pvalues_DropStates.pdf",width=7,height=7)
-plot(vecX,vecCDF1,
+plot(vecX,vecCDF2,
   col="red",pch=4,type="l",
   xlim=c(-30,-1),
-  ylim=c(0,max(max(vecCDF1,na.rm=TRUE),max(vecCDF2,na.rm=TRUE))),
+  ylim=c(0,max(max(vecCDF2,na.rm=TRUE),max(vecCDF3,na.rm=TRUE))),
   xlab="log_10(p-value)", 
   ylab=paste0("Cumulative p-value distribution"),
   main=paste0("Lungeputhelium scRNA-seq"))
-points(vecX,vecCDF2,
-  col="green",pch=4,type="l")
+#points(vecX,vecCDF2,
+#  col="green",pch=4,type="l")
 points(vecX,vecCDF3,
   col="blue",pch=4,type="l")
-#points(vecX,vecCDF4,
-#  col="orange",pch=4,type="l")
+points(vecX,vecCDF4,
+  col="orange",pch=4,type="l")
 points(vecX,vecCDF5,
   col="black",pch=4,type="l")
 legend(x="topleft",
-  legend=c("Drop state 1",
+  legend=c(
+    #"Drop state 1",
     "Drop state 1 (continuous branch)",
     "Drop state 2",
-    #"Drop state 3", 
+    "Drop state 3", 
     "Drop state 3 (reversed pseudotime)"),
-  fill=c("red",
-    "green",
+  fill=c(
+    "red",
+    #"green",
     "blue",
-    #"orange",
+    "orange",
     "black"))
 dev.off()
 graphics.off()

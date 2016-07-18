@@ -92,6 +92,8 @@ source("srcPseudoDE_runModelFreeDEAnalysis.R")
 #'    of the cells. If false, the pseudotime centroids of the clusters
 #'    are chose: Impulse fitting is done based on the same clusters
 #'    as hyperparameter estimation.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval length.
 #' @param boolOneDispPerGene: (bool) [Default TRUE]
 #'    Whether one negative binomial dispersion factor is fitted
 #'    per gene or per gene for each cluster.
