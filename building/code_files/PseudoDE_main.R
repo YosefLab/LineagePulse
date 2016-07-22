@@ -1,5 +1,5 @@
 ################################################################################
-########################     PseudodE package     ##############################
+#######################     LineagePulse package     ###########################
 ################################################################################
 
 ### Version 1.0
@@ -37,9 +37,9 @@ source("srcPseudoDE_runModelFreeDEAnalysis.R")
 ### Main function
 ################################################################################
 
-#' PseudoDE wrapper: Differential expression analysis in pseudotime
+#' LineagePulse wrapper: Differential expression analysis in pseudotime
 #' 
-#' This function is the wrapper function for the PseudoDE algorithm,
+#' This function is the wrapper function for the LineagePulse algorithm,
 #' which performs data processing, clustering, zero-inflated negative
 #' binomial model identification (hyperparameter estimation) and 
 #' model-based differential expression analysis with ImpulseDE2 in 

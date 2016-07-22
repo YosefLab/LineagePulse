@@ -4,7 +4,7 @@ load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/ou
 load("/Users/davidsebastianfischer/MasterThesis/data/ImpulseDE2_datasets/HSMM/outputLineagePulse/NoState3/PseudoDE_vecPseudotimeProc.RData")
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(
-  matCounts=matCountsProcFull[1:200,],
+  matCounts=matCountsProcFull[1:100,],
   vecPseudotime=vecPseudotimeProc,
   K=6,
   scaSmallRun=NULL,
@@ -15,12 +15,14 @@ lsDEresults <- runPseudoDE(
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits=TRUE,
-  scaMaxiterEM=4,
+  scaMaxiterEM=5,
   nProc=2,
   verbose=TRUE )
 
 load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_lsImpulseDE2results.RData")
 load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/PseudoDE_matDropout.RData")
+load("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out/ImpulseDE2_lsImpulseFits.RData")
 names(lsImpulseDE2results)
 head(lsImpulseDE2results$dfImpulseResults)
 head(lsImpulseDE2results$lsImpulseFits$parameters_case)
+head(lsImpulseFits$parameters_case)
