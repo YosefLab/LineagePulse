@@ -412,12 +412,13 @@ fitZINB <- function(matCountsProc,
   # are drop-outs.
   
   matSizeFactors <- matrix(vecSizeFactors, nrow=scaNumGenes, ncol=scaNumCells, byrow=TRUE)
+  matboolNotZeroObserved <- matCountsProc>0 & !is.na(matCountsProc)
+  matboolZero <- matCountsProc==0
   # E-step:
   # Posterior of dropout: matZ
   if(boolSuperVerbose){print("Initialisation E-step: Estimtate posterior of dropout")}
-  matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-    as.numeric(matCountsProc[i,]==0)
-  }))
+  matZ <- matrix(1, nrow=scaNumGenes, ncol=scaNumCells)
+  matZ[matboolNotZeroObserved] <- 0
   matDropout <- matZ
   
   # (II) EM itertion
@@ -471,7 +472,7 @@ fitZINB <- function(matCountsProc,
     # Fit dropout rate with GLM
     if(boolSuperVerbose){print("Constrained E-step: Estimtate dropout rate")}
     vecPiFit <- bplapply(seq(1,scaNumCells), function(j) {
-      glm( matZ[,j] ~ log(matMu[,j]*vecSizeFactors[j]),
+      glm( matZ[,j] ~ log(matMu[,j]),
         family=binomial(link=logit),
         control=list(maxit=1000)
       )[c("converged","fitted.values","coefficients")]
@@ -487,8 +488,6 @@ fitZINB <- function(matCountsProc,
     # c) Negative binomial dispersion parameter
     # Use MLE of dispersion factor: numeric optimisation of likelihood.
     if(boolSuperVerbose){print("M-step: Estimtate negative binomial dispersion parameters")}
-    matboolNotZeroObserved <- matCountsProc > 0 & !is.na(matCountsProc) & is.finite(matCountsProc)
-    matboolZero <- matCountsProc == 0
     scaDispGuess <- 1
     if(boolOneDispPerGene){  
       vecDispFit <- bplapply(seq(1,scaNumGenes), function(i){
@@ -522,14 +521,10 @@ fitZINB <- function(matCountsProc,
     matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
       matDropout[i,]/(matDropout[i,] + (1-matDropout[i,])*matNBZero[i,])
     }))
-    #matZ <- matDropout/(matDropout + (1-matDropout)*
-    #    dnbinom(0, mu = matMu, size = matDispersions) )
-    matZ[matCountsProc > 0] <- 0
+    matZ[matboolNotZeroObserved] <- 0
     
     # Evaluate Likelihood
     scaLogLikOld <- scaLogLikNew
-    matboolNotZeroObserved <- matCountsProc>0 & !is.na(matCountsProc)
-    matboolZero <- matCountsProc==0
     if(is.null(scaWindowRadius)){
       scaLogLikNew <- sum(unlist(
         bplapply( seq(1,scaNumGenes), function(i){
