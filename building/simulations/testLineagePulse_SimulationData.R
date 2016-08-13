@@ -99,6 +99,10 @@ rownames(matData) <- paste0("_",seq(1,dim(matData)[1]))
 names(vecPT) <- colnames(matData)
 
 source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
+evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
+evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
+evalLogLikMuZINB_LinPulse_comp <- cmpfun(evalLogLikMuZINB_LinPulse)
+evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(
   matCounts=matData,
