@@ -103,6 +103,7 @@ evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
 evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
 evalLogLikMuZINB_LinPulse_comp <- cmpfun(evalLogLikMuZINB_LinPulse)
 evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
+evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(
   matCounts=matData,
@@ -148,6 +149,20 @@ scaMaxiterEM=100
 boolSuperVerbose=FALSE
 vecSizeFactors <- rep(1,dim(matCountsProc)[2])
 #--
+#mean estimation
+vecCounts=matCountsProc[i,vecInterval]
+vecMu=vecMu[vecInterval]
+vecDisp=matDispersions[i,vecInterval]
+vecNormConst=vecSizeFactors[vecInterval]
+vecDropoutRateEst=vecDropout[vecInterval]
+vecProbNB=1-matZ[i,]
+vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,])
+matLinModelPi=matLinModelPi
+scaTarget=match(j,vecInterval)
+vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0
+vecboolZero=vecCounts==0
+scaTheta <- 1
+#----
 
 # Open .pdf
 matInferredData <- lsDEresults$lsImpulseDE2results$

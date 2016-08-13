@@ -43,30 +43,29 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   # zero probabilities. Zero probabilities are handled
   # through substitution of the minimal probability under
   # machine precision.
-  
+  scaLogPrecLim <- -323*log(10)
+
   # Likelihood of zero counts:
-  vecLikZeros <- (1-vecDropoutRateEst[vecboolZero])*
+  vecLogLikZeros <- log((1-vecDropoutRateEst[vecboolZero])*
     (vecDispEst[vecboolZero]/(vecDispEst[vecboolZero] + 
         vecMu[vecboolZero]))^vecDispEst[vecboolZero] +
-    vecDropoutRateEst[vecboolZero]
-  # Replace zero likelihood observation with machine precision
-  # for taking log.
-  scaLogLikZeros <- sum( log(vecLikZeros[vecLikZeros > .Machine$double.eps]) +
-      sum(vecLikZeros <= .Machine$double.eps)*log(.Machine$double.eps) )
+    vecDropoutRateEst[vecboolZero])
+  vecLogLikZeros[vecLogLikZeros < scaLogPrecLim] <- scaLogPrecLim
+  scaLogLikZeros <- sum(vecLogLikZeros)
   # Likelihood of non-zero counts:
-  vecLogLikNonzeros <- log(1-vecDropoutRateEst[vecboolNotZeroObserved]) +
-    dnbinom(
+  vecLogLikNonzerosDropout <- log(1-vecDropoutRateEst[vecboolNotZeroObserved])
+  vecLogLikNonzerosNB <- dnbinom(
       vecCounts[vecboolNotZeroObserved], 
       mu=vecMu[vecboolNotZeroObserved], 
       size=vecDispEst[vecboolNotZeroObserved], 
       log=TRUE)
-
+  vecLogLikNonzerosDropout[vecLogLikNonzerosDropout < scaLogPrecLim] <- scaLogPrecLim
+  vecLogLikNonzerosNB[vecLogLikNonzerosNB < scaLogPrecLim] <- scaLogPrecLim
   # Replace zero likelihood observation with machine precision
   # for taking log.
-  scaLogLikNonzeros <- sum( vecLogLikNonzeros[vecLogLikNonzeros > log(.Machine$double.eps)] ) +
-      sum(vecLogLikNonzeros <= log(.Machine$double.eps))*log(.Machine$double.eps)
+  scaLogLikNonzeros <- sum( vecLogLikNonzerosDropout+vecLogLikNonzerosNB )
   # Compute likelihood of all data:
-  scaLogLik <- scaLogLikZeros + scaLogLikNonzeros
+  scaLogLik <- sum(c(scaLogLikZeros, scaLogLikNonzeros), na.rm=TRUE)
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
 }
