@@ -430,6 +430,8 @@ fitImpulse_gene_LP <- function(vecCounts,
   # Report mean fit objective value as null hypothesis, too.
   # match() selects first hit if maximum occurs multiple times
   indBestFit <- match(max(dfFitsByInitialisation["value",]),dfFitsByInitialisation["value",])
+
+  #print(paste0(scaLLOld, " ", dfFitsByInitialisation["value",indBestFit]))
   if(scaLLOld < dfFitsByInitialisation["value",indBestFit]){
     vecBestFitParam <- c(dfFitsByInitialisation[1:6,indBestFit])
   } else {
@@ -487,8 +489,6 @@ fitMuZINB_LinPulse <- function(vecCounts,
   vecProbNB=NULL,
   scaTarget=NULL,
   scaWindowRadius=NULL,
-  vecPseudotime=NULL,
-  vecImpulseParam=NULL,
   strMuModel="windows",
   boolDynamicPi=FALSE ){ 
   
@@ -1010,7 +1010,7 @@ fitZINB <- function(matCountsProc,
     if(boolSuperVerbose){
       scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
         matMu=matMu,
-        vecSizeFactors,
+        vecSizeFactors=vecSizeFactors,
         matDispersions=matDispersions, 
         matDropout=matDropout, 
         matboolNotZeroObserved=matboolNotZeroObserved, 
@@ -1046,7 +1046,7 @@ fitZINB <- function(matCountsProc,
         sum(vecboolConvergedGLMdisp), " cases."))
       scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
         matMu=matMu,
-        vecSizeFactors,
+        vecSizeFactors=vecSizeFactors,
         matDispersions=matDispersions, 
         matDropout=matDropout, 
         matboolNotZeroObserved=matboolNotZeroObserved, 
@@ -1090,7 +1090,7 @@ fitZINB <- function(matCountsProc,
         sum(vecboolConvergedGLMdisp), " cases."))
       scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
         matMu=matMu,
-        vecSizeFactors,
+        vecSizeFactors=vecSizeFactors,
         matDispersions=matDispersions, 
         matDropout=matDropout, 
         matboolNotZeroObserved=matboolNotZeroObserved, 
@@ -1104,7 +1104,7 @@ fitZINB <- function(matCountsProc,
     scaLogLikOld <- scaLogLikNew
     scaLogLikNew <- evalLogLikMatrix(matCounts=matCountsProc,
       matMu=matMu,
-      vecSizeFactors,
+      vecSizeFactors=vecSizeFactors,
       matDispersions=matDispersions, 
       matDropout=matDropout, 
       matboolNotZeroObserved=matboolNotZeroObserved, 

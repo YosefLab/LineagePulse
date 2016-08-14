@@ -142,7 +142,7 @@ evalLogLikMatrix <- function(matCounts,
   scaLogLik <- sum(unlist(
     bplapply( seq(1,dim(matCounts)[1]), function(i){
       if(boolSmoothed){
-        evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCounts[i,],
+        scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCounts[i,],
           vecMu=matMu[i,],
           vecSizeFactors=vecSizeFactors,
           vecDispEst=matDispersions[i,], 
@@ -151,13 +151,14 @@ evalLogLikMatrix <- function(matCounts,
           vecboolZero=matboolZero[i,],
           scaWindowRadius=scaWindowRadius)
       } else {
-        evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
+        scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
           vecMu=matMu[i,]*vecSizeFactors,
           vecDispEst=matDispersions[i,], 
           vecDropoutRateEst=matDropout[i,],
           vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
           vecboolZero=matboolZero[i,] )
       }
+      return(scaLogLik)
     })
   ))
   return(scaLogLik)
