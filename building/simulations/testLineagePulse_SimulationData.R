@@ -17,7 +17,7 @@ vecPT <- seq(0, PTmax, by=PTmax/(Ncells-1))
 
 # 2. Create hidden data set
 # a. Draw means from uniform (first half of genes): one mean per gene
-Nconst <-50
+Nconst <- 30
 vecMuConst <- runif(Nconst)*Mumax
 matHiddenDataConst <- matrix(vecMuConst,
   nrow=Nconst,
@@ -25,7 +25,7 @@ matHiddenDataConst <- matrix(vecMuConst,
   byrow=FALSE )
 
 # b. Draw means from impulse model
-NImp <- 50
+NImp <- 30
 beta <- runif(NImp)*2+0.5
 #t1 <- seq(0, PTmax, by=PTmax/(NImp-1))
 #t2 <- seq(1, 1+PTmax*2, by=2*PTmax/(NImp-1))
@@ -99,11 +99,6 @@ rownames(matData) <- paste0("_",seq(1,dim(matData)[1]))
 names(vecPT) <- colnames(matData)
 
 source("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files/PseudoDE_main.R")
-evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
-evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
-evalLogLikMuZINB_LinPulse_comp <- cmpfun(evalLogLikMuZINB_LinPulse)
-evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
-evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/software_test_out")
 lsDEresults <- runPseudoDE(
   matCounts=matData,
@@ -113,7 +108,7 @@ lsDEresults <- runPseudoDE(
   boolPseudotime = TRUE,
   boolContPseudotimeFit=TRUE,
   boolOneDispPerGene = TRUE,
-  scaWindowRadius=20,
+  scaWindowRadius=3,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits=FALSE,
@@ -129,6 +124,7 @@ matDropoutInferred <- matDropout
 load("PseudoDE_matMu.RData")
 
 #---
+load("PseudoDE_lsResultsClustering.RData")
 matCountsProc=matData
 vecPseudotime=vecPT
 K=6
