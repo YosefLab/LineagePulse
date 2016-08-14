@@ -108,7 +108,7 @@ lsDEresults <- runPseudoDE(
   boolPseudotime = TRUE,
   boolContPseudotimeFit=TRUE,
   boolOneDispPerGene = TRUE,
-  scaWindowRadius=3,
+  scaWindowRadius=NULL,
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits=FALSE,
@@ -125,6 +125,8 @@ load("PseudoDE_matMu.RData")
 
 #---
 load("PseudoDE_lsResultsClustering.RData")
+load("PseudoDE_vecPseudotimeProc.RData")
+vecPseudotime <- vecPseudotimeProc
 matCountsProc=matData
 vecPseudotime=vecPT
 K=6
@@ -132,7 +134,7 @@ scaSmallRun=NULL
 boolPseudotime = TRUE
 boolContPseudotimeFit=TRUE
 boolOneDispPerGene = TRUE
-scaWindowRadius=20
+scaWindowRadius=NULL
 boolDEAnalysisImpulseModel = TRUE
 boolDEAnalysisModelFree = FALSE
 boolPlotZINBfits=FALSE
