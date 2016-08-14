@@ -155,7 +155,8 @@ runPseudoDE <- function(matCounts,
   boolPlotZINBfits = FALSE,
   scaMaxiterEM=20,
   nProc=1,
-  verbose=TRUE ){
+  verbose=TRUE,
+  boolSuperVerbose=FALSE ){
   
   # 1. Data preprocessing
   print("1. Data preprocessing:")
@@ -230,7 +231,8 @@ runPseudoDE <- function(matCounts,
       scaWindowRadius=scaWindowRadius,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
-      verbose=verbose )
+      verbose=verbose,
+      boolSuperVerbose=boolSuperVerbose )
     vecDispersions <- lsResZINBFits$vecDispersions
     matDropout <- lsResZINBFits$matDropout
     matDropoutLinModel <- lsResZINBFits$matDropoutLinModel

@@ -65,7 +65,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   # for taking log.
   scaLogLikNonzeros <- sum( vecLogLikNonzerosDropout+vecLogLikNonzerosNB )
   # Compute likelihood of all data:
-  scaLogLik <- sum(c(scaLogLikZeros, scaLogLikNonzeros), na.rm=TRUE)
+  scaLogLik <- scaLogLikZeros + scaLogLikNonzeros
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
 }

@@ -4,7 +4,7 @@
 # Pseudotime interval
 PTmax <- 100
 Ncells <- 100
-Mumax <- 1000
+Mumax <- 10000
 evalImpulse <- function(t,beta,t1,t2,h0,h1,h2){
   return(1/h1*(h0+(h1-h0)*1/(1+exp(-beta*(t-t1))))*(h2+(h1-h2)*1/(1+exp(beta*(t-t2)))))
 }
@@ -17,7 +17,7 @@ vecPT <- seq(0, PTmax, by=PTmax/(Ncells-1))
 
 # 2. Create hidden data set
 # a. Draw means from uniform (first half of genes): one mean per gene
-Nconst <-10
+Nconst <-50
 vecMuConst <- runif(Nconst)*Mumax
 matHiddenDataConst <- matrix(vecMuConst,
   nrow=Nconst,
@@ -25,7 +25,7 @@ matHiddenDataConst <- matrix(vecMuConst,
   byrow=FALSE )
 
 # b. Draw means from impulse model
-NImp <- 10
+NImp <- 50
 beta <- runif(NImp)*2+0.5
 #t1 <- seq(0, PTmax, by=PTmax/(NImp-1))
 #t2 <- seq(1, 1+PTmax*2, by=2*PTmax/(NImp-1))
@@ -119,7 +119,8 @@ lsDEresults <- runPseudoDE(
   boolPlotZINBfits=FALSE,
   scaMaxiterEM=100,
   nProc=NCORES,
-  verbose=TRUE )
+  verbose=TRUE,
+  boolSuperVerbose=TRUE )
 load("PseudoDE_vecDispersions.RData")
 vecDispersionsInferred <- vecDispersions
 load("PseudoDE_matDropout.RData")
@@ -146,7 +147,7 @@ boolOneDispPerGene=TRUE
 verbose=TRUE
 matConstPredictorsPi=NULL
 scaMaxiterEM=100
-boolSuperVerbose=FALSE
+boolSuperVerbose=TRUE
 vecSizeFactors <- rep(1,dim(matCountsProc)[2])
 #--
 #mean estimation
