@@ -12,7 +12,7 @@
 #' to each set of replicates. All cells are labelled to originate from
 #' condition "case".
 #' 
-#' @seealso Called by \code{runPseudoDE}. \code{createAnnotationByCell} creates
+#' @seealso Called by \code{runLineagePulse}. \code{createAnnotationByCell} creates
 #' annotation table for each cell as a separate sample, not summarising cells
 #' into clusters.
 #' 
@@ -58,7 +58,7 @@ createAnnotationByCluster <- function(matCounts,
 #' are not considered to be biological replicates. All cells are labelled to 
 #' originate from condition "case".
 #' 
-#' @seealso Called by \code{runPseudoDE}. \code{createAnnotationByCluster} creates
+#' @seealso Called by \code{runLineagePulse}. \code{createAnnotationByCluster} creates
 #' annotation table for clusters of cells.
 #' 
 #' @param matCounts: (matrix genes x cells)

@@ -151,7 +151,7 @@ evalLogLikMatrix <- function(matCounts,
           vecboolZero=matboolZero[i,],
           scaWindowRadius=scaWindowRadius)
       } else {
-        scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
+        scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=matCounts[i,],
           vecMu=matMu[i,]*vecSizeFactors,
           vecDispEst=matDispersions[i,], 
           vecDropoutRateEst=matDropout[i,],

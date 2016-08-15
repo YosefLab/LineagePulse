@@ -769,14 +769,14 @@ fitDispZINB_LinPulse <- function( scaDispGuess,
 #' and either one dispersion parameter across all observations in all cluster
 #' for a gene or one dispersion parameter per cluster per gene. Dropout rate
 #' and dispersion factor inferred here are used as hyperparamters in the
-#' impulse fitting stage of PseudoDE.
+#' impulse fitting stage of LineagePulse.
 #' To parallelise this code, replace lapply by bplapply in dispersion
 #' factor and drop-out rate estimation and uncomment the BiocParallel
 #' register() command at the beginning of this function.
 #' Counts can be imputed under the ZINB model as:
 #' matCountsProcImputed <- matDropout * (1 - matProbNB) + matMu * matProbNB
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
@@ -834,6 +834,7 @@ fitZINB <- function(matCountsProc,
   vecSpikeInGenes=NULL,
   boolOneDispPerGene=TRUE,
   scaWindowRadius=NULL,
+  strMuModel="windows",
   vecPseudotime=NULL,
   scaMaxiterEM=100,
   verbose=FALSE,
@@ -851,9 +852,13 @@ fitZINB <- function(matCountsProc,
   boolDynamicPi <- TRUE
   matConstPredictorsPi <- NULL
   
-  # automatise this
-  strMuModel <- "impulse"
+  # Set smoothing mode
   boolSmoothed <- FALSE
+  if(strMuModel=="windows" & !is.null(scaWindowRadius)){
+    if(scaWindowRadius>0){
+      boolSmoothed <- TRUE
+    }
+  }
   
   # Set number of processes to be used for parallelisation
   # This function is currently not parallelised to reduce memory usage.
@@ -1002,7 +1007,7 @@ fitZINB <- function(matCountsProc,
     }
     # These udates are done during mean estimation too
     # Reestimate drop-out rates based on new means
-    matDropout <- do.call(cbind, lapply(seq(1, scaNumCells), function(cell){
+    matDropout <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
       vecLinModelOut <- cbind(1,log(matMu[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
       vecDropout <- 1/(1+exp(-vecLinModelOut))
       return(vecDropout)

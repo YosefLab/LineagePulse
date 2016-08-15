@@ -10,7 +10,7 @@
 #' model selection is skipped on K-means results based on
 #' external K returned.
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.

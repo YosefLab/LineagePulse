@@ -12,7 +12,7 @@
 #'    checkNumeric() Checks whether elements are numeric.
 #'    checkCounts() Checks whether elements are count data.
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param matCounts: (matrix genes x samples)
 #'    Count data of all cells, unobserved entries are NA.
@@ -31,10 +31,11 @@
 
 processSCData <- function(matCounts,
   vecPseudotime,
-  scaSmallRun=scaSmallRun,
+  scaSmallRun,
   boolDEAnalysisImpulseModel,
   boolDEAnalysisModelFree,
-  verbose ){
+  strMuModel,
+  scaWindowRadius ){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -101,6 +102,23 @@ processSCData <- function(matCounts,
   if(!boolDEAnalysisImpulseModel & !boolDEAnalysisModelFree){
     stop(paste0("ERROR: No differential analysis mode selected.",
       "Set either boolDEAnalysisImpulseModel or boolDEAnalysisModelFree as TRUE."))
+  }
+  
+  # 5. Check mean model
+  if(!(strMuModel %in% c("windows","clusters","impulse"))){
+    stop(paste0("strMuModel not recognised: ", strMuModel, 
+      " Must be one of: windowsm clusters, impulse."))
+  }
+  if(!is.null(scaWindowRadius)){
+    if(scaWindowRadius==0){
+      warning(paste0("LineagePulse received scaWindowRadius=0.", 
+        " Set to NULL if smoothing is not desired."))
+    }
+  }
+  if(!is.null(scaWindowRadius) & !(strMuModel %in% c("windows","impulse"))){
+    stop(paste0("Smooting via scaWindowRadius can only be applied in strMuModel",
+      " windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
+      "Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
   }
   
   # (II) Process data

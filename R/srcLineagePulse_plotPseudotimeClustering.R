@@ -9,7 +9,7 @@
 #' the empricial cumulative distribution function of cells in 
 #' pseudotime with cluster borders indicated in each.
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
@@ -29,7 +29,7 @@
 
 plotPseudotimeClustering <- function(vecPseudotime, 
   lsResultsClustering,
-  strPDFname="PseudoDE_ZINBfitsPseudotimeClustering.pdf"){
+  strPDFname="LineagePulse_ZINBfitsPseudotimeClustering.pdf"){
   
   dfClusterBorders <- data.frame( borders=sapply( seq(1,length(lsResultsClustering$Centroids)-1), 
     function(centroid){(lsResultsClustering$Centroids[centroid]+lsResultsClustering$Centroids[centroid+1])/2} ))

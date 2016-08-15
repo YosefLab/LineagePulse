@@ -16,10 +16,10 @@ library(MASS)
 source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/R/ImpulseDE2_main.R")
 #source("/data/yosef2/users/fischerd/code/ImpulseDE2/R/ImpulseDE2_main.R")
 
-setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/building/code_files")
-#setwd("/data/yosef2/users/fischerd/code/LineagePulse/building/code_files")
-source("srcPseudoDE_evalLogLikZINB.R")
-source("srcPseudoDE_fitZINB.R")
+setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/R")
+#setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
+source("srcLineagePulse_evalLogLikZINB.R")
+source("srcLineagePulse_fitZINB.R")
 # Compile function
 evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
 evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
@@ -27,13 +27,13 @@ evalLogLikMuWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuWindowsZINB_LinPulse
 evalLogLikMuClustersZINB_LinPulse_comp <- cmpfun(evalLogLikMuClustersZINB_LinPulse)
 evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
-source("srcPseudoDE_clusterCellsInPseudotime.R")
-source("srcPseudoDE_createAnnotation.R")
-source("srcPseudoDE_computeSizeFactors.R")
-source("srcPseudoDE_plotZINBfits.R")
-source("srcPseudoDE_plotPseudotimeClustering.R")
-source("srcPseudoDE_processSCData.R")
-source("srcPseudoDE_runModelFreeDEAnalysis.R")
+source("srcLineagePulse_clusterCellsInPseudotime.R")
+source("srcLineagePulse_createAnnotation.R")
+source("srcLineagePulse_computeSizeFactors.R")
+source("srcLineagePulse_plotZINBfits.R")
+source("srcLineagePulse_plotPseudotimeClustering.R")
+source("srcLineagePulse_processSCData.R")
+source("srcLineagePulse_runModelFreeDEAnalysis.R")
 
 ################################################################################
 ### Main function
@@ -71,7 +71,7 @@ source("srcPseudoDE_runModelFreeDEAnalysis.R")
 #'    }
 #' }
 #' 
-#' @aliases PseudoDE
+#' @aliases LineagePulse
 #' 
 #' @param matCounts: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
@@ -143,7 +143,7 @@ source("srcPseudoDE_runModelFreeDEAnalysis.R")
 #' 
 #' @export
 
-runPseudoDE <- function(matCounts, 
+runLineagePulse <- function(matCounts, 
   vecPseudotime,
   K=NULL,
   scaSmallRun=NULL,
@@ -151,6 +151,7 @@ runPseudoDE <- function(matCounts,
   boolContPseudotimeFit = TRUE,
   boolOneDispPerGene = TRUE,
   scaWindowRadius=20,
+  strMuModel="impulse",
   boolDEAnalysisImpulseModel = TRUE,
   boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits = FALSE,
@@ -165,7 +166,10 @@ runPseudoDE <- function(matCounts,
     vecPseudotime=vecPseudotime,
     scaSmallRun=scaSmallRun,
     boolDEAnalysisImpulseModel=boolDEAnalysisImpulseModel,
-    boolDEAnalysisModelFree=boolDEAnalysisModelFree )
+    boolDEAnalysisModelFree=boolDEAnalysisModelFree,
+    strMuModel=strMuModel,
+    scaWindowRadius=scaWindowRadius
+    )
   matCountsProc <- lsProcessedSCData$matCountsProc
   matCountsProcFull <- lsProcessedSCData$matCountsProcFull
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
@@ -174,9 +178,9 @@ runPseudoDE <- function(matCounts,
   if(boolContPseudotimeFit){strSCMode="continuous"
   }else{strSCMode="clustered"}
   
-  save(matCountsProc,file=file.path(getwd(),"PseudoDE_matCountsProc.RData"))
-  save(matCountsProcFull,file=file.path(getwd(),"PseudoDE_matCountsProcFull.RData"))
-  save(vecPseudotimeProc,file=file.path(getwd(),"PseudoDE_vecPseudotimeProc.RData"))
+  save(matCountsProc,file=file.path(getwd(),"LineagePulse_matCountsProc.RData"))
+  save(matCountsProcFull,file=file.path(getwd(),"LineagePulse_matCountsProcFull.RData"))
+  save(vecPseudotimeProc,file=file.path(getwd(),"LineagePulse_vecPseudotimeProc.RData"))
   
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
@@ -198,7 +202,7 @@ runPseudoDE <- function(matCounts,
       names(lsResultsClustering) <- c("Assignments","Centroids","K")
     }
   })
-  save(lsResultsClustering,file=file.path(getwd(),"PseudoDE_lsResultsClustering.RData"))
+  save(lsResultsClustering,file=file.path(getwd(),"LineagePulse_lsResultsClustering.RData"))
   print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
     " min",sep=""))
   
@@ -214,12 +218,12 @@ runPseudoDE <- function(matCounts,
       vecPseudotime=vecPseudotimeProc,
       lsResultsClustering=lsResultsClustering)
   }
-  save(dfAnnotation,file=file.path(getwd(),"PseudoDE_dfAnnotation.RData"))
+  save(dfAnnotation,file=file.path(getwd(),"LineagePulse_dfAnnotation.RData"))
   
   # 4. Compute size factors
   print("4. Compute size factors:")
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
-  save(vecSizeFactors,file=file.path(getwd(),"PseudoDE_vecSizeFactors.RData"))
+  save(vecSizeFactors,file=file.path(getwd(),"LineagePulse_vecSizeFactors.RData"))
   
   # 5. Fit mixture model
   print("5. Fit mixture model:")
@@ -230,6 +234,7 @@ runPseudoDE <- function(matCounts,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=scaWindowRadius,
+      strMuModel=strMuModel,
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
@@ -244,13 +249,13 @@ runPseudoDE <- function(matCounts,
     boolConvergenceZINB <- lsResZINBFits$boolConvergence
     vecEMLogLik <- lsResZINBFits$vecEMLogLik
   })
-  save(vecDispersions,file=file.path(getwd(),"PseudoDE_vecDispersions.RData"))
-  save(matDropout,file=file.path(getwd(),"PseudoDE_matDropout.RData"))
-  save(matDropoutLinModel,file=file.path(getwd(),"PseudoDE_matDropoutLinModel.RData"))
-  save(matProbNB,file=file.path(getwd(),"PseudoDE_matProbNB.RData"))
-  save(matMuCluster,file=file.path(getwd(),"PseudoDE_matMuCluster.RData"))
-  save(matMu,file=file.path(getwd(),"PseudoDE_matMu.RData"))
-  save(vecEMLogLik,file=file.path(getwd(),"PseudoDE_vecEMLogLik.RData"))
+  save(vecDispersions,file=file.path(getwd(),"LineagePulse_vecDispersions.RData"))
+  save(matDropout,file=file.path(getwd(),"LineagePulse_matDropout.RData"))
+  save(matDropoutLinModel,file=file.path(getwd(),"LineagePulse_matDropoutLinModel.RData"))
+  save(matProbNB,file=file.path(getwd(),"LineagePulse_matProbNB.RData"))
+  save(matMuCluster,file=file.path(getwd(),"LineagePulse_matMuCluster.RData"))
+  save(matMu,file=file.path(getwd(),"LineagePulse_matMu.RData"))
+  save(vecEMLogLik,file=file.path(getwd(),"LineagePulse_vecEMLogLik.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
 
@@ -268,7 +273,7 @@ runPseudoDE <- function(matCounts,
       vecClusterAssignments=lsResultsClustering$Assignments,
       lsResultsClustering=lsResultsClustering,
       dfAnnotation=dfAnnotation, 
-      strPDFname="PseudoDE_ZINBfits.pdf" )
+      strPDFname="LineagePulse_ZINBfits.pdf" )
   }
   
   # 7. Differential expression analysis:
@@ -304,7 +309,7 @@ runPseudoDE <- function(matCounts,
         boolLogPlot = TRUE )
     })
     print("### End ImpulseDE2 output ##################################")
-    save(lsImpulseDE2results,file=file.path(getwd(),"PseudoDE_lsImpulseDE2results.RData"))
+    save(lsImpulseDE2results,file=file.path(getwd(),"LineagePulse_lsImpulseDE2results.RData"))
     print(paste("Time elapsed during differential expression analysis with ImpulseDE2: ",
       round(tm_deanalysis_impulse["elapsed"]/60,2)," min",sep=""))
   } else {
@@ -329,14 +334,14 @@ runPseudoDE <- function(matCounts,
         scaMaxiterEM=scaMaxiterEM,
         verbose=verbose )
     })
-    save(dfModelFreeDEAnalysis,file=file.path(getwd(),"PseudoDE_dfModelFreeDEAnalysis.RData"))
+    save(dfModelFreeDEAnalysis,file=file.path(getwd(),"LineagePulse_dfModelFreeDEAnalysis.RData"))
     print(paste("Time elapsed during model-free differential expression analysis: ",
       round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   } else {
     dfModelFreeDEAnalysis <- NULL
   }
   
-  print("Completed PseudoDE.")
+  print("Completed LineagePulse.")
   return(list( lsImpulseDE2results=lsImpulseDE2results,
     dfModelFreeDEAnalysis=dfModelFreeDEAnalysis ))
 }

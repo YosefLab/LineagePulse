@@ -10,7 +10,7 @@
 #' (II) Compute likelihood of full and reduced model.
 #' (II) Differential expression analysis.
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.

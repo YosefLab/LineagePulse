@@ -72,11 +72,11 @@ anlayseOuput <- function(
   
   # Load data
   setwd(folderLineagePulseOutput)
-  load("PseudoDE_matCountsProc.RData")
-  load("PseudoDE_matDropout.RData")
-  load("PseudoDE_matProbNB.RData")
-  load("PseudoDE_matMu.RData")
-  load("PseudoDE_matDropoutLinModel.RData")
+  load("LineagePulse_matCountsProc.RData")
+  load("LineagePulse_matDropout.RData")
+  load("LineagePulse_matProbNB.RData")
+  load("LineagePulse_matMu.RData")
+  load("LineagePulse_matDropoutLinModel.RData")
   matCountsProcLP <- matCountsProc
   
   load("ImpulseDE2_matCountDataProc.RData")

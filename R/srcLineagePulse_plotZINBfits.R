@@ -6,7 +6,7 @@
 #' 
 #' Plots the zero inflated negative binomial fits and data to pdf.
 #' 
-#' @seealso Called by \code{runPseudoDE}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param vecGeneIDs: (string vector) Gene names to be plotted. 
 #'    Elements must be rownames of matCounts.
@@ -44,7 +44,7 @@ plotZINBfits <- function(vecGeneIDs,
   vecClusterAssignments,
   lsResultsClustering,
   dfAnnotation, 
-  strPDFname="PseudoDE_ZINBfits.pdf"){
+  strPDFname="LineagePulse_ZINBfits.pdf"){
   
   # Only for batch/singlecell plotting:
   # Width of negative binomial pdf (ylim) in time units for plotting
