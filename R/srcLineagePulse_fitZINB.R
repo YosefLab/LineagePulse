@@ -26,6 +26,12 @@
 # points: Completed 4 iter with BFGS in 36.03 min on 2 cores 
 # (LL=24536057.4015036). Completed 4 iter with Nelder-Mead in 35.22 min on 
 # 2 cores (LL=-24536058.6125272). Exact same data set. Both yield 172 DE genes.
+# Problem with impulse mode: LL returned from optim does not match LL
+# computed from parameters returned by optim. Effect not so heavy in first 
+# iteration but very heavy after that. Not due to matLinModel, is it dispersion?
+# Dispersion is initialised low, if initialised higher, effects are stronger
+# in first iteration already. Is this inaccuracy in reporting parameters? Wouldnt
+# be so bad in first iteration with low dispersion param!?
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Cost function zero-inflated negative binomial model for drop-out fitting
@@ -430,8 +436,7 @@ fitImpulse_gene_LP <- function(vecCounts,
   # Report mean fit objective value as null hypothesis, too.
   # match() selects first hit if maximum occurs multiple times
   indBestFit <- match(max(dfFitsByInitialisation["value",]),dfFitsByInitialisation["value",])
-
-  #print(paste0(scaLLOld, " ", dfFitsByInitialisation["value",indBestFit]))
+  
   if(scaLLOld < dfFitsByInitialisation["value",indBestFit]){
     vecBestFitParam <- c(dfFitsByInitialisation[1:6,indBestFit])
   } else {
@@ -441,6 +446,29 @@ fitImpulse_gene_LP <- function(vecCounts,
   
   # Compute predicted means
   vecImpulseValue <- calcImpulse_comp(vecBestFitParam,vecTimepoints)[vecindTimepointAssign]
+  vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
+
+  if(TRUE){
+    print(paste0(scaLLOld, " ", dfFitsByInitialisation["value",indBestFit]))
+    vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
+      sum(c(1,log(vecImpulseValue[cell])) * matLinModelPi[cell,])
+    })
+    vecDropout <- 1/(1+exp(-vecLinModelOut))
+    scaLLRef <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+      vecMu=vecImpulseValue*vecNormConst,
+      vecDispEst=rep(scaDispersionEstimate, length(vecCounts)), 
+      vecDropoutRateEst=vecDropout,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecCounts==0 )
+    scaLLRef2 <- evalLogLikZINB_comp(vecY=vecCounts,
+      vecMu=vecImpulseValue*vecNormConst,
+      vecDispEst=rep(scaDispersionEstimate, length(vecCounts)), 
+      vecDropoutRateEst=vecDropout, 
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecCounts==0)
+    print(scaLLRef)
+    print(scaLLRef2)
+  }
   
   return(list(vecBestFitParam=vecBestFitParam,
     vecImpulseValue=vecImpulseValue))
@@ -883,8 +911,7 @@ fitZINB <- function(matCountsProc,
   matMu <- matrix(vecMu, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
   matDispersions <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
   matDropout <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells)
-  #matDropout[matboolNotZeroObserved] <- 0
-  matLinModelPi <- cbind(rep(0, scaNumCells), rep(-10^(-10), scaNumCells), 
+  matLinModelPi <- cbind(rep(0, scaNumCells), rep(-10^(-10), scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
   matImpulseParam <- matrix(1, nrow=scaNumGenes, ncol=6)
   if(boolSuperVerbose){
@@ -1063,7 +1090,6 @@ fitZINB <- function(matCountsProc,
     
     #####  2. Cell-wise parameter estimation
     # Dropout rate
-    # Fit dropout rate with GLM
     # Drop-out estimation is independent between cells and can be parallelised.
     matLinModelPi <- do.call(rbind, 
       bplapply(seq(1, scaNumCells), function(cell){
