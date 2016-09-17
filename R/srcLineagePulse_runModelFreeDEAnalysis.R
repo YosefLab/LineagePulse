@@ -2,9 +2,9 @@
 #+++++++++++++++++++++++++    Model-free DE analysis  ++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Model-free differential expression analysis
+#' Differential expression analysis
 #' 
-#' Performs model-free differential expression analysis. This functiion is
+#' Performs differential expression analysis. This functiion is
 #' broken up into:
 #' (I) Fit null model.
 #' (II) Compute likelihood of full and reduced model.
@@ -38,16 +38,19 @@
 #'    Summary of model-free differential expression analysis.
 #' @export
 
-runModelFreeDEAnalysis <- function(matCountsProc,
+runDEAnalysis <- function(matCountsProc,
   vecPseudotime,
   vecSizeFactors,
   lsResultsClusteringH1,
   vecDispersionsH1,
   matMuClusterH1,
+  matMu=NULL,
   matDropoutH1,
   boolConvergenceZINBH1,
   scaWindowRadius=NULL,
   boolOneDispPerGene=TRUE,
+  boolMuConstrainedAsImpulse=FALSE,
+  boolFitMuAsCluster=FALSE,
   nProc=1,
   scaMaxiterEM = 100,
   verbose=TRUE ){
@@ -66,6 +69,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
     vecSpikeInGenes=NULL,
     boolOneDispPerGene=boolOneDispPerGene,
     scaWindowRadius=NULL,
+    strMuModel="clusters",
     nProc=nProc,
     scaMaxiterEM=scaMaxiterEM,
     verbose=verbose )
@@ -82,11 +86,18 @@ runModelFreeDEAnalysis <- function(matCountsProc,
   # Alternative model was fit furing hyperparameter estimation
   # if clusters were used for mean estimation during hyperparameter
   # estimation.
-  if(is.null(scaWindowRadius)){
-    matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
+  #matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
+  #matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
+  #  ncol=dim(matCountsProc)[2], byrow=FALSE)
+  if(boolMuConstrainedAsImpulse & boolFitMuAsCluster){
+    stop("ERROR runModelFreeDEAnalysis: ",
+      "Cannot have impulse and clusters as mean model")
+  }
+  if(boolMuConstrainedAsImpulse) {
+    matMuH1 <- matMu
     matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
       ncol=dim(matCountsProc)[2], byrow=FALSE)
-  } else {
+  } else if(boolFitMuAsCluster){
     # Fit zero-inflated negative binomial alternative model
     # without sliding mean estimation but with mean estimation
     # by cluster.
@@ -96,6 +107,7 @@ runModelFreeDEAnalysis <- function(matCountsProc,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=NULL,
+      strMuModel="clusters",
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
       verbose=verbose )
@@ -106,6 +118,8 @@ runModelFreeDEAnalysis <- function(matCountsProc,
     matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
     matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
       ncol=dim(matCountsProc)[2], byrow=FALSE)
+  } else {
+    stop("ERROR runModelFreeDEAnalysis: No alternative model given.")
   }
   
   # (III) Compute log likelihoods

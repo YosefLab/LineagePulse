@@ -32,7 +32,8 @@
 processSCData <- function(matCounts,
   vecPseudotime,
   scaSmallRun,
-  boolDEAnalysisImpulseModel,
+  boolDEAnalysisImpulseModelZINBFit,
+  boolDEAnalysisImpulseModelImpulseDE2Fit,
   boolDEAnalysisModelFree,
   strMuModel,
   scaWindowRadius ){
@@ -99,9 +100,11 @@ processSCData <- function(matCounts,
   }
   
   # 4. boolDEAnalysisImpulseModel and boolDEAnalysisModelFree
-  if(!boolDEAnalysisImpulseModel & !boolDEAnalysisModelFree){
+  if(!boolDEAnalysisImpulseModelZINBFit & boolDEAnalysisImpulseModelImpulseDE2Fit & 
+      !boolDEAnalysisModelFree){
     stop(paste0("ERROR: No differential analysis mode selected.",
-      "Set either boolDEAnalysisImpulseModel or boolDEAnalysisModelFree as TRUE."))
+      "Set either boolDEAnalysisImpulseModelZINBFit or ",
+      "boolDEAnalysisImpulseModelImpulseDE2Fit or boolDEAnalysisModelFree as TRUE."))
   }
   
   # 5. Check mean model
