@@ -20,12 +20,16 @@ setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
 source("srcLineagePulse_evalLogLikZINB.R")
 source("srcLineagePulse_fitZINB.R")
+source("srcLineagePulse_fitZINB_fitMean.R")
+source("srcLineagePulse_fitZINB_fitDispersion.R")
+source("srcLineagePulse_fitZINB_fitDropout.R")
 # Compile function
 evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
 evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
 evalLogLikMuWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuWindowsZINB_LinPulse)
 evalLogLikMuVecWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuVecWindowsZINB_LinPulse)
 evalLogLikMuClustersZINB_LinPulse_comp <- cmpfun(evalLogLikMuClustersZINB_LinPulse)
+evalLogLikMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikMuConstZINB_LinPulse)
 evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
 source("srcLineagePulse_clusterCellsInPseudotime.R")
@@ -34,7 +38,7 @@ source("srcLineagePulse_computeSizeFactors.R")
 source("srcLineagePulse_plotZINBfits.R")
 source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
-source("srcLineagePulse_runModelFreeDEAnalysis.R")
+source("srcLineagePulse_runDEAnalysis.R")
 
 ################################################################################
 ### Main function
@@ -153,9 +157,6 @@ runLineagePulse <- function(matCounts,
   boolOneDispPerGene = TRUE,
   scaWindowRadius=20,
   strMuModel="impulse",
-  boolDEAnalysisImpulseModelZINBFit = TRUE,
-  boolDEAnalysisImpulseModelImpulseDE2Fit = FALSE,
-  boolDEAnalysisModelFree = FALSE,
   boolPlotZINBfits = FALSE,
   scaMaxiterEM=20,
   nProc=1,
@@ -167,19 +168,12 @@ runLineagePulse <- function(matCounts,
   lsProcessedSCData <- processSCData(matCounts=matCounts,
     vecPseudotime=vecPseudotime,
     scaSmallRun=scaSmallRun,
-    boolDEAnalysisImpulseModelZINBFit=boolDEAnalysisImpulseModelZINBFit,
-    boolDEAnalysisImpulseModelImpulseDE2Fit=boolDEAnalysisImpulseModelImpulseDE2Fit,
-    boolDEAnalysisModelFree=boolDEAnalysisModelFree,
     strMuModel=strMuModel,
     scaWindowRadius=scaWindowRadius
     )
   matCountsProc <- lsProcessedSCData$matCountsProc
   matCountsProcFull <- lsProcessedSCData$matCountsProcFull
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
-  
-  # Set fitting mode
-  if(boolContPseudotimeFit){strSCMode="continuous"
-  }else{strSCMode="clustered"}
   
   save(matCountsProc,file=file.path(getwd(),"LineagePulse_matCountsProc.RData"))
   save(matCountsProcFull,file=file.path(getwd(),"LineagePulse_matCountsProcFull.RData"))
@@ -249,36 +243,33 @@ runLineagePulse <- function(matCounts,
     matDropoutH1 <- lsZINBFitH1$matDropout
     matDropoutLinModelH1 <- lsZINBFitH1$matDropoutLinModel
     matProbNBH1  <- lsZINBFitH1$matProbNB
+    matImpulseParamH1  <- lsZINBFitH1$matImpulseParam
     boolConvergenceZINBH1 <- lsZINBFitH1$boolConvergence
     vecEMLogLikH1 <- lsZINBFitH1$vecEMLogLik
     scaKbyGeneH1 <- lsZINBFitH1$scaKbyGene
   })
-  save(matMuH1,file=file.path(getwd(),"LineagePulse_matMu.RData"))
-  save(matMuClusterH1,file=file.path(getwd(),"LineagePulse_matMuCluster.RData"))
-  save(vecDispersionsH1,file=file.path(getwd(),"LineagePulse_vecDispersions.RData"))
-  save(matDropoutH1,file=file.path(getwd(),"LineagePulse_matDropout.RData"))
-  save(matDropoutLinModelH1,file=file.path(getwd(),"LineagePulse_matDropoutLinModel.RData"))
-  save(matProbNBH1,file=file.path(getwd(),"LineagePulse_matProbNB.RData"))
-  save(vecEMLogLikH1,file=file.path(getwd(),"LineagePulse_vecEMLogLik.RData"))
+  save(matMuH1,file=file.path(getwd(),"LineagePulse_matMuH1.RData"))
+  save(matDispersionsH1,file=file.path(getwd(),"LineagePulse_matDispersionsH1.RData"))
+  save(matDropoutH1,file=file.path(getwd(),"LineagePulse_matDropoutH1.RData"))
+  save(matDropoutLinModelH1,file=file.path(getwd(),"LineagePulse_matDropoutLinModelH1.RData"))
+  save(matImpulseParamH1,file=file.path(getwd(),"LineagePulse_matImpulseParamH1.RData"))
+  save(matProbNBH1,file=file.path(getwd(),"LineagePulse_matProbNBH1.RData"))
+  save(vecEMLogLikH1,file=file.path(getwd(),"LineagePulse_vecEMLogLikH1.RData"))
+  save(scaKbyGeneH1,file=file.path(getwd(),"LineagePulse_scaKbyGeneH1.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
   # 6. Fit mixture model: Null model (H0)
   print("6. Fit mixture model: Null model (H0)")
   tm_fitmm <- system.time({
-    # Define null model: Constant. Evaluate in cluster mode.
-    lsClusteringH0 <- list()
-    lsClusteringH0$Assignments <- rep(1,dim(matCountsProc)[2])
-    lsClusteringH0$Centroids <- mean(vecPseudotime, na.rm=TRUE)
-    lsClusteringH0$K <- 1
-    
+    # Define null model in function. report via boolean.
     lsZINBFitH0 <- fitZINB( matCountsProc=matCountsProc, 
-      lsResultsClustering=lsClusteringH0,
+      lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=scaWindowRadius,
-      strMuModel="clusters",
+      strMuModel="constant",
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
@@ -294,13 +285,13 @@ runLineagePulse <- function(matCounts,
     vecEMLogLikH0 <- lsZINBFitH0$vecEMLogLik
     scaKbyGeneH0 <- lsZINBFitH0$scaKbyGene
   })
-  save(matMuH0,file=file.path(getwd(),"LineagePulse_matMu.RData"))
-  save(matMuClusterH0,file=file.path(getwd(),"LineagePulse_matMuCluster.RData"))
-  save(vecDispersionsH0,file=file.path(getwd(),"LineagePulse_vecDispersions.RData"))
-  save(matDropoutH0,file=file.path(getwd(),"LineagePulse_matDropout.RData"))
-  save(matDropoutLinModelH0,file=file.path(getwd(),"LineagePulse_matDropoutLinModel.RData"))
-  save(matProbNBH0,file=file.path(getwd(),"LineagePulse_matProbNB.RData"))
-  save(vecEMLogLikH0,file=file.path(getwd(),"LineagePulse_vecEMLogLik.RData"))
+  save(matMuH0,file=file.path(getwd(),"LineagePulse_matMuH0.RData"))
+  save(matDispersionsH0,file=file.path(getwd(),"LineagePulse_matDispersionsH0.RData"))
+  save(matDropoutH0,file=file.path(getwd(),"LineagePulse_matDropoutH0.RData"))
+  save(matDropoutLinModelH0,file=file.path(getwd(),"LineagePulse_matDropoutLinModelH0.RData"))
+  save(matProbNBH0,file=file.path(getwd(),"LineagePulse_matProbNBH0.RData"))
+  save(vecEMLogLikH0,file=file.path(getwd(),"LineagePulse_vecEMLogLikH0.RData"))
+  save(scaKbyGeneH0,file=file.path(getwd(),"LineagePulse_scaKbyGeneH0.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
 
@@ -323,104 +314,26 @@ runLineagePulse <- function(matCounts,
   
   # 7. Differential expression analysis:
   print("7. Differential expression analysis:")
-  if(boolDEAnalysisImpulseModelZINBFit){
-    # a) Model-free
-    print("a) Differential expression analysis: Impulse model fit with ZINB")
-    tm_deanalysis_mf <- system.time({
-      dfImpulseModelZINBFitDEAnalysis <- runDEAnalysis(
-        matCountsProc = matCountsProc,
-        vecPseudotime=vecPseudotimeProc,
-        vecSizeFactors=vecSizeFactors,
-        lsResultsClusteringH1=lsResultsClustering,
-        vecDispersionsH1=vecDispersions,
-        matMuClusterH1=matMuCluster,
-        matMu=matMu,
-        matDropoutH1=matDropout,
-        boolConvergenceZINBH1=boolConvergenceZINB,
-        scaWindowRadius=scaWindowRadius,
-        nProc = nProc,
-        boolOneDispPerGene=boolOneDispPerGene,
-        boolMuConstrainedAsImpulse=TRUE,
-        boolFitMuAsCluster=FALSE,
-        scaMaxiterEM=scaMaxiterEM,
-        verbose=verbose )
-    })
-    save(dfImpulseModelZINBFitDEAnalysis,file=file.path(getwd(),"LineagePulse_dfImpulseModelZINBFitDEAnalysis.RData"))
-    print(paste("Time elapsed during impulse model-based differential expression analysis: ",
-      round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
-  } else {
-    dfImpulseModelZINBFitDEAnalysis <- NULL
-  }
-  if(boolDEAnalysisImpulseModelImpulseDE2Fit){
-    # b) Model-based: Impulse model with ImpulseDE2.
-    print("b) Differential expression analysis: Use ImpulseDE2 based on ZINB",
-      " parameter fits.")
-    print("### Begin ImpulseDE2 output ################################")
-    tm_deanalysis_impulse <- system.time({
-      vecClusterAssignments <- lsResultsClustering$Assignments
-      names(vecClusterAssignments) <- colnames(matCountsProc)
-      lsInputToImpulseDE2 <- list(matDropout, matDropoutLinModel, 
-        matProbNB, matMuCluster, 
-        vecClusterAssignments, lsResultsClustering$Centroids )
-      names(lsInputToImpulseDE2) <- c("matDropout", "matDropoutLinModel",
-        "matProbNB", "matMuCluster", 
-        "vecClusterAssignments", "vecCentroids")
-      
-      lsImpulseDE2results <- runImpulseDE2(
-        matCountData = matCountsProc, 
-        dfAnnotation = dfAnnotation,
-        strCaseName = "case", 
-        strControlName = NULL, 
-        strMode = "singlecell",
-        strSCMode = strSCMode,
-        scaWindowRadius = NULL,
-        nProc = nProc, 
-        Q_value = 10^(-5),
-        boolPlotting = TRUE,
-        lsPseudo = lsInputToImpulseDE2,
-        vecDispersionsExternal = vecDispersions,
-        vecSizeFactorsExternal = vecSizeFactors,
-        boolRunDESeq2 = FALSE,
-        boolSimplePlot = FALSE, 
-        boolLogPlot = TRUE )
-    })
-    print("### End ImpulseDE2 output ##################################")
-    save(lsImpulseDE2results,file=file.path(getwd(),"LineagePulse_lsImpulseDE2results.RData"))
-    print(paste("Time elapsed during differential expression analysis with ImpulseDE2: ",
-      round(tm_deanalysis_impulse["elapsed"]/60,2)," min",sep=""))
-  } else {
-    lsImpulseDE2results <- NULL
-  }
-  if(boolDEAnalysisModelFree){
-    # c) Model-free
-    print("c) Differential expression analysis: Model-free")
-    tm_deanalysis_mf <- system.time({
-      dfModelFreeDEAnalysis <- runDEAnalysis(
-        matCountsProc = matCountsProc,
-        vecPseudotime=vecPseudotimeProc,
-        vecSizeFactors=vecSizeFactors,
-        lsResultsClusteringH1=lsResultsClustering,
-        vecDispersionsH1=vecDispersions,
-        matMuClusterH1=matMuCluster,
-        matDropoutH1=matDropout,
-        boolConvergenceZINBH1=boolConvergenceZINB,
-        scaWindowRadius=scaWindowRadius,
-        nProc = nProc,
-        boolOneDispPerGene=boolOneDispPerGene,
-        boolMuConstrainedAsImpulse=FALSE,
-        boolFitMuAsCluster=TRUE,
-        scaMaxiterEM=scaMaxiterEM,
-        verbose=verbose )
-    })
-    save(dfModelFreeDEAnalysis,file=file.path(getwd(),"LineagePulse_dfModelFreeDEAnalysis.RData"))
-    print(paste("Time elapsed during model-free differential expression analysis: ",
-      round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
-  } else {
-    dfModelFreeDEAnalysis <- NULL
-  }
+  tm_deanalysis_mf <- system.time({
+    dfDEAnalysis <- runDEAnalysis(
+      matCountsProc = matCountsProc,
+      vecPseudotime=vecPseudotimeProc,
+      vecSizeFactors=vecSizeFactors,
+      matDispersionsH1=matDispersionsH1,
+      matMuH1=matMuH1,
+      matDropoutH1=matDropoutH1,
+      scaKbyGeneH1=scaKbyGeneH1,
+      matDispersionsH0=matDispersionsH0,
+      matMuH0=matMuH0,
+      matDropoutH0=matDropoutH0,
+      scaKbyGeneH0=scaKbyGeneH0,
+      scaWindowRadius=scaWindowRadius )
+  })
+  save(dfDEAnalysis,file=file.path(getwd(),"LineagePulse_dfDEAnalysis.RData"))
+  print(paste("Time elapsed during differential expression analysis: ",
+    round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
   print("Completed LineagePulse.")
-  return(list( dfImpulseModelZINBFitDEAnalysis=dfImpulseModelZINBFitDEAnalysis,
-    lsImpulseDE2results=lsImpulseDE2results,
-    dfModelFreeDEAnalysis=dfModelFreeDEAnalysis ))
+  return(list( dfDEAnalysis=dfDEAnalysis,
+    matMu=matMuH1 ))
 }

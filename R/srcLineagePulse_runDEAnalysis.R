@@ -41,90 +41,20 @@
 runDEAnalysis <- function(matCountsProc,
   vecPseudotime,
   vecSizeFactors,
-  lsResultsClusteringH1,
-  vecDispersionsH1,
-  matMuClusterH1,
-  matMu=NULL,
+  matDispersionsH1,
+  matMuH1,
   matDropoutH1,
-  boolConvergenceZINBH1,
-  scaWindowRadius=NULL,
-  boolOneDispPerGene=TRUE,
-  boolMuConstrainedAsImpulse=FALSE,
-  boolFitMuAsCluster=FALSE,
-  nProc=1,
-  scaMaxiterEM = 100,
-  verbose=TRUE ){
+  scaKbyGeneH1,
+  matDispersionsH0,
+  matMuH0,
+  matDropoutH0,
+  scaKbyGeneH0,
+  scaWindowRadius=NULL ){
   
-  # (I) Fit null model
-  # Null model is a single cluster: Create Clustering.
-  lsH0Clustering <- list()
-  lsH0Clustering$Assignments <- rep(1,dim(matCountsProc)[2])
-  lsH0Clustering$Centroids <- mean(vecPseudotime, na.rm=TRUE)
-  lsH0Clustering$K <- 1
-  
-  # Fit zero-inflated negative binomial null model
-  lsResZINBFitsH0 <- fitZINB( matCountsProc=matCountsProc, 
-    lsResultsClustering=lsH0Clustering,
-    vecSizeFactors=vecSizeFactors,
-    vecSpikeInGenes=NULL,
-    boolOneDispPerGene=boolOneDispPerGene,
-    scaWindowRadius=NULL,
-    strMuModel="clusters",
-    nProc=nProc,
-    scaMaxiterEM=scaMaxiterEM,
-    verbose=verbose )
-  vecMuClusterH0  <- lsResZINBFitsH0$matMuCluster
-  vecDispersionsH0 <- lsResZINBFitsH0$vecDispersions
-  matDropoutH0 <- lsResZINBFitsH0$matDropout
-  boolConvergenceZINBH0 <- lsResZINBFitsH0$boolConvergence
-  matMuH0 <- matrix(vecMuClusterH0, nrow=dim(matCountsProc)[1], 
-    ncol=dim(matCountsProc)[2], byrow=FALSE)
-  matDispersionsH0 <- matrix(vecDispersionsH0, nrow=dim(matCountsProc)[1], 
-    ncol=dim(matCountsProc)[2], byrow=FALSE)
-  
-  # (II) Fit alternative model
-  # Alternative model was fit furing hyperparameter estimation
-  # if clusters were used for mean estimation during hyperparameter
-  # estimation.
-  #matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
-  #matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
-  #  ncol=dim(matCountsProc)[2], byrow=FALSE)
-  if(boolMuConstrainedAsImpulse & boolFitMuAsCluster){
-    stop("ERROR runModelFreeDEAnalysis: ",
-      "Cannot have impulse and clusters as mean model")
-  }
-  if(boolMuConstrainedAsImpulse) {
-    matMuH1 <- matMu
-    matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
-      ncol=dim(matCountsProc)[2], byrow=FALSE)
-  } else if(boolFitMuAsCluster){
-    # Fit zero-inflated negative binomial alternative model
-    # without sliding mean estimation but with mean estimation
-    # by cluster.
-    lsResZINBFitsH1 <- fitZINB( matCountsProc=matCountsProc, 
-      lsResultsClustering=lsResultsClusteringH1,
-      vecSizeFactors=vecSizeFactors,
-      vecSpikeInGenes=NULL,
-      boolOneDispPerGene=boolOneDispPerGene,
-      scaWindowRadius=NULL,
-      strMuModel="clusters",
-      nProc=nProc,
-      scaMaxiterEM=scaMaxiterEM,
-      verbose=verbose )
-    matMuClusterH1  <- lsResZINBFitsH1$matMuCluster
-    vecDispersionsH1 <- lsResZINBFitsH1$vecDispersions
-    matDropoutH1 <- lsResZINBFitsH1$matDropout
-    boolConvergenceZINBH1 <- lsResZINBFitsH1$boolConvergence
-    matMuH1 <- matMuClusterH1[,lsResultsClusteringH1$Assignments]
-    matDispersionsH1 <- matrix(vecDispersionsH1, nrow=dim(matCountsProc)[1], 
-      ncol=dim(matCountsProc)[2], byrow=FALSE)
-  } else {
-    stop("ERROR runModelFreeDEAnalysis: No alternative model given.")
-  }
-  
-  # (III) Compute log likelihoods
+  # Compute log likelihoods
   matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
   matboolZero <- matCountsProc==0
+  
   vecLogLikFull <- sapply( seq(1,dim(matCountsProc)[1]), function(i){
     evalLogLikZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
       vecMu=matMuH1[i,]*vecSizeFactors,
@@ -142,18 +72,9 @@ runDEAnalysis <- function(matCountsProc,
       vecboolZero=matboolZero[i,])
   })
   
-  # (IV) Differential expression analysis
-  # scaK: Number of clusters used in full model
-  scaK <- lsResultsClusteringH1$K
-  # Dropout rate models are shared and do not influence
-  # the difference in degrees of freedom of the model.
-  # Full model: K x mean and 1 or K x dispersion parameters.
-  if(boolOneDispPerGene){ scaDegFreedomFull <- scaK + 1
-  }else{ scaDegFreedomFull <- scaK*2 }
-  # Null model: One dispersion estimate and one overall mean estimate
-  scaDegFreedomRed <- 2
+  # (II) Differential expression analysis
   # Compute difference in degrees of freedom between null model and alternative model.
-  scaDeltaDegFreedom <- scaDegFreedomFull - scaDegFreedomRed
+  scaDeltaDegFreedom <- scaKbyGeneH1 - scaKbyGeneH0
   # Compute test statistic: Deviance
   vecDeviance <- 2*(vecLogLikFull - vecLogLikRed)
   # Get p-values from Chi-square distribution (assumption about null model)

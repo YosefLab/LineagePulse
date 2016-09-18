@@ -32,9 +32,6 @@
 processSCData <- function(matCounts,
   vecPseudotime,
   scaSmallRun,
-  boolDEAnalysisImpulseModelZINBFit,
-  boolDEAnalysisImpulseModelImpulseDE2Fit,
-  boolDEAnalysisModelFree,
   strMuModel,
   scaWindowRadius ){
   
@@ -99,18 +96,10 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 4. boolDEAnalysisImpulseModel and boolDEAnalysisModelFree
-  if(!boolDEAnalysisImpulseModelZINBFit & boolDEAnalysisImpulseModelImpulseDE2Fit & 
-      !boolDEAnalysisModelFree){
-    stop(paste0("ERROR: No differential analysis mode selected.",
-      "Set either boolDEAnalysisImpulseModelZINBFit or ",
-      "boolDEAnalysisImpulseModelImpulseDE2Fit or boolDEAnalysisModelFree as TRUE."))
-  }
-  
-  # 5. Check mean model
-  if(!(strMuModel %in% c("windows","clusters","impulse"))){
+  # 4. Check mean model
+  if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
     stop(paste0("strMuModel not recognised: ", strMuModel, 
-      " Must be one of: windowsm clusters, impulse."))
+      " Must be one of: windows, clusters, impulse, constant."))
   }
   if(!is.null(scaWindowRadius)){
     if(scaWindowRadius==0){
@@ -118,10 +107,10 @@ processSCData <- function(matCounts,
         " Set to NULL if smoothing is not desired."))
     }
   }
-  if(!is.null(scaWindowRadius) & !(strMuModel %in% c("windows","impulse"))){
+  if(!is.null(scaWindowRadius) & !(strMuModel %in% c("windows","impulse","constant"))){
     stop(paste0("Smooting via scaWindowRadius can only be applied in strMuModel",
       " windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
-      "Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
+      " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
   }
   
   # (II) Process data

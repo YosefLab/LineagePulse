@@ -151,6 +151,7 @@ evalLogLikMatrix <- function(matCounts,
           vecboolZero=matboolZero[i,],
           scaWindowRadius=scaWindowRadius)
       } else {
+        print("flag")
         scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=matCounts[i,],
           vecMu=matMu[i,]*vecSizeFactors,
           vecDispEst=matDispersions[i,], 
@@ -158,6 +159,7 @@ evalLogLikMatrix <- function(matCounts,
           vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
           vecboolZero=matboolZero[i,] )
       }
+      print(scaLogLik)
       return(scaLogLik)
     })
   ))
