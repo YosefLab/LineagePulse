@@ -359,7 +359,7 @@ fitZINB <- function(matCountsProc,
   matMuInit <- matrix(vecMuInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
   matDispersionsInit <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
   #matDropoutInit <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells) # Recompute based on model below
-  matLinModelPiInit <- cbind(rep(0, scaNumCells), rep(-10^(-10), scaNumCells),
+  matLinModelPiInit <- cbind(rep(0, scaNumCells), rep(-1, scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
   if(strMuModel=="impulse"){ 
     matImpulseParamInit <- matrix(1, nrow=scaNumGenes, ncol=6)
