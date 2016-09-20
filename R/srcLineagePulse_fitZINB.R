@@ -358,12 +358,12 @@ fitZINB <- function(matCountsProc,
   vecMuInit[vecMuInit < .Machine$double.eps] <- .Machine$double.eps
   matMuInit <- matrix(vecMuInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
   matDispersionsInit <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
-  matDropoutInit <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells)
+  #matDropoutInit <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells) # Recompute based on model below
   matLinModelPiInit <- cbind(rep(0, scaNumCells), rep(-10^(-10), scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
   if(strMuModel=="impulse"){ 
     matImpulseParamInit <- matrix(1, nrow=scaNumGenes, ncol=6)
-    matImpulseParamInit[,1:3] <- log(matrix(vecMuInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+    matImpulseParamInit[,2:4] <- log(matrix(vecMuInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
   } else { matImpulseParamInit <- matrix(NA, nrow=scaNumGenes, ncol=6) }
   
   ####################################################
@@ -375,8 +375,13 @@ fitZINB <- function(matCountsProc,
   matMuModelA <- matMuInit
   matImpulseParamModelA <- matImpulseParamInit
   matDispersionsModelA <- matDispersionsInit
-  matDropoutModelA <- matDropoutInit
   matLinModelPi <- matLinModelPiInit
+  #matDropoutModelA <- matDropoutInit
+  matDropoutModelA <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
+    vecLinModelOut <- cbind(1,log(matMuModelA[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
+    vecDropout <- 1/(1+exp(-vecLinModelOut))
+    return(vecDropout)
+  }))
   
   # Evaluate initialisation loglikelihood for model B
   scaLogLikInitA <- evalLogLikMatrix(matCounts=matCountsProc,

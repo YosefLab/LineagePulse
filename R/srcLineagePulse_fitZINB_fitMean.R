@@ -554,7 +554,7 @@ fitImpulse_gene_LP <- function(vecCounts,
   vecImpulseValue <- calcImpulse_comp(vecBestFitParam,vecTimepoints)[vecindTimepointAssign]
   vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
 
-  if(TRUE){
+  if(FALSE){
     # Follow choice of model (For algorithm building only)
     # Valley is chosen very often (?) and reported likelihoods are wrong for valley
     # Was reporting observed values and not zeros for valley initialisation
@@ -575,8 +575,8 @@ fitImpulse_gene_LP <- function(vecCounts,
     print(paste0("Old:", scaLLOld))
     
     # report all new parame
-    #print(dfFitsByInitialisation["value",]) # switch for below if only prior initialisation is used
-    print(vecFitPrior["value"])
+    print(dfFitsByInitialisation["value",]) # switch for below if only prior initialisation is used
+    #print(vecFitPrior["value"])
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValue[cell])) * matLinModelPi[cell,])
     })
