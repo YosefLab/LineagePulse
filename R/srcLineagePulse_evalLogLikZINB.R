@@ -34,7 +34,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   vecDropoutRateEst, 
   vecboolNotZeroObserved, 
   vecboolZero){  
-  
+
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
   # the summand drop-out rate. Also the log cannot be
@@ -129,6 +129,35 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
   return(scaLogLik)
 }
 
+evalLogLikGene <- function(vecCounts,
+  vecMu,
+  vecSizeFactors,
+  vecDispEst, 
+  vecDropoutRateEst,
+  vecboolNotZeroObserved, 
+  vecboolZero,
+  scaWindowRadius=NULL ){
+  
+  if(!is.null(scaWindowRadius)){
+    scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=vecCounts,
+      vecMu=vecMu,
+      vecSizeFactors=vecSizeFactors,
+      vecDispEst=vecDispEst, 
+      vecDropoutRateEst=vecDropoutRateEst,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero,
+      scaWindowRadius=scaWindowRadius)
+  } else {
+    scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+      vecMu=vecMu*vecSizeFactors,
+      vecDispEst=vecDispEst, 
+      vecDropoutRateEst=vecDropoutRateEst,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero )
+  }
+  return(scaLogLik)
+}
+
 evalLogLikMatrix <- function(matCounts,
   matMu,
   vecSizeFactors,
@@ -136,13 +165,11 @@ evalLogLikMatrix <- function(matCounts,
   matDropout, 
   matboolNotZeroObserved, 
   matboolZero,
-  scaWindowRadius=NULL,
-  boolSmoothed=FALSE ){
+  scaWindowRadius=NULL ){
   
   scaLogLik <- sum(unlist(
     bplapply( seq(1,dim(matCounts)[1]), function(i){
-      if(boolSmoothed){
-        scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCounts[i,],
+      evalLogLikGene(vecCounts=matCounts[i,],
           vecMu=matMu[i,],
           vecSizeFactors=vecSizeFactors,
           vecDispEst=matDispersions[i,], 
@@ -150,17 +177,6 @@ evalLogLikMatrix <- function(matCounts,
           vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
           vecboolZero=matboolZero[i,],
           scaWindowRadius=scaWindowRadius)
-      } else {
-        print("flag")
-        scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=matCounts[i,],
-          vecMu=matMu[i,]*vecSizeFactors,
-          vecDispEst=matDispersions[i,], 
-          vecDropoutRateEst=matDropout[i,],
-          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-          vecboolZero=matboolZero[i,] )
-      }
-      print(scaLogLik)
-      return(scaLogLik)
     })
   ))
   return(scaLogLik)

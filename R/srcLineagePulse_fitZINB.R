@@ -37,21 +37,21 @@
 fitZINBMu <- function( matCountsProc,
   vecPseudotime=NULL,
   vecindClusterAssign=NULL,
-  matMu,
+  matMu=NULL,
   matDispersions,
   vecSizeFactors,
   matDropout,
+  matZ=NULL,
   matConstPredictorsPi=NULL,
   matLinModelPi=NULL,
-  matZ,
   matImpulseParam=NULL,
-  scaNumGenes,
-  scaNumCells,
   scaWindowRadius,
   boolDynamicPi,
-  boolBFGSEstOfMu,
+  boolBFGSEstOfMu=NULL,
   strMuModel ){
 
+  scaNumGenes <- dim(matCountsProc)[1]
+  scaNumCells <- dim(matCountsProc)[2]
   if(strMuModel=="windows"){
     # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
     # interval with cell density centred at target cell.
@@ -126,7 +126,6 @@ fitZINBMu <- function( matCountsProc,
         vecDisp=matDispersions[i,],
         vecNormConst=vecSizeFactors,
         vecDropoutRateEst=matDropout[i,],
-        vecProbNB=1-matZ[i,],
         vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,]),
         matLinModelPi=matLinModelPi,
         vecPseudotime=vecPseudotime,
@@ -245,23 +244,23 @@ fitZINB <- function(matCountsProc,
   # Mean model:
   if(strMuModel=="windows"){
     # One mean parameter per cell
-    scaKbyGene <- dim(matCountsProc)[2]
+    scaKbyGeneH1 <- dim(matCountsProc)[2]
   } else if(strMuModel=="clusters"){
     # One mean parameter per cluster
-    scaKbyGene <- lsResultsClustering$K
+    scaKbyGeneH1 <- lsResultsClustering$K
   } else if(strMuModel=="impulse"){
     # Six impulse model parameter to model means
-    scaKbyGene <- 6
+    scaKbyGeneH1 <- 6
   } else if(strMuModel=="constant"){
     # One constant mean
-    scaKbyGene <- 1
+    scaKbyGeneH1 <- 1
   } else {
     stop(paste0("ERROR in fitZINB(): strMuModel not recognised: ", strMuModel))
   }
   # Dispersion model
   if(boolOneDispPerGene){
     # One dispersion factor per gene.
-    scaKbyGene <- scaKbyGene + 1
+    scaKbyGeneH1 <- scaKbyGeneH1 + 1
   } else {
     stop(paste0("ERROR in fitZINB(): boolOneDispPerGene set to FALSE."))
   }
@@ -269,10 +268,11 @@ fitZINB <- function(matCountsProc,
   # Parameters:
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations:
-  scaPrecEM <- 1-10^(-6)
+  scaPrecEM <- 1-10^(-4)
   
   # Store EM convergence
-  vecEMLogLik <- array(NA,scaMaxiterEM)
+  vecEMLogLikH1 <- array(NA,scaMaxiterEM)
+  vecEMLogLikH0 <- array(NA,scaMaxiterEM)
   scaPredictors <- 2
   boolDynamicPi <- TRUE
   boolBFGSEstOfMu <- TRUE
@@ -299,12 +299,13 @@ fitZINB <- function(matCountsProc,
   scaNumGenes <- dim(matCountsProc)[1]
   scaNumCells <- dim(matCountsProc)[2]  
   
-  # (I) Initialisation
   # Pre-compute constant matrices
   matSizeFactors <- matrix(vecSizeFactors, nrow=scaNumGenes, ncol=scaNumCells, byrow=TRUE)
   matboolNotZeroObserved <- matCountsProc > 0 & !is.na(matCountsProc) & is.finite(matCountsProc)
   matboolZero <- matCountsProc == 0
   
+  print("### a) Fit alternative negative binomial model and noise model.")
+  # (I) Initialisation
   # Initialise parameters:
   # Mean parameters (mu): Gene-wise mean of non-zero observations
   # Dispersions: Low dispersion factor yielding high variance which makes
@@ -312,147 +313,38 @@ fitZINB <- function(matCountsProc,
   # Drop-out rate: Set to 0.5, ie a constant model with all parameters zero.
   # As the parameter corresponding to log(mu) is forced to be negative later,
   # this parameter is initialised as very close to zero but negative.  
-  vecMu <- apply(matCountsProc, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
-  vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
-  matMu <- matrix(vecMu, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
-  matDispersions <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
-  matDropout <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells)
+  vecMuH1 <- apply(matCountsProc, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
+  vecMuH1[vecMuH1 < .Machine$double.eps] <- .Machine$double.eps
+  matMuH1 <- matrix(vecMuH1, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+  matDispersionsH1 <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
+  matDropoutH1 <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells)
   matLinModelPi <- cbind(rep(0, scaNumCells), rep(-10^(-10), scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
   if(strMuModel=="impulse"){ 
     matImpulseParam <- matrix(1, nrow=scaNumGenes, ncol=6)
-    matImpulseParam[,1:3] <- log(matrix(vecMu, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+    matImpulseParam[,1:3] <- log(matrix(vecMuH1, nrow=scaNumGenes, ncol=3, byrow=FALSE))
   } else { matImpulseParam <- matrix(NA, nrow=scaNumGenes, ncol=6) }
-  if(boolSuperVerbose){
-    scaLogLikInit <- evalLogLikMatrix(matCounts=matCountsProc,
-      matMu=matMu,
-      vecSizeFactors=vecSizeFactors,
-      matDispersions=matDispersions, 
-      matDropout=matDropout, 
-      matboolNotZeroObserved=matboolNotZeroObserved, 
-      matboolZero=matboolZero,
-      scaWindowRadius=scaWindowRadius,
-      boolSmoothed=boolSmoothed )
+  scaLogLikInit <- evalLogLikMatrix(matCounts=matCountsProc,
+    matMu=matMuH1,
+    vecSizeFactors=vecSizeFactors,
+    matDispersions=matDispersionsH1, 
+    matDropout=matDropoutH1, 
+    matboolNotZeroObserved=matboolNotZeroObserved, 
+    matboolZero=matboolZero,
+    scaWindowRadius=scaWindowRadius )
+  if(verbose){
     print(paste0("Completed initialisation with ",
       "log likelihood of         ", scaLogLikInit))
   }
   
-  # (II) EM itertion
+  # (II) Estimation itertion: 
+  # Estimate H1 negative binomial model and logistic noise model
   scaIter <- 1
-  scaLogLikNew <- 0
-  scaLogLikOld <- 0
+  scaLogLikNew <- scaLogLikInit
+  scaLogLikOld <- NA
   
-  while(scaIter == 1 | scaIter == 2 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
-    ##### 1. Gene-wise parameter estimation: 
-    # a) Negative binomial mean parameter
-    # Only compute posterior if using closed form estimator for mean:
-    # Posterior is not necessary in all other cases, expect for parameter
-    # initialisation of impulse model.
-    if((all(vecSizeFactors==1) & !boolDynamicPi) | strMuModel=="impulse"){    
-      matNBZero <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-        (matDispersions[i,]/(matDispersions[i,]+matMu[i,]))^matDispersions[i,]
-      }))
-      matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-        vecZ <- sapply(seq(1,scaNumCells), function(j){
-          if(matboolNotZeroObserved[i,j]){
-            scaZ <- 0
-          } else {
-            if(boolSmoothed){
-              scaindIntervalStart <- max(1,j-scaWindowRadius)
-              scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-              vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-            } else {
-              vecInterval <- j
-            }
-            scaZ <- sum(matDropout[i,j]/(matDropout[i,j] + 
-                (1-matDropout[i,j])*matNBZero[i,vecInterval])) *
-              1/length(vecInterval)
-          }
-          return(scaZ)
-        })
-        return(vecZ)
-      }))
-    }
-    lsMuFits <- fitZINBMu( matCountsProc=matCountsProc,
-      vecPseudotime=vecPseudotime,
-      vecindClusterAssign=vecindClusterAssign,
-      matMu=matMu,
-      matDispersions=matDispersions,
-      vecSizeFactors=vecSizeFactors,
-      matDropout=matDropout,
-      matConstPredictorsPi=matConstPredictorsPi,
-      matLinModelPi=matLinModelPi,
-      matZ=matZ,
-      matImpulseParam=matImpulseParam,
-      scaNumGenes=scaNumGenes,
-      scaNumCells=scaNumGenes,
-      scaWindowRadius=scaWindowRadius,
-      boolDynamicPi=boolDynamicPi,
-      boolBFGSEstOfMu=boolBFGSEstOfMu,
-      strMuModel=strMuModel )
-    matMu <- lsMuFits$matMu
-    matImpulseParam <- lsMuFits$matImpulseParam
-    # These udates are done during mean estimation too
-    # Reestimate drop-out rates based on new means
-    matDropout <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
-      vecLinModelOut <- cbind(1,log(matMu[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-      vecDropout <- 1/(1+exp(-vecLinModelOut))
-      return(vecDropout)
-    }))
-    if(boolSuperVerbose){
-      scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-        matMu=matMu,
-        vecSizeFactors=vecSizeFactors,
-        matDispersions=matDispersions, 
-        matDropout=matDropout,
-        matboolNotZeroObserved=matboolNotZeroObserved, 
-        matboolZero=matboolZero,
-        scaWindowRadius=scaWindowRadius,
-        boolSmoothed=boolSmoothed )
-      print(paste0("# ",scaIter, ".1) Mean estimation complete: ",
-        "loglikelihood of       ", scaLogLikTemp))
-    }
-    
-    # b) Negative binomial dispersion parameter
-    # Use MLE of dispersion factor: numeric optimisation of likelihood.
-    if(boolOneDispPerGene){  
-      vecDispFit <- bplapply(seq(1,scaNumGenes), function(i){
-        fitDispZINB_LinPulse(scaDispGuess=matDispersions[i,1],
-          vecCounts=matCountsProc[i,],
-          vecMuEst=matMu[i,],
-          vecSizeFactors=vecSizeFactors,
-          vecDropoutRateEst=matDropout[i,],
-          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-          vecboolZero=matboolZero[i,],
-          scaWindowRadius=scaWindowRadius,
-          boolSmoothed=boolSmoothed )
-      })
-    } else {
-      #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-      stop("Non constant-dispersion factors are not yet implemented. david.seb.fischer@gmail.com")
-    }
-    vecboolConvergedGLMdisp <- sapply(vecDispFit, function(fit) fit["convergence"])
-    vecDispersions <- sapply(vecDispFit, function(fit){ fit["par"] })
-    matDispersions <- matrix(vecDispersions, nrow=length(vecDispersions), ncol=scaNumCells, byrow=FALSE)
-    if(boolSuperVerbose){
-      if(any(vecboolConvergedGLMdisp != 0)){
-        print(paste0("Dispersion estimation did not converge in ", 
-          sum(vecboolConvergedGLMdisp), " cases."))
-      }
-      scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-        matMu=matMu,
-        vecSizeFactors=vecSizeFactors,
-        matDispersions=matDispersions, 
-        matDropout=matDropout, 
-        matboolNotZeroObserved=matboolNotZeroObserved, 
-        matboolZero=matboolZero,
-        scaWindowRadius=scaWindowRadius,
-        boolSmoothed=boolSmoothed )
-      print(paste0("# ",scaIter, ".2) Dispersion estimation complete: ",
-        "loglikelihood of ", scaLogLikTemp))
-    }  
-    
-    #####  2. Cell-wise parameter estimation
+  while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){    
+    #####  1. Cell-wise parameter estimation
     # Dropout rate
     # Drop-out estimation is independent between cells and can be parallelised.
     matLinModelPi <- do.call(rbind, 
@@ -467,104 +359,273 @@ fitZINB <- function(matCountsProc,
         
         vecLinModelPi <- fitPiZINB_LinPulse(
           vecLinModelPi=matLinModelPi[cell,],
-          matPredictorsPi=cbind(1,log(matMu[,cell]),matConstPredictorsPi),
+          matPredictorsPi=cbind(1,log(matMuH1[,cell]),matConstPredictorsPi),
           vecCounts=matCountsProc[,cell],
-          matMu=matMu[,vecInterval],
-          matDisp=matDispersions[,vecInterval],
+          matMu=matMuH1[,vecInterval],
+          matDisp=matDispersionsH1[,vecInterval],
           scaNormConst=vecSizeFactors[cell],
           boolSmoothed=boolSmoothed )
         return(vecLinModelPi)
       }))
-    matDropout <- do.call(cbind, 
+    matDropoutH1 <- do.call(cbind, 
       lapply(seq(1, scaNumCells), function(cell){
-        vecLinModelOut <- cbind(1,log(matMu[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
+        vecLinModelOut <- cbind(1,log(matMuH1[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
         vecDropout <- 1/(1+exp(-vecLinModelOut))
         return(vecDropout)
       }))
     if(boolSuperVerbose){
       scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-        matMu=matMu,
+        matMu=matMuH1,
         vecSizeFactors=vecSizeFactors,
-        matDispersions=matDispersions, 
-        matDropout=matDropout, 
+        matDispersions=matDispersionsH1, 
+        matDropout=matDropoutH1, 
         matboolNotZeroObserved=matboolNotZeroObserved, 
         matboolZero=matboolZero,
-        scaWindowRadius=scaWindowRadius,
-        boolSmoothed=boolSmoothed )
-      print(paste0("# ",scaIter,".3) Drop-out estimation complete: ",
+        scaWindowRadius=scaWindowRadius )
+      print(paste0("# ",scaIter,".1) Drop-out estimation complete: ",
         "loglikelihood of   ", scaLogLikTemp))
     }  
+    
+    ##### 2. Gene-wise parameter estimation: 
+    # a) Negative binomial mean parameter
+    # Only compute posterior if using closed form estimator for mean:
+    # Posterior is not necessary in all other cases, expect for parameter
+    # initialisation of impulse model.
+    matZH1 <- calcProbNB( matMu=matMuH1,
+      matDispersions=matDispersionsH1,
+      matDropout=matDropoutH1,
+      matboolZero=matboolZero,
+      matboolNotZeroObserved=matboolNotZeroObserved,
+      scaWindowRadius=scaWindowRadius )
+    
+    lsMuFitsH1 <- fitZINBMu( matCountsProc=matCountsProc,
+      vecPseudotime=vecPseudotime,
+      vecindClusterAssign=vecindClusterAssign,
+      matMu=matMuH1,
+      matDispersions=matDispersionsH1,
+      vecSizeFactors=vecSizeFactors,
+      matDropout=matDropoutH1,
+      matZ=matZH1,
+      matConstPredictorsPi=matConstPredictorsPi,
+      matLinModelPi=matLinModelPi,
+      matImpulseParam=matImpulseParam,
+      scaWindowRadius=scaWindowRadius,
+      boolDynamicPi=boolDynamicPi,
+      boolBFGSEstOfMu=boolBFGSEstOfMu,
+      strMuModel=strMuModel )
+    matMuH1 <- lsMuFitsH1$matMu
+    matImpulseParam <- lsMuFitsH1$matImpulseParam
+    # These udates are done during mean estimation too
+    # Reestimate drop-out rates based on new means
+    matDropoutH1 <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
+      vecLinModelOut <- cbind(1,log(matMuH1[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
+      vecDropout <- 1/(1+exp(-vecLinModelOut))
+      return(vecDropout)
+    }))
+    if(boolSuperVerbose){
+      scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
+        matMu=matMuH1,
+        vecSizeFactors=vecSizeFactors,
+        matDispersions=matDispersionsH1, 
+        matDropout=matDropoutH1,
+        matboolNotZeroObserved=matboolNotZeroObserved, 
+        matboolZero=matboolZero,
+        scaWindowRadius=scaWindowRadius )
+      print(paste0("# ",scaIter, ".2) Mean estimation complete: ",
+        "loglikelihood of       ", scaLogLikTemp))
+    }
+    
+    # b) Negative binomial dispersion parameter
+    # Use MLE of dispersion factor: numeric optimisation of likelihood.
+    if(boolOneDispPerGene){  
+      vecDispFitH1 <- bplapply(seq(1,scaNumGenes), function(i){
+        fitDispZINB_LinPulse(scaDispGuess=matDispersionsH1[i,1],
+          vecCounts=matCountsProc[i,],
+          vecMuEst=matMuH1[i,],
+          vecSizeFactors=vecSizeFactors,
+          vecDropoutRateEst=matDropoutH1[i,],
+          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
+          vecboolZero=matboolZero[i,],
+          scaWindowRadius=scaWindowRadius,
+          boolSmoothed=boolSmoothed )
+      })
+    } else {
+      #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
+      stop("Non constant-dispersion factors are not yet implemented. david.seb.fischer@gmail.com")
+    }
+    vecboolConvergedGLMdispH1 <- sapply(vecDispFitH1, function(fit) fit["convergence"])
+    vecDispersionsH1 <- sapply(vecDispFitH1, function(fit){ fit["par"] })
+    matDispersionsH1 <- matrix(vecDispersionsH1, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE) 
     
     # Evaluate Likelihood
     scaLogLikOld <- scaLogLikNew
     scaLogLikNew <- evalLogLikMatrix(matCounts=matCountsProc,
-      matMu=matMu,
+      matMu=matMuH1,
       vecSizeFactors=vecSizeFactors,
-      matDispersions=matDispersions, 
-      matDropout=matDropout, 
+      matDispersions=matDispersionsH1, 
+      matDropout=matDropoutH1, 
       matboolNotZeroObserved=matboolNotZeroObserved, 
       matboolZero=matboolZero,
-      scaWindowRadius=scaWindowRadius,
-      boolSmoothed=boolSmoothed )
+      scaWindowRadius=scaWindowRadius )
     
-    # EM-iteration complete
-    if(!boolSuperVerbose){
+    # Iteration complete
+    if(boolSuperVerbose){
+      if(any(vecboolConvergedGLMdispH1 != 0)){
+        print(paste0("Dispersion estimation did not converge in ", 
+          sum(vecboolConvergedGLMdispH1), " cases."))
+      }
+      print(paste0("# ",scaIter, ".3) Dispersion estimation complete: ",
+        "loglikelihood of ", scaLogLikNew))
+    } else {
       if(verbose){print(paste0("# ",scaIter, ".) complete with ",
         "log likelihood of ", scaLogLikNew))}
     }
-    vecEMLogLik[scaIter] <- scaLogLikNew
+    vecEMLogLikH1[scaIter] <- scaLogLikNew
     scaIter <- scaIter+1
   }
-  print("Exited EM-iteration.")
-  
-  # Evaluate convergenc
-  if(all(as.logical(vecboolConvergedGLMdisp)) &
+  print("Finished fitting alternative negative binomial model and noise model.")
+
+  # Evaluate convergence
+  if(all(as.logical(vecboolConvergedGLMdispH1)) &
       scaLogLikNew < scaLogLikOld*scaPrecEM & scaLogLikNew > scaLogLikOld){
-    boolConvergence <- TRUE
-  } else {
-    boolConvergence <- FALSE
-  }
+    boolConvergenceH1 <- TRUE
+  } else { boolConvergenceH1 <- FALSE }
+
+  print("### b) Fit null negative binomial model.")
+  # Initialise dispersion factors to those estimated
+  # for alternative model.
+  matDispersionsH0 <- matDispersionsH1
+  matDropoutH0 <- matDropoutH1
   
-  # Compute mixture probabilities and imputed counts  
-  matNBZero <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-    (matDispersions[i,]/(matDispersions[i,]+matMu[i,]))^matDispersions[i,]
-  }))
-  matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-    vecZ <- sapply(seq(1,scaNumCells), function(j){
-      if(matboolNotZeroObserved[i,j]){
-        scaZ <- 0
-      } else {
-        scaindIntervalStart <- max(1,j-scaWindowRadius)
-        scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-        vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-        scaZ <- sum(matDropout[i,j]/(matDropout[i,j] + 
-            (1-matDropout[i,j])*matNBZero[i,vecInterval])) *
-          1/length(vecInterval)
+  # One mean per gene and one dispersion factor
+  scaKbyGeneH0 <- 1+1
+  
+  scaIter <- 1
+  scaLogLikNew <- NA
+  scaLogLikOld <- NA
+  
+  while(scaIter == 1 | scaIter == 2 | 
+      (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
+    ##### Gene-wise parameter estimation: 
+    # a) Negative binomial mean parameter
+    # Only compute posterior if using closed form estimator for mean:
+    # Posterior is not necessary in all other cases, expect for parameter
+    # initialisation of impulse model.
+    lsMuFitsH0 <- fitZINBMu( matCountsProc=matCountsProc,
+      matDispersions=matDispersionsH0,
+      vecSizeFactors=vecSizeFactors,
+      matDropout=matDropoutH0,
+      matConstPredictorsPi=matConstPredictorsPi,
+      matLinModelPi=matLinModelPi,
+      scaWindowRadius=scaWindowRadius,
+      boolDynamicPi=boolDynamicPi,
+      strMuModel="constant" )
+    matMuH0 <- lsMuFitsH0$matMu
+    # These udates are done during mean estimation too
+    # Reestimate drop-out rates based on new means
+    matDropoutH0 <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
+      vecLinModelOut <- cbind(1,log(matMuH0[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
+      vecDropout <- 1/(1+exp(-vecLinModelOut))
+      return(vecDropout)
+    }))
+    if(boolSuperVerbose){
+      scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
+        matMu=matMuH0,
+        vecSizeFactors=vecSizeFactors,
+        matDispersions=matDispersionsH0, 
+        matDropout=matDropoutH0,
+        matboolNotZeroObserved=matboolNotZeroObserved, 
+        matboolZero=matboolZero,
+        scaWindowRadius=scaWindowRadius )
+      print(paste0("# ",scaIter, ".1) Mean estimation complete: ",
+        "loglikelihood of       ", scaLogLikTemp))
+    }
+    
+    # b) Negative binomial dispersion parameter
+    # Use MLE of dispersion factor: numeric optimisation of likelihood.
+    if(boolOneDispPerGene){  
+      vecDispFitH0 <- bplapply(seq(1,scaNumGenes), function(i){
+        fitDispZINB_LinPulse(scaDispGuess=matDispersionsH0[i,1],
+          vecCounts=matCountsProc[i,],
+          vecMuEst=matMuH0[i,],
+          vecSizeFactors=vecSizeFactors,
+          vecDropoutRateEst=matDropoutH0[i,],
+          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
+          vecboolZero=matboolZero[i,],
+          scaWindowRadius=scaWindowRadius,
+          boolSmoothed=boolSmoothed )
+      })
+    } else {
+      #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
+      stop("Non constant-dispersion factors are not yet implemented. david.seb.fischer@gmail.com")
+    }
+    vecboolConvergedGLMdispH0 <- sapply(vecDispFitH0, function(fit) fit["convergence"])
+    vecDispersionsH0 <- sapply(vecDispFitH0, function(fit){ fit["par"] })
+    matDispersionsH0 <- matrix(vecDispersionsH0, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+    
+    # Evaluate Likelihood
+    scaLogLikOld <- scaLogLikNew
+    scaLogLikNew <- evalLogLikMatrix(matCounts=matCountsProc,
+      matMu=matMuH0,
+      vecSizeFactors=vecSizeFactors,
+      matDispersions=matDispersionsH0, 
+      matDropout=matDropoutH0, 
+      matboolNotZeroObserved=matboolNotZeroObserved, 
+      matboolZero=matboolZero,
+      scaWindowRadius=scaWindowRadius )
+    
+    # EM-iteration complete
+    if(boolSuperVerbose){
+      if(any(vecboolConvergedGLMdispH0 != 0)){
+        print(paste0("Dispersion estimation did not converge in ", 
+          sum(vecboolConvergedGLMdispH0), " cases."))
       }
-      return(scaZ)
-    })
-    return(vecZ)
-  }))
-  matProbNB <- 1 - matZ
+      print(paste0("# ",scaIter, ".2) Dispersion estimation complete: ",
+        "loglikelihood of ", scaLogLikNew))
+    } else {
+      if(verbose){print(paste0("# ",scaIter, ".) complete with ",
+        "log likelihood of ", scaLogLikNew))}
+    }
+    vecEMLogLikH0[scaIter] <- scaLogLikNew
+    scaIter <- scaIter+1
+  }
+  print("Finished fitting alternative mean model.")
+  
+  # Evaluate convergence
+  if(all(as.logical(vecboolConvergedGLMdispH0)) &
+      scaLogLikNew < scaLogLikOld*scaPrecEM & scaLogLikNew > scaLogLikOld){
+    boolConvergenceH0 <- TRUE
+  } else { boolConvergenceH0 <- FALSE }
   
   # Name rows and columns of output
-  rownames(matMu) <- rownames(matCountsProc)
-  colnames(matMu) <- colnames(matCountsProc)
-  rownames(matDispersions) <- rownames(matCountsProc)
-  colnames(matDispersions) <- colnames(matCountsProc)
-  rownames(matDropout) <- rownames(matCountsProc)
-  colnames(matDropout) <- colnames(matCountsProc)
+  rownames(matMuH1) <- rownames(matCountsProc)
+  colnames(matMuH1) <- colnames(matCountsProc)
+  rownames(matDispersionsH1) <- rownames(matCountsProc)
+  colnames(matDispersionsH1) <- colnames(matCountsProc)
+  rownames(matDropoutH1) <- rownames(matCountsProc)
+  colnames(matDropoutH1) <- colnames(matCountsProc)
+  rownames(matMuH0) <- rownames(matCountsProc)
+  colnames(matMuH0) <- colnames(matCountsProc)
+  rownames(matDispersionsH0) <- rownames(matCountsProc)
+  colnames(matDispersionsH0) <- colnames(matCountsProc)
+  rownames(matDropoutH0) <- rownames(matCountsProc)
+  colnames(matDropoutH0) <- colnames(matCountsProc)
   rownames(matLinModelPi) <- colnames(matCountsProc)
-  rownames(matProbNB) <- rownames(matCountsProc)
-  colnames(matProbNB) <- colnames(matCountsProc)
   
-  return(list( matMu=matMu,
-    matDispersions=matDispersions,
-    matDropout=matDropout,
+  lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceH1,
+    boolConvergenceH0=boolConvergenceH0,
+    vecEMLogLikH1=vecEMLogLikH1,
+    vecEMLogLikH0=vecEMLogLikH0,
+    scaKbyGeneH1=scaKbyGeneH1,
+    scaKbyGeneH0=scaKbyGeneH0 )
+  
+  return(list( matMuH1=matMuH1,
+    matDispersionsH1=matDispersionsH1,
+    matDropoutH1=matDropoutH1,
+    matMuH0=matMuH0,
+    matDispersionsH0=matDispersionsH0,
+    matDropoutH0=matDropoutH0,
     matDropoutLinModel=matLinModelPi,
-    matProbNB=matProbNB,
     matImpulseParam=matImpulseParam,
-    boolConvergence=boolConvergence,
-    vecEMLogLik=vecEMLogLik,
-    scaKbyGene=scaKbyGene ))
+    lsFitZINBReporters=lsFitZINBReporters ))
 }

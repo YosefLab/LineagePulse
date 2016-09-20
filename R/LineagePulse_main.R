@@ -39,6 +39,7 @@ source("srcLineagePulse_plotZINBfits.R")
 source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_runDEAnalysis.R")
+source("srcLineagePulse_calcProbNB.R")
 
 ################################################################################
 ### Main function
@@ -225,7 +226,7 @@ runLineagePulse <- function(matCounts,
   # 5. Fit mixture model: Alternative model (H1)
   print("5. Fit mixture model: Alternative model (H1)")
   tm_fitmm <- system.time({
-    lsZINBFitH1 <- fitZINB( matCountsProc=matCountsProc, 
+    lsZINBFit <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
       vecSpikeInGenes=NULL,
@@ -237,63 +238,36 @@ runLineagePulse <- function(matCounts,
       scaMaxiterEM=scaMaxiterEM,
       verbose=verbose,
       boolSuperVerbose=boolSuperVerbose )
-    matMuH1  <- lsZINBFitH1$matMu
-    matMuClusterH1  <- lsZINBFitH1$matMuCluster
-    matDispersionsH1 <- lsZINBFitH1$vecDispersions
-    matDropoutH1 <- lsZINBFitH1$matDropout
-    matDropoutLinModelH1 <- lsZINBFitH1$matDropoutLinModel
-    matProbNBH1  <- lsZINBFitH1$matProbNB
-    matImpulseParamH1  <- lsZINBFitH1$matImpulseParam
-    boolConvergenceZINBH1 <- lsZINBFitH1$boolConvergence
-    vecEMLogLikH1 <- lsZINBFitH1$vecEMLogLik
-    scaKbyGeneH1 <- lsZINBFitH1$scaKbyGene
+    matMuH1  <- lsZINBFit$matMuH1
+    matDispersionsH1 <- lsZINBFit$matDispersionsH1
+    matDropoutH1 <- lsZINBFit$matDropoutH1
+    matMuH0  <- lsZINBFit$matMuH0
+    matDispersionsH0 <- lsZINBFit$matDispersionsH0
+    matDropoutH0 <- lsZINBFit$matDropoutH0
+    matDropoutLinModel <- lsZINBFit$matDropoutLinModel
+    matImpulseParam  <- lsZINBFit$matImpulseParam
+    lsFitZINBReporters <- lsZINBFit$lsFitZINBReporters
   })
   save(matMuH1,file=file.path(getwd(),"LineagePulse_matMuH1.RData"))
   save(matDispersionsH1,file=file.path(getwd(),"LineagePulse_matDispersionsH1.RData"))
   save(matDropoutH1,file=file.path(getwd(),"LineagePulse_matDropoutH1.RData"))
-  save(matDropoutLinModelH1,file=file.path(getwd(),"LineagePulse_matDropoutLinModelH1.RData"))
-  save(matImpulseParamH1,file=file.path(getwd(),"LineagePulse_matImpulseParamH1.RData"))
-  save(matProbNBH1,file=file.path(getwd(),"LineagePulse_matProbNBH1.RData"))
-  save(vecEMLogLikH1,file=file.path(getwd(),"LineagePulse_vecEMLogLikH1.RData"))
-  save(scaKbyGeneH1,file=file.path(getwd(),"LineagePulse_scaKbyGeneH1.RData"))
-  print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
-    " min",sep=""))
-  
-  # 6. Fit mixture model: Null model (H0)
-  print("6. Fit mixture model: Null model (H0)")
-  tm_fitmm <- system.time({
-    # Define null model in function. report via boolean.
-    lsZINBFitH0 <- fitZINB( matCountsProc=matCountsProc, 
-      lsResultsClustering=lsResultsClustering,
-      vecSizeFactors=vecSizeFactors,
-      vecSpikeInGenes=NULL,
-      boolOneDispPerGene=boolOneDispPerGene,
-      scaWindowRadius=scaWindowRadius,
-      strMuModel="constant",
-      vecPseudotime=vecPseudotimeProc,
-      nProc=nProc,
-      scaMaxiterEM=scaMaxiterEM,
-      verbose=verbose,
-      boolSuperVerbose=boolSuperVerbose )
-    matMuH0  <- lsZINBFitH0$matMu
-    matMuClusterH0  <- lsZINBFitH0$matMuCluster
-    matDispersionsH0 <- lsZINBFitH0$vecDispersions
-    matDropoutH0 <- lsZINBFitH0$matDropout
-    matDropoutLinModelH0 <- lsZINBFitH0$matDropoutLinModel
-    matProbNBH0  <- lsZINBFitH0$matProbNB
-    boolConvergenceZINBH0 <- lsZINBFitH0$boolConvergence
-    vecEMLogLikH0 <- lsZINBFitH0$vecEMLogLik
-    scaKbyGeneH0 <- lsZINBFitH0$scaKbyGene
-  })
   save(matMuH0,file=file.path(getwd(),"LineagePulse_matMuH0.RData"))
   save(matDispersionsH0,file=file.path(getwd(),"LineagePulse_matDispersionsH0.RData"))
   save(matDropoutH0,file=file.path(getwd(),"LineagePulse_matDropoutH0.RData"))
-  save(matDropoutLinModelH0,file=file.path(getwd(),"LineagePulse_matDropoutLinModelH0.RData"))
-  save(matProbNBH0,file=file.path(getwd(),"LineagePulse_matProbNBH0.RData"))
-  save(vecEMLogLikH0,file=file.path(getwd(),"LineagePulse_vecEMLogLikH0.RData"))
-  save(scaKbyGeneH0,file=file.path(getwd(),"LineagePulse_scaKbyGeneH0.RData"))
+  save(matDropoutLinModel,file=file.path(getwd(),"LineagePulse_matDropoutLinModel.RData"))
+  save(matImpulseParam,file=file.path(getwd(),"LineagePulse_matImpulseParam.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
+  
+  # 6. Compute posterior probability of drop-out under
+  # alternative model.
+  matZH1 <- calcProbNB( matMu=matMuH1,
+    matDispersions=matDispersionsH1,
+    matDropout=matDropoutH1,
+    matboolZero= matCountsProc==0,
+    matboolNotZeroObserved= (!is.na(matCountsProc) & matCountsProc>0),
+    scaWindowRadius=scaWindowRadius )
+  save(matZH1,file=file.path(getwd(),"LineagePulse_matZH1.RData"))
 
   # X. Plot ZINB fits to data.
   if(boolPlotZINBfits & FALSE){
@@ -317,16 +291,15 @@ runLineagePulse <- function(matCounts,
   tm_deanalysis_mf <- system.time({
     dfDEAnalysis <- runDEAnalysis(
       matCountsProc = matCountsProc,
-      vecPseudotime=vecPseudotimeProc,
       vecSizeFactors=vecSizeFactors,
-      matDispersionsH1=matDispersionsH1,
       matMuH1=matMuH1,
+      matDispersionsH1=matDispersionsH1,
       matDropoutH1=matDropoutH1,
-      scaKbyGeneH1=scaKbyGeneH1,
-      matDispersionsH0=matDispersionsH0,
       matMuH0=matMuH0,
+      matDispersionsH0=matDispersionsH0,
       matDropoutH0=matDropoutH0,
-      scaKbyGeneH0=scaKbyGeneH0,
+      scaKbyGeneH1=lsFitZINBReporters$scaKbyGeneH1,
+      scaKbyGeneH0=lsFitZINBReporters$scaKbyGeneH0,
       scaWindowRadius=scaWindowRadius )
   })
   save(dfDEAnalysis,file=file.path(getwd(),"LineagePulse_dfDEAnalysis.RData"))
