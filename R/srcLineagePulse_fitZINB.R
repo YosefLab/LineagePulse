@@ -334,13 +334,13 @@ fitZINB <- function(matCountsProc,
   if(boolEstimateNoiseBasedOnH0){
     strMuModelA <- "constant"
     strMuModelB <- strMuModel
-    strNameModelA <- "H0"
-    strNameModelB <- "H1"
+    strNameModelA <- paste0("H0: ",strMuModelA)
+    strNameModelB <- paste0("H1: ",strMuModelB)
   } else {
     strMuModelA <- strMuModel
     strMuModelB <- "constant"
-    strNameModelA <- "H1"
-    strNameModelB <- "H0"
+    strNameModelA <- paste0("H1: ",strMuModelA)
+    strNameModelB <- paste0("H0: ",strMuModelB)
   }
   
   ####################################################

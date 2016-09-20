@@ -462,6 +462,10 @@ fitImpulse_gene_LP <- function(vecCounts,
   # Set reporter parameters for optim BFGS optimisation
   trace <- 0 # Report typp: 0 none, 2 yes
   REPORT <- 1 # Frequency of reporting in iterations
+  # Try new peak and valley initialisations?
+  # Increases time complexity of mean estimation by factor 3
+  # but seems to make a difference on simulated data.
+  boolUseNewInits <- TRUE
   
   # (I) Process data
   # Compute time point specifc parameters
@@ -503,7 +507,7 @@ fitImpulse_gene_LP <- function(vecCounts,
     strMode="singlecell", 
     MAXIT=MAXIT, RELTOL=RELTOL, 
     trace=trace, REPORT=REPORT )  
-  if(FALSE){
+  if(boolUseNewInits){
     # 2. Initialisation: Peak
     vecFitPeak <- optimiseImpulseModelFit(
       vecParamGuess=vecParamGuessPeak,
