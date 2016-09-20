@@ -157,6 +157,7 @@ runLineagePulse <- function(matCounts,
   boolContPseudotimeFit = TRUE,
   boolOneDispPerGene = TRUE,
   scaWindowRadius=20,
+  boolEstimateNoiseBasedOnH0=TRUE,
   strMuModel="impulse",
   boolPlotZINBfits = FALSE,
   scaMaxiterEM=20,
@@ -223,8 +224,8 @@ runLineagePulse <- function(matCounts,
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
   save(vecSizeFactors,file=file.path(getwd(),"LineagePulse_vecSizeFactors.RData"))
   
-  # 5. Fit mixture model: Alternative model (H1)
-  print("5. Fit mixture model: Alternative model (H1)")
+  # 5. Fit ZINB mixture model for both H1 and H0.
+  print("5. Fit ZINB mixture model for both H1 and H0.")
   tm_fitmm <- system.time({
     lsZINBFit <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClustering,
@@ -232,6 +233,7 @@ runLineagePulse <- function(matCounts,
       vecSpikeInGenes=NULL,
       boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=scaWindowRadius,
+      boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
       strMuModel=strMuModel,
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,

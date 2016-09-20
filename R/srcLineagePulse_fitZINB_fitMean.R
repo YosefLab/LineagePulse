@@ -455,7 +455,13 @@ fitImpulse_gene_LP <- function(vecCounts,
   vecboolNotZeroObserved,
   vecPseudotime,
   vecImpulseParam,
-  scaWindowRadius=NULL){
+  scaWindowRadius=NULL,
+  MAXIT=1000,
+  RELTOL=sqrt(.Machine$double.eps) ){
+  
+  # Set reporter parameters for optim BFGS optimisation
+  trace <- 0 # Report typp: 0 none, 2 yes
+  REPORT <- 1 # Frequency of reporting in iterations
   
   # (I) Process data
   # Compute time point specifc parameters
@@ -480,20 +486,6 @@ fitImpulse_gene_LP <- function(vecCounts,
   vecParamGuessPeak <- lsParamGuesses$peak
   vecParamGuessValley <- lsParamGuesses$valley
   
-  # (I) Previous parameters
-  scaLLOld <- evalLogLikImpulseSC_comp(
-    vecTheta=vecParamGuessPrior,
-    vecX=vecTimepoints,
-    vecY=vecCounts, 
-    scaDispEst=scaDispersionEstimate,
-    vecDropoutRateEst=NA,
-    matLinModelPi=matLinModelPi,
-    vecNormConst=vecNormConst,
-    vecindTimepointAssign=vecindTimepointAssign,
-    vecboolNotZeroObserved=vecboolNotZeroObserved, 
-    vecboolZero=vecboolZero,
-    scaWindowRadius=scaWindowRadius )
-    
   # (II) Compute new parameters
   # 1. Initialisation: Prior best fit
   vecFitPrior <- optimiseImpulseModelFit(
@@ -509,66 +501,82 @@ fitImpulse_gene_LP <- function(vecCounts,
     vecboolNotZeroObserved=vecboolNotZeroObserved,
     scaWindowRadius=scaWindowRadius,
     strMode="singlecell", 
-    MAXIT=1000)  
-  # 2. Initialisation: Peak
-  vecFitPeak <- optimiseImpulseModelFit(
-    vecParamGuess=vecParamGuessPeak,
-    vecTimepoints=vecTimepoints, 
-    vecCounts=vecCounts,
-    scaDispersionEstimate=scaDispersionEstimate,
-    vecDropoutRate=NA,
-    matLinModelPi=matLinModelPi,
-    vecNormConst=vecNormConst,
-    vecindTimepointAssign=vecindTimepointAssign,
-    vecboolZero=vecboolZero, 
-    vecboolNotZeroObserved=vecboolNotZeroObserved,
-    scaWindowRadius=scaWindowRadius,
-    strMode="singlecell", 
-    MAXIT=1000)
-  # 3. Initialisation: Valley
-  vecFitValley <- optimiseImpulseModelFit(
-    vecParamGuess=vecParamGuessValley,
-    vecTimepoints=vecTimepoints, 
-    vecCounts=vecCounts,
-    scaDispersionEstimate=scaDispersionEstimate,
-    vecDropoutRate=NA,
-    matLinModelPi=matLinModelPi,
-    vecNormConst=vecNormConst,
-    vecindTimepointAssign=vecindTimepointAssign,
-    vecboolZero=vecboolZero, 
-    vecboolNotZeroObserved=vecboolNotZeroObserved,
-    scaWindowRadius=scaWindowRadius,
-    strMode="singlecell", 
-    MAXIT=1000)
-  
-  # (IV) Process fits
-  dfFitsByInitialisation <- cbind(vecFitPeak, vecFitValley, vecFitPrior)
-  
-  # Select best fit and report fit type
-  # Report mean fit objective value as null hypothesis, too.
-  # match() selects first hit if maximum occurs multiple times
-  indBestFit <- match(max(dfFitsByInitialisation["value",]),dfFitsByInitialisation["value",])
-  
-  if(scaLLOld < dfFitsByInitialisation["value",indBestFit]){
-    # Select best of the new models if achieve higher loglikelihood than
-    # previous model
+    MAXIT=MAXIT, RELTOL=RELTOL, 
+    trace=trace, REPORT=REPORT )  
+  if(FALSE){
+    # 2. Initialisation: Peak
+    vecFitPeak <- optimiseImpulseModelFit(
+      vecParamGuess=vecParamGuessPeak,
+      vecTimepoints=vecTimepoints, 
+      vecCounts=vecCounts,
+      scaDispersionEstimate=scaDispersionEstimate,
+      vecDropoutRate=NA,
+      matLinModelPi=matLinModelPi,
+      vecNormConst=vecNormConst,
+      vecindTimepointAssign=vecindTimepointAssign,
+      vecboolZero=vecboolZero, 
+      vecboolNotZeroObserved=vecboolNotZeroObserved,
+      scaWindowRadius=scaWindowRadius,
+      strMode="singlecell", 
+      MAXIT=MAXIT, RELTOL=RELTOL,
+      trace=trace, REPORT=REPORT)
+    # 3. Initialisation: Valley
+    vecFitValley <- optimiseImpulseModelFit(
+      vecParamGuess=vecParamGuessValley,
+      vecTimepoints=vecTimepoints, 
+      vecCounts=vecCounts,
+      scaDispersionEstimate=scaDispersionEstimate,
+      vecDropoutRate=NA,
+      matLinModelPi=matLinModelPi,
+      vecNormConst=vecNormConst,
+      vecindTimepointAssign=vecindTimepointAssign,
+      vecboolZero=vecboolZero, 
+      vecboolNotZeroObserved=vecboolNotZeroObserved,
+      scaWindowRadius=scaWindowRadius,
+      strMode="singlecell", 
+      MAXIT=MAXIT, RELTOL=RELTOL, 
+      trace=trace, REPORT=REPORT)
+    
+    # (IV) Process fits
+    dfFitsByInitialisation <- cbind(vecFitPeak, vecFitValley, vecFitPrior)
+    
+    # Select best fit and report fit type
+    # Report mean fit objective value as null hypothesis, too.
+    # match() selects first hit if maximum occurs multiple times
+    indBestFit <- match(max(dfFitsByInitialisation["value",]),dfFitsByInitialisation["value",])
+    
     vecBestFitParam <- c(dfFitsByInitialisation[1:6,indBestFit])
   } else {
-    # Keep old parameters to guarantee convergence
-    vecBestFitParam <- vecParamGuessPrior
+    vecBestFitParam <- vecFitPrior[1:6]
   }
   
   # Compute predicted means
   vecImpulseValue <- calcImpulse_comp(vecBestFitParam,vecTimepoints)[vecindTimepointAssign]
   vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
 
-  if(FALSE){
-    # Follow choice of model
+  if(TRUE){
+    # Follow choice of model (For algorithm building only)
     # Valley is chosen very often (?) and reported likelihoods are wrong for valley
     # Was reporting observed values and not zeros for valley initialisation
     # to optimisation... routine -> seems to have solved the problem
-    print(dfFitsByInitialisation["value",])
-    print(paste0(scaLLOld, " ", dfFitsByInitialisation["value",indBestFit]))
+    
+    # Compute best set from last iteration
+    vecImpulseValueOld <- calcImpulse_comp(vecParamGuessPrior,vecTimepoints)[vecindTimepointAssign]
+    vecLinModelOutOld <- sapply(seq(1, length(vecCounts)), function(cell){
+      sum(c(1,log(vecImpulseValueOld[cell])) * matLinModelPi[cell,])
+    })
+    vecDropoutOld <- 1/(1+exp(-vecLinModelOutOld))
+    scaLLOld <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+      vecMu=vecImpulseValueOld*vecNormConst,
+      vecDispEst=rep(scaDispersionEstimate, length(vecCounts)), 
+      vecDropoutRateEst=vecDropoutOld,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero )
+    print(paste0("Old:", scaLLOld))
+    
+    # report all new parame
+    #print(dfFitsByInitialisation["value",]) # switch for below if only prior initialisation is used
+    print(vecFitPrior["value"])
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValue[cell])) * matLinModelPi[cell,])
     })
@@ -640,69 +648,67 @@ fitMuZINB_LinPulse <- function(vecCounts,
   vecDropoutRateEst,
   matLinModelPi=NULL,
   vecPredictorsPi=NULL,
-  vecProbNB=NULL,
   scaTarget=NULL,
   scaWindowRadius=NULL,
   strMuModel="windows",
   boolDynamicPi=FALSE ){ 
   
-  if(all(vecNormConst==1) & !boolDynamicPi){
-    # Closed form maximum likelihood estimator of observed, not joint likelihood
-    scaMu <- sum(vecCounts*vecProbNB, na.rm=TRUE)/sum(vecProbNB, na.rm=TRUE)
-  } else {
-    # Numerical maximum likelihood estimator
-    scaMu <- tryCatch({
-      if(strMuModel=="windows"){
-        exp(unlist(optim(
-          par=log(vecMu[scaTarget]),
-          evalLogLikMuWindowsZINB_LinPulse_comp,
-          vecCounts=vecCounts,
-          vecMu=vecMu,
-          vecDisp=vecDisp,
-          vecDropoutRateEst=vecDropoutRateEst,
-          matLinModelPi=matLinModelPi,
-          vecPredictorsPi=vecPredictorsPi,
-          vecNormConst=vecNormConst,
-          vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-          vecboolZero=vecCounts==0,
-          scaTarget=scaTarget,
-          scaWindowRadius=scaWindowRadius,
-          boolDynamicPi=boolDynamicPi,
-          method="BFGS",
-          control=list(maxit=1000,fnscale=-1) )["par"]))
-      } else if(strMuModel=="clusters"){
-        exp(unlist(optim(
-          par=log(vecMu[1]),
-          evalLogLikMuClustersZINB_LinPulse_comp,
-          vecCounts=vecCounts,
-          vecDisp=vecDisp,
-          vecDropoutRateEst=vecDropoutRateEst,
-          matLinModelPi=matLinModelPi,
-          vecPredictorsPi=vecPredictorsPi,
-          vecProbNB=vecProbNB,
-          vecNormConst=vecNormConst,
-          vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-          vecboolZero=vecCounts==0,
-          boolDynamicPi=boolDynamicPi,
-          method="BFGS",
-          control=list(maxit=1000,fnscale=-1) )["par"]))
-      } else {
-        stop(paste0("Unrecognised strMuModel in fitMuZINB_LinPulse: ", strMuModel))
-      }
-    }, error=function(strErrorMsg){
-      print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuZINB_LinPulse().",
-        " Wrote report into ImpulseDE2_lsErrorCausingGene.RData"))
-      print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-      print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
-      print(paste0("vecDropoutRateEst ", paste(vecDropoutRateEst,collapse=" ")))
-      print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
-      lsErrorCausingGene <- list(vecCounts, vecDisp, vecDropoutRateEst, vecNormConst)
-      names(lsErrorCausingGene) <- c("vecCounts", "vecDisp", "vecDropoutRateEst","vecNormConst")
-      save(lsErrorCausingGene,file=file.path(getwd(),"ImpulseDE2_lsErrorCausingGene.RData"))
-      print(strErrorMsg)
-      stop(strErrorMsg)
-    })
-  }
+  # if(all(vecNormConst==1) & !boolDynamicPi){
+  # Closed form maximum likelihood estimator of observed, not joint likelihood
+  #  scaMu <- sum(vecCounts*vecProbNB, na.rm=TRUE)/sum(vecProbNB, na.rm=TRUE)
+  # Numerical maximum likelihood estimator
+  
+  scaMu <- tryCatch({
+    if(strMuModel=="windows"){
+      exp(unlist(optim(
+        par=log(vecMu[scaTarget]),
+        evalLogLikMuWindowsZINB_LinPulse_comp,
+        vecCounts=vecCounts,
+        vecMu=vecMu,
+        vecDisp=vecDisp,
+        vecDropoutRateEst=vecDropoutRateEst,
+        matLinModelPi=matLinModelPi,
+        vecPredictorsPi=vecPredictorsPi,
+        vecNormConst=vecNormConst,
+        vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+        vecboolZero=vecCounts==0,
+        scaTarget=scaTarget,
+        scaWindowRadius=scaWindowRadius,
+        boolDynamicPi=boolDynamicPi,
+        method="BFGS",
+        control=list(maxit=1000,fnscale=-1) )["par"]))
+    } else if(strMuModel=="clusters"){
+      exp(unlist(optim(
+        par=log(vecMu[1]),
+        evalLogLikMuClustersZINB_LinPulse_comp,
+        vecCounts=vecCounts,
+        vecDisp=vecDisp,
+        vecDropoutRateEst=vecDropoutRateEst,
+        matLinModelPi=matLinModelPi,
+        vecPredictorsPi=vecPredictorsPi,
+        vecProbNB=vecProbNB,
+        vecNormConst=vecNormConst,
+        vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+        vecboolZero=vecCounts==0,
+        boolDynamicPi=boolDynamicPi,
+        method="BFGS",
+        control=list(maxit=1000,fnscale=-1) )["par"]))
+    } else {
+      stop(paste0("Unrecognised strMuModel in fitMuZINB_LinPulse: ", strMuModel))
+    }
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuZINB_LinPulse().",
+      " Wrote report into ImpulseDE2_lsErrorCausingGene.RData"))
+    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
+    print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
+    print(paste0("vecDropoutRateEst ", paste(vecDropoutRateEst,collapse=" ")))
+    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    lsErrorCausingGene <- list(vecCounts, vecDisp, vecDropoutRateEst, vecNormConst)
+    names(lsErrorCausingGene) <- c("vecCounts", "vecDisp", "vecDropoutRateEst","vecNormConst")
+    save(lsErrorCausingGene,file=file.path(getwd(),"ImpulseDE2_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    stop(strErrorMsg)
+  })
   
   # Catch boundary of likelihood domain on mu space
   if(is.na(scaMu) | scaMu < .Machine$double.eps){scaMu <- .Machine$double.eps}
@@ -847,7 +853,9 @@ fitMuImpulseZINB_LinPulse <- function(vecCounts,
   scaWindowRadius=NULL,
   vecPseudotime=NULL,
   vecImpulseParam=NULL,
-  boolDynamicPi=FALSE ){
+  boolDynamicPi=FALSE,
+  MAXIT=1000,
+  RELTOL=sqrt(.Machine$double.eps) ){
   
   lsImpulseFit <- tryCatch({
     fitImpulse_gene_LP(vecCounts=vecCounts, 
@@ -860,7 +868,8 @@ fitMuImpulseZINB_LinPulse <- function(vecCounts,
       vecboolZero=vecCounts==0,
       vecPseudotime=vecPseudotime,
       vecImpulseParam=vecImpulseParam,
-      scaWindowRadius=scaWindowRadius)
+      scaWindowRadius=scaWindowRadius,
+      MAXIT=MAXIT, RELTOL=RELTOL )
     
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuImpulseZINB_LinPulse().",
