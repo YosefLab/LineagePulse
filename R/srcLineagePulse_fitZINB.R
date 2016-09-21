@@ -206,9 +206,14 @@ fitZINBMu <- function( matCountsProc,
 #'    not used.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
-#' @param boolOneDispPerGene: (bool) [Default TRUE]
-#'    Whether one negative binomial dispersion factor is fitted
-#'    per gene or per gene for each cluster.
+#' @param strMuModel: (str) {"constant"}
+#'    [Default "impulse"] Model according to which the mean
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#'    [Default "constant"] Model according to which dispersion
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
 #' @param vecPseudotime: (numerical vector number of cells)
 #'    Pseudotime coordinates of cells.
 #' @param scaMaxiterEM: (scalar) Maximum number of EM-iterations to
@@ -242,10 +247,9 @@ fitZINBMu <- function( matCountsProc,
 fitZINB <- function(matCountsProc, 
   lsResultsClustering,
   vecSizeFactors,
-  vecSpikeInGenes=NULL,
-  boolOneDispPerGene=TRUE,
   scaWindowRadius=NULL,
   strMuModel="windows",
+  strDispModel = "constant",
   boolEstimateNoiseBasedOnH0=TRUE,
   vecPseudotime=NULL,
   scaMaxiterEM=100,
@@ -257,9 +261,12 @@ fitZINB <- function(matCountsProc,
   # Internal Parameters:
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations:
-  scaPrecEM <- 1-10^(-4)
+  scaPrecEM <- 1-10^(-6)
   MAXIT_BFGS_Impulse <- 1000 # optim default is 1000
   RELTOL_BFGS_Impulse <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
+  # Lowering RELTOL_BFGS_IMPULSE gives drastic run time improvements.
+  # Set to 10^(-4) to maintain sensible fits without running far into saturation
+  # in the objective (loglikelihood).
   
   # Store EM convergence
   vecEMLogLikModelA <- array(NA,scaMaxiterEM)
@@ -300,11 +307,11 @@ fitZINB <- function(matCountsProc,
     stop(paste0("ERROR in fitZINB(): strMuModel not recognised: ", strMuModel))
   }
   # Dispersion model
-  if(boolOneDispPerGene){
+  if(strDispModel=="constant"){
     # One dispersion factor per gene.
     scaKbyGeneH1 <- scaKbyGeneH1 + 1
   } else {
-    stop(paste0("ERROR in fitZINB(): boolOneDispPerGene set to FALSE."))
+    stop(paste0("ERROR in fitZINB(): strMuModel not recognised: ", strDispModel))
   }
   # 2. Null model H0:
   # One mean per gene and one dispersion factor
@@ -497,7 +504,7 @@ fitZINB <- function(matCountsProc,
         # b) Negative binomial dispersion parameter
         # Use MLE of dispersion factor: numeric optimisation of likelihood.
         tm_phi <-system.time({
-          if(boolOneDispPerGene){  
+          if(strDispModel=="constant"){  
             vecDispFitModelA <- bplapply(seq(1,scaNumGenes), function(i){
               fitDispZINB_LinPulse(scaDispGuess=matDispersionsModelA[i,1],
                 vecCounts=matCountsProc[i,],
@@ -511,7 +518,10 @@ fitZINB <- function(matCountsProc,
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-            stop("Non constant-dispersion factors are not yet implemented. david.seb.fischer@gmail.com")
+            print(paste0("Dispersion parameter model not recognised: ", strDispModel, 
+              ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
+            stop(paste0("Dispersion parameter model not recognised: ", strDispModel, 
+              ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelA <- sapply(vecDispFitModelA, function(fit) fit["convergence"])
           vecDispersionsModelA <- sapply(vecDispFitModelA, function(fit){ fit["par"] })
@@ -650,7 +660,7 @@ fitZINB <- function(matCountsProc,
         # b) Negative binomial dispersion parameter
         # Use MLE of dispersion factor: numeric optimisation of likelihood.
         tm_phi <- system.time({
-          if(boolOneDispPerGene){  
+          if(strDispModel=="constant"){  
             vecDispFitModelB <- bplapply(seq(1,scaNumGenes), function(i){
               fitDispZINB_LinPulse(scaDispGuess=matDispersionsModelB[i,1],
                 vecCounts=matCountsProc[i,],
@@ -664,7 +674,10 @@ fitZINB <- function(matCountsProc,
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-            stop("Non constant-dispersion factors are not yet implemented. david.seb.fischer@gmail.com")
+            print(paste0("Dispersion parameter model not recognised: ", strDispModel, 
+              ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
+            stop(paste0("Dispersion parameter model not recognised: ", strDispModel, 
+              ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelB <- sapply(vecDispFitModelB, function(fit) fit["convergence"])
           vecDispersionsModelB <- sapply(vecDispFitModelB, function(fit){ fit["par"] })

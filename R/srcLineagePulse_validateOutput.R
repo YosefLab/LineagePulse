@@ -12,7 +12,7 @@ library(reshape2)
 #' given cell. Assumes that drop-out rate(mean) relationship in 
 #' monotonously decreasing.
 #' 
-#' @seealso Called by axuillary \code{anlayseOuput}.
+#' @seealso Called by \code{anlayseOuput}.
 #' 
 #' @param vecLinearModel: (numeric vector length 2)
 #'    Two parameters of linear model of logistic function.
@@ -46,14 +46,16 @@ computeAUCLogistic <- function(vecLinearModel){
   return(scaAUC)
 }
 
-#' Compare ImpulseDE2 output against other differential expression method
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++  Validation metrics for ZINB fits  +++++++++++++++++++++++#
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+#' Generate metrics for validation of ZINB fit
 #' 
-#' The comparison is performed based on the adjusted p-values of differential
-#' expression. This methods allows the user to explore visually how 
-#' ImpulseDE2 output differs from similar methods.
+#' Compute and plot summary metrics that allow the user to judge
+#' whether the ZINB fit is sensible.
 #' 
-#' @seealso Auxillary method not called during ImpulseDE2 running.
-#' Called separately by user.
+#' @seealso Called by \code{runLineagePulse} or separately by user.
 #' 
 #' @param matQval: matrix with p-values by methods
 #' 
@@ -61,9 +63,9 @@ computeAUCLogistic <- function(vecLinearModel){
 #' 
 #' @export
 
-anlayseOuput <- function(
-  folderLineagePulseOutput,
-  folderPDFs,
+validateOuput <- function(
+  dirLineagePulseTempFiles,
+  dirValidationOut,
   strSCMode="continuous",
   scaWindowRadis=20,
   dfGeneAnnotation=NULL){
@@ -73,79 +75,46 @@ anlayseOuput <- function(
   # Load data
   setwd(folderLineagePulseOutput)
   load("LineagePulse_matCountsProc.RData")
-  load("LineagePulse_matDropout.RData")
-  load("LineagePulse_matProbNB.RData")
-  load("LineagePulse_matMu.RData")
+  load("LineagePulse_matMuH0.RData")
+  load("LineagePulse_matDispersionsH0.RData")
+  load("LineagePulse_matDropoutH0.RData")
+  load("LineagePulse_matMuH1.RData")
+  load("LineagePulse_matDispersionsH1.RData")
+  load("LineagePulse_matDropoutH1.RData")
+  load("LineagePulse_matZH1.RData")
   load("LineagePulse_matDropoutLinModel.RData")
-  matCountsProcLP <- matCountsProc
+  load("LineagePulse_dfDEAnalysis.RData")
   
-  load("ImpulseDE2_matCountDataProc.RData")
-  load("ImpulseDE2_dfAnnotationProc.RData")
-  load("ImpulseDE2_dfImpulseResults.RData")
-  load("ImpulseDE2_vecDEGenes.RData")
-  load("ImpulseDE2_lsImpulseFits.RData")
-  load("ImpulseDE2_matSizeFactors.RData")
+  # Initialise
+  setwd(dirValidationOut)
+  scaNumGenes <- dim(matCountDataProc)[1]
+  scaNumCells <- dim(matCountDataProc)[2]
   
-  if(!is.null(dfGeneAnnotation)){
-    rownames(matCountsProcLP) <- as.vector(dfGeneAnnotation[match(rownames(matCountsProcLP), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(matDropout) <- as.vector(dfGeneAnnotation[match(rownames(matDropout), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(matProbNB) <- as.vector(dfGeneAnnotation[match(rownames(matProbNB), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(matMu) <- as.vector(dfGeneAnnotation[match(rownames(matMu), rownames(dfGeneAnnotation)),"gene_short_name"])
-    
-    rownames(matCountDataProc) <- as.vector(dfGeneAnnotation[match(rownames(matCountDataProc), rownames(dfGeneAnnotation)),"gene_short_name"])
-    dfImpulseResults$Gene <- as.vector(dfGeneAnnotation[match(rownames(dfImpulseResults), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(dfImpulseResults) <- as.vector(dfGeneAnnotation[match(rownames(dfImpulseResults), rownames(dfGeneAnnotation)),"gene_short_name"])
-    names(vecDEGenes) <- as.vector(dfGeneAnnotation[match(names(vecDEGenes), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(lsImpulseFits$parameters_case) <- as.vector(dfGeneAnnotation[match(rownames(lsImpulseFits$parameters_case), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(lsImpulseFits$values_case) <- as.vector(dfGeneAnnotation[match(rownames(lsImpulseFits$values_case), rownames(dfGeneAnnotation)),"gene_short_name"])
-    rownames(matSizeFactors) <- as.vector(dfGeneAnnotation[match(rownames(matSizeFactors), rownames(dfGeneAnnotation)),"gene_short_name"])
-  }
-  
-  # Plot
-  setwd(folderPDFs)
-  # 1. CDF q-values
-  vecX <- seq(-100,-1,by=0.5)
-  vecCDF1 <- sapply(vecX, function(thres){sum(log(as.numeric(as.vector(dfImpulseResults$p)))/log(10) <= thres, na.rm=TRUE)})
-  pdf(paste0(folderPDFs,"/LineagePulse_ECDF-pvalues.pdf"),width=7,height=7)
+  # 1. ECDF q-values
+  vecX <- seq(max(-100,min(dfDEAnalysis$adj.p)),0,by=0.5)
+  vecCDF1 <- sapply(vecX, function(thres){
+    sum( log(as.numeric(as.vector(dfDEAnalysis$adj.p)))/log(10) <= thres, na.rm=TRUE)})
+  pdf("LineagePulse_ECDF-qvalues.pdf",width=7,height=7)
   plot(vecX,vecCDF1,
     col="black",pch=4,type="l",
     ylim=c(0,max(vecCDF1,na.rm=TRUE)),
-    xlab="log_10 p-value", 
-    ylab=paste0("Cumulative p-value distribution"),
-    main=paste0("Cumulative p-values distribution LineagePulse"),
+    xlab="log_10 q-value", 
+    ylab=paste0("Cumulative q-value distribution"),
+    main=paste0("Cumulative q-values distribution LineagePulse"),
     cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
   legend(x="topleft",
     legend=c("LineagePulse"),
     fill=c("black"))
   dev.off()
   graphics.off()
-  
-  # Additional: histogram p-value distribution
-  pdf(paste0(folderPDFs,"/LineagePulse_Histogram-logpvalues.pdf"),width=7,height=7)
-  hist(log(as.numeric(as.vector(dfImpulseResults$p)))/log(10),
-    breaks=20,
-    xlab="log_10 adjusted p-value)", 
-    ylab=paste0("Number of observations"),
-    main=paste0("Histogram of adjusted p-value"),
-    cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
-  dev.off()
-  graphics.off()
-  pdf(paste0(folderPDFs,"/LineagePulse_Histogram-pvalues.pdf"),width=7,height=7)
-  hist(as.numeric(as.vector(dfImpulseResults$p)),
-    breaks=20,
-    xlab="log_10 adjusted p-value)", 
-    ylab=paste0("Number of observations"),
-    main=paste0("Histogram of adjusted p-value"),
-    cex.lab=1.2, cex.axis=1.2, cex.main=1.5, cex.sub=1.2)
-  dev.off()
-  graphics.off()
-  
-  scaNumGenes <- dim(matCountDataProc)[1]
-  scaNumCells <- dim(matCountDataProc)[2]
+
   scaNIDs <- 200
   scaFracExprIsHigh <- 0.5
-  # 2. Plot highly expressed genes
-  vecIDsHighExpr <- apply(matCountDataProc, 1, function(gene){sum(gene > 10) >= scaFracExprIsHigh*scaNumCells})
+  
+  # 2. Plot Fits
+  # a). Plot highly expressed genes
+  vecIDsHighExpr <- apply(matCountDataProc, 1, function(gene){
+    sum(gene > 10) >= scaFracExprIsHigh*scaNumCells})
   vecIDsTopQvalHighExpre <- as.vector(dfImpulseResults[match(rownames(dfImpulseResults), rownames(matCountDataProc[vecIDsHighExpr,])),]$Gene)
   vecIDsTopQvalHighExpre <- (vecIDsTopQvalHighExpre[!is.na(vecIDsTopQvalHighExpre)])[1:scaNIDs]
   plotDEGenes( vecGeneIDs=vecIDsTopQvalHighExpre,
@@ -168,7 +137,7 @@ anlayseOuput <- function(
     NPARAM=6)
   graphics.off()
   
-  # 3. Plot top q-val
+  # b) Plot top q-val
   vecIDsTopQval <- as.vector(dfImpulseResults[1:scaNIDs,]$Gene)
   plotDEGenes( vecGeneIDs=vecIDsTopQval,
     matCountDataProc=matCountDataProc,
@@ -190,7 +159,7 @@ anlayseOuput <- function(
     NPARAM=6)
   graphics.off()
   
-  # 4. Plot worst significant q-val
+  # c) Plot worst significant q-val
   scaThres <- 10^(-3)
   idxIDatThres <- min(which(dfImpulseResults$adj.p > scaThres))-1
   vecIDsWorstQval <- as.vector(dfImpulseResults[max(1,idxIDatThres-scaNIDs):idxIDatThres,]$Gene)
@@ -214,19 +183,12 @@ anlayseOuput <- function(
     NPARAM=6)
   graphics.off()
   
-  # 5. Look at drop out rate vs mean fitting
-  # a) Sum of drop out rates of a cell
-  vecSumNotDropout <- apply(matDropout, 2, function(cell){sum(1-cell, na.rm=TRUE)})
-  # b) AUC of logistic curve as measure for drop-out intensity
-  vecAUCLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
-    computeAUCLogistic(cellmodel)
-  })
-  # c) Inflexion point of logistic
-  vecInflexLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
-    return(-cellmodel[1]/cellmodel[2])
-  })
+  # 3. Look at drop out rate vs mean fitting
   # Sequencing depth as a comparative experimental measure for drop-out
   vecDepth <- apply(matCountsProcLP, 2, function(cell){sum(cell, na.rm=TRUE)})
+  
+  # a) Sum of drop out rates of a cell
+  vecSumNotDropout <- apply(matDropout, 2, function(cell){sum(1-cell, na.rm=TRUE)})
   
   dfScatter1 <- data.frame(
     x=log(vecDepth),
@@ -241,9 +203,13 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0(folderPDFs,"/LineagePulse_Scatter_CumulativeNBProbvsDepth.pdf"),width=7,height=7)
+  pdf("LineagePulse_Scatter_CumulativeNBProbvsDepth.pdf",width=7,height=7)
   print(g1)
   dev.off()
+  # b) AUC of logistic curve as measure for drop-out intensity
+  vecAUCLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
+    computeAUCLogistic(cellmodel)
+  })
   
   dfScatter2 <- data.frame(
     x=log(vecDepth),
@@ -258,10 +224,15 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0(folderPDFs,"/LineagePulse_Scatter_AUCDropoutvsDepth.pdf"),width=7,height=7)
+  pdf("LineagePulse_Scatter_AUCDropoutvsDepth.pdf",width=7,height=7)
   print(g2)
   dev.off()
   graphics.off()
+  
+  # c) Inflexion point of logistic
+  vecInflexLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
+    return(-cellmodel[1]/cellmodel[2])
+  })
   
   dfScatter3 <- data.frame(
     x=vecDepth,
@@ -276,7 +247,7 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0(folderPDFs,"/LineagePulse_Scatter_InflexionDropoutvsDepth.pdf"),width=7,height=7)
+  pdf("LineagePulse_Scatter_InflexionDropoutvsDepth.pdf",width=7,height=7)
   print(g3)
   dev.off()
   graphics.off()
@@ -294,13 +265,13 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0(folderPDFs,"/LineagePulse_Scatter_logInflexionDropoutvslogDepth.pdf"),width=7,height=7)
+  pdf("LineagePulse_Scatter_logInflexionDropoutvslogDepth.pdf",width=7,height=7)
   print(g3b)
   dev.off()
   graphics.off()
   
-  # Plot drop-out rate as function of cell
-  pdf(paste0(folderPDFs,"/LineagePulse_LogisticScatter_DropoutvsMeanbyCell.pdf"),width=7,height=7)
+  # 4. Plot drop-out rate as function of cell
+  pdf("LineagePulse_LogisticScatter_DropoutvsMeanbyCell.pdf",width=7,height=7)
   for(cell in seq(1,dim(matDropout)[2])){
     plot( log(matMu[,cell])/log(10), 
       matDropout[,cell], 
@@ -311,8 +282,9 @@ anlayseOuput <- function(
   }
   dev.off()
   graphics.off()
-  # Summary plot with all logistic curves in one plot
-  # Colour by sequencing depth ordering
+  
+  # 5. Logistic dropout rate fit as function of mean coloured by
+  # sequencing depth.
   # Draw samples from dropout logistic model to save memory
   vecMu=sapply(seq(1,log(max(matMu)/10^(-4))/log(2)), function(x) 10^(-4)*2^x)
   matDropoutSampled <- matrix(NA, nrow=length(vecMu), ncol=dim(matDropout)[2])
@@ -348,8 +320,52 @@ anlayseOuput <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf(paste0(folderPDFs,"/LineagePulse_AllCurves_LogisticDropoutvsMubyDepth.pdf"),width=7,height=7)
+  pdf("LineagePulse_AllCurves_LogisticDropoutvsMubyDepth.pdf",width=7,height=7)
   print(g4)
+  dev.off()
+  graphics.off()
+  
+  # 6. Plot variance measure as function of mean
+  # a) Plot dispersion parameter fit as function of mean parameter
+  # From H0 to have one parameter each per gene.
+  dfScatterDispvsMean <- data.frame(
+    x=log(matMuH0[,1])/log(10),
+    y=matDispersions[,1]) )
+  gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=x, y=y)) +
+    geom_point() + 
+    labs(title="Dispersion parameter as function of mean parameter under H0.") +
+    xlab(paste0("log10 H0 mean parameter")) +
+    ylab(paste0("H0 dispersion parameter")) + 
+    scale_fill_continuous(name = "Count") + 
+    theme(axis.text=element_text(size=14),
+      axis.title=element_text(size=14,face="bold"),
+      title=element_text(size=14,face="bold"),
+      legend.text=element_text(size=14))
+  pdf("LineagePulse_Scatter_DispvsMean.pdf",width=7,height=7)
+  print(gScatterDispvsMean)
+  dev.off()
+  graphics.off()
+  
+  # b) Plot coefficient of variation as function of mean parameter
+  # Compute coefficient of variation under H0
+  vecVar <- matMuH0[,1] + matMuH0[,1]^2 / matDispersions[,1]
+  vecCV <- vecVar / matMuH0[,1]^2
+  # From H0 to have one parameter each per gene.
+  dfScatterDispvsMean <- data.frame(
+    x=log(matMuH0[,1])/log(10),
+    y=vecCV )
+  gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=x, y=y)) +
+    geom_point() + 
+    labs(title="Dispersion parameter as function of mean parameter under H0.") +
+    xlab(paste0("log10 H0 mean parameter")) +
+    ylab(paste0("coefficient of variation")) + 
+    scale_fill_continuous(name = "Count") + 
+    theme(axis.text=element_text(size=14),
+      axis.title=element_text(size=14,face="bold"),
+      title=element_text(size=14,face="bold"),
+      legend.text=element_text(size=14))
+  pdf("LineagePulse_Scatter_CVvsMean.pdf",width=7,height=7)
+  print(gScatterDispvsMean)
   dev.off()
   graphics.off()
   

@@ -102,9 +102,14 @@ source("srcLineagePulse_calcProbNB.R")
 #'    as hyperparameter estimation.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval length.
-#' @param boolOneDispPerGene: (bool) [Default TRUE]
-#'    Whether one negative binomial dispersion factor is fitted
-#'    per gene or per gene for each cluster.
+#' @param strMuModel: (str) {"constant"}
+#'    [Default "impulse"] Model according to which the mean
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#'    [Default "constant"] Model according to which dispersion
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
 #' @param boolDEAnalysisImpulseModel: (bool) [Default TRUE]
 #'    Whether to perform differential expression analysis with ImpulseDE2.
 #' @param boolDEAnalysisModelFree: (bool) [Default FALSE]
@@ -121,29 +126,12 @@ source("srcLineagePulse_calcProbNB.R")
 #' 
 #' @return (list length 2)
 #'    \itemize{
-#'    \item lsImpulseDE2results: (list length 4)
-#'    \itemize{
-#'      \item vecDEGenes: (list number of genes) Genes IDs identified
-#'        as differentially expressed by ImpulseDE2 at threshold \code{Q_value}.
-#'      \item dfImpulseResults: (data frame) ImpulseDE2 results.
-#'      \item lsImpulseFits: (list) List of matrices which
-#'        contain parameter fits and model values for given time course for the
-#'        case condition (and control and combined if control is present).
-#'        Each parameter matrix is called parameter_'condition' and has the form
-#'        (genes x [beta, h0, h1, h2, t1, t2, logL_H1, converge_H1, mu, logL_H0, 
-#'        converge_H0]) where beta to t2 are parameters of the impulse
-#'        model, mu is the single parameter of the mean model, logL are
-#'        log likelihoods of full (H1) and reduced model (H0) respectively, converge
-#'        is convergence status of numerical optimisation of model fitting by
-#'        \code{optim} from \code{stats} of either model. Each value matrix is called
-#'        value_'condition' and has the form (genes x time points) and contains the
-#'        counts predicted by the impulse model at the observed time points.
-#'      \item dfDESeq2Results: (NULL) DESeq2 results, DESeq2 is not run within
-#'        ImpulseDE2 in singlecell mode.
-#'    }
-#'    \item dfModelFreeDEAnalysis: (data frame) 
-#'        Summary of model-free differential expression analysis.
-#'    }
+#'      \item   dfDEAnalysis: (integer vector length number of
+#'        cells) Index of cluster assigned to each cell.
+#'      \item   matMu: 1D Coordinates of cluster centroids,
+#'        one scalar per centroid.
+#'      \item   K: (scalar) Number of clusters selected.
+#'      }
 #'    
 #' @author David Sebastian Fischer
 #' 
@@ -151,35 +139,38 @@ source("srcLineagePulse_calcProbNB.R")
 
 runLineagePulse <- function(matCounts, 
   vecPseudotime,
-  K=NULL,
+  scaKClusters=NULL,
   scaSmallRun=NULL,
   boolPseudotime = TRUE,
   boolContPseudotimeFit = TRUE,
-  boolOneDispPerGene = TRUE,
-  scaWindowRadius=20,
-  boolEstimateNoiseBasedOnH0=TRUE,
+  scaWindowRadius=NULL,
+  boolEstimateNoiseBasedOnH0=FALSE,
   strMuModel="impulse",
+  strDispModel = "constant",
   boolPlotZINBfits = FALSE,
+  boolValidateZINBfit=TRUE,
   scaMaxiterEM=20,
   nProc=1,
   verbose=TRUE,
-  boolSuperVerbose=FALSE ){
+  boolSuperVerbose=FALSE,
+  dirOut=NULL ){
   
   # 1. Data preprocessing
   print("1. Data preprocessing:")
-  lsProcessedSCData <- processSCData(matCounts=matCounts,
+  lsProcessedSCData <- processSCData( matCounts=matCounts,
     vecPseudotime=vecPseudotime,
     scaSmallRun=scaSmallRun,
     strMuModel=strMuModel,
-    scaWindowRadius=scaWindowRadius
-    )
+    scaWindowRadius=scaWindowRadius,
+    dirOut=dirOut )
   matCountsProc <- lsProcessedSCData$matCountsProc
   matCountsProcFull <- lsProcessedSCData$matCountsProcFull
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
+  dirOut <- lsProcessedSCData$dirOut
   
-  save(matCountsProc,file=file.path(getwd(),"LineagePulse_matCountsProc.RData"))
-  save(matCountsProcFull,file=file.path(getwd(),"LineagePulse_matCountsProcFull.RData"))
-  save(vecPseudotimeProc,file=file.path(getwd(),"LineagePulse_vecPseudotimeProc.RData"))
+  save(matCountsProc,file=file.path(dirOut,"LineagePulse_matCountsProc.RData"))
+  save(matCountsProcFull,file=file.path(dirOut,"LineagePulse_matCountsProcFull.RData"))
+  save(vecPseudotimeProc,file=file.path(dirOut,"LineagePulse_vecPseudotimeProc.RData"))
   
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
@@ -187,7 +178,7 @@ runLineagePulse <- function(matCounts,
     if(boolPseudotime){
       # Cluster in pseudotime
       lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
-        Kexternal=K)
+        Kexternal=scaKClusters)
       # Plot clustering
       plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
         lsResultsClustering=lsResultsClustering)
@@ -201,7 +192,7 @@ runLineagePulse <- function(matCounts,
       names(lsResultsClustering) <- c("Assignments","Centroids","K")
     }
   })
-  save(lsResultsClustering,file=file.path(getwd(),"LineagePulse_lsResultsClustering.RData"))
+  save(lsResultsClustering,file=file.path(dirOut,"LineagePulse_lsResultsClustering.RData"))
   print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
     " min",sep=""))
   
@@ -217,12 +208,12 @@ runLineagePulse <- function(matCounts,
       vecPseudotime=vecPseudotimeProc,
       lsResultsClustering=lsResultsClustering)
   }
-  save(dfAnnotation,file=file.path(getwd(),"LineagePulse_dfAnnotation.RData"))
+  save(dfAnnotation,file=file.path(dirOut,"LineagePulse_dfAnnotation.RData"))
   
   # 4. Compute size factors
   print("4. Compute size factors:")
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
-  save(vecSizeFactors,file=file.path(getwd(),"LineagePulse_vecSizeFactors.RData"))
+  save(vecSizeFactors,file=file.path(dirOut,"LineagePulse_vecSizeFactors.RData"))
   
   # 5. Fit ZINB mixture model for both H1 and H0.
   print("5. Fit ZINB mixture model for both H1 and H0.")
@@ -230,11 +221,10 @@ runLineagePulse <- function(matCounts,
     lsZINBFit <- fitZINB( matCountsProc=matCountsProc, 
       lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
-      vecSpikeInGenes=NULL,
-      boolOneDispPerGene=boolOneDispPerGene,
       scaWindowRadius=scaWindowRadius,
       boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
       strMuModel=strMuModel,
+      strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,
       scaMaxiterEM=scaMaxiterEM,
@@ -250,14 +240,14 @@ runLineagePulse <- function(matCounts,
     matImpulseParam  <- lsZINBFit$matImpulseParam
     lsFitZINBReporters <- lsZINBFit$lsFitZINBReporters
   })
-  save(matMuH1,file=file.path(getwd(),"LineagePulse_matMuH1.RData"))
-  save(matDispersionsH1,file=file.path(getwd(),"LineagePulse_matDispersionsH1.RData"))
-  save(matDropoutH1,file=file.path(getwd(),"LineagePulse_matDropoutH1.RData"))
-  save(matMuH0,file=file.path(getwd(),"LineagePulse_matMuH0.RData"))
-  save(matDispersionsH0,file=file.path(getwd(),"LineagePulse_matDispersionsH0.RData"))
-  save(matDropoutH0,file=file.path(getwd(),"LineagePulse_matDropoutH0.RData"))
-  save(matDropoutLinModel,file=file.path(getwd(),"LineagePulse_matDropoutLinModel.RData"))
-  save(matImpulseParam,file=file.path(getwd(),"LineagePulse_matImpulseParam.RData"))
+  save(matMuH1,file=file.path(dirOut,"LineagePulse_matMuH1.RData"))
+  save(matDispersionsH1,file=file.path(dirOut,"LineagePulse_matDispersionsH1.RData"))
+  save(matDropoutH1,file=file.path(dirOut,"LineagePulse_matDropoutH1.RData"))
+  save(matMuH0,file=file.path(dirOut,"LineagePulse_matMuH0.RData"))
+  save(matDispersionsH0,file=file.path(dirOut,"LineagePulse_matDispersionsH0.RData"))
+  save(matDropoutH0,file=file.path(dirOut,"LineagePulse_matDropoutH0.RData"))
+  save(matDropoutLinModel,file=file.path(dirOut,"LineagePulse_matDropoutLinModel.RData"))
+  save(matImpulseParam,file=file.path(dirOut,"LineagePulse_matImpulseParam.RData"))
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
@@ -269,27 +259,31 @@ runLineagePulse <- function(matCounts,
     matboolZero= matCountsProc==0,
     matboolNotZeroObserved= (!is.na(matCountsProc) & matCountsProc>0),
     scaWindowRadius=scaWindowRadius )
-  save(matZH1,file=file.path(getwd(),"LineagePulse_matZH1.RData"))
+  save(matZH1,file=file.path(dirOut,"LineagePulse_matZH1.RData"))
 
-  # X. Plot ZINB fits to data.
-  if(boolPlotZINBfits & FALSE){
-    graphics.off()
-    print("X. Plot ZINB fits to data.")
-    vecZINBfitPlotIDs <- names(sort(apply(matCountsProc, 1, mean),
-      decreasing=TRUE)[1:min(20,dim(matCountsProc)[1])])
-    plotZINBfits(vecGeneIDs=vecZINBfitPlotIDs, 
-      matCounts=matCountsProc,
-      matMuCluster=matMuCluster, 
-      vecDispersions=vecDispersions,
-      matProbNB=matProbNB,
-      vecClusterAssignments=lsResultsClustering$Assignments,
-      lsResultsClustering=lsResultsClustering,
-      dfAnnotation=dfAnnotation, 
-      strPDFname="LineagePulse_ZINBfits.pdf" )
+  # 7. Plot ZINB fits to data.
+  if(boolPlotZINBfits){
+    tm_plotZINBfits <- system.time({
+      graphics.off()
+      print("7. Plot ZINB fits to data.")
+      vecZINBfitPlotIDs <- rownames(matCountsProc)
+      vecZINBfitPlotIDs <- vecZINBfitPlotIDs[1:min(100,length(vecZINBfitPlotIDs))]
+      vecMuH0 <- matMuH0[,1]
+      vecDispersionsH0 <- matDispersionsH0[,1]
+      plotZINBfits( vecGeneIDs=vecZINBfitPlotIDs, 
+        matCounts=matCountsProc,
+        vecMu=vecMuH0, 
+        vecDispersions=vecDispersionsH0,
+        matProbNB=1-matZH1,
+        scaWindowRadius=scaWindowRadius,
+        strPDFname="LineagePulse_ZINBfits.pdf" )
+    })
+    print(paste("Time elapsed during plotting of ZINP fits: ",
+      round(tm_plotZINBfits["elapsed"]/60,2)," min",sep=""))
   }
   
-  # 7. Differential expression analysis:
-  print("7. Differential expression analysis:")
+  # 8. Differential expression analysis:
+  print("8. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
     dfDEAnalysis <- runDEAnalysis(
       matCountsProc = matCountsProc,
@@ -304,11 +298,24 @@ runLineagePulse <- function(matCounts,
       scaKbyGeneH0=lsFitZINBReporters$scaKbyGeneH0,
       scaWindowRadius=scaWindowRadius )
   })
-  save(dfDEAnalysis,file=file.path(getwd(),"LineagePulse_dfDEAnalysis.RData"))
+  save(dfDEAnalysis,file=file.path(dirOut,"LineagePulse_dfDEAnalysis.RData"))
   print(paste("Time elapsed during differential expression analysis: ",
     round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
-  print("Completed LineagePulse.")
+  # 9. Generate validation metrics for inferred ZINB fits
+  if(boolValidateZINBfit){
+    validateOuput <- function(
+      dirLineagePulseTempFiles=dirOut,
+      dirValidationOut=dirOut,
+      strSCMode="continuous",
+      scaWindowRadis=20,
+      dfGeneAnnotation=NULL)
+  }
+  
+  # TODO: return mu matrix with constant fits and impulse fits
+  # if significant.
+  
+  print("LineagePulse complete.")
   return(list( dfDEAnalysis=dfDEAnalysis,
     matMu=matMuH1 ))
 }

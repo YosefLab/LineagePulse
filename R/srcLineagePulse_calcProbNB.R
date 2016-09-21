@@ -64,5 +64,7 @@ calcProbNB <- function( matMu,
     return(vecZ)
   }))
   
+  rownames(matZ) <- rownames(matMu)
+  colnames(matZ) <- colnames(matMu)
   return(matZ)
 }

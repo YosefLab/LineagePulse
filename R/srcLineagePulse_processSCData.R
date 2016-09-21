@@ -33,7 +33,8 @@ processSCData <- function(matCounts,
   vecPseudotime,
   scaSmallRun,
   strMuModel,
-  scaWindowRadius ){
+  scaWindowRadius,
+  dirOut ){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -146,7 +147,13 @@ processSCData <- function(matCounts,
   # Name nameless gene:
   matCountsProc <- nameGenes(matCountsProc)
   
+  # Process output directory
+  if(is.null(dirOut)){
+    dirOut <- getwd()
+  }
+  
   return(list(matCountsProc=matCountsProc,
     matCountsProcFull=matCountsProcFull,
-    vecPseudotimeProc=vecPseudotimeProc))
+    vecPseudotimeProc=vecPseudotimeProc,
+    dirOut=dirOut ))
 }

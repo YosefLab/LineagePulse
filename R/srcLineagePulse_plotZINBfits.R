@@ -12,25 +12,17 @@
 #'    Elements must be rownames of matCounts.
 #' @param matCounts: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param matMuCluster:
+#' @param vecMu: (numeric vector number of genes)
+#'    Constant mean parameter estimate (H0) of genes.
+#'    Must be contain names of vecGeneIDs as labels.
+#' @param vecDispersions: (numeric vector number of genes)
+#'    Constant dispersion parameter estimate (H0) of genes.
+#'    Must be contain names of vecGeneIDs as labels.
 #' @param vecDispersions: (vector number of genes) Gene-wise 
 #'    negative binomial dispersion coefficients.
 #' @param matProbNB: (probability matrix genes x samples) 
 #'    Probability of observations to come from negative binomial 
 #'    component of mixture model.
-#' @param vecClusterAssignments:
-#' @param lsResultsClustering (list {"Assignments","Centroids","K"})
-#'    \itemize{
-#'      \item   Assignments: (integer vector length number of
-#'        cells) Index of cluster assigned to each cell.
-#'      \item   Centroids: 1D Coordinates of cluster centroids,
-#'        one scalar per centroid.
-#'      \item   K: (scalar) Number of clusters selected.
-#'      }
-#' @param dfAnnotationImpulseDE2: (Table)
-#'    Annotation table. Lists covariates of samples: 
-#'    Sample, Condition, Time. Time must be numeric. No longitudinal
-#'    series given as scRNA-seq data are not longitudinal.
 #' @param strPDFname: (str) Name of .pdf with plots.
 #' 
 #' @return NULL
@@ -38,13 +30,19 @@
 
 plotZINBfits <- function(vecGeneIDs, 
   matCounts,
-  matMuCluster, 
+  vecMu, 
   vecDispersions,
   matProbNB,
-  vecClusterAssignments,
-  lsResultsClustering,
-  dfAnnotation, 
+  scaWindowRadius,
   strPDFname="LineagePulse_ZINBfits.pdf"){
+  
+  scaNumCells <- dim(matCounts)[2]
+    
+  # Only keep target genes in input parameters
+  matCounts <- matCounts[vecGeneIDs,]
+  vecMu <- vecMu[vecGeneIDs]
+  vecDispersions <- vecDispersions[vecGeneIDs]
+  matProbNB <- matProbNB[vecGeneIDs,]
   
   # Only for batch/singlecell plotting:
   # Width of negative binomial pdf (ylim) in time units for plotting
@@ -65,9 +63,6 @@ plotZINBfits <- function(vecGeneIDs,
   #  ncol=dim(matCounts)[2], 
   #  byrow=TRUE)
   
-  vecClusters <- sort(unique(vecClusterAssignments))
-  vecindClusterAssignments <- match(vecClusterAssignments,vecClusters)
-  
   # Define grid for printing plots
   par(mfrow=c(3,3), xpd=TRUE)
   scaLegendInset <- -0.65
@@ -75,29 +70,35 @@ plotZINBfits <- function(vecGeneIDs,
   # Create list of plots
   lsPlots <- list()
   for (geneID in vecGeneIDs){
-    for(cl in vecClusters){
-      vecXCoordPDF <- seq(0,max(matCounts[geneID,vecindClusterAssignments==match(cl,vecClusters)],na.rm=TRUE))
-      vecYCoordPDF <- dnbinom(vecXCoordPDF,mu=matMuCluster[geneID,cl],
-        size=vecDispersions[geneID])
-      # Plot both
-      vecMixtures <- c("Negative binomial","Dropout")
-      dfData <- data.frame( counts=as.vector(matCounts[geneID,vecindClusterAssignments==match(cl,vecClusters)] ),
-        mixture=vecMixtures[as.numeric(matProbNB[geneID,vecindClusterAssignments==match(cl,vecClusters)] < 0.5)+1]  )
-      dfDensity <- data.frame( counts=vecXCoordPDF, density=vecYCoordPDF*(dim(dfData)[1]))
-      lsPlots[[length(lsPlots)+1]] <- suppressMessages( ggplot( ) +
-          geom_histogram( data=dfData, aes(x=counts, y=..count.., fill=mixture), alpha=0.5 ) +
-          geom_line( data=dfDensity, aes(x=counts, y=density), col = "blue") +
-          labs(title=paste0(geneID," Cluster ", cl, " Observed cells: ",length(dfData$counts),
-            "\n Non-zero counts: ", sum(dfData$counts!=0), " Inferred mean: ", round(matMuCluster[geneID,cl]))) +
-          xlab("Counts") +
-          ylab("Frequency") )
-    }
+    vecXCoordPDF <- seq(0, max(matCounts[geneID,],na.rm=TRUE))
+    vecYCoordPDF <- dnbinom(vecXCoordPDF,
+      mu=rep(vecMu[geneID],scaNumCells),
+      size=rep(vecDispersions[geneID],scaNumCells))
+    # Plot both
+    vecMixtures <- c("Negative binomial","Dropout")
+    dfData <- data.frame( counts=as.vector(matCounts[geneID,] ),
+      mixture=vecMixtures[as.numeric(matProbNB[geneID,] < 0.5)+1]  )
+    dfDensity <- data.frame( counts=vecXCoordPDF, 
+      density=vecYCoordPDF*(dim(dfData)[1]))
+    lsPlots[[length(lsPlots)+1]] <- suppressMessages( 
+      ggplot( ) +
+        geom_histogram( data=dfData, 
+          aes(x=counts, y=..count.., fill=mixture), 
+          alpha=0.5 ) +
+        geom_line( data=dfDensity, 
+          aes(x=counts, y=density), 
+          col = "blue") +
+        labs(title=paste0(geneID," Observed cells: ",length(dfData$counts),
+          "\n Non-zero counts: ", sum(dfData$counts!=0))) +
+        xlab("Counts") +
+        ylab("Frequency") 
+    )
   }
   
   # Write plots into .pdf
   pdf(strPDFname,height=6.0,width=9.0)
-  for(plotTF in lsPlots){
-    suppressMessages( print(plotTF) )
+  for(plotGene in lsPlots){
+    suppressMessages( print(plotGene) )
   }
   dev.off()
 }
