@@ -1,53 +1,82 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++++++++++    Model-free DE analysis  ++++++++++++++++++++++++#
+#++++++++++++++++++++   Differential expression analysis  +++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Differential expression analysis
 #' 
-#' Performs differential expression analysis. This functiion is
-#' broken up into:
-#' (I) Fit null model.
-#' (II) Compute likelihood of full and reduced model.
-#' (II) Differential expression analysis.
+#' Performs differential expression analysis based on previously estimated 
+#' null and alternative models.
+#' (I) Compute loglikelihood of data under null H0 and alternative H1 model.
+#' (II) Differential expression analysis as loglikelihood ratio test.
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param vecDispersions: (vector number of genes) Gene-wise 
-#'    negative binomial dispersion coefficients.
-#' @param vecDispersions: (numeric matrix genes x clusters)
-#'    Inferred negative binomial dispersions.
-#' @param matMuCluster: (numeric matrix genes x clusters)
-#'    Inferred negative binomial cluster means.
-#' @param matDropout: (numeric matrix genes x cells)
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param matMuH1: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial mean parameters
+#'    under alternative model H1.
+#' @param matDispersionsH1: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial dispersion parameters
+#'    under alternative model H1.
+#' @param matDropoutH1: (numeric matrix genes x cells)
 #'    Inferred zero inflated negative binomial drop out rates.
-#' @param boolConvergenceZINBH1: (bool) Convergence of EM algorithm for
-#'    full model.
-#' @param nProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
-#' @param scaMaxiterEM: (scalar) Maximum number of EM-iterations to
-#'    be performed in ZINB model fitting.
-#' @param verbose: (bool) Whether to follow EM-algorithm
-#'    convergence.
+#'    These are the observation-wise point estimates, not the
+#'    logistic functions. Fit under alternative model H1.
+#' @param scaKbyGeneH1: (scalar) Degrees of freedom
+#'    by gene used in alternative model H1. The logistic
+#'    dropout model is ignored as it is shared between
+#'    alternative and null model.
+#' @param matMuH0: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial mean parameters
+#'    under null model H0.
+#' @param matDispersionsH0: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial dispersion parameters
+#'    under null model H0.
+#' @param matDropoutH0: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial drop out rates.
+#'    These are the observation-wise point estimates, not the
+#'    logistic functions. Fit under null model H0.
+#' @param scaKbyGeneH0: (scalar) Degrees of freedom
+#'    by gene used in null model H0. The logistic
+#'    dropout model is ignored as it is shared between
+#'    alternative and null model.
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
 #' 
-#' @return dfModelFreeDEAnalysis: (data frame genes) 
-#'    Summary of model-free differential expression analysis.
+#' @return dfModelFreeDEAnalysis: (data frame genes x reported variables) 
+#'    Summary of differential expression analysis, sorted by adj.p:
+#'    {Gene: gene ID,
+#'    p: raw p-value, 
+#'    adj.p: BH corrected p-value, 
+#'    loglik_full: loglikelihood of alternative model H1,
+#'    loglik_red: loglikelihood of null model H0,
+#'    deviance: loglikelihood ratio test statistic (the deviance),
+#'    mean_H0: inferred gene-wise mean parameter (constant null model),
+#'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
 #' @export
 
 runDEAnalysis <- function(matCountsProc,
   vecSizeFactors,
-  matDispersionsH1,
   matMuH1,
+  matDispersionsH1,
   matDropoutH1,
   scaKbyGeneH1,
-  matDispersionsH0,
   matMuH0,
+  matDispersionsH0,
   matDropoutH0,
   scaKbyGeneH0,
   scaWindowRadius=NULL ){
   
-  # Compute log likelihoods
+  # (I) Compute log likelihoods
   matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
   matboolZero <- matCountsProc==0
   

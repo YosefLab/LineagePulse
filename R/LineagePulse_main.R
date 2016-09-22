@@ -40,6 +40,9 @@ source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_calcProbNB.R")
+source("srcLineagePulse_validateOutput.R")
+source("srcLineagePulse_validateOutputSimulation.R")
+source("srcLineagePulse_plotGene.R")
 
 ################################################################################
 ### Main function
@@ -84,8 +87,8 @@ source("srcLineagePulse_calcProbNB.R")
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
-#' @param K: (integer) [Default NULL] Forces number of centroids
-#'    in K-means to be K: setting this to not NULL skips model
+#' @param scaKCluster: (integer) [Default NULL] Forces number of centroids
+#'    in K-means to be K: setting this to an integer (not NULL) skips model
 #'    selection in clusterting.
 #' @param scaSmallRun: (integer) [Default NULL] Number of rows
 #'    on which ImpulseDE2 is supposed to be run, the full
@@ -100,8 +103,22 @@ source("srcLineagePulse_calcProbNB.R")
 #'    of the cells. If false, the pseudotime centroids of the clusters
 #'    are chose: Impulse fitting is done based on the same clusters
 #'    as hyperparameter estimation.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval length.
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
+#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#'    Whether to co-estimate logistic drop-out model with the 
+#'    constant null model or with the alternative model. The
+#'    co-estimation with the noise model typically extends the
+#'    run-time of this model-estimation step strongly. While
+#'    the drop-out model is more accurate if estimated based on
+#'    a more realistic model expression model (the alternative
+#'    model), a trade-off for speed over accuracy can be taken
+#'    and the dropout model can be chosen to be estimated based
+#'    on the constant null expression model (set to TRUE).
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -110,27 +127,42 @@ source("srcLineagePulse_calcProbNB.R")
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
-#' @param boolDEAnalysisImpulseModel: (bool) [Default TRUE]
-#'    Whether to perform differential expression analysis with ImpulseDE2.
-#' @param boolDEAnalysisModelFree: (bool) [Default FALSE]
-#'    Whether to perform model-free differential expression analysis.
 #' @param boolPlotZINBfits: (bool) [Default TRUE]
 #'    Whether to plot zero-inflated negative binomial fits to selected genes
 #'    and clusters.
-#' @param scaMaxiterEM: (integer) [Default 20] Maximium number 
-#'    of EM-terations performed in fitZINB(), i.e. during
-#'    estimation of the zero-inflated negative binomial 
-#'    hyperparameters.
+#' @param boolValidateZINBfit: (bool) [Default TRUE]
+#'    Whether to generate evaluation metrics and plots
+#'    for parameter values of inferred ZINB model.
+#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
+#'    of estimation cycles performed in fitZINB(). One cycle
+#'    contain one estimation of of each parameter of the 
+#'    zero-inflated negative binomial model as coordinate ascent.
 #' @param nProc: (scalar) [Default 1] Number of processes for 
 #'    parallelisation.
+#' @param verbose: (bool) [Defaul TRUE]
+#'    Whether progress of coordinate ascent within fitZINB is 
+#'    reported once per iteration.
+#' @param boolSuperVerbose: (bool) [Defaul FALSE]
+#'    Whether coordinate ascent within fitZINB is followed
+#'    step-by-step rather than reporting once per iteration.
+#' @param dirOut: (str directory) [Default NULL]
+#'    Directory to which detailed output is saved to.
+#'    Defaults to current working directory if NULL.
 #' 
 #' @return (list length 2)
 #'    \itemize{
-#'      \item   dfDEAnalysis: (integer vector length number of
-#'        cells) Index of cluster assigned to each cell.
+#'      \item   dfDEAnalysis: (data frame genes x reported variables) 
+#'    Summary of differential expression analysis, sorted by adj.p:
+#'    {Gene: gene ID,
+#'    p: raw p-value, 
+#'    adj.p: BH corrected p-value, 
+#'    loglik_full: loglikelihood of alternative model H1,
+#'    loglik_red: loglikelihood of null model H0,
+#'    deviance: loglikelihood ratio test statistic (the deviance),
+#'    mean_H0: inferred gene-wise mean parameter (constant null model),
+#'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
 #'      \item   matMu: 1D Coordinates of cluster centroids,
 #'        one scalar per centroid.
-#'      \item   K: (scalar) Number of clusters selected.
 #'      }
 #'    
 #' @author David Sebastian Fischer
@@ -149,7 +181,7 @@ runLineagePulse <- function(matCounts,
   strDispModel = "constant",
   boolPlotZINBfits = FALSE,
   boolValidateZINBfit=TRUE,
-  scaMaxiterEM=20,
+  scaMaxCycles=20,
   nProc=1,
   verbose=TRUE,
   boolSuperVerbose=FALSE,
@@ -227,7 +259,7 @@ runLineagePulse <- function(matCounts,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,
-      scaMaxiterEM=scaMaxiterEM,
+      scaMaxCycles=scaMaxCycles,
       verbose=verbose,
       boolSuperVerbose=boolSuperVerbose )
     matMuH1  <- lsZINBFit$matMuH1
@@ -304,12 +336,9 @@ runLineagePulse <- function(matCounts,
   
   # 9. Generate validation metrics for inferred ZINB fits
   if(boolValidateZINBfit){
-    validateOuput <- function(
-      dirLineagePulseTempFiles=dirOut,
-      dirValidationOut=dirOut,
-      strSCMode="continuous",
-      scaWindowRadis=20,
-      dfGeneAnnotation=NULL)
+    print("9. Generate ZINB model fit validation metrics:")
+    suppressWarnings( validateOutput(dirLineagePulseTempFiles=dirOut,
+      dirValidationOut=dirOut) )
   }
   
   # TODO: return mu matrix with constant fits and impulse fits

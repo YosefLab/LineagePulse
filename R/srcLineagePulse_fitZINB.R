@@ -1,6 +1,7 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 #+++++++++++++++++++++++++     Fit ZINB model    ++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+# DEVELOPER COMMENTS ON ALGORITHM BUILDING AND IMPLEMENTATION
 # Note: Most problems are numerical and not conceptual problems.
 
 # Previously encountered problems:
@@ -34,12 +35,98 @@
 # be so bad in first iteration with low dispersion param!?
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
+#' Coordinate mean parameter estimation step
+#' 
+#' Auxillary function that calls the estimation functions for the
+#' different mean models according to their needs. This function
+#' only saves space in fitZINB.
+#' 
+#' @seealso Called by \code{fitZINB}.
+#' 
+#' @param matCountsProc: (matrix genes x cells)
+#'    Count data of all cells, unobserved entries are NA.
+#' @param vecSizeFactors: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param vecPseudotime: (numerical vector number of cells)
+#'    [Default NULL]
+#'    Pseudotime coordinates of cells. Only required if mean model
+#'    or dispersion model are fit as a function of pseudotime, 
+#'    e.g. impulse model for means.
+#' @param vecindClusterAssign: (integer vector length number of
+#'    cells) [Default NULL] Index of cluster assigned to each cell.
+#' @param matMu: (numeric matrix genes x cells) [Default NULL]
+#'    Inferred zero inflated negative binomial mean parameters on 
+#'    which estimation in this step  is conditioned on. 
+#'    Not required for all models.
+#' @param  matDispersions: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial dispersion parameters
+#'    on which estimation in this step is conditioned on.
+#' @param matDropout: (numeric matrix genes x cells)
+#'    Inferred zero inflated negative binomial drop out rates
+#'    on which estimation in this step is conditioned on.
+#'    These are the observation-wise point estimates, not the
+#'    logistic functions. ==========CORRECTED UNTIL HERE.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#' @param strMuModel: (str) {"constant"}
+#'    [Default "impulse"] Model according to which the mean
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#'    [Default "constant"] Model according to which dispersion
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#'    Whether to co-estimate logistic drop-out model with the 
+#'    constant null model or with the alternative model. The
+#'    co-estimation with the noise model typically extends the
+#'    run-time of this model-estimation step strongly. While
+#'    the drop-out model is more accurate if estimated based on
+#'    a more realistic model expression model (the alternative
+#'    model), a trade-off for speed over accuracy can be taken
+#'    and the dropout model can be chosen to be estimated based
+#'    on the constant null expression model (set to TRUE).
+#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
+#'    of estimation cycles performed in fitZINB(). One cycle
+#'    contain one estimation of of each parameter of the 
+#'    zero-inflated negative binomial model as coordinate ascent.
+#' @param nProc: (scalar) [Default 1] Number of processes for 
+#'    parallelisation.
+#' @param verbose: (bool) Whether to follow EM-algorithm
+#'    convergence.
+#' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
+#'    progress in high detail with local convergence flags. 
+#' @param MAXIT_BFGS_Impulse: (scalar) [Default 1000]
+#'    Maximum number of BFGS iterations used to estiamte
+#'    an impulse model for a gene.
+#' @param RELTOL_BFGS_Impulse: (scalar) [Default 
+#'    sqrt(.Machine$double.eps)] Minimum relativ decrease
+#'    in the loglikelihood objective within one iteration
+#'    of BFGS impulse model fitting to gene for the estimation
+#'    to not complete as converged. The default is the 
+#'    default of optim which is overridden by the value set in
+#'    fitZINB by default in LineagePulse to save computation 
+#'    time.
+#' 
+#' @return (list length 2)
+#'    \itemize{
+#'      \item matMu: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial mean parameters.
+#'      \item matImpulseParam: (numeric matrix genes x impulse 
+#'        parameters 6) Inferred impulse model parameters
+#'        if strMuModel is "impulse". NA for all other strMuModel.
+#'        
+#'    }
+#' @export
+
 fitZINBMu <- function( matCountsProc,
+  vecSizeFactors,
   vecPseudotime=NULL,
   vecindClusterAssign=NULL,
   matMu=NULL,
   matDispersions,
-  vecSizeFactors,
   matDropout,
   matConstPredictorsPi=NULL,
   matLinModelPi=NULL,
@@ -166,24 +253,35 @@ fitZINBMu <- function( matCountsProc,
 
 #' Fit zero-inflated negative binomial model to data
 #' 
-#' Fit zero-inflated negative binomial model to data by composite 
-#' coordinate ascent, every step is a partial MLE step. The scheme
-#' iterates over cell-wise (drop-out models) and gene-wise (negative 
-#' binomial models) parameters. Convergence is tracked with the the
-#' loglikelihood of the entire data matrix. Every step is a strict MLE
-#' of the target parameters given the remaining parameter estimates,
-#' therefore, convergence to a local optimum is guaranteed. Parallelisation
-#' can be performed as independences of parameters are exploited where
-#' possible. Convergence can be followed with verbose=TRUE (at each 
+#' Fit alternative H1 and null H0 zero-inflated negative binomial model 
+#' to a data set using cycles of coordinate ascent. The algorithm first
+#' fits the either H1 or H0 together with the logistic dropout model by
+#' iterating over cell-wise (dropout models) and gene-wise (negative 
+#' binomial models) parameters. Subsequently, the remaining model (H0 
+#' or H1) is estimated by iterating over zero-inflated negative binomial
+#' mean and dispersion parameter estimation condition on the previously
+#' estimated logistic drop-out model.
+#' 
+#' Estimation of H0 and H1 are therefore separate coordinate ascent 
+#' procedures yielding different local optima on the overall zero-inflated
+#' negative binomial loglikelihood function with different gene-wise constraints.
+#' 
+#' Convergence is tracked with the theloglikelihood of the entire 
+#' data matrix. Every step is a maximum likelihood estimation of the 
+#' target parameters conditioned on the remaining parameter estimates. 
+#' Therefore, convergence to a local optimum is guaranteed if the algorithm
+#' is run until convergence. Parallelisation of each estimation step 
+#' is implemented where conditional independences of parameter estimations
+#' allow so. 
+#' 
+#' Convergence can be followed with verbose=TRUE (at each 
 #' iteration) or at each step (boolSuperVerbose=TRUE). Variables for the
 #' logistic drop-out model are a constant and the estimated mean parameter
 #' and other constant gene-specific variables (such as GC-conten) in 
 #' matConstPredictorsPi. Three modes are available for modelling the mean
-#' parameter: By cluster (this is fast as neighbourhoods don't have to
-#' be evaluated), sliding windows (recommended) and as an impulse model 
-#' (under construction).
-#' Counts can be imputed under the ZINB model as:
-#' matCountsProcImputed <- matDropout * (1 - matProbNB) + matMu * matProbNB
+#' parameter: As a gene-wise constant (the default null model), by cluster 
+#' (this is fast as neighbourhoods don't have to be evaluated), 
+#' sliding windows (using neighbourhood smoothing), and as an impulse model.
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
@@ -201,11 +299,12 @@ fitZINBMu <- function( matCountsProc,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecSpikeInGenes: (string vector) Names of genes
-#'    which correspond to external RNA spike-ins. Currently
-#'    not used.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -214,33 +313,87 @@ fitZINBMu <- function( matCountsProc,
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
+#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#'    Whether to co-estimate logistic drop-out model with the 
+#'    constant null model or with the alternative model. The
+#'    co-estimation with the noise model typically extends the
+#'    run-time of this model-estimation step strongly. While
+#'    the drop-out model is more accurate if estimated based on
+#'    a more realistic model expression model (the alternative
+#'    model), a trade-off for speed over accuracy can be taken
+#'    and the dropout model can be chosen to be estimated based
+#'    on the constant null expression model (set to TRUE).
 #' @param vecPseudotime: (numerical vector number of cells)
-#'    Pseudotime coordinates of cells.
-#' @param scaMaxiterEM: (scalar) Maximum number of EM-iterations to
-#'    be performed in ZINB model fitting.
+#'    Pseudotime coordinates of cells. Only required if mean model
+#'    or dispersion model are fit as a function of pseudotime, 
+#'    e.g. impulse model for means.
+#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
+#'    of estimation cycles performed in fitZINB(). One cycle
+#'    contain one estimation of of each parameter of the 
+#'    zero-inflated negative binomial model as coordinate ascent.
+#' @param nProc: (scalar) [Default 1] Number of processes for 
+#'    parallelisation.
 #' @param verbose: (bool) Whether to follow EM-algorithm
 #'    convergence.
 #' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
 #'    progress in high detail with local convergence flags. 
-#' @param nProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
 #' 
-#' @return (list length 6)
+#' @return (list)
 #'    \itemize{
-#'      \item vecDispersions: (numeric matrix genes x clusters)
-#'        Inferred negative binomial dispersions.
-#'      \item matDropout: (numeric matrix genes x cells)
+#'      \item matMuH1: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial mean parameters
+#'        under alternative model H1.
+#'      \item matDispersionsH1: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial dispersion parameters
+#'        under alternative model H1.
+#'      \item matDropoutH1: (numeric matrix genes x cells)
 #'        Inferred zero inflated negative binomial drop out rates.
-#'      \item matProbNB: (numeric matrix genes x cells)
-#'        Inferred probabilities of every observation to be generated
-#'        from the negative binomial component of the zero-inflated
-#'        negative binomial mixture model.
-#'      \item matCountsProcImputed: (numeric matrix genes x cells)
-#'        Data predicted with inferred zero-inflated negative binomial
-#'        model.
-#'      \item matMuCluster: (numeric matrix genes x clusters)
-#'        Inferred negative binomial cluster means.
-#'      \item boolConvergence: (bool) Convergence of EM algorithm.
+#'        These are the observation-wise point estimates, not the
+#'        logistic functions. Fit under alternative model H1.
+#'      \item matMuH0: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial mean parameters
+#'        under null model H0.
+#'      \item matDispersionsH0: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial dispersion parameters
+#'        under null model H0.
+#'      \item matDropoutH0: (numeric matrix genes x cells)
+#'        Inferred zero inflated negative binomial drop out rates.
+#'        These are the observation-wise point estimates, not the
+#'        logistic functions. Fit under null model H0.
+#'      \item matDropoutLinModel: (numeric matrix cells x logistic parameters)
+#'        Logistic dropout rate model for each cell. Inferred based on
+#'        alternative model H1 or null model H0 dependent on 
+#'        \code{boolEstimateNoiseBasedOnH0).
+#'      \item matImpulseParam: (numeric matrix genes x impulse 
+#'        parameters 6) Inferred impulse model parameters
+#'        if strMuModel is "impulse". NA for all other strMuModel.
+#'      \item lsFitZINBReporters: (list length 6)
+#'        \itemize{
+#'           \item boolConvergenceH1: (bool) Convergence of
+#'            estimation for alternative model H1. Convergence
+#'            is evaluated based on the convergence of the 
+#'            loglikelihood of the entire data set.
+#'          \item boolConvergenceH0: (bool) Convergence of
+#'            estimation for null model H0. Convergence
+#'            is evaluated based on the convergence of the 
+#'            loglikelihood of the entire data set.
+#'          \item vecEMLogLikH1: (numeric vector number of 
+#'            estimation cycles) Loglikelihood of entire 
+#'            data set after each estimation cycle of alternative
+#'            model H1.
+#'          \item vecEMLogLikH0: (numeric vector number of 
+#'            estimation cycles) Loglikelihood of entire 
+#'            data set after each estimation cycle of null
+#'            model H0.
+#'          \item scaKbyGeneH1: (scalar) Degrees of freedom
+#'            by gene used in alternative model H1. The logistic
+#'            dropout model is ignored as it is shared between
+#'            alternative and null model.
+#'          \item scaKbyGeneH0: (scalar) Degrees of freedom
+#'            by gene used in null model H0. The logistic
+#'            dropout model is ignored as it is shared between
+#'            alternative and null model.
+#'        }
 #'    }
 #' @export
 
@@ -252,7 +405,7 @@ fitZINB <- function(matCountsProc,
   strDispModel = "constant",
   boolEstimateNoiseBasedOnH0=TRUE,
   vecPseudotime=NULL,
-  scaMaxiterEM=100,
+  scaMaxCycles=100,
   verbose=FALSE,
   boolSuperVerbose=FALSE,
   nProc=1){
@@ -269,8 +422,8 @@ fitZINB <- function(matCountsProc,
   # in the objective (loglikelihood).
   
   # Store EM convergence
-  vecEMLogLikModelA <- array(NA,scaMaxiterEM)
-  vecEMLogLikModelB <- array(NA,scaMaxiterEM)
+  vecEMLogLikModelA <- array(NA,scaMaxCycles)
+  vecEMLogLikModelB <- array(NA,scaMaxCycles)
   scaPredictors <- 2
   boolDynamicPi <- TRUE
   boolBFGSEstOfMu <- FALSE
@@ -409,7 +562,7 @@ fitZINB <- function(matCountsProc,
   scaLogLikOld <- NA
   
   tm_cycle <- system.time({
-    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
+    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxCycles)){
       tm_iter <- system.time({
         #####  1. Cell-wise parameter estimation
         # Dropout rate
@@ -606,8 +759,8 @@ fitZINB <- function(matCountsProc,
   scaLogLikOld <- NA
   
   tm_cycle <- system.time({
-    while(scaIter == 1 | scaIter == 2 | 
-        (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxiterEM)){
+    while(scaIter == 1 |
+        (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxCycles)){
       tm_iter <- system.time({
         ##### Gene-wise parameter estimation: 
         # a) Negative binomial mean parameter
@@ -741,8 +894,12 @@ fitZINB <- function(matCountsProc,
   # Prepare output according to which model was estimated
   # first (H0 or H1).
   if(strMuModel=="impulse"){
-    if(boolEstimateNoiseBasedOnH0){ matImpulseParamOut <- matImpulseParamModelB
-    } else { matImpulseParamOut <- matImpulseParamModelA }
+    if(boolEstimateNoiseBasedOnH0){ 
+      matImpulseParamOut <- matImpulseParamModelB
+    } else { 
+      matImpulseParamOut <- matImpulseParamModelA 
+    }
+    rownames(matImpulseParamOut) <- rownames(matCountsProc)
   } else { matImpulseParamOut <- NA }
   if(boolEstimateNoiseBasedOnH0){
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelB,

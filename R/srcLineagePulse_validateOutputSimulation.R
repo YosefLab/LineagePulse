@@ -19,7 +19,7 @@ library(reshape2)
 #' 
 #' @export
 
-validateOuput <- function(
+validateOuputSimulation <- function(
   dirLineagePulseTempFiles,
   dirValidationOut,
   matMuHidden,
@@ -29,12 +29,16 @@ validateOuput <- function(
   vecSizeFactorsHidden,
   vecConstIDs,
   vecImpulseIDs,
-  scaWindowRadis=NULL ){
+  scaWindowRadius=NULL ){
   
-  graphics.off()
+  dirCurrent <- getwd()
+  
+  # TODO: add correlation R2 to 1. and null pval distri to 4.
+  # Find way to compare logistic noise models
   
   # Load data
-  setwd(folderLineagePulseOutput)
+  print(paste0("Load data from LineagePulse output directory: ",dirLineagePulseTempFiles))
+  setwd(dirLineagePulseTempFiles)
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_matMuH0.RData")
   load("LineagePulse_matDispersionsH0.RData")
@@ -56,21 +60,28 @@ validateOuput <- function(
   
   # Initialise
   setwd(dirValidationOut)
-  scaNumGenes <- dim(matCountDataProc)[1]
-  vecConstIDs <- vecConstIDs[vecConstIDs %in% rownames(matCountDataProc)]
-  vecImpulseIDs <- vecImpulseIDs[vecImpulseIDs %in% rownames(matCountDataProc)]
+  scaNumGenes <- dim(matCountsProc)[1]
+  vecConstIDs <- vecConstIDs[vecConstIDs %in% rownames(matCountsProc)]
+  vecImpulseIDs <- vecImpulseIDs[vecImpulseIDs %in% rownames(matCountsProc)]
   scaNumGenesConst <- length(vecConstIDs)
   scaNumGenesImpulse <- length(vecImpulseIDs)
-  scaNumCells <- dim(matCountDataProc)[2]
+  scaNumCells <- dim(matCountsProc)[2]
+  
+  vecHiddenModelType <- rep("const", length(vecAnalysedGenes))
+  names(vecHiddenModelType) <- vecAnalysedGenes
+  vecHiddenModelType[vecImpulseIDs] <- "impulse"
   
   # 1.) Scatter plots of parameter sets
+  print("# 1. Scatter plots of inferred versus true parameter sets")
   # a) Mean parameters H0
+  print("# a) Mean parameters H0")
   dfScatterMuModelvsMuInferredH0 <- data.frame(
     x=log(matMuH0[,1])/log(10),
-    y=log(apply(matMuHidden,1, function(gene) mean(gene, na.rm=TRUE)) )/log(10) )
-  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y)) +
-    geom_point() + 
-    labs(title="Inferred mean (H0) versus model mean parameter.") +
+    y=log(apply(matMuHidden,1, function(gene) mean(gene, na.rm=TRUE)) )/log(10),
+    model=vecHiddenModelType )
+  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y, group=model)) +
+    geom_point(aes(colour = model)) + 
+    labs(title="Inferred mean (H0) versus\n underlying model mean parameter.") +
     xlab(paste0("log10 H0 inferred mean parameter")) +
     ylab(paste0("log10 gene-wise average of model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
@@ -84,13 +95,15 @@ validateOuput <- function(
   graphics.off()
   
   # b) Mean parameters H1: For one cell only
+  print("# b) Mean parameters H1: For one cell only")
   dfScatterMuModelvsMuInferredH1 <- data.frame(
     x=log(matMuH1[,1])/log(10),
-    y=log(matMuHidden[,1])/log(10) )
-  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y)) +
-    geom_point() + 
-    labs(title="Inferred mean (H1) of first cell versus model mean parameter.") +
-    xlab(paste0("log10 H0 inferred mean parameter")) +
+    y=log(matMuHidden[,1])/log(10),
+    model=vecHiddenModelType )
+  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y, group=model)) +
+    geom_point(aes(colour = model)) + 
+    labs(title="Inferred mean (H1) of first cell versus\n underlying model mean parameter.") +
+    xlab(paste0("log10 H1 inferred mean parameter")) +
     ylab(paste0("log10 model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
@@ -103,12 +116,14 @@ validateOuput <- function(
   graphics.off()
   
   # c) Dispersion parameters H0 (using dispersion of first cell from model)
+  print("# c) Dispersion parameters H0 (using dispersion of first cell from model)")
   dfScatterDispModelvsDispInferredH0 <- data.frame(
-    x=matDispersionH0[,1],
-    y=matDispersionHidden[,1] )
-  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH0, aes(x=x, y=y)) +
-    geom_point() + 
-    labs(title="Inferred dispersion (H0) versus model dispersion parameter.") +
+    x=matDispersionsH0[,1],
+    y=matDispHidden[,1],
+    model=vecHiddenModelType )
+  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH0, aes(x=x, y=y, group=model)) +
+    geom_point(aes(colour = model)) + 
+    labs(title="Inferred dispersion (H0) versus\n underlying model dispersion parameter.") +
     xlab(paste0("H0 inferred dispersion parameter")) +
     ylab(paste0("model dispersion parameter of first cell")) + 
     scale_fill_continuous(name = "Count") + 
@@ -120,13 +135,15 @@ validateOuput <- function(
   print(gScatterDispvsMean)
   dev.off()
   
-  # d) Mean parameters H1: For one cell only
+  # d) Dispersion parameters H1: For one cell only
+  print("# d) Dispersion parameters H1: For one cell only")
   dfScatterDispModelvsDispInferredH1 <- data.frame(
-    x=matDispersionH1[,1],
-    y=matDispersionHidden[,1] )
-  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH1, aes(x=x, y=y)) +
-    geom_point() + 
-    labs(title="Inferred dispersion (H0) versus model dispersion parameter.") +
+    x=matDispersionsH1[,1],
+    y=matDispHidden[,1],
+    model=vecHiddenModelType )
+  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH1, aes(x=x, y=y, group=model)) +
+    geom_point(aes(colour = model)) + 
+    labs(title="Inferred dispersion (H0) versus\n underlying model dispersion parameter.") +
     xlab(paste0("H1 inferred dispersion parameter of first cell")) +
     ylab(paste0("model dispersion parameter of first cell")) + 
     scale_fill_continuous(name = "Count") + 
@@ -145,6 +162,7 @@ validateOuput <- function(
   # Plot data, true and inferred model by gene. qvalue
   
   # 3. LRT hist
+  print("# 3. LRT histogram")
   # Overall deviation comparison: LRT
   # Compare under negative binomial and under ZINB model
   # Compute loglikelihood of true underlying model
@@ -197,49 +215,64 @@ validateOuput <- function(
     geom_histogram(alpha = 1, position = 'identity') +
     ggtitle(paste0("log LRT value under NB model")) +
     xlab("Difference in loglikelihood") +
-    ylab("Frequency")
+    ylab("Frequency") +
+    theme(axis.text=element_text(size=14),
+      axis.title=element_text(size=14,face="bold"),
+      title=element_text(size=14,face="bold"),
+      legend.text=element_text(size=14))
   graphics.off()
   pdf("LineagePulse_AnalyseSimulated_Hist_LRT_InferredH1vsHidden_NB.pdf")
-  print(gHistLRT)
+  print(gHistLRT_NB)
   dev.off()
   gHistLRT_ZINB <- ggplot( dfLRT_ZINB, aes(value)) +
     geom_histogram(alpha = 1, position = 'identity') +
     ggtitle(paste0("log LRT value under ZINB model")) +
     xlab("Difference in loglikelihood") +
-    ylab("Frequency")
+    ylab("Frequency") +
+    theme(axis.text=element_text(size=14),
+      axis.title=element_text(size=14,face="bold"),
+      title=element_text(size=14,face="bold"),
+      legend.text=element_text(size=14))
   graphics.off()
   pdf("LineagePulse_AnalyseSimulated_Hist_LRT_InferredH1vsHidden_ZINB.pdf")
   print(gHistLRT_ZINB)
   dev.off() 
   
   # 4. ECDF q-values divided by const and impulse true model
-  vecX <- seq(max(-100,min(dfDEAnalysis$adj.p)),0,by=0.5)
+  print("# 4. ECDF q-values divided by const and impulse true model")
+  vecX <- seq(max(-100,log(min(dfDEAnalysis$adj.p))/log(10)),0,by=0.5)
   vecCDFConst <- sapply(vecX, function(thres){
-    sum(log(as.numeric(as.vector(dfDEAnalysis[vecConstIDs,]$adj.p)))/log(10) <= thres, na.rm=TRUE)})
+    sum(log(as.numeric(as.vector(dfDEAnalysis[vecConstIDs,]$p)))/log(10) <= thres, na.rm=TRUE)})
   vecCDFImpulse <- sapply(vecX, function(thres){
-    sum(log(as.numeric(as.vector(dfDEAnalysis[vecImpulseIDs,]$adj.p)))/log(10) <= thres, na.rm=TRUE)})
-  dfECDFQvalByModel <- data.frame( thres=vecX,
-    qval=c(vecCDFConst,vecCDFImpulse),
+    sum(log(as.numeric(as.vector(dfDEAnalysis[vecImpulseIDs,]$p)))/log(10) <= thres, na.rm=TRUE)})
+  dfECDFPvalByModel <- data.frame( thres=vecX,
+    pval=c(vecCDFConst,vecCDFImpulse),
     model=c(rep("const",length(vecCDFConst)), rep("impulse",length(vecCDFImpulse))) )
-  gECDFQvalByModel <- ggplot(dfECDFQvalByModel, aes(x=thres, y=qval, group=model)) +
-    geom_line(aes(colour = group))
-  pdf("LineagePulse_AnalyseSimulated_ECDF_QvalByModelClass.pdf",width=7,height=7)
-  print(gECDFQvalByModel)
+  gECDFPvalByModel <- ggplot(dfECDFPvalByModel, aes(x=thres, y=pval, group=model)) +
+    geom_line(aes(colour = model)) +
+    labs(title="ECDF log10 p-values by underlying model type") +
+    xlab(paste0("log10 p-value threshold")) +
+    ylab(paste0("empricial cumulative density")) + 
+    theme(axis.text=element_text(size=14),
+      axis.title=element_text(size=14,face="bold"),
+      title=element_text(size=14,face="bold"),
+      legend.text=element_text(size=14))
+  pdf("LineagePulse_AnalyseSimulated_ECDF_PvalByModelClass.pdf",width=7,height=7)
+  print(gECDFPvalByModel)
   dev.off() 
   
-  # 5. Q-value as function of model
-  vecHiddenModelType <- rep("const", length(vecAnalysedGenes))
-  names(vecHiddenModelType) <- vecAnalysedGenes
-  vecHiddenModelType[vecImpulseIDs] <- "impulse"
+  # 5. Q-value as function of model parameters
+  print("# 5. Q-value as function of model parameters")
   # a) Q-value as function of average true mean parameter
+  print("# a) Q-value as function of average true mean parameter")
   # divided by const and impulse true model
   dfScatterQvalvsMuModelByModel <- data.frame(
     mu=apply(matMuHidden, 1, function(gene) mean(gene, na.rm=TRUE)),
-    qval=dfDEAnalysis[vecAnalysedGenes,]$adj.p,
+    qval=log(dfDEAnalysis[vecAnalysedGenes,]$adj.p)/log(10),
     model=vecHiddenModelType )
   gScatterQvalvsMean <- ggplot(dfScatterQvalvsMuModelByModel, aes(x=mu, y=qval, group=model)) +
-    geom_point(aes(colour = group)) + 
-    labs(title="Q-value versus true by underlying model type") +
+    geom_point(aes(colour = model)) + 
+    labs(title="Q-value versus true mean\n by underlying model type") +
     xlab(paste0("average true mean")) +
     ylab(paste0("log10 Q-value")) + 
     scale_fill_continuous(name = "Count") + 
@@ -252,14 +285,15 @@ validateOuput <- function(
   dev.off()
   
   # b) Q-value as function of true dispersion parameter
+  print("# b) Q-value as function of true dispersion parameter")
   # divided by const and impulse true model
   dfScatterQvalvsDispModelByModel <- data.frame(
     disp=apply(matDispHidden, 1, function(gene) mean(gene, na.rm=TRUE)),
-    qval=dfDEAnalysis[vecAnalysedGenes,]$adj.p,
+    qval=log(dfDEAnalysis[vecAnalysedGenes,]$adj.p)/log(10),
     model=vecHiddenModelType )
   gScatterQvalvsDisp <- ggplot(dfScatterQvalvsDispModelByModel, aes(x=disp, y=qval, group=model)) +
-    geom_point(aes(colour = group)) + 
-    labs(title="Q-value versus true by underlying model type") +
+    geom_point(aes(colour = model)) + 
+    labs(title="Q-value versus true dispersion\n by underlying model type") +
     xlab(paste0("average true dispersion")) +
     ylab(paste0("log10 Q-value")) + 
     scale_fill_continuous(name = "Count") + 
@@ -272,14 +306,15 @@ validateOuput <- function(
   dev.off()
   
   # c) Q-value as function of number of drop-outs
+  print("# c) Q-value as function of number of drop-outs")
   # divided by const and impulse true model
   dfScatterQvalvsDispModelByModel <- data.frame(
     sumdroprate=apply(matDropoutHidden, 1, function(gene) sum(gene, na.rm=TRUE)),
-    qval=dfDEAnalysis[vecAnalysedGenes,]$adj.p,
+    qval=log(dfDEAnalysis[vecAnalysedGenes,]$adj.p)/log(10),
     model=vecHiddenModelType )
   gScatterQvalvsDisp <- ggplot(dfScatterQvalvsDispModelByModel, aes(x=sumdroprate, y=qval, group=model)) +
-    geom_point(aes(colour = group)) + 
-    labs(title="Q-value versus sum of true dropout rates by underlying model type") +
+    geom_point(aes(colour = model)) + 
+    labs(title="Q-value versus sum of true dropout rates\n by underlying model type") +
     xlab(paste0("sum of true dropout rates")) +
     ylab(paste0("log10 Q-value")) + 
     scale_fill_continuous(name = "Count") + 
@@ -291,5 +326,7 @@ validateOuput <- function(
   print(gScatterQvalvsDisp)
   dev.off()
     
-  return(NULL)
+  print("Done generating validation plots with models underlying simulation as reference.")
+  # Switch back to original directory
+  setwd(dirCurrent)
 }

@@ -63,18 +63,26 @@ computeAUCLogistic <- function(vecLinearModel){
 #' 
 #' @export
 
-validateOuput <- function(
-  dirLineagePulseTempFiles,
-  dirValidationOut,
-  strSCMode="continuous",
-  scaWindowRadis=20,
-  dfGeneAnnotation=NULL){
+validateOutput <- function(dirLineagePulseTempFiles,
+  dirValidationOut ){
   
-  graphics.off()
+  # Parameters
+  # Point 2:
+  scaNIDs <- 20  # Genes to plot for each group
+  scaThres <- 10^(-3) # Expression threshold for highly expressed group
+  scaFracExprIsHigh <- 0.5 # Fraction of cells above 
+  #expression threshold to be in the highly expressed group
+  
+  scaEps <- 10^(-5) # Constant to be added to paramters before taking log 
+  # to avoid errors at zero values.
+  
+  # Get current wd to change back to at the end
+  dirCurrent <- getwd()
   
   # Load data
-  setwd(folderLineagePulseOutput)
+  setwd(dirLineagePulseTempFiles)
   load("LineagePulse_matCountsProc.RData")
+  load("LineagePulse_vecPseudotimeProc.RData")
   load("LineagePulse_matMuH0.RData")
   load("LineagePulse_matDispersionsH0.RData")
   load("LineagePulse_matDropoutH0.RData")
@@ -83,15 +91,16 @@ validateOuput <- function(
   load("LineagePulse_matDropoutH1.RData")
   load("LineagePulse_matZH1.RData")
   load("LineagePulse_matDropoutLinModel.RData")
+  load("LineagePulse_matImpulseParam.RData")
   load("LineagePulse_dfDEAnalysis.RData")
   
   # Initialise
   setwd(dirValidationOut)
-  scaNumGenes <- dim(matCountDataProc)[1]
-  scaNumCells <- dim(matCountDataProc)[2]
+  scaNumGenes <- dim(matCountsProc)[1]
+  scaNumCells <- dim(matCountsProc)[2]
   
   # 1. ECDF q-values
-  vecX <- seq(max(-100,min(dfDEAnalysis$adj.p)),0,by=0.5)
+  vecX <- seq(max(-100,min(log(dfDEAnalysis$adj.p)/log(10))),0,by=0.5)
   vecCDF1 <- sapply(vecX, function(thres){
     sum( log(as.numeric(as.vector(dfDEAnalysis$adj.p)))/log(10) <= thres, na.rm=TRUE)})
   pdf("LineagePulse_ECDF-qvalues.pdf",width=7,height=7)
@@ -107,97 +116,92 @@ validateOuput <- function(
     fill=c("black"))
   dev.off()
   graphics.off()
-
-  scaNIDs <- 200
-  scaFracExprIsHigh <- 0.5
   
   # 2. Plot Fits
-  # a). Plot highly expressed genes
-  vecIDsHighExpr <- apply(matCountDataProc, 1, function(gene){
-    sum(gene > 10) >= scaFracExprIsHigh*scaNumCells})
-  vecIDsTopQvalHighExpre <- as.vector(dfImpulseResults[match(rownames(dfImpulseResults), rownames(matCountDataProc[vecIDsHighExpr,])),]$Gene)
-  vecIDsTopQvalHighExpre <- (vecIDsTopQvalHighExpre[!is.na(vecIDsTopQvalHighExpre)])[1:scaNIDs]
-  plotDEGenes( vecGeneIDs=vecIDsTopQvalHighExpre,
-    matCountDataProc=matCountDataProc,
-    matTranslationFactors=NULL,
-    matSizeFactors=matSizeFactors,
-    dfAnnotationProc=dfAnnotationProc, 
-    lsImpulseFits=lsImpulseFits,
-    strCaseName="case", 
-    strControlName=NULL, 
-    strFileNameSuffix=paste0("_ImpulseTraces_HighlyExpressedLowQval"), 
-    strPlotTitleSuffix="", 
-    strPlotSubtitle="",
-    dfImpulseResults=dfImpulseResults,
-    vecRefPval=NULL,
-    strNameMethod2=NULL,
-    strMode="singlecell",
-    strSCMode="continuous",
-    boolLogPlot=TRUE,
-    NPARAM=6)
+  print("# 2. Print model fits sorted into groups.")
+  # a) Plot highly expressed genes.
+  print("# a) Plot top significant of highly expressed genes.")
+  vecboolIDsHighExpr <- apply(matCountsProc, 1, function(gene){
+    sum(gene > 50) >= scaFracExprIsHigh*scaNumCells})
+  vecIDsHighExpr <- rownames(matCountsProc)[vecboolIDsHighExpr]
+  vecIDsTopQvalHighExpre <- as.vector(dfDEAnalysis[dfDEAnalysis$Gene %in% vecIDsHighExpr,]$Gene)
+  vecIDsTopQvalHighExpre <- (vecIDsTopQvalHighExpre[!is.na(vecIDsTopQvalHighExpre)])[
+    1:min(scaNIDs,sum(!is.na(vecIDsTopQvalHighExpre)))]
+  lsGplotsHighExpr <- list()
+  for(id in vecIDsTopQvalHighExpre){
+    lsGplotsHighExpr[[match(id, vecIDsTopQvalHighExpre)]] <- plotGene(vecCounts=matCountsProc[id,],
+      vecPseudotime=vecPseudotimeProc,
+      vecDropoutRates=matDropoutH1[id,],
+      vecImpulseModelParam=matImpulseParam[id,],
+      scaConstModelParam=matMuH0[id,1],
+      strGeneID=id,
+      strTitleSuffix=paste0("Q-value ", dfDEAnalysis[id,"adj.p"]))
+  }
+  pdf("LineagePulse_ImpulseTraces_HighlyExpressedLowQval.pdf")
+  for(gplot in lsGplotsHighExpr){
+    print(gplot)
+  }
+  dev.off()
   graphics.off()
   
   # b) Plot top q-val
-  vecIDsTopQval <- as.vector(dfImpulseResults[1:scaNIDs,]$Gene)
-  plotDEGenes( vecGeneIDs=vecIDsTopQval,
-    matCountDataProc=matCountDataProc,
-    matTranslationFactors=NULL,
-    matSizeFactors=matSizeFactors,
-    dfAnnotationProc=dfAnnotationProc, 
-    lsImpulseFits=lsImpulseFits,
-    strCaseName="case", 
-    strControlName=NULL, 
-    strFileNameSuffix=paste0("_LineagePulse_ImpulseTraces_LowQval"), 
-    strPlotTitleSuffix="", 
-    strPlotSubtitle="",
-    dfImpulseResults=dfImpulseResults,
-    vecRefPval=NULL,
-    strNameMethod2=NULL,
-    strMode="singlecell",
-    strSCMode="continuous",
-    boolLogPlot=TRUE,
-    NPARAM=6)
+  print("# b) Plot top significant genes.")
+  vecIDsTopQval <- as.vector(dfDEAnalysis[1:scaNIDs,]$Gene)
+  lsGplotsTopQval <- list()
+  for(id in vecIDsTopQval){
+    lsGplotsTopQval[[match(id, vecIDsTopQval)]] <- plotGene(vecCounts=matCountsProc[id,],
+      vecPseudotime=vecPseudotimeProc,
+      vecDropoutRates=matDropoutH1[id,],
+      vecImpulseModelParam=matImpulseParam[id,],
+      scaConstModelParam=matMuH0[id,1],
+      strGeneID=id,
+      strTitleSuffix=paste0("Q-value ", dfDEAnalysis[id,"adj.p"]))
+  }
+  pdf("LineagePulse_ImpulseTraces_LowQval.pdf")
+  for(gplot in lsGplotsTopQval){
+    print(gplot)
+  }
+  dev.off()
   graphics.off()
   
   # c) Plot worst significant q-val
-  scaThres <- 10^(-3)
-  idxIDatThres <- min(which(dfImpulseResults$adj.p > scaThres))-1
-  vecIDsWorstQval <- as.vector(dfImpulseResults[max(1,idxIDatThres-scaNIDs):idxIDatThres,]$Gene)
-  plotDEGenes( vecGeneIDs=vecIDsWorstQval,
-    matCountDataProc=matCountDataProc,
-    matTranslationFactors=NULL,
-    matSizeFactors=matSizeFactors,
-    dfAnnotationProc=dfAnnotationProc, 
-    lsImpulseFits=lsImpulseFits,
-    strCaseName="case", 
-    strControlName=NULL, 
-    strFileNameSuffix=paste0("_LineagePulse_ImpulseTraces_HighButSignificantQval"), 
-    strPlotTitleSuffix="", 
-    strPlotSubtitle="",
-    dfImpulseResults=dfImpulseResults,
-    vecRefPval=NULL,
-    strNameMethod2=NULL,
-    strMode="singlecell",
-    strSCMode="continuous",
-    boolLogPlot=TRUE,
-    NPARAM=6)
+  print("# c) Plot least significant genes.")
+  idxIDatThres <- min(which(as.vector(dfDEAnalysis$adj.p) > scaThres))-1
+  vecIDsWorstQval <- as.vector(dfDEAnalysis[max(1,idxIDatThres-scaNIDs):idxIDatThres,]$Gene)
+  lsGplotsHighQval <- list()
+  for(id in vecIDsWorstQval){
+    lsGplotsHighQval[[match(id, vecIDsWorstQval)]] <- plotGene(vecCounts=matCountsProc[id,],
+      vecPseudotime=vecPseudotimeProc,
+      vecDropoutRates=matDropoutH1[id,],
+      vecImpulseModelParam=matImpulseParam[id,],
+      scaConstModelParam=matMuH0[id,1],
+      strGeneID=id,
+      strTitleSuffix=paste0("Q-value ", dfDEAnalysis[id,"adj.p"]))
+  }
+  pdf("LineagePulse_ImpulseTraces_HighQval.pdf")
+  for(gplot in lsGplotsHighQval){
+    print(gplot)
+  }
+  dev.off()
   graphics.off()
   
   # 3. Look at drop out rate vs mean fitting
+  print("# 3. Dropout rate vs mean parameter")
   # Sequencing depth as a comparative experimental measure for drop-out
-  vecDepth <- apply(matCountsProcLP, 2, function(cell){sum(cell, na.rm=TRUE)})
+  vecDepth <- apply(matCountsProc, 2, function(cell){sum(cell, na.rm=TRUE)})
   
   # a) Sum of drop out rates of a cell
-  vecSumNotDropout <- apply(matDropout, 2, function(cell){sum(1-cell, na.rm=TRUE)})
+  print("# a) Scatter plot cumulative NB mixture probability versus sequencing depth by cell")
+  vecSumProbNB <- apply(matZH1, 2, function(cell){sum(1-cell, na.rm=TRUE)})
   
   dfScatter1 <- data.frame(
     x=log(vecDepth),
-    y=log(vecSumNotDropout))
+    y=log(vecSumProbNB))
   g1 <- ggplot(dfScatter1, aes(x=x, y=y)) +
     geom_point() + 
     labs(title="Scatter plot cumulative NB mixture probability versus sequencing depth by cell") +
     xlab(paste0("log sequencing depth")) +
-    ylab(paste0("log cumulative NB mixture probability")) + 
+    ylab(paste0("log cumulative NB mixture probability H1")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
@@ -206,7 +210,9 @@ validateOuput <- function(
   pdf("LineagePulse_Scatter_CumulativeNBProbvsDepth.pdf",width=7,height=7)
   print(g1)
   dev.off()
+  
   # b) AUC of logistic curve as measure for drop-out intensity
+  print("# b) Scatter plot AUC logistic drop-out model versus\n sequencing depth by cell")
   vecAUCLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
     computeAUCLogistic(cellmodel)
   })
@@ -216,7 +222,7 @@ validateOuput <- function(
     y=log(vecAUCLogistic))
   g2 <- ggplot(dfScatter2, aes(x=x, y=y)) +
     geom_point() + 
-    labs(title="Scatter plot AUC logistic drop-out model versus sequencing depth by cell") +
+    labs(title="Scatter plot AUC logistic drop-out model\n versus sequencing depth by cell") +
     xlab(paste0("log sequencing depth")) +
     ylab(paste0("AUC logistic drop-out model")) + 
     scale_fill_continuous(name = "Count") + 
@@ -230,6 +236,7 @@ validateOuput <- function(
   graphics.off()
   
   # c) Inflexion point of logistic
+  print("# c) Scatter plot inflexion point logistic drop-out model\n versus sequencing depth by cell")
   vecInflexLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
     return(-cellmodel[1]/cellmodel[2])
   })
@@ -239,7 +246,7 @@ validateOuput <- function(
     y=vecInflexLogistic)
   g3 <- ggplot(dfScatter3, aes(x=x, y=y)) +
     geom_point() + 
-    labs(title="Scatter plot inflexion point logistic drop-out model versus sequencing depth by cell") +
+    labs(title="Scatter plot inflexion point logistic drop-out model\n versus sequencing depth by cell") +
     xlab(paste0("Sequencing depth")) +
     ylab(paste0("Inflexion point logistic drop-out model")) + 
     scale_fill_continuous(name = "Count") + 
@@ -252,32 +259,15 @@ validateOuput <- function(
   dev.off()
   graphics.off()
   
-  dfScatter3b <- data.frame(
-    x=log(vecDepth),
-    y=log(vecInflexLogistic-min(vecInflexLogistic)+1))
-  g3b <- ggplot(dfScatter3b, aes(x=x, y=y)) +
-    geom_point() + 
-    labs(title="Scatter plot inflexion point logistic drop-out model versus sequencing depth by cell") +
-    xlab(paste0("log Sequencing depth")) +
-    ylab(paste0("log Inflexion point logistic drop-out model (adjusted)")) + 
-    scale_fill_continuous(name = "Count") + 
-    theme(axis.text=element_text(size=14),
-      axis.title=element_text(size=14,face="bold"),
-      title=element_text(size=14,face="bold"),
-      legend.text=element_text(size=14))
-  pdf("LineagePulse_Scatter_logInflexionDropoutvslogDepth.pdf",width=7,height=7)
-  print(g3b)
-  dev.off()
-  graphics.off()
-  
   # 4. Plot drop-out rate as function of cell
+  print("# 4. Plot drop-out rate as function of mean parameter by cell.")
   pdf("LineagePulse_LogisticScatter_DropoutvsMeanbyCell.pdf",width=7,height=7)
-  for(cell in seq(1,dim(matDropout)[2])){
-    plot( log(matMu[,cell])/log(10), 
-      matDropout[,cell], 
-      xlim=c(-4,max(log(matMu[,cell])/log(10))),
-      ylab="Dropout rate",
-      xlab="log_10 mu",
+  for(cell in seq(1,scaNumCells)){
+    plot( log(matMuH1[,cell])/log(10), 
+      matDropoutH1[,cell], 
+      xlim=c(-4,max(log(matMuH1[,cell])/log(10))),
+      ylab="dropout rate H1",
+      xlab="log_10 mu H1",
       main=paste0("cell_",cell," (Sequencing depth: ",round(vecDepth[cell]/10^5,1),"e5)"))
   }
   dev.off()
@@ -285,37 +275,36 @@ validateOuput <- function(
   
   # 5. Logistic dropout rate fit as function of mean coloured by
   # sequencing depth.
+  print(paste0("# 5. Plot logistic dropout rate fit as function of mean",
+    " coloured by sequencing depth."))
   # Draw samples from dropout logistic model to save memory
-  vecMu=sapply(seq(1,log(max(matMu)/10^(-4))/log(2)), function(x) 10^(-4)*2^x)
-  matDropoutSampled <- matrix(NA, nrow=length(vecMu), ncol=dim(matDropout)[2])
-  for(cell in seq(1,dim(matDropout)[2])){
+  vecMu=sapply(seq(1,log(max(matMuH1)/10^(-4))/log(2)), function(x) 10^(-4)*2^x)
+  matDropoutSampled <- matrix(NA, nrow=length(vecMu), ncol=scaNumCells)
+  for(cell in seq(1,scaNumCells)){
     vecCellModel <- matDropoutLinModel[cell,]
     matDropoutSampled[,cell] <- 1/(1+exp(-(vecCellModel[1]+vecCellModel[2]*vecMu)))
   }
-  colnames(matDropoutSampled) <- colnames(matDropout)
+  colnames(matDropoutSampled) <- colnames(matDropoutH1)
   # Reshape matrices into single column first:
-  # Look at first scaNSummaryCells cells
-  scaNSummaryCells <- dim(matMu)[2]
-  dfMuMolten <- melt(matMu[,1:scaNSummaryCells])
-  dfDropoutMolten <- melt(matDropout[,1:scaNSummaryCells])
+  dfMuMolten <- melt(matMuH1[,1:scaNumCells])
+  dfDropoutMolten <- melt(matDropoutH1[,1:scaNumCells])
   dfLines1 <- data.frame(
     mu=log(dfMuMolten$value),
     dropout=dfDropoutMolten$value,
     depth=vecDepth[match(dfDropoutMolten$Var2,names(vecDepth))])
   
-  dfDropoutSampledMolten <- melt(matDropoutSampled[,1:scaNSummaryCells])
+  dfDropoutSampledMolten <- melt(matDropoutSampled[,1:scaNumCells])
   dfLines1 <- data.frame(
-    mu=log(vecMu)/log(10),
+    mu=log(vecMu+scaEps)/log(10),
     dropout=dfDropoutSampledMolten$value,
     depth=vecDepth[match(dfDropoutSampledMolten$Var2,names(vecDepth))])
   g4 <- ggplot(dfLines1, aes(x=mu, y=dropout, group=depth)) +
     geom_line(aes(colour=depth)) +
     scale_colour_gradient(low="red",high="green") +
     labs(title="Logistic drop-out model versus sequencing depth by cell") +
-    xlab(paste0("log_10 mean parameter")) +
-    ylab(paste0("Drop-out rate")) +
+    xlab(paste0("log_10 mean parameter H1")) +
+    ylab(paste0("dropout rate")) +
     xlim(c(-1,2))
-    scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
@@ -326,16 +315,18 @@ validateOuput <- function(
   graphics.off()
   
   # 6. Plot variance measure as function of mean
+  print("# 6. Plot variance measure as function of mean")
   # a) Plot dispersion parameter fit as function of mean parameter
+  print("# a) Plot dispersion parameter fit as function of mean parameter")
   # From H0 to have one parameter each per gene.
   dfScatterDispvsMean <- data.frame(
-    x=log(matMuH0[,1])/log(10),
-    y=matDispersions[,1]) )
-  gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=x, y=y)) +
+    mu=log(matMuH0[,1]+scaEps)/log(10),
+    disp=matDispersionsH0[,1] )
+  gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=mu, y=disp)) +
     geom_point() + 
-    labs(title="Dispersion parameter as function of mean parameter under H0.") +
-    xlab(paste0("log10 H0 mean parameter")) +
-    ylab(paste0("H0 dispersion parameter")) + 
+    labs(title="Dispersion parameter as function of\n mean parameter under H0.") +
+    xlab(paste0("log10 mean parameter H0")) +
+    ylab(paste0("dispersion parameter H0")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
@@ -347,18 +338,19 @@ validateOuput <- function(
   graphics.off()
   
   # b) Plot coefficient of variation as function of mean parameter
+  print("# b) Plot coefficient of variation as function of mean parameter")
   # Compute coefficient of variation under H0
-  vecVar <- matMuH0[,1] + matMuH0[,1]^2 / matDispersions[,1]
-  vecCV <- vecVar / matMuH0[,1]^2
+  vecSD <- sqrt( matMuH0[,1] + matMuH0[,1]^2 / matDispersionsH0[,1] )
+  vecCV <- vecSD / matMuH0[,1]
   # From H0 to have one parameter each per gene.
-  dfScatterDispvsMean <- data.frame(
-    x=log(matMuH0[,1])/log(10),
-    y=vecCV )
-  gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=x, y=y)) +
+  dfScatterCVvsMean <- data.frame(
+    mu=log(matMuH0[,1]+scaEps)/log(10),
+    cv=vecCV )
+  gScatterDispvsMean <- ggplot(dfScatterCVvsMean, aes(x=mu, y=cv)) +
     geom_point() + 
-    labs(title="Dispersion parameter as function of mean parameter under H0.") +
-    xlab(paste0("log10 H0 mean parameter")) +
-    ylab(paste0("coefficient of variation")) + 
+    labs(title="Coefficient of variation as function of\n mean parameter under H0.") +
+    xlab(paste0("log10 mean parameter H0")) +
+    ylab(paste0("coefficient of variation H0")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
@@ -369,5 +361,6 @@ validateOuput <- function(
   dev.off()
   graphics.off()
   
-  return(NULL)
+  print("Done generating validation plots.")
+  setwd(dirCurrent)
 }
