@@ -162,7 +162,7 @@ source("srcLineagePulse_plotGene.R")
 #'    mean_H0: inferred gene-wise mean parameter (constant null model),
 #'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
 #'      \item   matMu: 1D Coordinates of cluster centroids,
-#'    one scalar per centroid.
+#'        one scalar per centroid.
 #'      }
 #'    
 #' @author David Sebastian Fischer
