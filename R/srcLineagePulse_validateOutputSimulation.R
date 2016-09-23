@@ -218,7 +218,6 @@ validateOuputSimulation <- function(
       strGeneID=id,
       strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
   }
-  print(lsGplotsGeneIDs)
   pdf("LineagePulse_AnalyseSimulated_ExpressionTraces.pdf")
   for(gplot in lsGplotsGeneIDs){
     print(gplot)

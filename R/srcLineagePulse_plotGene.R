@@ -6,7 +6,7 @@
 #' 
 #' Plot counts and model for one gene as a scatter plot with line plots. 
 #' Dropout rates can be given and are visualised as the colour of the observation
-#' points. 
+#' points. Inferred and underlying reference models can be plotted as lines.
 #' 
 #' @seealso Called by \code{runLineagePulse} or separately by user.
 #' 
@@ -24,11 +24,14 @@
 #'    Name of reference impulse model for given gene.
 #' @param scaConstModelParam: (scalar) [Default NULL]
 #'    Constant model parameter for given gene: expression mean.
+#' @param scaConstModelRefParam: (scalar) [Default NULL]
+#'    Reference constant model parameter for given gene: expression mean.
 #' @param strGeneID: (str) Name of gene, used for title of plot.
 #' @param strTitleSuffix: (str) String to be added to title.
 #' 
 #' @return gGenePlot: (ggplot object) Plot which can be printed or saved
-#'    to pdf.
+#'    to pdf. Inferred impulse and constant model are plotted as 
+#'    a constant line, the underlying models as dashed.
 #' 
 #' @export
 
@@ -39,6 +42,7 @@ plotGene <- function(vecCounts,
   vecImpulseModelRefParam=NULL,
   strNameImpulseModelRef=NULL,
   scaConstModelParam=NULL,
+  scaConstModelRefParam=NULL,
   strGeneID,
   strTitleSuffix=NULL){
   
@@ -50,7 +54,7 @@ plotGene <- function(vecCounts,
     counts=vecCounts,
     dropout_rate=vecDropoutRates )
   gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
-    geom_point(aes(colour=dropout_rate)) + 
+    geom_point(aes(colour=dropout_rate), show.legend=TRUE) + 
     labs(title=paste0(strGeneID," ",strTitleSuffix)) +
     xlab(paste0("pseudotime")) +
     ylab(paste0("counts")) +
@@ -58,7 +62,9 @@ plotGene <- function(vecCounts,
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
-      legend.text=element_text(size=14))
+      legend.text=element_text(size=14)) +
+    annotate("text", x=(max(vecPseudotime)-min(vecPseudotime))*3/4,
+      y=max(vecCounts)*9/10, label="[Line legend]\nUnderlying model: dashed,\nInferred model: solid")
   
   # Add models to plot
   scaNPoints <- 100 # Points to plot for each model
@@ -70,8 +76,11 @@ plotGene <- function(vecCounts,
       vecTimepoints=vecPTCoord)
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValues)
-    gGenePlot <- gGenePlot + geom_line(data=dfLineImpulse, 
-      aes(x=pt, y=impulse))
+    gGenePlot <- gGenePlot + 
+      geom_line(data=dfLineImpulse, 
+        aes(x=pt, y=impulse),
+        linetype="solid",
+        show.legend=TRUE)
   }
   # Reference impulse model (e.g. true model if handling simulated data)
   if(!is.null(vecImpulseModelRefParam)){
@@ -80,7 +89,9 @@ plotGene <- function(vecCounts,
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValuesRef)
     gGenePlot <- gGenePlot + geom_line(data=dfLineImpulse, 
-      aes(x=pt, y=impulse))
+      aes(x=pt, y=impulse),
+      linetype="dashed",
+      show.legend=TRUE)
   }
   # Constant model
   if(!is.null(scaConstModelParam)){
@@ -88,8 +99,21 @@ plotGene <- function(vecCounts,
     vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
     dfLineConst <- data.frame( pt=vecPTCoordConst,
       const=vecConstValues)
-    gGenePlot <- gGenePlot + geom_line(data=dfLineConst, 
-      aes(x=pt, y=const))
+    gGenePlot <- gGenePlot + geom_line(data=dfLineConst,
+      aes(x=pt, y=const),
+      linetype="solid",
+      show.legend=TRUE)
+  }
+  # Reference constant model
+  if(!is.null(scaConstModelRefParam)){
+    vecConstRefValues <- c(scaConstModelRefParam,scaConstModelRefParam)
+    vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
+    dfLineConstRef <- data.frame( pt=vecPTCoordConst,
+      const=vecConstRefValues)
+    gGenePlot <- gGenePlot + geom_line(data=dfLineConstRef, 
+      aes(x=pt, y=const),
+      linetype="dashed",
+      show.legend=TRUE)
   }
   
   return(gGenePlot)
