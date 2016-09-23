@@ -26,6 +26,7 @@ validateOuputSimulation <- function(
   matDispHidden,
   matDropoutHidden,
   matDropoutLinModelHidden,
+  matImpulseModelHidden,
   vecSizeFactorsHidden,
   vecConstIDs,
   vecImpulseIDs,
@@ -33,13 +34,11 @@ validateOuputSimulation <- function(
   
   dirCurrent <- getwd()
   
-  # TODO: add correlation R2 to 1. and null pval distri to 4.
-  # Find way to compare logistic noise models
-  
   # Load data
   print(paste0("Load data from LineagePulse output directory: ",dirLineagePulseTempFiles))
   setwd(dirLineagePulseTempFiles)
   load("LineagePulse_matCountsProc.RData")
+  load("LineagePulse_vecPseudotimeProc.RData")
   load("LineagePulse_matMuH0.RData")
   load("LineagePulse_matDispersionsH0.RData")
   load("LineagePulse_matDropoutH0.RData")
@@ -48,6 +47,7 @@ validateOuputSimulation <- function(
   load("LineagePulse_matDropoutH1.RData")
   load("LineagePulse_matZH1.RData")
   load("LineagePulse_matDropoutLinModel.RData")
+  load("LineagePulse_matImpulseParam.RData")
   load("LineagePulse_dfDEAnalysis.RData")
   
   vecAnalysedGenes <- rownames(matCountsProc)
@@ -66,6 +66,9 @@ validateOuputSimulation <- function(
   scaNumGenesConst <- length(vecConstIDs)
   scaNumGenesImpulse <- length(vecImpulseIDs)
   scaNumCells <- dim(matCountsProc)[2]
+  
+  scaEps <- 10^(-5) # Constant to be added to paramters before taking log 
+  # to avoid errors at zero values.
   
   vecHiddenModelType <- rep("const", length(vecAnalysedGenes))
   names(vecHiddenModelType) <- vecAnalysedGenes
@@ -155,14 +158,76 @@ validateOuputSimulation <- function(
   print(gScatterDispvsMean)
   dev.off()
   
-  # e) Dropout model
+  # 2. Dropout model
+  print("# 2. Plot true and inferred dropout models by cell")
   # PDF with one page per cell: Plot data and inferred and true logistic model
+  # Reshape matrices into single column first:
+  lsGplotsDropoutModelsByCell <- list()
+  for(cell in seq(1,scaNumCells)){
+    lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps), index.return=TRUE)
+    vecMuHiddenSort <- lsMuHiddenSort$x
+    vecDropoutHiddenSort <- (matDropoutHidden[,cell])[lsMuHiddenSort$ix]
+    lsMuH1Sort <- sort(log(matMuH1[,cell]+scaEps), index.return=TRUE)
+    vecMuH1Sort <- lsMuH1Sort$x
+    vecDropoutH1Sort <- (matDropoutH1[,cell])[lsMuH1Sort$ix] 
+    dfDropoutModelsByCell <- data.frame(
+      mu=c(vecMuHiddenSort, vecMuH1Sort),
+      dropout=c(vecDropoutHiddenSort, vecDropoutH1Sort),
+      model=c(rep("true", scaNumGenes), rep("H1", scaNumGenes)) )
+    lsGplotsDropoutModelsByCell[[cell]] <- ggplot(dfDropoutModelsByCell) +
+      geom_line(aes(x=mu, y=dropout, colour=model)) +
+      labs(title=paste0("Cell ", cell, ": Inferred and true logistic drop-out model")) +
+      xlab(paste0("log_10 true mean parameter")) +
+      ylab(paste0("dropout rate")) +
+      geom_density(aes(mu, colour=model)) +          
+      theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=14,face="bold"),
+        title=element_text(size=14,face="bold"),
+        legend.text=element_text(size=14))
+  }
+  pdf("LineagePulse_AnalyseSimulated_DropoutModelByCell.pdf",width=7,height=7)
+  for(gplot in lsGplotsDropoutModelsByCell){
+    print(gplot)
+  }
+  dev.off()
+  graphics.off()
   
-  # 2. Mean model by gene
+  # 3. Mean model by gene
+  print("# 3. Plot inferred pseudotime expression models by gene.")
   # Plot data, true and inferred model by gene. qvalue
+  vecIDsToPlot <- rownames(matCountsProc)[seq(1,min(200,scaNumGenes))]
+  lsGplotsGeneIDs <- list()
+  for(id in vecIDsToPlot){
+    if(id %in% vecConstIDs){
+      scaConstModelRefParam <- matHiddenData[id,1]
+    } else {
+      scaConstModelRefParam <- NULL
+    }
+    if(id %in% vecImpulseIDs){
+      vecImpulseModelRefParam <- matImpulseModelHidden[id,]
+    } else {
+      vecImpulseModelRefParam <- NULL
+    }
+    lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
+      vecPseudotime=vecPseudotimeProc,
+      vecDropoutRates=matDropoutH1[id,],
+      vecImpulseModelParam=matImpulseParam[id,],
+      vecImpulseModelRefParam=vecImpulseModelRefParam,
+      scaConstModelParam=matMuH0[id,1],
+      scaConstModelRefParam=scaConstModelRefParam,
+      strGeneID=id,
+      strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
+  }
+  print(lsGplotsGeneIDs)
+  pdf("LineagePulse_AnalyseSimulated_ExpressionTraces.pdf")
+  for(gplot in lsGplotsGeneIDs){
+    print(gplot)
+  }
+  dev.off()
+  graphics.off()
   
-  # 3. LRT hist
-  print("# 3. LRT histogram")
+  # 4. LRT hist
+  print("# 4. LRT histogram")
   # Overall deviation comparison: LRT
   # Compare under negative binomial and under ZINB model
   # Compute loglikelihood of true underlying model
@@ -238,16 +303,23 @@ validateOuputSimulation <- function(
   print(gHistLRT_ZINB)
   dev.off() 
   
-  # 4. ECDF q-values divided by const and impulse true model
-  print("# 4. ECDF q-values divided by const and impulse true model")
+  # 5. ECDF q-values divided by const and impulse true model
+  print("# 5. ECDF q-values divided by const and impulse true model")
   vecX <- seq(max(-100,log(min(dfDEAnalysis$adj.p))/log(10)),0,by=0.5)
+  # Compute observed ECDF for constant and for impulse distributed genes
   vecCDFConst <- sapply(vecX, function(thres){
     sum(log(as.numeric(as.vector(dfDEAnalysis[vecConstIDs,]$p)))/log(10) <= thres, na.rm=TRUE)})
   vecCDFImpulse <- sapply(vecX, function(thres){
     sum(log(as.numeric(as.vector(dfDEAnalysis[vecImpulseIDs,]$p)))/log(10) <= thres, na.rm=TRUE)})
+  # Compute CDF under null p-value distribution: uniform
+  # Scale by number of observations for constant model, against
+  # which the null is compared
+  vecCDFBackgroundNull <- 1/log(10)*10^(vecX)*scaNumGenesConst
   dfECDFPvalByModel <- data.frame( thres=vecX,
-    pval=c(vecCDFConst,vecCDFImpulse),
-    model=c(rep("const",length(vecCDFConst)), rep("impulse",length(vecCDFImpulse))) )
+    pval=c(vecCDFConst,vecCDFImpulse,vecCDFBackgroundNull),
+    model=c(rep("const",length(vecCDFConst)), 
+      rep("impulse",length(vecCDFImpulse)),
+      rep("null_distribution",length(vecCDFBackgroundNull))) )
   gECDFPvalByModel <- ggplot(dfECDFPvalByModel, aes(x=thres, y=pval, group=model)) +
     geom_line(aes(colour = model)) +
     labs(title="ECDF log10 p-values by underlying model type") +
@@ -261,8 +333,8 @@ validateOuputSimulation <- function(
   print(gECDFPvalByModel)
   dev.off() 
   
-  # 5. Q-value as function of model parameters
-  print("# 5. Q-value as function of model parameters")
+  # 6. Q-value as function of model parameters
+  print("# 6. Q-value as function of model parameters")
   # a) Q-value as function of average true mean parameter
   print("# a) Q-value as function of average true mean parameter")
   # divided by const and impulse true model
