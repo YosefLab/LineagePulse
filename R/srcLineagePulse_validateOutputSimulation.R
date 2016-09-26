@@ -20,21 +20,29 @@ library(reshape2)
 #' @export
 
 validateOuputSimulation <- function(
-  dirLineagePulseTempFiles,
+  dirOutLineagePulse,
+  dirOutSimulation,
   dirValidationOut,
-  matMuHidden,
-  matDispHidden,
-  matDropoutHidden,
-  matDropoutLinModelHidden,
-  matImpulseModelHidden,
-  vecSizeFactorsHidden,
-  vecConstIDs,
-  vecImpulseIDs,
   scaWindowRadius=NULL ){
   
   dirCurrent <- getwd()
   
   # Load data
+  print(paste0("Load data from Simulation output directory: ",dirOutSimulation))
+  setwd(dirOutSimulation)
+  load(file=file.path(dirOutSimulation,"Simulation_vecPT.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_vecConstIDs.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_vecSizeFactorsHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matDropoutRatesHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matDropoutsHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
+
   print(paste0("Load data from LineagePulse output directory: ",dirLineagePulseTempFiles))
   setwd(dirLineagePulseTempFiles)
   load("LineagePulse_matCountsProc.RData")
@@ -54,7 +62,7 @@ validateOuputSimulation <- function(
   vecAnalysedCells <- colnames(matCountsProc)
   matMuHidden <- matMuHidden[vecAnalysedGenes,vecAnalysedCells]
   matDispHidden <- matDispHidden[vecAnalysedGenes,vecAnalysedCells]
-  matDropoutHidden <- matDropoutHidden[vecAnalysedGenes,vecAnalysedCells]
+  matDropoutRatesHidden <- matDropoutRatesHidden[vecAnalysedGenes,vecAnalysedCells]
   matDropoutLinModelHidden <- matDropoutLinModelHidden[vecAnalysedCells,]
   vecSizeFactorsHidden <- vecSizeFactorsHidden[vecAnalysedCells]
   
@@ -166,7 +174,7 @@ validateOuputSimulation <- function(
   for(cell in seq(1,scaNumCells)){
     lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps), index.return=TRUE)
     vecMuHiddenSort <- lsMuHiddenSort$x
-    vecDropoutHiddenSort <- (matDropoutHidden[,cell])[lsMuHiddenSort$ix]
+    vecDropoutHiddenSort <- (matDropoutRatesHidden[,cell])[lsMuHiddenSort$ix]
     lsMuH1Sort <- sort(log(matMuH1[,cell]+scaEps), index.return=TRUE)
     vecMuH1Sort <- lsMuH1Sort$x
     vecDropoutH1Sort <- (matDropoutH1[,cell])[lsMuH1Sort$ix] 
@@ -244,7 +252,7 @@ validateOuputSimulation <- function(
       vecMu=matMuHiddenTemp[i,],
       vecSizeFactors=vecSizeFactorsHidden,
       vecDispEst=matDispHidden[i,], 
-      vecDropoutRateEst=matDropoutHidden[i,],
+      vecDropoutRateEst=matDropoutRatesHidden[i,],
       vecboolNotZeroObserved=matData[i,]>0 & !is.na(matData[i,]), 
       vecboolZero=matData[i,]==0,
       scaWindowRadius=scaWindowRadius)
@@ -380,7 +388,7 @@ validateOuputSimulation <- function(
   print("# c) Q-value as function of number of drop-outs")
   # divided by const and impulse true model
   dfScatterQvalvsDispModelByModel <- data.frame(
-    sumdroprate=apply(matDropoutHidden, 1, function(gene) sum(gene, na.rm=TRUE)),
+    sumdroprate=apply(matDropoutRatesHidden, 1, function(gene) sum(gene, na.rm=TRUE)),
     qval=log(dfDEAnalysis[vecAnalysedGenes,]$adj.p)/log(10),
     model=vecHiddenModelType )
   gScatterQvalvsDisp <- ggplot(dfScatterQvalvsDispModelByModel, aes(x=sumdroprate, y=qval, group=model)) +
