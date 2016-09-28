@@ -63,12 +63,12 @@ computeAUCLogistic <- function(vecLinearModel){
 #' 
 #' @export
 
-validateOutput <- function(dirLineagePulseTempFiles,
-  dirValidationOut ){
+validateOutput <- function(dirOutLineagePulse,
+  dirOutValidation ){
   
   # Parameters
   # Point 2:
-  scaNIDs <- 20  # Genes to plot for each group
+  scaNIDs <- 50  # Genes/Cells to plot for each group
   scaThres <- 10^(-3) # Expression threshold for highly expressed group
   scaFracExprIsHigh <- 0.5 # Fraction of cells above 
   #expression threshold to be in the highly expressed group
@@ -80,22 +80,19 @@ validateOutput <- function(dirLineagePulseTempFiles,
   dirCurrent <- getwd()
   
   # Load data
-  setwd(dirLineagePulseTempFiles)
+  setwd(dirOutLineagePulse)
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_vecPseudotimeProc.RData")
-  load("LineagePulse_matMuH0.RData")
-  load("LineagePulse_matDispersionsH0.RData")
-  load("LineagePulse_matDropoutH0.RData")
-  load("LineagePulse_matMuH1.RData")
-  load("LineagePulse_matDispersionsH1.RData")
-  load("LineagePulse_matDropoutH1.RData")
-  load("LineagePulse_matZH1.RData")
-  load("LineagePulse_matDropoutLinModel.RData")
-  load("LineagePulse_matImpulseParam.RData")
+  load("LineagePulse_lsMuModelH0.RData")
+  load("LineagePulse_lsDispModelH0.RData")
+  load("LineagePulse_lsMuModelH1.RData")
+  load("LineagePulse_lsDispModelH1.RData")
+  load("LineagePulse_lsDropModel.RData")
+  #load("LineagePulse_matZH1.RData")
   load("LineagePulse_dfDEAnalysis.RData")
   
   # Initialise
-  setwd(dirValidationOut)
+  setwd(dirOutValidation)
   scaNumGenes <- dim(matCountsProc)[1]
   scaNumCells <- dim(matCountsProc)[2]
   
@@ -192,7 +189,8 @@ validateOutput <- function(dirLineagePulseTempFiles,
   
   # a) Sum of drop out rates of a cell
   print("# a) Scatter plot cumulative NB mixture probability versus sequencing depth by cell")
-  vecSumProbNB <- apply(matZH1, 2, function(cell){sum(1-cell, na.rm=TRUE)})
+  #vecSumProbNB <- apply(matZH1, 2, function(cell){sum(1-cell, na.rm=TRUE)})
+  vecSumProbNB <- array(NA, length(vecDepth))
   
   dfScatter1 <- data.frame(
     x=log(vecDepth),
@@ -213,7 +211,7 @@ validateOutput <- function(dirLineagePulseTempFiles,
   
   # b) AUC of logistic curve as measure for drop-out intensity
   print("# b) Scatter plot AUC logistic drop-out model versus\n sequencing depth by cell")
-  vecAUCLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
+  vecAUCLogistic <- apply(lsDropModel$matDropoutLinModel, 1, function(cellmodel){
     computeAUCLogistic(cellmodel)
   })
   
@@ -237,7 +235,7 @@ validateOutput <- function(dirLineagePulseTempFiles,
   
   # c) Inflexion point of logistic
   print("# c) Scatter plot inflexion point logistic drop-out model\n versus sequencing depth by cell")
-  vecInflexLogistic <- apply(matDropoutLinModel, 1, function(cellmodel){
+  vecInflexLogistic <- apply(lsDropModel$matDropoutLinModel, 1, function(cellmodel){
     return(-cellmodel[1]/cellmodel[2])
   })
   
@@ -262,10 +260,20 @@ validateOutput <- function(dirLineagePulseTempFiles,
   # 4. Plot drop-out rate as function of cell
   print("# 4. Plot drop-out rate as function of mean parameter by cell.")
   pdf("LineagePulse_LogisticScatter_DropoutvsMeanbyCell.pdf",width=7,height=7)
-  for(cell in seq(1,scaNumCells)){
-    plot( log(matMuH1[,cell])/log(10), 
-      matDropoutH1[,cell], 
-      xlim=c(-4,max(log(matMuH1[,cell])/log(10))),
+  for(cell in seq(1,min(scaNumCells,scaNIDs))){
+    # Decompress parameters by gene
+    vecMuParamH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+      decompressMeansByGene(vecMuModel=lsMuModelH1$matMuModel[i,],
+        lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+        vecInterval=cell)
+    }))
+    vecDropParamH1 <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[cell,],
+      vecMu=vecMuParam,
+      matPiConstPredictors=lsDropModel$matPiConstPredictors )
+    
+    plot( log(vecMuParamH1)/log(10), 
+      vecDropParamH1, 
+      xlim=c(-4,max(log(vecMuParamH1)/log(10))),
       ylab="dropout rate H1",
       xlab="log_10 mu H1",
       main=paste0("cell_",cell," (Sequencing depth: ",round(vecDepth[cell]/10^5,1),"e5)"))
@@ -275,23 +283,18 @@ validateOutput <- function(dirLineagePulseTempFiles,
   
   # 5. Logistic dropout rate fit as function of mean coloured by
   # sequencing depth.
+  scaNCells5 <- min(scaNumCells,1000)
   print(paste0("# 5. Plot logistic dropout rate fit as function of mean",
     " coloured by sequencing depth."))
   # Draw samples from dropout logistic model to save memory
-  vecMu=sapply(seq(1,log(max(matMuH1)/10^(-4))/log(2)), function(x) 10^(-4)*2^x)
-  matDropoutSampled <- matrix(NA, nrow=length(vecMu), ncol=scaNumCells)
-  for(cell in seq(1,scaNumCells)){
-    vecCellModel <- matDropoutLinModel[cell,]
-    matDropoutSampled[,cell] <- 1/(1+exp(-(vecCellModel[1]+vecCellModel[2]*vecMu)))
+  vecMu=sapply(seq(1,log(max(lsMuModel$matMuModel)/10^(-4))/log(2)), function(x) 10^(-4)*2^x)
+  matDropoutSampled <- matrix(NA, nrow=length(vecMu), ncol=scaNCells5)
+  for(cell in seq(1,scaNCells5)){
+    matDropoutSampled[,cell] <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[cell,],
+      vecMu=vecMu,
+      matPiConstPredictors=lsDropModel$matPiConstPredictors )
   }
-  colnames(matDropoutSampled) <- colnames(matDropoutH1)
-  # Reshape matrices into single column first:
-  dfMuMolten <- melt(matMuH1[,1:scaNumCells])
-  dfDropoutMolten <- melt(matDropoutH1[,1:scaNumCells])
-  dfLines1 <- data.frame(
-    mu=log(dfMuMolten$value),
-    dropout=dfDropoutMolten$value,
-    depth=vecDepth[match(dfDropoutMolten$Var2,names(vecDepth))])
+  colnames(matDropoutSampled) <- seq(1,scaNCells5)
   
   dfDropoutSampledMolten <- melt(matDropoutSampled[,1:scaNumCells])
   dfLines1 <- data.frame(
@@ -320,8 +323,8 @@ validateOutput <- function(dirLineagePulseTempFiles,
   print("# a) Plot dispersion parameter fit as function of mean parameter")
   # From H0 to have one parameter each per gene.
   dfScatterDispvsMean <- data.frame(
-    mu=log(matMuH0[,1]+scaEps)/log(10),
-    disp=matDispersionsH0[,1] )
+    mu=log(lsMuModelH0$matMuModel+scaEps)/log(10),
+    disp=lsDispModelH0$matDispModel )
   gScatterDispvsMean <- ggplot(dfScatterDispvsMean, aes(x=mu, y=disp)) +
     geom_point() + 
     labs(title="Dispersion parameter as function of\n mean parameter under H0.") +
@@ -340,11 +343,11 @@ validateOutput <- function(dirLineagePulseTempFiles,
   # b) Plot coefficient of variation as function of mean parameter
   print("# b) Plot coefficient of variation as function of mean parameter")
   # Compute coefficient of variation under H0
-  vecSD <- sqrt( matMuH0[,1] + matMuH0[,1]^2 / matDispersionsH0[,1] )
-  vecCV <- vecSD / matMuH0[,1]
+  vecSD <- sqrt( lsMuModelH0$matMuModel + lsMuModelH0$matMuModel^2 / lsDispModelH0$matDispModel )
+  vecCV <- vecSD / lsMuModelH0$matMuModel
   # From H0 to have one parameter each per gene.
   dfScatterCVvsMean <- data.frame(
-    mu=log(matMuH0[,1]+scaEps)/log(10),
+    mu=log(lsMuModelH0$matMuModel+scaEps)/log(10),
     cv=vecCV )
   gScatterDispvsMean <- ggplot(dfScatterCVvsMean, aes(x=mu, y=cv)) +
     geom_point() + 

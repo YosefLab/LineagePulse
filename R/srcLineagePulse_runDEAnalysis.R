@@ -66,40 +66,67 @@
 
 runDEAnalysis <- function(matCountsProc,
   vecSizeFactors,
-  matMuH1,
-  matDispersionsH1,
-  matDropoutH1,
+  lsMuModelH1,
+  lsDispModelH1,
+  lsMuModelH0,
+  lsDispModelH0,
+  lsDropModel,
   scaKbyGeneH1,
-  matMuH0,
-  matDispersionsH0,
-  matDropoutH0,
   scaKbyGeneH0,
   scaWindowRadius=NULL ){
   
   # (I) Compute log likelihoods
-  matboolNotZeroObserved <- matCountsProc >0 & !is.na(matCountsProc)
-  matboolZero <- matCountsProc==0
-  
-  vecLogLikFull <- unlist(bplapply( seq(1,dim(matCountsProc)[1]), function(i){
-    evalLogLikGene(vecCounts=matCountsProc[i,],
-      vecMu=matMuH1[i,],
+  lsLL <- bplapply( seq(1,dim(matCountsProc)[1]), function(i){
+    vecCounts <- matCountsProc[i,]
+    vecboolNotZeroObserved <- vecCounts >0 & !is.na(vecCounts)
+    vecboolZero <- vecCounts==0
+    
+    # Decompress parameters by gene
+    vecMuParamH0 <- decompressMeans( vecMuModel=lsMuModelH0$matMuModel[i,],
+      lsMuModelGlobal=lsMuModelH0$lsMuModelGlobal,
+      vecInterval=NULL )
+    vecDispParamH0 <- decompressDispersions( vecDispModel=lsDispModelH0$matDispModel[i,],
+      lsDispModel=lsDispersionModelH0$lsDispModelGlobal,
+      vecInterval=NULL )
+    vecDropoutParamH0 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+      vecMu=vecMuParamH0,
+      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+    
+    # Decompress parameters by gene
+    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+      vecInterval=NULL )
+    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+      vecInterval=NULL )
+    vecDropoutParamH1 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+      vecMu=vecMuParamH1,
+      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+    
+    # Compute loglikelihoods
+    scaLogLikFull <- evalLogLikGene(vecCounts=vecCounts,
       vecSizeFactors=vecSizeFactors,
-      vecDispEst=matDispersionsH1[i,], 
-      vecDropoutRateEst=matDropoutH1[i,],
-      vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-      vecboolZero=matboolZero[i,],
+      vecMu=vecMuParamH1,
+      vecDispEst=vecDispParamH1, 
+      vecDropoutRateEst=vecDropoutParamH1,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
-  }))
-  vecLogLikRed <- unlist(bplapply( seq(1,dim(matCountsProc)[1]), function(i){
-    evalLogLikGene(vecCounts=matCountsProc[i,],
-      vecMu=matMuH0[i,],
+    
+    scaLogLikRed <- evalLogLikGene(vecCounts=vecCounts,
+      vecMu=vecMuParamH0,
       vecSizeFactors=vecSizeFactors,
-      vecDispEst=matDispersionsH0[i,], 
-      vecDropoutRateEst=matDropoutH0[i,],
-      vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-      vecboolZero=matboolZero[i,],
+      vecDispEst=vecDispParamH0, 
+      vecDropoutRateEst=vecDropoutParamH0,
+      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
-  }))
+    
+    return(list( scaLogLikFull=scaLogLikFull,
+      scaLogLikRed=scaLogLikRed ))
+  })
+  vecLogLikFull <- sapply(lsLL, function(LL_i) LLi[["scaLogLikFull"]])
+  vecLogLikRed <- sapply(lsLL, function(LL_i) LLi[["scaLogLikRed"]])
   
   # (II) Differential expression analysis
   # Compute difference in degrees of freedom between null model and alternative model.
@@ -118,8 +145,8 @@ runDEAnalysis <- function(matCountsProc,
     "loglik_full"=vecLogLikFull,
     "loglik_red"=vecLogLikRed,
     "deviance"=vecDeviance,
-    "mean_H0"=matMuH0[,1],
-    "dispersion_H0"=matDispersionsH0[,1],
+    "mean_H0"=lsMuModelH0$matMuModel,
+    "dispersion_H0"=lsDispModelH0$matDispModel,
     stringsAsFactors = FALSE))
   
   # Order data frame by adjusted p-value

@@ -82,7 +82,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #' @param vecDropoutLinModel: (numeric vector length linear model)
 #'    Previous parameterisation of linear model for drop-out 
 #'    rate in logit space for given cell.
-#' @param matPredictorsPi: (matrix genes x predictors) Predictors of
+#' @param matPiConstPredictors: (matrix genes x predictors) Predictors of
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
@@ -96,24 +96,39 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #'    Model scaling factors for cell which takes
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
+#' @param vecInterval: (integer vector neighbourhood)
+#'    Positions of cells within smooting interval (neighbourhood)
+#'    of target cell.
+#' @param scaTarget: (integer) Index of target cell in interval.
 #' 
 #' @return vecLinModel: (numeric vector length linear model) 
 #'    Linear model for drop-out rate in logit space for given cell.
 #' @export
 
 fitPiZINB_LinPulse <- function( vecDropoutLinModel,
-  matPredictorsPi,
+  matPiConstPredictors,
   vecCounts,
-  matMu,
-  matDisp,
+  lsMuModel,
+  lsDispModel,
   scaNormConst,
-  boolSmoothed ){ 
+  vecInterval,
+  scaTarget){ 
   
-  # Catch matrix format error
-  if(!boolSmoothed){
-    matMu <- matrix(matMu,nrow=length(matMu),ncol=1, byrow=FALSE)
-    matDisp <- matrix(matDisp,nrow=length(matDisp),ncol=1, byrow=FALSE)
-  }
+  scaNumGenes <- length(vecCounts)
+  # Decompress parameters
+  matMuParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+    decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
+      lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+      vecInterval=vecInterval)
+  }))
+  matDispParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+    decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+      lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+      vecInterval=vecInterval)
+  }))
+  matPiPredictors <- cbind(1, matMuParam[,scaTarget], 
+    matPiConstPredictors)
+  
   # Numerical maximum likelihood estimaton of linear model
   # Initialise optimisation of linear model:
   #vecParamGuess <- rep(1, dim(matPredictorsPi)[2])
@@ -123,10 +138,10 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     optim(
       par=vecParamGuess,
       evalLogLikPiZINB_LinPulse_comp,
-      matPredictorsPi=matPredictorsPi,
+      matPredictorsPi=matPiPredictors,
       vecCounts=vecCounts,
-      matMu=matMu,
-      matDisp=matDisp,
+      matMu=matMuParam,
+      matDisp=matDispParam,
       scaNormConst=scaNormConst,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
       vecboolZero=vecCounts==0,

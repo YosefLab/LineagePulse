@@ -45,17 +45,15 @@ validateOuputSimulation <- function(
 
   print(paste0("Load data from LineagePulse output directory: ",dirOutLineagePulse))
   setwd(dirOutLineagePulse)
+  # Load data
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_vecPseudotimeProc.RData")
-  load("LineagePulse_matMuH0.RData")
-  load("LineagePulse_matDispersionsH0.RData")
-  load("LineagePulse_matDropoutH0.RData")
-  load("LineagePulse_matMuH1.RData")
-  load("LineagePulse_matDispersionsH1.RData")
-  load("LineagePulse_matDropoutH1.RData")
-  load("LineagePulse_matZH1.RData")
-  load("LineagePulse_matDropoutLinModel.RData")
-  load("LineagePulse_matImpulseParam.RData")
+  load("LineagePulse_lsMuModelH0.RData")
+  load("LineagePulse_lsDispModelH0.RData")
+  load("LineagePulse_lsMuModelH1.RData")
+  load("LineagePulse_lsDispModelH1.RData")
+  load("LineagePulse_lsDropModel.RData")
+  #load("LineagePulse_matZH1.RData")
   load("LineagePulse_dfDEAnalysis.RData")
   
   vecAnalysedGenes <- rownames(matCountsProc)
@@ -87,7 +85,7 @@ validateOuputSimulation <- function(
   # a) Mean parameters H0
   print("# a) Mean parameters H0")
   dfScatterMuModelvsMuInferredH0 <- data.frame(
-    x=log(matMuH0[,1])/log(10),
+    x=log(lsMuModelH0$matMuMode)/log(10),
     y=log(apply(matMuHidden,1, function(gene) mean(gene, na.rm=TRUE)) )/log(10),
     model=vecHiddenModelType )
   gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y, group=model)) +
@@ -107,8 +105,13 @@ validateOuputSimulation <- function(
   
   # b) Mean parameters H1: For one cell only
   print("# b) Mean parameters H1: For one cell only")
+  vecMuParamCell1H1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+    decompressMeansByGene(vecMuModel=lsMuModelH1$matMuModel[i,],
+      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+      vecInterval=1)
+  }))
   dfScatterMuModelvsMuInferredH1 <- data.frame(
-    x=log(matMuH1[,1])/log(10),
+    x=log(vecMuParamCell1H1)/log(10),
     y=log(matMuHidden[,1])/log(10),
     model=vecHiddenModelType )
   gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y, group=model)) +
@@ -129,7 +132,7 @@ validateOuputSimulation <- function(
   # c) Dispersion parameters H0 (using dispersion of first cell from model)
   print("# c) Dispersion parameters H0 (using dispersion of first cell from model)")
   dfScatterDispModelvsDispInferredH0 <- data.frame(
-    x=matDispersionsH0[,1],
+    x=lsDispModelH0$matDispModel,
     y=matDispHidden[,1],
     model=vecHiddenModelType )
   gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH0, aes(x=x, y=y, group=model)) +
@@ -148,13 +151,18 @@ validateOuputSimulation <- function(
   
   # d) Dispersion parameters H1: For one cell only
   print("# d) Dispersion parameters H1: For one cell only")
+  vecDispParamH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+    decompressDispByGene(vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModelGlobal=lsDispModelH1$lsMuModelGlobal,
+      vecInterval=1)
+  }))
   dfScatterDispModelvsDispInferredH1 <- data.frame(
-    x=matDispersionsH1[,1],
+    x=vecDispParamH1,
     y=matDispHidden[,1],
     model=vecHiddenModelType )
   gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH1, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
-    labs(title="Inferred dispersion (H0) versus\n underlying model dispersion parameter.") +
+    labs(title="Inferred dispersion (H1) versus\n underlying model dispersion parameter.") +
     xlab(paste0("H1 inferred dispersion parameter of first cell")) +
     ylab(paste0("model dispersion parameter of first cell")) + 
     scale_fill_continuous(name = "Count") + 
@@ -176,12 +184,20 @@ validateOuputSimulation <- function(
     lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps), index.return=TRUE)
     vecMuHiddenSort <- lsMuHiddenSort$x
     vecDropoutHiddenSort <- (matDropoutRatesHidden[,cell])[lsMuHiddenSort$ix]
-    lsMuH1Sort <- sort(log(matMuH1[,cell]+scaEps), index.return=TRUE)
+    vecMuParamH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+      decompressMeansByGene(vecMuModel=lsMuModelH1$matMuModel[i,],
+        lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+        vecInterval=cell)
+    }))
+    vecDropParamH1 <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[cell,],
+      vecMu=vecMuParamH1,
+      matPiConstPredictors=lsDropModel$matPiConstPredictors )
+    lsMuH1Sort <- sort(log(vecMuParamH1+scaEps), index.return=TRUE)
     vecMuH1Sort <- lsMuH1Sort$x
-    vecDropoutH1Sort <- (matDropoutH1[,cell])[lsMuH1Sort$ix] 
+    vecDropParamH1Sort <- vecDropParamH1[lsMuH1Sort$ix] 
     dfDropoutModelsByCell <- data.frame(
       mu=c(vecMuHiddenSort, vecMuH1Sort),
-      dropout=c(vecDropoutHiddenSort, vecDropoutH1Sort),
+      dropout=c(vecDropoutHiddenSort, vecDropParamH1Sort),
       model=c(rep("true", scaNumGenes), rep("H1", scaNumGenes)) )
     lsGplotsDropoutModelsByCell[[cell]] <- ggplot(dfDropoutModelsByCell) +
       geom_line(aes(x=mu, y=dropout, colour=model)) +
@@ -219,10 +235,10 @@ validateOuputSimulation <- function(
     }
     lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
       vecPseudotime=vecPseudotimeProc,
-      vecDropoutRates=matDropoutH1[id,],
-      vecImpulseModelParam=matImpulseParam[id,],
+      vecDropoutRates=matDropoutRatesHidden[id,],
+      vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
       vecImpulseModelRefParam=vecImpulseModelRefParam,
-      scaConstModelParam=matMuH0[id,1],
+      scaConstModelParam=lsMuModelH0$matMuModel[id,],
       scaConstModelRefParam=scaConstModelRefParam,
       strGeneID=id,
       strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
@@ -262,18 +278,33 @@ validateOuputSimulation <- function(
   # Recover zero predictions:
   matMuTemp <- matMuH1
   matMuTemp[matMuTemp==0] <- 10^(-4)
-  vecNBLLH1Model <- sapply(seq(1,scaNumGenes), function(gene){
-    sum(dnbinom(x=matCountsProc[gene,],
-      mu=matMuTemp[gene,],
-      size=matDispersionsH1[gene,],
+  vecNBLLH1Model <- sapply(seq(1,scaNumGenes), function(i){
+    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+      vecInterval=NULL )
+    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+      vecInterval=NULL )
+    sum(dnbinom(x=matCountsProc[i,],
+      mu=vecMuParamH1,
+      size=vecDispParamH1,
       log=TRUE), na.rm=TRUE)
   })
   vecZINBLLH1Model <- unlist(lapply( seq(1,scaNumGenes), function(i){
+    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+      vecInterval=NULL )
+    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+      vecInterval=NULL )
+    vecDropoutParamH1 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+      vecMu=vecMuParam,
+      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
-      vecMu=matMuTemp[i,],
+      vecMu=vecMuParamH1,
       vecSizeFactors=vecSizeFactorsHidden,
-      vecDispEst=matDispersionsH1[i,], 
-      vecDropoutRateEst=matDropoutH1[i,],
+      vecDispEst=vecDispParamH1, 
+      vecDropoutRateEst=vecDropoutParamH1,
       vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
       vecboolZero=matCountsProc[i,]==0,
       scaWindowRadius=scaWindowRadius)

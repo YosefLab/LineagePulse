@@ -159,24 +159,40 @@ evalLogLikGene <- function(vecCounts,
 }
 
 evalLogLikMatrix <- function(matCounts,
-  matMu,
   vecSizeFactors,
-  matDispersions, 
-  matDropout, 
-  matboolNotZeroObserved, 
-  matboolZero,
+  lsMuModel,
+  lsDispModel, 
+  lsDropModel,
   scaWindowRadius=NULL ){
   
   scaLogLik <- sum(unlist(
     bplapply( seq(1,dim(matCounts)[1]), function(i){
-      evalLogLikGene(vecCounts=matCounts[i,],
-          vecMu=matMu[i,],
+      # Decompress parameters by gene
+      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+        vecInterval=NULL )
+      vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
+        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+        vecInterval=NULL )
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+        vecMu=vecMuParam,
+        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      
+      # Compute boolean observation vectors
+      vecCounts <- matCounts[i,]
+      vecboolNotZeroObserved <- !is.na(vecCounts) & vecCounts>0
+      vecboolZero <- vecCounts==0
+    
+      # Evaluate loglikelihood of gene
+      scaLL <- evalLogLikGene(vecCounts=vecCounts,
+          vecMu=vecMuParam,
           vecSizeFactors=vecSizeFactors,
-          vecDispEst=matDispersions[i,], 
-          vecDropoutRateEst=matDropout[i,],
-          vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-          vecboolZero=matboolZero[i,],
+          vecDispEst=vecDispParam, 
+          vecDropoutRateEst=vecDropoutParam,
+          vecboolNotZeroObserved=vecboolNotZeroObserved, 
+          vecboolZero=vecboolZero,
           scaWindowRadius=scaWindowRadius)
+      return(scaLL)
     })
   ))
   return(scaLogLik)

@@ -67,37 +67,37 @@
 #'    Inferred zero inflated negative binomial drop out rates
 #'    on which estimation in this step is conditioned on.
 #'    These are the observation-wise point estimates, not the
-#'    logistic functions. ==========CORRECTED UNTIL HERE.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
+#'    logistic functions.
+#' @param matPiConstPredictors: (numeric matrix genes x external 
+#'    predictors) [Default NULL]
+#' @param matDropoutLinModel: (numeric matrix genes x predictors)
+#'    [Default NULL]
+#' @param matImpulseParam: (numeric matrix genes x impulse 
+#'    parameters 6) Inferred impulse model parameters
+#'    if strMuModel is "impulse". NA for all other strMuModel.
+#' @param matboolZero: (numeric matrix genes x cells)
+#'    [Default NULL] Whether observation is zero.
+#' @param matboolNotZeroObserved: (numeric matrix genes x cells)
+#'    [Default NULL] Whether observation is non-zero and real.
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
+#' @param boolDynamicPi: (bool) Whether drop-out rate is
+#'    treated as function of mean or as a constant.
+#' @param boolBFGSEstOfMu: (bool) [Default Null] Whether
+#'    mean parameters of a gene are co-estimated in "windows"
+#'    mode with BFGS algorithm (optimisation with dimensionality
+#'    of number of cells) or estimated one by one, conditioned
+#'    one the latest estimates of neighbours. The latter case
+#'    (boolBFGSEstOfMu=FALSE) is coordinate ascent within the gene
+#'    and each mean parameter is optimised once only.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
-#' @param strDispModel: (str) {"constant"}
-#'    [Default "constant"] Model according to which dispersion
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
-#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
-#'    Whether to co-estimate logistic drop-out model with the 
-#'    constant null model or with the alternative model. The
-#'    co-estimation with the noise model typically extends the
-#'    run-time of this model-estimation step strongly. While
-#'    the drop-out model is more accurate if estimated based on
-#'    a more realistic model expression model (the alternative
-#'    model), a trade-off for speed over accuracy can be taken
-#'    and the dropout model can be chosen to be estimated based
-#'    on the constant null expression model (set to TRUE).
-#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
-#'    of estimation cycles performed in fitZINB(). One cycle
-#'    contain one estimation of of each parameter of the 
-#'    zero-inflated negative binomial model as coordinate ascent.
-#' @param nProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
-#' @param verbose: (bool) Whether to follow EM-algorithm
-#'    convergence.
-#' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
-#'    progress in high detail with local convergence flags. 
 #' @param MAXIT_BFGS_Impulse: (scalar) [Default 1000]
 #'    Maximum number of BFGS iterations used to estiamte
 #'    an impulse model for a gene.
@@ -110,61 +110,54 @@
 #'    fitZINB by default in LineagePulse to save computation 
 #'    time.
 #' 
-#' @return (list length 2)
-#'    \itemize{
-#'      \item matMu: (numeric matrix genes x cells)
-#'        Inferred zero inflated negative binomial mean parameters.
-#'      \item matImpulseParam: (numeric matrix genes x impulse 
-#'        parameters 6) Inferred impulse model parameters
-#'        if strMuModel is "impulse". NA for all other strMuModel.
-#'        
-#'    }
+#' @return matMuModel: (numeric matrix genes x mu model parameters)
+#'    Contains the model parameters according to the used model.
 #' @export
 
 fitZINBMu <- function( matCountsProc,
   vecSizeFactors,
-  vecPseudotime=NULL,
-  vecindClusterAssign=NULL,
-  matMu=NULL,
-  matDispersions,
-  matDropout,
-  matConstPredictorsPi=NULL,
-  matLinModelPi=NULL,
-  matImpulseParam=NULL,
-  matboolZero=NULL,
-  matboolNotZeroObserved=NULL,
-  scaWindowRadius,
-  boolDynamicPi,
-  boolBFGSEstOfMu=NULL,
-  strMuModel,
-  MAXIT_BFGS_Impulse=1000,
-  RELTOL_BFGS_Impulse=sqrt(.Machine$double.eps) ){
+  lsMuModel,
+  lsDispModel,
+  lsDropModel,
+  scaWindowRadius ){
   
   scaNumGenes <- dim(matCountsProc)[1]
   scaNumCells <- dim(matCountsProc)[2]
-  if(strMuModel=="windows"){
+  if(lsMuModel$lsMuModelGlobal$strMuModel=="windows"){
     # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
     # interval with cell density centred at target cell.
     # Note that this corresponds to maximising smoothed log likelihood but instead
     # of using the implemented cost function evalLogLikSmoothZINB_LinPulse for an entire
     # gene, the optimisation problem is broken up into 1D problems for each mean.
-    matMu <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+    matMuModel <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
       # Note: Mean parameter estimates of gene i depend on each other:
       # Either estimate all parameters for gene i together 
       # (quasi-Newton estimation with BFGS: boolBFGSEstOfMu=TRUE)
       # or use the latest updates of the remaining parameters during 
       # one-by-one estimation (coordinate ascent, boolBFGSEstOfMu=TRUE).
-      if(boolBFGSEstOfMu){
+      
+      # Decompress parameters
+      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+        vecInterval=NULL )
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+          lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+        vecInterval=NULL)
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+        vecMu=vecMuParam,
+        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      
+      if(lsMuModel$lsMuModelGlobal$boolBFGSEstOfMu){
         vecMu <- fitMuVecZINB_LinPulse(
           vecCounts=matCountsProc[i,],
-          vecMu=matMu[i,],
-          vecDisp=matDispersions[i,],
+          vecMu=vecMuParam,
+          vecDisp=vecDispParam,
           vecNormConst=vecSizeFactors,
-          vecDropoutRateEst=matDropout[i,],
-          vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,]),
-          matLinModelPi=matLinModelPi,
+          vecDropoutRateEst=vecDropoutParam,
+          vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
+          matDropoutLinModel=lsDropModel$matDropoutLinModel,
           scaWindowRadius=scaWindowRadius,
-          boolDynamicPi=boolDynamicPi )
+          boolDynamicPi=TRUE )
       } else {
         vecMu <- matMu[i,]
         for(j in seq(1,scaNumCells)){
@@ -172,83 +165,122 @@ fitZINBMu <- function( matCountsProc,
           scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
           vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
           vecMu[j] <- fitMuZINB_LinPulse(vecCounts=matCountsProc[i,vecInterval],
-            vecMu=vecMu[vecInterval],
-            vecDisp=matDispersions[i,vecInterval],
+            vecMu=vecMuParam[vecInterval],
+            vecDisp=vecDispParam[vecInterval],
             vecNormConst=vecSizeFactors[vecInterval],
-            vecDropoutRateEst=matDropout[i,vecInterval],
-            vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,]),
-            matLinModelPi=matLinModelPi[vecInterval,],
+            vecDropoutRateEst=vecDropoutParam[vecInterval],
+            vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
+            matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
             scaTarget=match(j,vecInterval),
             scaWindowRadius=scaWindowRadius,
             strMuModel=strMuModel,
-            boolDynamicPi=boolDynamicPi )
+            boolDynamicPi=TRUE )
           # vecDropout is re-estimated in mean estimation based on the new mean.
         }
       }
       return(vecMu)
     }))
-  } else if(strMuModel=="clusters"){
+    
+  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
     # Estimate mean parameter by cluster. No smoothing is used.
-    matMuCluster <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-      vecMu <- sapply(seq(1,max(vecindClusterAssign)), function(k){
-        vecInterval <- vecindClusterAssign==k
+    matMuModel <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+      
+      # Decompress parameters
+      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+        vecInterval=NULL )
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+          lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+        vecInterval=NULL)
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+        vecMu=vecMuParam,
+        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      
+      # Estimate mean parameters
+      vecMu <- sapply(seq(1,max(lsMuModel$lsMuModelGlobal$vecindClusterAssign)), function(k){
+        vecInterval <- lsMuModel$lsMuModelGlobal$vecindClusterAssign==k
         scaMu <- fitMuZINB_LinPulse(
           vecCounts=matCountsProc[i,vecInterval],
-          vecMu=matMu[i,vecInterval],
-          vecDisp=matDispersions[i,vecInterval],
+          vecMu=vecMuParam[vecInterval],
+          vecDisp=vecDispParam[vecInterval],
           vecNormConst=vecSizeFactors[vecInterval],
-          vecDropoutRateEst=matDropout[i,vecInterval],
-          vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,]),
-          matLinModelPi=matLinModelPi[vecInterval,],
-          strMuModel=strMuModel,
-          boolDynamicPi=boolDynamicPi )
+          vecDropoutRateEst=vecDropoutParam[vecInterval],
+          vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
+          matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+          strMuModel=lsMuModel$lsMuModelGlobal$strMuModel,
+          boolDynamicPi=TRUE )
         return(scaMu)
       })
       return(vecMu)
     }))
-    matMu <- matMuCluster[,vecindClusterAssign]
-  } else if(strMuModel=="impulse"){
-    #  Compute posterior for parameter
-    # initialisation of impulse model.
-    matZ <- calcProbNB( matMu=matMu,
-      matDispersions=matDispersions,
-      matDropout=matDropout,
-      matboolZero=matboolZero,
-      matboolNotZeroObserved=matboolNotZeroObserved,
-      scaWindowRadius=scaWindowRadius )
+
+  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){
     
-    lsImpulseFits <- bplapply(seq(1,scaNumGenes), function(i){
-      lsImpulseFit <- fitMuImpulseZINB_LinPulse(
-        vecCounts=matCountsProc[i,],
-        vecDisp=matDispersions[i,],
-        vecNormConst=vecSizeFactors,
-        vecDropoutRateEst=matDropout[i,],
-        vecPredictorsPi=cbind(1,NA,matConstPredictorsPi[i,]),
-        matLinModelPi=matLinModelPi,
-        vecProbNB=1-matZ[i,],
-        vecPseudotime=vecPseudotime,
-        vecImpulseParam=matImpulseParam[i,],
-        boolDynamicPi=boolDynamicPi,
-        MAXIT=MAXIT_BFGS_Impulse,
-        RELTOL=RELTOL_BFGS_Impulse )
-      return(lsImpulseFit)
-    })
-    matMu <- do.call(rbind, lapply(lsImpulseFits, function(x) x$vecImpulseValue))
-    matImpulseParam <- do.call(rbind, lapply(lsImpulseFits, function(x) x$vecBestFitParam))
-  } else if(strMuModel=="constant"){
-    vecMu <- unlist(bplapply( seq(1,scaNumGenes), function(i){
-      fitMuConstZINB( vecCounts=matCountsProc[i,],
-        vecDisp=matDispersions[i,],
-        vecNormConst=vecSizeFactors,
-        vecDropoutRateEst=matDropout[i,],
-        matLinModelPi=matLinModelPi,
+    matMuModel <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+      
+      # Decompres parameters
+      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+        vecInterval=NULL )
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+        lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+        vecInterval=NULL)
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+        vecMu=vecMuParam,
+        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      
+      #  Compute posterior for parameter
+      # initialisation of impulse model.
+      vecZ <- calcProbNB( matMu=vecMuParam,
+        matDispersions=vecDispParam,
+        matDropout=vecDropoutParam,
+        matboolZero= vecCounts==0,
+        matboolNotZeroObserved= !is.na(vecCounts) & vecCounts==0,
         scaWindowRadius=scaWindowRadius )
+      
+      # Estimate mean parameters
+      lsImpulseFit <- fitMuImpulseZINB_LinPulse(
+        vecCounts=vecCounts,
+        vecDisp=vecDispParam,
+        vecNormConst=vecSizeFactors,
+        vecDropoutRateEst=vecDropoutParam,
+        vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
+        matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+        vecProbNB=1-vecZ,
+        vecPseudotime=lsMuModel$lsMuModelGlobal$vecPseudotime,
+        vecImpulseParam=lsMuModel$matMuModel[[i]],
+        boolDynamicPi=TRUE,
+        MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_Impulse,
+        RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_Impulse )
+      return(lsImpulseFit$vecBestFitParam)
     }))
-    matMu <- matrix(vecMu, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+    
+  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
+    matMuModel <- do.call(rbind, bplapply( seq(1,scaNumGenes), function(i){
+      # Decompres parameters
+      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+        vecInterval=NULL )
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+        lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+        vecInterval=NULL)
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+        vecMu=vecMuParam,
+        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      
+      # Estimate constant mean parameter
+      scaMu <- fitMuConstZINB( vecCounts=matCountsProc[i,],
+        vecDisp=vecDispParam,
+        vecNormConst=vecSizeFactors,
+        vecDropoutRateEst=vecDropoutParam,
+        vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
+        matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+        scaWindowRadius=scaWindowRadius )
+      return(scaMu)
+    }))
   }
   
-  return(list( matMu=matMu,
-    matImpulseParam=matImpulseParam ))
+  return( matMuModel=matMuModel )
 }
 
 #' Fit zero-inflated negative binomial model to data
@@ -278,7 +310,7 @@ fitZINBMu <- function( matCountsProc,
 #' iteration) or at each step (boolSuperVerbose=TRUE). Variables for the
 #' logistic drop-out model are a constant and the estimated mean parameter
 #' and other constant gene-specific variables (such as GC-conten) in 
-#' matConstPredictorsPi. Three modes are available for modelling the mean
+#' matPiConstPredictors. Three modes are available for modelling the mean
 #' parameter: As a gene-wise constant (the default null model), by cluster 
 #' (this is fast as neighbourhoods don't have to be evaluated), 
 #' sliding windows (using neighbourhood smoothing), and as an impulse model.
@@ -336,7 +368,12 @@ fitZINBMu <- function( matCountsProc,
 #' @param verbose: (bool) Whether to follow EM-algorithm
 #'    convergence.
 #' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
-#'    progress in high detail with local convergence flags. 
+#'    progress in high detail with local convergence flags.
+#' @param boolMemorySaving: (bool) [Default FALSE]
+#'    Whether LineagePulse is run in memory saving mode:
+#'    In memory saving mode, the communication of files between
+#'    function is partially exported to writing and reading
+#'    files with fixed names from dirOut. 
 #' 
 #' @return (list)
 #'    \itemize{
@@ -408,7 +445,8 @@ fitZINB <- function(matCountsProc,
   scaMaxCycles=100,
   verbose=FALSE,
   boolSuperVerbose=FALSE,
-  nProc=1){
+  nProc=1,
+  boolMemorySaving=FALSE ){
   
   ####################################################
   # Internal Parameters:
@@ -425,9 +463,8 @@ fitZINB <- function(matCountsProc,
   vecEMLogLikModelA <- array(NA,scaMaxCycles)
   vecEMLogLikModelB <- array(NA,scaMaxCycles)
   scaPredictors <- 2
-  boolDynamicPi <- TRUE
   boolBFGSEstOfMu <- FALSE
-  matConstPredictorsPi <- NULL
+  matPiConstPredictors <- NULL
   
   # Set smoothing mode
   boolSmoothed <- FALSE
@@ -494,63 +531,83 @@ fitZINB <- function(matCountsProc,
   if(boolEstimateNoiseBasedOnH0){
     strMuModelA <- "constant"
     strMuModelB <- strMuModel
+    strDispModelA <- "constant"
+    strDispModelB <- "constant"
     strNameModelA <- paste0("H0: ",strMuModelA)
     strNameModelB <- paste0("H1: ",strMuModelB)
   } else {
     strMuModelA <- strMuModel
     strMuModelB <- "constant"
+    strDispModelA <- "constant"
+    strDispModelB <- "constant"
     strNameModelA <- paste0("H1: ",strMuModelA)
     strNameModelB <- paste0("H0: ",strMuModelB)
   }
   
   ####################################################
-  # Initialise zero-inflated negative binomial models:
-  # Initialisation shared for both iterations
-  print("Initialise parameters")
+  # Initialise model A
+  # Initialisation repeated for second estimation to save memory
+  print("Initialise parameters model A")
   # Initialise parameters:
-  # Mean parameters (mu): Gene-wise mean of non-zero observations
+  # Mean parameters (mu): Gene-wise mean of non-zero observations.
+  # Impulse model: Initialised to constant (mean).
   # Dispersions: Low dispersion factor yielding high variance which makes
   # cost function screening easy in the first iteration.
-  # Drop-out rate: Set to 0.5, ie a constant model with all parameters zero.
-  # As the parameter corresponding to log(mu) is forced to be negative later,
-  # this parameter is initialised as very close to zero but negative.  
-  vecMuInit <- apply(matCountsProc, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
-  vecMuInit[vecMuInit < .Machine$double.eps] <- .Machine$double.eps
-  matMuInit <- matrix(vecMuInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
-  matDispersionsInit <- matrix(0.001, nrow=scaNumGenes, ncol=scaNumCells)
-  #matDropoutInit <- matrix(0.5, nrow=scaNumGenes, ncol=scaNumCells) # Recompute based on model below
-  matLinModelPiInit <- cbind(rep(0, scaNumCells), rep(-1, scaNumCells),
+  # Dropout model: Initialise as offset=0 and log(mu)  parameter which
+  # is forced to be negative during fitting, as -1. The parameter corresponding
+  # to log(mu) may not be initialised too close to zero, as the cost function 
+  # cannot always pick up the signal in such cases, leading to an MLE with this 
+  # parameter untouched.
+  lsMuModelA <- list( matMuModel=NA,
+    lsMuModelGlobal=list( strMuModel=strMuModelA,
+      scaNumCells=scaNumCells,
+      vecPseudotime=vecPseudotime,
+      vecindClusterAssign=vecindClusterAssign,
+      boolBFGSEstOfMu=boolBFGSEstOfMu,
+      MAXIT_BFGS_Impulse=MAXIT_BFGS_Impulse,
+      RELTOL_BFGS_Impulse=RELTOL_BFGS_Impulse) )
+  vecMuModelInit <- apply(matCountsProc, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
+  vecMuModelInit[vecMuModelInit < .Machine$double.eps] <- .Machine$double.eps
+  if(strMuModelA=="constant"){
+    lsMuModelA$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+  } else if(strMuModelA=="impulse"){
+    lsMuModelA$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
+    lsMuModelA$matMuModel[,2:4] <- log(matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+  } else if(strMuModelA=="clusters"){
+    lsMuModelA$matMuModel <- matrix(vecMuModel, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
+  } else  if(strMuModelA=="windows"){
+    lsMuModelA$matMuModel <- matrix(vecMuModel, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+  } else {
+    stop(paste0("ERROR fitZINB(): strMuModelA=", strMuModelA, " not recognised."))
+  }
+  
+  lsDispModelA <- list( matDispModel=NA,
+    lsDispModelGlobal=list( strDispModel=strDispModelA,
+      scaNumCells=scaNumCells,
+      vecPseudotime=vecPseudotime,
+      vecindClusterAssign=vecindClusterAssign) )
+  if(strDispModelA=="constant"){
+    lsDispModelA$matDispModel <- matrix(0.001, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+  } else {
+    stop(paste0("ERROR fitZINB(): strDispModelA=", strDispModelA, " not recognised."))
+  }
+  
+  lsDropModel <- list(matDropoutLinModel=NA,
+    matPiConstPredictors=matPiConstPredictors)
+  lsDropModel$matDropoutLinModel <- cbind(rep(0, scaNumCells), rep(-1, scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
-  if(strMuModel=="impulse"){ 
-    matImpulseParamInit <- matrix(1, nrow=scaNumGenes, ncol=6)
-    matImpulseParamInit[,2:4] <- log(matrix(vecMuInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
-  } else { matImpulseParamInit <- matrix(NA, nrow=scaNumGenes, ncol=6) }
   
   ####################################################
   # Fit model A
   print(paste0("### a) Fit negative binomial model A (",
     strNameModelA,") with noise model."))
   
-  # Set initialisations for this iteration cycle
-  matMuModelA <- matMuInit
-  matImpulseParamModelA <- matImpulseParamInit
-  matDispersionsModelA <- matDispersionsInit
-  matLinModelPi <- matLinModelPiInit
-  #matDropoutModelA <- matDropoutInit
-  matDropoutModelA <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
-    vecLinModelOut <- cbind(1,log(matMuModelA[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-    vecDropout <- 1/(1+exp(-vecLinModelOut))
-    return(vecDropout)
-  }))
-  
   # Evaluate initialisation loglikelihood for model B
   scaLogLikInitA <- evalLogLikMatrix(matCounts=matCountsProc,
     vecSizeFactors=vecSizeFactors,
-    matMu=matMuModelA,
-    matDispersions=matDispersionsModelA, 
-    matDropout=matDropoutModelA, 
-    matboolNotZeroObserved=matboolNotZeroObserved, 
-    matboolZero=matboolZero,
+    lsMuModel=lsMuModelA,
+    lsDispModel=lsDispModelA, 
+    lsDropModel=lsDropModel,
     scaWindowRadius=scaWindowRadius )
   if(verbose){
     print(paste0("Completed initialisation with ",
@@ -568,41 +625,30 @@ fitZINB <- function(matCountsProc,
         # Dropout rate
         # Drop-out estimation is independent between cells and can be parallelised.
         tm_pi <- system.time({
-          matLinModelPi <- do.call(rbind, 
+          lsDropModel$matDropoutLinModel <- do.call(rbind, 
             bplapply(seq(1, scaNumCells), function(cell){
-              if(boolSmoothed){
-                scaindIntervalStart <- max(1,cell-scaWindowRadius)
-                scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
-                vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-              } else {
-                vecInterval <- cell
-              }
+              scaindIntervalStart <- max(1,cell-scaWindowRadius)
+              scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
+              vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
               
-              vecLinModelPi <- fitPiZINB_LinPulse(
-                vecLinModelPi=matLinModelPi[cell,],
-                matPredictorsPi=cbind(1,log(matMuModelA[,cell]),matConstPredictorsPi),
+              vecDropoutLinModel <- fitPiZINB_LinPulse(
                 vecCounts=matCountsProc[,cell],
-                matMu=matMuModelA[,vecInterval],
-                matDisp=matDispersionsModelA[,vecInterval],
+                vecDropoutLinModel=lsDropModel$matDropoutLinModel[cell,],
+                matPiConstPredictors=lsDropModel$matPiConstPredictors,
+                lsMuModel=lsMuModelA,
+                lsDispModel=lsDispModelA,
                 scaNormConst=vecSizeFactors[cell],
-                boolSmoothed=boolSmoothed )
-              return(vecLinModelPi)
-            }))
-          matDropoutModelA <- do.call(cbind, 
-            lapply(seq(1, scaNumCells), function(cell){
-              vecLinModelOut <- cbind(1,log(matMuModelA[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-              vecDropout <- 1/(1+exp(-vecLinModelOut))
-              return(vecDropout)
+                vecInterval=vecInterval,
+                scaTarget=match(cell, vecInterval))
+              return(vecDropoutLinModel)
             }))
         })
         if(boolSuperVerbose){
-          scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-            matMu=matMuModelA,
+          scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
             vecSizeFactors=vecSizeFactors,
-            matDispersions=matDispersionsModelA, 
-            matDropout=matDropoutModelA, 
-            matboolNotZeroObserved=matboolNotZeroObserved, 
-            matboolZero=matboolZero,
+            lsMuModel=lsMuModelA,
+            lsDispModel=lsDispModelA, 
+            lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
           print(paste0("# ",scaIter,".1) Drop-out estimation complete: ",
             "loglikelihood of   ", scaLogLikTemp, " in ",
@@ -612,42 +658,19 @@ fitZINB <- function(matCountsProc,
         ##### 2. Gene-wise parameter estimation: 
         # a) Negative binomial mean parameter
         tm_mu <- system.time({
-          lsMuFitsModelA <- fitZINBMu( matCountsProc=matCountsProc,
-            vecPseudotime=vecPseudotime,
-            vecindClusterAssign=vecindClusterAssign,
-            matMu=matMuModelA,
-            matDispersions=matDispersionsModelA,
+          lsMuModelA$matMuModel <- fitZINBMu( matCountsProc=matCountsProc,
             vecSizeFactors=vecSizeFactors,
-            matDropout=matDropoutModelA,
-            matConstPredictorsPi=matConstPredictorsPi,
-            matLinModelPi=matLinModelPi,
-            matImpulseParam=matImpulseParamModelA,
-            matboolZero=matboolZero,
-            matboolNotZeroObserved=matboolNotZeroObserved,
-            scaWindowRadius=scaWindowRadius,
-            boolDynamicPi=boolDynamicPi,
-            boolBFGSEstOfMu=boolBFGSEstOfMu,
-            strMuModel=strMuModelA,
-            MAXIT_BFGS_Impulse=MAXIT_BFGS_Impulse,
-            RELTOL_BFGS_Impulse=RELTOL_BFGS_Impulse )
-          matMuModelA <- lsMuFitsModelA$matMu
-          matImpulseParamModelA <- lsMuFitsModelA$matImpulseParam
-          # These udates are done during mean estimation too
-          # Reestimate drop-out rates based on new means
-          matDropoutModelA <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
-            vecLinModelOut <- cbind(1,log(matMuModelA[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-            vecDropout <- 1/(1+exp(-vecLinModelOut))
-            return(vecDropout)
-          }))
+            lsMuModel=lsMuModelA,
+            lsDispModel=lsDispModelA,
+            lsDropModel=lsDropModel,
+            scaWindowRadius=scaWindowRadius )
         })
         if(boolSuperVerbose){
-          scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-            matMu=matMuModelA,
+          scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
             vecSizeFactors=vecSizeFactors,
-            matDispersions=matDispersionsModelA, 
-            matDropout=matDropoutModelA,
-            matboolNotZeroObserved=matboolNotZeroObserved, 
-            matboolZero=matboolZero,
+            lsMuModel=lsMuModelA,
+            lsDispModel=lsDispModelA, 
+            lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
           print(paste0("# ",scaIter, ".2) Mean estimation complete: ",
             "loglikelihood of       ", scaLogLikTemp, " in ",
@@ -659,15 +682,25 @@ fitZINB <- function(matCountsProc,
         tm_phi <-system.time({
           if(strDispModel=="constant"){  
             vecDispFitModelA <- bplapply(seq(1,scaNumGenes), function(i){
-              fitDispZINB_LinPulse(scaDispGuess=matDispersionsModelA[i,1],
+              # Decompress parameters
+              vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModelA$matMuModel[i,],
+                lsMuModelGlobal=lsMuModelA$lsMuModelGlobal,
+                vecInterval=NULL )
+              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+                vecMu=vecMuParam,
+                vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+              
+              # Estimate constant dispersion factor
+              fitDisp <- fitDispZINB_LinPulse(scaDispGuess=lsDispModelA$matDispModel[i,],
                 vecCounts=matCountsProc[i,],
-                vecMuEst=matMuModelA[i,],
                 vecSizeFactors=vecSizeFactors,
-                vecDropoutRateEst=matDropoutModelA[i,],
-                vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-                vecboolZero=matboolZero[i,],
+                vecMuEst=vecMuParam,
+                vecDropoutRateEst=vecDropoutParam,
+                vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+                vecboolZero= vecCounts==0,
                 scaWindowRadius=scaWindowRadius,
                 boolSmoothed=boolSmoothed )
+              return(fitDispZINB_LinPulse)
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
@@ -677,20 +710,17 @@ fitZINB <- function(matCountsProc,
               ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelA <- sapply(vecDispFitModelA, function(fit) fit["convergence"])
-          vecDispersionsModelA <- sapply(vecDispFitModelA, function(fit){ fit["par"] })
-          matDispersionsModelA <- matrix(vecDispersionsModelA, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE) 
+          lsDispModelA$matDispModel <- do.call(rbind, sapply(vecDispFitModelA, function(fit){ fit["par"] }))
         })
         
         # Evaluate Likelihood
         scaLogLikOld <- scaLogLikNew
-        scaLogLikNew <- evalLogLikMatrix(matCounts=matCountsProc,
-          matMu=matMuModelA,
-          vecSizeFactors=vecSizeFactors,
-          matDispersions=matDispersionsModelA, 
-          matDropout=matDropoutModelA, 
-          matboolNotZeroObserved=matboolNotZeroObserved, 
-          matboolZero=matboolZero,
-          scaWindowRadius=scaWindowRadius )
+        scaLogLikNew <- evalLogLikMatrix( matCounts=matCountsProc,
+            vecSizeFactors=vecSizeFactors,
+            lsMuModel=lsMuModelA,
+            lsDispModel=lsDispModelA, 
+            lsDropModel=lsDropModel,
+            scaWindowRadius=scaWindowRadius )
       })
       
       # Iteration complete
@@ -721,32 +751,58 @@ fitZINB <- function(matCountsProc,
   } else { boolConvergenceModelA <- FALSE }
   
   ####################################################
+  # Initialise model B
+  
+  print("Initialise parameters model B")
+  # Initialise parameters:
+  # -> Mean model is re-fit from scratch
+  # -> Dispersion estimates from A are used for initialisation
+  # -> Drop-out model is kept from model A estimation and
+  #   point estimators adjusted to mu initialisation used.
+  lsMuModelB <- list( matMuModel=NA,
+    lsMuModelGlobal=list( strMuModel=strMuModelB,
+      scaNumCells=scaNumCells,
+      vecPseudotime=vecPseudotime,
+      vecindClusterAssign=vecindClusterAssign,
+      boolBFGSEstOfMu=boolBFGSEstOfMu,
+      MAXIT_BFGS_Impulse=MAXIT_BFGS_Impulse,
+      RELTOL_BFGS_Impulse=RELTOL_BFGS_Impulse) )
+  # B is alternative model H1
+  if(strMuModelB=="constant"){
+    lsMuModelB$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+  } else if(strMuModelB=="impulse"){
+    lsMuModelB$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
+    lsMuModelB$matMuModel[,2:4] <- log(matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+  } else if(strMuModelB=="clusters"){
+    lsMuModelB$matMuModel <- matrix(vecMuModel, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
+  } else  if(strMuModelB=="windows"){
+    lsMuModelB$matMuModel <- matrix(vecMuModel, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+  } else {
+    stop(paste0("ERROR fitZINB(): strMuModelB=", strMuModelB, " not recognised."))
+  }
+  
+  lsDispModelB <- list( matDispModel=NA,
+    lsDispModelGlobal=list( strDispModel=strDispModelB,
+      scaNumCells=scaNumCells,
+      vecPseudotime=vecPseudotime,
+      vecindClusterAssign=vecindClusterAssign) )
+  if(strDispModelB=="constant"){
+    lsDispModelB$matDispModel <- matrix(0.001, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+  } else {
+    stop(paste0("ERROR fitZINB(): strDispModelB=", strDispModelB, " not recognised."))
+  }
+  
+  ####################################################
   # Fit model B
   print(paste0("### b) Fit negative binomial model B (",
     strNameModelB,")."))
-  # Set initialisations for this iteration cycle
-  # -> Mean model is re-fit from scratch
-  # -> Dispersion estimates are used for initialisation
-  # -> Drop-out model is kept from model A estimation and
-  #   point estimators adjusted to mu initialisation used.
-  matMuModelB <- matMuInit 
-  matImpulseParamModelB <- matImpulseParamInit
-  matDispersionsModelB <- matDispersionsModelA
-  # matLinModelPi computed in A and not altered anymore
-  matDropoutModelB <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
-    vecLinModelOut <- cbind(1,log(matMuModelB[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-    vecDropout <- 1/(1+exp(-vecLinModelOut))
-    return(vecDropout)
-  }))
   
   # Evaluate initialisation loglikelihood for model B
   scaLogLikInitB <- evalLogLikMatrix(matCounts=matCountsProc,
     vecSizeFactors=vecSizeFactors,
-    matMu=matMuModelB,
-    matDispersions=matDispersionsModelB, 
-    matDropout=matDropoutModelB, 
-    matboolNotZeroObserved=matboolNotZeroObserved, 
-    matboolZero=matboolZero,
+    lsMuModel=lsMuModelB,
+    lsDispModel=lsDispModelB, 
+    lsDropModel=lsDropModel,
     scaWindowRadius=scaWindowRadius )
   if(verbose){
     print(paste0("Completed initialisation with ",
@@ -768,42 +824,19 @@ fitZINB <- function(matCountsProc,
         # Posterior is not necessary in all other cases, expect for parameter
         # initialisation of impulse model.
         tm_mu <- system.time({
-          lsMuFitsModelB <- fitZINBMu( matCountsProc=matCountsProc,
-            vecPseudotime=vecPseudotime,
-            vecindClusterAssign=vecindClusterAssign,
-            matMu=matMuModelB,
-            matDispersions=matDispersionsModelB,
+          lsMuModelB$matMuModel <- fitZINBMu( matCountsProc=matCountsProc,
             vecSizeFactors=vecSizeFactors,
-            matDropout=matDropoutModelB,
-            matConstPredictorsPi=matConstPredictorsPi,
-            matLinModelPi=matLinModelPi,
-            matImpulseParam=matImpulseParamModelB,
-            matboolZero=matboolZero,
-            matboolNotZeroObserved=matboolNotZeroObserved,
-            scaWindowRadius=scaWindowRadius,
-            boolDynamicPi=boolDynamicPi,
-            boolBFGSEstOfMu=boolBFGSEstOfMu,
-            strMuModel=strMuModelB,
-            MAXIT_BFGS_Impulse=MAXIT_BFGS_Impulse,
-            RELTOL_BFGS_Impulse=RELTOL_BFGS_Impulse )
-          matMuModelB <- lsMuFitsModelB$matMu
-          matImpulseParamModelB <- lsMuFitsModelB$matImpulseParam
-          # These udates are done during mean estimation too
-          # Reestimate drop-out rates based on new means
-          matDropoutModelB <- do.call(cbind, bplapply(seq(1, scaNumCells), function(cell){
-            vecLinModelOut <- cbind(1,log(matMuModelB[,cell]),matConstPredictorsPi) %*% matLinModelPi[cell,]
-            vecDropout <- 1/(1+exp(-vecLinModelOut))
-            return(vecDropout)
-          }))
+            lsMuModel=lsMuModelB,
+            lsDispModel=lsDispModelB,
+            lsDropModel=lsDropModel,
+            scaWindowRadius=scaWindowRadius )
         })
         if(boolSuperVerbose){
-          scaLogLikTemp <- evalLogLikMatrix(matCounts=matCountsProc,
-            matMu=matMuModelB,
+          scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
             vecSizeFactors=vecSizeFactors,
-            matDispersions=matDispersionsModelB, 
-            matDropout=matDropoutModelB,
-            matboolNotZeroObserved=matboolNotZeroObserved, 
-            matboolZero=matboolZero,
+            lsMuModel=lsMuModelB,
+            lsDispModel=lsDispModelB, 
+            lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
           print(paste0("# ",scaIter, ".1) Mean estimation complete: ",
             "loglikelihood of       ", scaLogLikTemp, " in ",
@@ -815,15 +848,25 @@ fitZINB <- function(matCountsProc,
         tm_phi <- system.time({
           if(strDispModel=="constant"){  
             vecDispFitModelB <- bplapply(seq(1,scaNumGenes), function(i){
-              fitDispZINB_LinPulse(scaDispGuess=matDispersionsModelB[i,1],
+              # Decompress parameters
+              vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModelB$matMuModel[i,],
+                lsMuModelGlobal=lsMuModelB$lsMuModelGlobal,
+                vecInterval=NULL )
+              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+                vecMu=vecMuParam,
+                vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+              
+              # Estimate constant dispersion factor
+              fitDisp <- fitDispZINB_LinPulse(scaDispGuess=lsDispModelB$matDispModel[i,],
                 vecCounts=matCountsProc[i,],
-                vecMuEst=matMuModelB[i,],
                 vecSizeFactors=vecSizeFactors,
-                vecDropoutRateEst=matDropoutModelB[i,],
-                vecboolNotZeroObserved=matboolNotZeroObserved[i,], 
-                vecboolZero=matboolZero[i,],
+                vecMuEst=vecMuParam,
+                vecDropoutRateEst=vecDropoutParam,
+                vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+                vecboolZero= vecCounts==0,
                 scaWindowRadius=scaWindowRadius,
                 boolSmoothed=boolSmoothed )
+              return(fitDispZINB_LinPulse)
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
@@ -833,20 +876,17 @@ fitZINB <- function(matCountsProc,
               ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelB <- sapply(vecDispFitModelB, function(fit) fit["convergence"])
-          vecDispersionsModelB <- sapply(vecDispFitModelB, function(fit){ fit["par"] })
-          matDispersionsModelB <- matrix(vecDispersionsModelB, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+          lsDispModelB$matDispModel <- do.call(rbind, sapply(vecDispFitModelB, function(fit){ fit["par"] }))
         })
         
         # Evaluate Likelihood
         scaLogLikOld <- scaLogLikNew
-        scaLogLikNew <- evalLogLikMatrix(matCounts=matCountsProc,
-          matMu=matMuModelB,
-          vecSizeFactors=vecSizeFactors,
-          matDispersions=matDispersionsModelB, 
-          matDropout=matDropoutModelB, 
-          matboolNotZeroObserved=matboolNotZeroObserved, 
-          matboolZero=matboolZero,
-          scaWindowRadius=scaWindowRadius )
+        scaLogLikNew <- evalLogLikMatrix( matCounts=matCountsProc,
+            vecSizeFactors=vecSizeFactors,
+            lsMuModel=lsMuModelB,
+            lsDispModel=lsDispModelB, 
+            lsDropModel=lsDropModel,
+            scaWindowRadius=scaWindowRadius )
       })
       
       # Iteration complete
@@ -877,19 +917,12 @@ fitZINB <- function(matCountsProc,
   } else { boolConvergenceModelB <- FALSE }
   
   # Name rows and columns of parameter matrices
-  rownames(matMuModelA) <- rownames(matCountsProc)
-  colnames(matMuModelA) <- colnames(matCountsProc)
-  rownames(matDispersionsModelA) <- rownames(matCountsProc)
-  colnames(matDispersionsModelA) <- colnames(matCountsProc)
-  rownames(matDropoutModelA) <- rownames(matCountsProc)
-  colnames(matDropoutModelA) <- colnames(matCountsProc)
-  rownames(matMuModelB) <- rownames(matCountsProc)
-  colnames(matMuModelB) <- colnames(matCountsProc)
-  rownames(matDispersionsModelB) <- rownames(matCountsProc)
-  colnames(matDispersionsModelB) <- colnames(matCountsProc)
-  rownames(matDropoutModelB) <- rownames(matCountsProc)
-  colnames(matDropoutModelB) <- colnames(matCountsProc)
-  rownames(matLinModelPi) <- colnames(matCountsProc)
+  rownames(lsMuModelA$matMuModel) <- rownames(matCountsProc)
+  rownames(lsDipsModelA$matDispModel) <- rownames(matCountsProc)
+  rownames(lsMuModelB$matMuModel) <- rownames(matCountsProc)
+  rownames(lsDipsModelB$matDispModel) <- rownames(matCountsProc)
+  rownames(lsDropModel$matDropoutLinModel) <- colnames(matCountsProc)
+  rownames(lsDropModel$matPiConstPredictors) <- rownames(matCountsProc)
   
   # Prepare output according to which model was estimated
   # first (H0 or H1).
@@ -908,14 +941,11 @@ fitZINB <- function(matCountsProc,
       vecEMLogLikH0=vecEMLogLikModelA,
       scaKbyGeneH1=scaKbyGeneH1,
       scaKbyGeneH0=scaKbyGeneH0 )
-    lsReturn <- list( matMuH1=matMuModelB,
-      matDispersionsH1=matDispersionsModelB,
-      matDropoutH1=matDropoutModelB,
-      matMuH0=matMuModelA,
-      matDispersionsH0=matDispersionsModelA,
-      matDropoutH0=matDropoutModelA,
-      matDropoutLinModel=matLinModelPi,
-      matImpulseParam=matImpulseParamOut,
+    lsReturn <- list( lsMuModelH1=lsMuModelB,
+      lsDispModelH1=lsDispModelB,
+      lsMuModelH0=lsMuModelA,
+      lsDispModelH0=lsDispModelA,
+      lsDropModel=lsDropModel,
       lsFitZINBReporters=lsFitZINBReporters )
   } else {
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelA,
@@ -924,14 +954,11 @@ fitZINB <- function(matCountsProc,
       vecEMLogLikH0=vecEMLogLikModelB,
       scaKbyGeneH1=scaKbyGeneH1,
       scaKbyGeneH0=scaKbyGeneH0 )
-    lsReturn <- list( matMuH1=matMuModelA,
-      matDispersionsH1=matDispersionsModelA,
-      matDropoutH1=matDropoutModelA,
-      matMuH0=matMuModelB,
-      matDispersionsH0=matDispersionsModelB,
-      matDropoutH0=matDropoutModelB,
-      matDropoutLinModel=matLinModelPi,
-      matImpulseParam=matImpulseParamOut,
+    lsReturn <- list( lsMuModelH1=lsMuModelA,
+      lsDispModelH1=lsDispModelA,
+      lsMuModelH0=lsMuModelB,
+      lsDispModelH0=lsDispModelB,
+      lsDropModel=lsDropModel,
       lsFitZINBReporters=lsFitZINBReporters )
   } 
   
