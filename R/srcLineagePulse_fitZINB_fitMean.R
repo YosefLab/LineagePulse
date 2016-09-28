@@ -30,7 +30,7 @@
 #' @param vecMu: (vector number of cells in neighbourhood) Mean
 #'    parameter estimates in neighourhood of target cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -60,7 +60,7 @@ evalLogLikMuWindowsZINB_LinPulse <- function(scaTheta,
   vecDisp,
   vecMu,
   vecDropoutRateEst=NULL,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   vecNormConst,
   vecboolNotZeroObserved,
@@ -87,7 +87,7 @@ evalLogLikMuWindowsZINB_LinPulse <- function(scaTheta,
     matPredictorsPi[,2] <- log(vecMu)
     matPredictorsPi[scaTarget,2] <- scaTheta
     vecLinModelOut <- sapply(seq(1,scaN), function(cell){
-      matLinModelPi[cell,] %*% matPredictorsPi[cell,]
+      matDropoutLinModel[cell,] %*% matPredictorsPi[cell,]
     })
     vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   }
@@ -148,7 +148,7 @@ evalLogLikMuWindowsZINB_LinPulse <- function(scaTheta,
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -175,7 +175,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
   vecCounts,
   vecDisp,
   vecDropoutRateEst=NULL,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   vecNormConst,
   vecboolNotZeroObserved,
@@ -200,7 +200,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
       ncol= length(vecPredictorsPi), byrow=TRUE)
     matPredictorsPi[,2] <- log(vecMu)
     vecLinModelOut <- sapply(seq(1,scaN), function(cell){
-      matLinModelPi[cell,] %*% matPredictorsPi[cell,]
+      matDropoutLinModel[cell,] %*% matPredictorsPi[cell,]
     })
     vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   }
@@ -245,7 +245,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -270,7 +270,7 @@ evalLogLikMuClustersZINB_LinPulse <- function(scaTheta,
   vecCounts,
   vecDisp,
   vecDropoutRateEst=NULL,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   vecNormConst,
   vecboolNotZeroObserved,
@@ -292,7 +292,7 @@ evalLogLikMuClustersZINB_LinPulse <- function(scaTheta,
   if(boolDynamicPi){
     vecPredictorsPi[2] <- scaTheta
     vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-      sum(matLinModelPi[cell,] * vecPredictorsPi)
+      sum(matDropoutLinModel[cell,] * vecPredictorsPi)
     })
     vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   }
@@ -354,7 +354,7 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
   vecDisp,
   vecNormConst,
   vecDropoutRateEst,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecboolNotZeroObserved,
   vecboolZero,
   scaWindowRadius=NULL ){ 
@@ -367,10 +367,10 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
   if(scaMu < .Machine$double.eps){ scaMu <- .Machine$double.eps }
   
   # Adjust drop-out rates if pi is dynamic in mu
-  if(!is.null(matLinModelPi)){
+  if(!is.null(matDropoutLinModel)){
     vecPredictors <- c(1,log(scaMu))
     vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-      sum(matLinModelPi[cell,] * vecPredictors)
+      sum(matDropoutLinModel[cell,] * vecPredictors)
     })
     vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   }
@@ -417,7 +417,7 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
 #' @param scaDispersionEstimate: (numerical scalar) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecDropoutRate: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x 2) Logistic linear
+#' @param matDropoutLinModel: (matrix number of cells x 2) Logistic linear
 #'    model parameters of the dropout rate as a function of the mean.
 #' @param vecProbNB: (vector number of cells) Posterior probability
 #'    of not being drop-out for all observations. Used for impulse
@@ -448,7 +448,7 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
 fitImpulse_gene_LP <- function(vecCounts, 
   scaDispersionEstimate,
   vecDropoutRate=NULL,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecProbNB,
   vecNormConst,
   vecboolZero,
@@ -498,7 +498,7 @@ fitImpulse_gene_LP <- function(vecCounts,
     vecCounts=vecCounts,
     scaDispersionEstimate=scaDispersionEstimate,
     vecDropoutRate=NA,
-    matLinModelPi=matLinModelPi,
+    matLinModelPi=matDropoutLinModel,
     vecNormConst=vecNormConst,
     vecindTimepointAssign=vecindTimepointAssign,
     vecboolZero=vecboolZero, 
@@ -515,7 +515,7 @@ fitImpulse_gene_LP <- function(vecCounts,
       vecCounts=vecCounts,
       scaDispersionEstimate=scaDispersionEstimate,
       vecDropoutRate=NA,
-      matLinModelPi=matLinModelPi,
+      matLinModelPi=matDropoutLinModel,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       vecboolZero=vecboolZero, 
@@ -531,7 +531,7 @@ fitImpulse_gene_LP <- function(vecCounts,
       vecCounts=vecCounts,
       scaDispersionEstimate=scaDispersionEstimate,
       vecDropoutRate=NA,
-      matLinModelPi=matLinModelPi,
+      matLinModelPi=matDropoutLinModel,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       vecboolZero=vecboolZero, 
@@ -567,7 +567,7 @@ fitImpulse_gene_LP <- function(vecCounts,
     # Compute best set from last iteration
     vecImpulseValueOld <- calcImpulse_comp(vecParamGuessPrior,vecTimepoints)[vecindTimepointAssign]
     vecLinModelOutOld <- sapply(seq(1, length(vecCounts)), function(cell){
-      sum(c(1,log(vecImpulseValueOld[cell])) * matLinModelPi[cell,])
+      sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
     vecDropoutOld <- 1/(1+exp(-vecLinModelOutOld))
     scaLLOld <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
@@ -582,7 +582,7 @@ fitImpulse_gene_LP <- function(vecCounts,
     print(dfFitsByInitialisation["value",]) # switch for below if only prior initialisation is used
     #print(vecFitPrior["value"])
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
-      sum(c(1,log(vecImpulseValue[cell])) * matLinModelPi[cell,])
+      sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
     vecDropout <- 1/(1+exp(-vecLinModelOut))
     scaLLRef <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
@@ -627,7 +627,7 @@ fitImpulse_gene_LP <- function(vecCounts,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -650,7 +650,7 @@ fitMuZINB_LinPulse <- function(vecCounts,
   vecDisp,
   vecNormConst,
   vecDropoutRateEst,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   scaTarget=NULL,
   scaWindowRadius=NULL,
@@ -671,7 +671,7 @@ fitMuZINB_LinPulse <- function(vecCounts,
         vecMu=vecMu,
         vecDisp=vecDisp,
         vecDropoutRateEst=vecDropoutRateEst,
-        matLinModelPi=matLinModelPi,
+        matDropoutLinModel=matDropoutLinModel,
         vecPredictorsPi=vecPredictorsPi,
         vecNormConst=vecNormConst,
         vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
@@ -688,7 +688,7 @@ fitMuZINB_LinPulse <- function(vecCounts,
         vecCounts=vecCounts,
         vecDisp=vecDisp,
         vecDropoutRateEst=vecDropoutRateEst,
-        matLinModelPi=matLinModelPi,
+        matDropoutLinModel=matDropoutLinModel,
         vecPredictorsPi=vecPredictorsPi,
         vecProbNB=vecProbNB,
         vecNormConst=vecNormConst,
@@ -741,7 +741,7 @@ fitMuZINB_LinPulse <- function(vecCounts,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -764,7 +764,7 @@ fitMuVecZINB_LinPulse<- function(vecCounts,
   vecDisp,
   vecNormConst,
   vecDropoutRateEst,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   scaWindowRadius=NULL,
   boolDynamicPi=FALSE ){
@@ -776,7 +776,7 @@ fitMuVecZINB_LinPulse<- function(vecCounts,
       vecCounts=vecCounts,
       vecDisp=vecDisp,
       vecDropoutRateEst=vecDropoutRateEst,
-      matLinModelPi=matLinModelPi,
+      matDropoutLinModel=matDropoutLinModel,
       vecPredictorsPi=vecPredictorsPi,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
@@ -827,7 +827,7 @@ fitMuVecZINB_LinPulse<- function(vecCounts,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell.
-#' @param matLinModelPi: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPredictorsPi: (numeric vector constant gene-wise coefficients)
@@ -851,7 +851,7 @@ fitMuImpulseZINB_LinPulse <- function(vecCounts,
   vecDisp,
   vecNormConst,
   vecDropoutRateEst,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   vecPredictorsPi=NULL,
   vecProbNB=NULL,
   scaWindowRadius=NULL,
@@ -865,7 +865,7 @@ fitMuImpulseZINB_LinPulse <- function(vecCounts,
     fitImpulse_gene_LP(vecCounts=vecCounts, 
       scaDispersionEstimate=vecDisp[1],
       vecDropoutRate=vecDropoutRateEst,
-      matLinModelPi=matLinModelPi,
+      matDropoutLinModel=matDropoutLinModel,
       vecProbNB=vecProbNB,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
@@ -919,7 +919,7 @@ fitMuConstZINB <- function(vecCounts,
   vecDisp,
   vecNormConst,
   vecDropoutRateEst,
-  matLinModelPi=NULL,
+  matDropoutLinModel=NULL,
   scaWindowRadius){ 
 
   # Numerical maximum likelihood estimator
@@ -931,7 +931,7 @@ fitMuConstZINB <- function(vecCounts,
       vecCounts=vecCounts,
       vecDisp=vecDisp,
       vecDropoutRateEst=vecDropoutRateEst,
-      matLinModelPi=matLinModelPi,
+      matDropoutLinModel=matDropoutLinModel,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0,
@@ -945,13 +945,13 @@ fitMuConstZINB <- function(vecCounts,
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
     print(paste0("vecDropoutRateEst ", paste(vecDropoutRateEst,collapse=" ")))
-    print("matLinModelPi")
-    print(matLinModelPi)
+    print("matDropoutLinModel")
+    print(matDropoutLinModel)
     print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
     lsErrorCausingGene <- list(vecCounts, vecDisp, vecDropoutRateEst, 
-      matLinModelPi, vecNormConst)
+      matDropoutLinModel, vecNormConst)
     names(lsErrorCausingGene) <- c("vecCounts", "vecDisp", "vecDropoutRateEst",
-      "matLinModelPi", "vecNormConst")
+      "matDropoutLinModel", "vecNormConst")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })

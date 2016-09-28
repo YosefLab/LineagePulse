@@ -79,7 +79,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #' 
 #' @seealso Called by \code{fitZINB}.
 #' 
-#' @param vecLinModelPi: (numeric vector length linear model)
+#' @param vecDropoutLinModel: (numeric vector length linear model)
 #'    Previous parameterisation of linear model for drop-out 
 #'    rate in logit space for given cell.
 #' @param matPredictorsPi: (matrix genes x predictors) Predictors of
@@ -101,7 +101,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #'    Linear model for drop-out rate in logit space for given cell.
 #' @export
 
-fitPiZINB_LinPulse <- function( vecLinModelPi,
+fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   matPredictorsPi,
   vecCounts,
   matMu,
@@ -117,7 +117,7 @@ fitPiZINB_LinPulse <- function( vecLinModelPi,
   # Numerical maximum likelihood estimaton of linear model
   # Initialise optimisation of linear model:
   #vecParamGuess <- rep(1, dim(matPredictorsPi)[2])
-  vecParamGuess <- vecLinModelPi
+  vecParamGuess <- vecDropoutLinModel
   vecParamGuess[2] <- log(-vecParamGuess[2])
   lsLinModelFit <- tryCatch({
     optim(

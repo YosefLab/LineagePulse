@@ -22,7 +22,7 @@ library(reshape2)
 validateOuputSimulation <- function(
   dirOutLineagePulse,
   dirOutSimulation,
-  dirValidationOut,
+  dirOutValidation,
   scaWindowRadius=NULL ){
   
   dirCurrent <- getwd()
@@ -43,8 +43,8 @@ validateOuputSimulation <- function(
   load(file=file.path(dirOutSimulation,"Simulation_matDropoutsHidden.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
 
-  print(paste0("Load data from LineagePulse output directory: ",dirLineagePulseTempFiles))
-  setwd(dirLineagePulseTempFiles)
+  print(paste0("Load data from LineagePulse output directory: ",dirOutLineagePulse))
+  setwd(dirOutLineagePulse)
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_vecPseudotimeProc.RData")
   load("LineagePulse_matMuH0.RData")
@@ -67,7 +67,7 @@ validateOuputSimulation <- function(
   vecSizeFactorsHidden <- vecSizeFactorsHidden[vecAnalysedCells]
   
   # Initialise
-  setwd(dirValidationOut)
+  setwd(dirOutValidation)
   scaNumGenes <- dim(matCountsProc)[1]
   vecConstIDs <- vecConstIDs[vecConstIDs %in% rownames(matCountsProc)]
   vecImpulseIDs <- vecImpulseIDs[vecImpulseIDs %in% rownames(matCountsProc)]
@@ -167,11 +167,12 @@ validateOuputSimulation <- function(
   dev.off()
   
   # 2. Dropout model
+  NCellsToPlot <- 50
   print("# 2. Plot true and inferred dropout models by cell")
   # PDF with one page per cell: Plot data and inferred and true logistic model
   # Reshape matrices into single column first:
   lsGplotsDropoutModelsByCell <- list()
-  for(cell in seq(1,scaNumCells)){
+  for(cell in seq(1,min(scaNumCells,NCellsToPlot))){
     lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps), index.return=TRUE)
     vecMuHiddenSort <- lsMuHiddenSort$x
     vecDropoutHiddenSort <- (matDropoutRatesHidden[,cell])[lsMuHiddenSort$ix]
@@ -207,7 +208,7 @@ validateOuputSimulation <- function(
   lsGplotsGeneIDs <- list()
   for(id in vecIDsToPlot){
     if(id %in% vecConstIDs){
-      scaConstModelRefParam <- matHiddenData[id,1]
+      scaConstModelRefParam <- matMuHidden[id,1]
     } else {
       scaConstModelRefParam <- NULL
     }
@@ -253,8 +254,8 @@ validateOuputSimulation <- function(
       vecSizeFactors=vecSizeFactorsHidden,
       vecDispEst=matDispHidden[i,], 
       vecDropoutRateEst=matDropoutRatesHidden[i,],
-      vecboolNotZeroObserved=matData[i,]>0 & !is.na(matData[i,]), 
-      vecboolZero=matData[i,]==0,
+      vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
+      vecboolZero=matCountsProc[i,]==0,
       scaWindowRadius=scaWindowRadius)
   }))
   # Compute loglikelihood of inferred model
@@ -273,8 +274,8 @@ validateOuputSimulation <- function(
       vecSizeFactors=vecSizeFactorsHidden,
       vecDispEst=matDispersionsH1[i,], 
       vecDropoutRateEst=matDropoutH1[i,],
-      vecboolNotZeroObserved=matData[i,]>0 & !is.na(matData[i,]), 
-      vecboolZero=matData[i,]==0,
+      vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
+      vecboolZero=matCountsProc[i,]==0,
       scaWindowRadius=scaWindowRadius)
   }))
   # LRT

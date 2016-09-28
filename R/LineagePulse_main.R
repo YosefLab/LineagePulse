@@ -148,6 +148,11 @@ source("srcLineagePulse_plotGene.R")
 #' @param dirOut: (str directory) [Default NULL]
 #'    Directory to which detailed output is saved to.
 #'    Defaults to current working directory if NULL.
+#' @param boolMemorySaving: (bool) [Default FALSE]
+#'    Whether LineagePulse is run in memory saving mode:
+#'    In memory saving mode, the communication of files between
+#'    function is partially exported to writing and reading
+#'    files with fixed names from dirOut.
 #' 
 #' @return (list length 2)
 #'    \itemize{
@@ -185,7 +190,8 @@ runLineagePulse <- function(matCounts,
   nProc=1,
   verbose=TRUE,
   boolSuperVerbose=FALSE,
-  dirOut=NULL ){
+  dirOut=NULL,
+  boolMemorySaving=FALSE ){
   
   # 1. Data preprocessing
   print("1. Data preprocessing:")
@@ -203,6 +209,9 @@ runLineagePulse <- function(matCounts,
   save(matCountsProc,file=file.path(dirOut,"LineagePulse_matCountsProc.RData"))
   save(matCountsProcFull,file=file.path(dirOut,"LineagePulse_matCountsProcFull.RData"))
   save(vecPseudotimeProc,file=file.path(dirOut,"LineagePulse_vecPseudotimeProc.RData"))
+  # Clear memory
+  rm(matCounts)
+  rm(vecPseudotime)
   
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
@@ -246,6 +255,8 @@ runLineagePulse <- function(matCounts,
   print("4. Compute size factors:")
   vecSizeFactors <- computeSizeFactors_LineagePulse(matCountsProcFull)
   save(vecSizeFactors,file=file.path(dirOut,"LineagePulse_vecSizeFactors.RData"))
+  # Clear memory
+  rm(matCountsProcFull)
   
   # 5. Fit ZINB mixture model for both H1 and H0.
   print("5. Fit ZINB mixture model for both H1 and H0.")
@@ -261,7 +272,8 @@ runLineagePulse <- function(matCounts,
       nProc=nProc,
       scaMaxCycles=scaMaxCycles,
       verbose=verbose,
-      boolSuperVerbose=boolSuperVerbose )
+      boolSuperVerbose=boolSuperVerbose,
+      boolMemorySaving=boolMemorySaving )
     matMuH1  <- lsZINBFit$matMuH1
     matDispersionsH1 <- lsZINBFit$matDispersionsH1
     matDropoutH1 <- lsZINBFit$matDropoutH1
