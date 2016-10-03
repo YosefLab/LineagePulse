@@ -88,7 +88,7 @@ runDEAnalysis <- function(matCountsProc,
     vecDispParamH0 <- decompressDispersions( vecDispModel=lsDispModelH0$matDispModel[i,],
       lsDispModel=lsDispersionModelH0$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH0 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+    vecDropoutParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH0,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     
@@ -99,7 +99,7 @@ runDEAnalysis <- function(matCountsProc,
     vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
       lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     
@@ -125,8 +125,8 @@ runDEAnalysis <- function(matCountsProc,
     return(list( scaLogLikFull=scaLogLikFull,
       scaLogLikRed=scaLogLikRed ))
   })
-  vecLogLikFull <- sapply(lsLL, function(LL_i) LLi["scaLogLikFull"])
-  vecLogLikRed <- sapply(lsLL, function(LL_i) LLi["scaLogLikRed"])
+  vecLogLikFull <- sapply(lsLL, function(LL_i) LLi[["scaLogLikFull"]])
+  vecLogLikRed <- sapply(lsLL, function(LL_i) LLi[["scaLogLikRed"]])
   
   # (II) Differential expression analysis
   # Compute difference in degrees of freedom between null model and alternative model.

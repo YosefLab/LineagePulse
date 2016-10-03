@@ -241,7 +241,7 @@ fitZINBMu <- function( matCountsProc,
     }))
     
   } else if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
-    matMuModel <- do.call(rbind, lapply( seq(1,scaNumGenes), function(i){
+    matMuModel <- do.call(rbind, bplapply( seq(1,scaNumGenes), function(i){
       
       # Decompress parameters
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
