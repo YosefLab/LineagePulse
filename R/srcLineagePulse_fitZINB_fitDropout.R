@@ -126,7 +126,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
       vecInterval=vecInterval)
   }))
-  matPiPredictors <- cbind(1, matMuParam[,scaTarget], 
+  matPiPredictors <- cbind(1, log(matMuParam[,scaTarget]), 
     matPiConstPredictors)
   
   # Numerical maximum likelihood estimaton of linear model
@@ -163,7 +163,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   })
   vecLinModel <- unlist(lsLinModelFit["par"])
   vecLinModel[2] <- -exp(vecLinModel[2])
-  scaConvergence <- unlist(lsLinModelFit["convergence"])
+  scaConvergence <- unlist(lsLinModelFit["convergence"]) # Not used atm
   
   return(vecLinModel)
 }

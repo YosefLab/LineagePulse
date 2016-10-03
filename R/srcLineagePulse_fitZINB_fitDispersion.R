@@ -149,7 +149,7 @@ fitDispZINB_LinPulse <- function( scaDispGuess,
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
-  
+
   fitDisp["par"] <- exp(fitDisp["par"])
   
   # Catch boundary of likelihood domain on mu space

@@ -33,6 +33,10 @@
 # Dispersion is initialised low, if initialised higher, effects are stronger
 # in first iteration already. Is this inaccuracy in reporting parameters? Wouldnt
 # be so bad in first iteration with low dispersion param!?
+
+# HOWTO debug this: 
+# Set bplapply of estimation that throws error to lapply for proper error
+# reporting.
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Coordinate mean parameter estimation step
@@ -120,7 +124,7 @@ fitZINBMu <- function( matCountsProc,
   lsDispModel,
   lsDropModel,
   scaWindowRadius ){
-  
+
   scaNumGenes <- dim(matCountsProc)[1]
   scaNumCells <- dim(matCountsProc)[2]
   if(lsMuModel$lsMuModelGlobal$strMuModel=="windows"){
@@ -143,7 +147,7 @@ fitZINBMu <- function( matCountsProc,
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
           lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
         vecInterval=NULL)
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
@@ -192,7 +196,7 @@ fitZINBMu <- function( matCountsProc,
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
           lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
         vecInterval=NULL)
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
@@ -218,37 +222,37 @@ fitZINBMu <- function( matCountsProc,
     
     matMuModel <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
       
-      # Decompres parameters
+      # Decompress parameters
       vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
         lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
         vecInterval=NULL )
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
         vecInterval=NULL)
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
       #  Compute posterior for parameter
-      # initialisation of impulse model.
-      vecZ <- calcProbNB( matMu=vecMuParam,
-        matDispersions=vecDispParam,
-        matDropout=vecDropoutParam,
-        matboolZero= vecCounts==0,
-        matboolNotZeroObserved= !is.na(vecCounts) & vecCounts==0,
+      vecZ <- calcPostDrop_Vector( vecMu=vecMuParam,
+        vecDispersions=vecDispParam,
+        vecDropout=vecDropoutParam,
+        vecboolZero= matCountsProc[i,]==0,
+        vecboolNotZeroObserved= !is.na(matCountsProc[i,]) & matCountsProc[i,]>0,
         scaWindowRadius=scaWindowRadius )
       
       # Estimate mean parameters
       lsImpulseFit <- fitMuImpulseZINB_LinPulse(
-        vecCounts=vecCounts,
+        vecCounts=matCountsProc[i,],
         vecDisp=vecDispParam,
         vecNormConst=vecSizeFactors,
         vecDropoutRateEst=vecDropoutParam,
         vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
-        matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+        matDropoutLinModel=lsDropModel$matDropoutLinModel,
         vecProbNB=1-vecZ,
         vecPseudotime=lsMuModel$lsMuModelGlobal$vecPseudotime,
-        vecImpulseParam=lsMuModel$matMuModel[[i]],
+        vecImpulseParam=lsMuModel$matMuModel[i,],
+        scaWindowRadius=scaWindowRadius,
         boolDynamicPi=TRUE,
         MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_Impulse,
         RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_Impulse )
@@ -264,7 +268,7 @@ fitZINBMu <- function( matCountsProc,
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
         lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
         vecInterval=NULL)
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
@@ -274,7 +278,7 @@ fitZINBMu <- function( matCountsProc,
         vecNormConst=vecSizeFactors,
         vecDropoutRateEst=vecDropoutParam,
         vecPredictorsPi=cbind(1,NA,lsDropModel$matPiConstPredictors[i,]),
-        matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+        matDropoutLinModel=lsDropModel$matDropoutLinModel,
         scaWindowRadius=scaWindowRadius )
       return(scaMu)
     }))
@@ -627,9 +631,13 @@ fitZINB <- function(matCountsProc,
         tm_pi <- system.time({
           lsDropModel$matDropoutLinModel <- do.call(rbind, 
             bplapply(seq(1, scaNumCells), function(cell){
-              scaindIntervalStart <- max(1,cell-scaWindowRadius)
-              scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
-              vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+              if(!is.null(scaWindowRadius)){
+                scaindIntervalStart <- max(1,cell-scaWindowRadius)
+                scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
+                vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+              } else {
+                vecInterval <- cell
+              }
               
               vecDropoutLinModel <- fitPiZINB_LinPulse(
                 vecCounts=matCountsProc[,cell],
@@ -680,13 +688,13 @@ fitZINB <- function(matCountsProc,
         # b) Negative binomial dispersion parameter
         # Use MLE of dispersion factor: numeric optimisation of likelihood.
         tm_phi <-system.time({
-          if(strDispModel=="constant"){  
+          if(lsDispModelA$lsDispModelGlobal$strDispModel=="constant"){  
             vecDispFitModelA <- bplapply(seq(1,scaNumGenes), function(i){
               # Decompress parameters
               vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModelA$matMuModel[i,],
                 lsMuModelGlobal=lsMuModelA$lsMuModelGlobal,
                 vecInterval=NULL )
-              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
                 vecMu=vecMuParam,
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
               
@@ -696,11 +704,11 @@ fitZINB <- function(matCountsProc,
                 vecSizeFactors=vecSizeFactors,
                 vecMuEst=vecMuParam,
                 vecDropoutRateEst=vecDropoutParam,
-                vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
-                vecboolZero= vecCounts==0,
+                vecboolNotZeroObserved= !is.na(matCountsProc[i,]) & matCountsProc[i,]>0, 
+                vecboolZero= matCountsProc[i,]==0,
                 scaWindowRadius=scaWindowRadius,
                 boolSmoothed=boolSmoothed )
-              return(fitDispZINB_LinPulse)
+              return(fitDisp)
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
@@ -710,7 +718,8 @@ fitZINB <- function(matCountsProc,
               ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelA <- sapply(vecDispFitModelA, function(fit) fit["convergence"])
-          lsDispModelA$matDispModel <- do.call(rbind, sapply(vecDispFitModelA, function(fit){ fit["par"] }))
+          lsDispModelA$matDispModel <- do.call(rbind, lapply(vecDispFitModelA, function(fit){ fit["par"] }))
+          colnames(lsDispModelA$matDispModel) <- NULL # Need this so that column names dont grow to par.par.par...
         })
         
         # Evaluate Likelihood
@@ -846,13 +855,13 @@ fitZINB <- function(matCountsProc,
         # b) Negative binomial dispersion parameter
         # Use MLE of dispersion factor: numeric optimisation of likelihood.
         tm_phi <- system.time({
-          if(strDispModel=="constant"){  
+          if(lsDispModelB$lsDispModelGlobal$strDispModel=="constant"){  
             vecDispFitModelB <- bplapply(seq(1,scaNumGenes), function(i){
               # Decompress parameters
               vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModelB$matMuModel[i,],
                 lsMuModelGlobal=lsMuModelB$lsMuModelGlobal,
                 vecInterval=NULL )
-              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+              vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
                 vecMu=vecMuParam,
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
               
@@ -862,11 +871,11 @@ fitZINB <- function(matCountsProc,
                 vecSizeFactors=vecSizeFactors,
                 vecMuEst=vecMuParam,
                 vecDropoutRateEst=vecDropoutParam,
-                vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
-                vecboolZero= vecCounts==0,
+                vecboolNotZeroObserved= !is.na(matCountsProc[i,]) & matCountsProc[i,]>0, 
+                vecboolZero= matCountsProc[i,]==0,
                 scaWindowRadius=scaWindowRadius,
                 boolSmoothed=boolSmoothed )
-              return(fitDispZINB_LinPulse)
+              return(fitDisp)
             })
           } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
@@ -876,7 +885,8 @@ fitZINB <- function(matCountsProc,
               ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
           }
           vecboolConvergedGLMdispModelB <- sapply(vecDispFitModelB, function(fit) fit["convergence"])
-          lsDispModelB$matDispModel <- do.call(rbind, sapply(vecDispFitModelB, function(fit){ fit["par"] }))
+          lsDispModelB$matDispModel <- do.call(rbind, lapply(vecDispFitModelB, function(fit){ fit["par"] }))
+          colnames(lsDispModelB$matDispModel) <- NULL # Need this so that column names dont grow to par.par.par...
         })
         
         # Evaluate Likelihood
