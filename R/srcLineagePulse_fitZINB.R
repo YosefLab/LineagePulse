@@ -191,7 +191,7 @@ fitZINBMu <- function( matCountsProc,
         vecInterval <- lsMuModel$lsMuModelGlobal$vecindClusterAssign==k
         scaMu <- fitMuClusterZINB_LinPulse(
           vecCounts=matCountsProc[i,vecInterval],
-          scaMuGuess=vecMuParam[k],
+          scaMuGuess=lsMuModel$matMuModel[i,k],
           vecDisp=vecDispParam[vecInterval],
           vecNormConst=vecSizeFactors[vecInterval],
           matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
