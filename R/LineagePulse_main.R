@@ -27,9 +27,8 @@ source("srcLineagePulse_fitZINB_fitDropout.R")
 # Compile function
 evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
 evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
-evalLogLikMuWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuWindowsZINB_LinPulse)
+evalLogLikMuWindowZINB_LinPulse_comp <- cmpfun(evalLogLikMuWindowZINB_LinPulse)
 evalLogLikMuVecWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuVecWindowsZINB_LinPulse)
-evalLogLikMuClustersZINB_LinPulse_comp <- cmpfun(evalLogLikMuClustersZINB_LinPulse)
 evalLogLikMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikMuConstZINB_LinPulse)
 evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
@@ -120,6 +119,13 @@ source("srcLineagePulse_plotGene.R")
 #'    model), a trade-off for speed over accuracy can be taken
 #'    and the dropout model can be chosen to be estimated based
 #'    on the constant null expression model (set to TRUE).
+#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
+#'    mean parameters of a gene are co-estimated in "windows"
+#'    mode with BFGS algorithm (optimisation with dimensionality
+#'    of number of cells) or estimated one by one, conditioned
+#'    one the latest estimates of neighbours. The latter case
+#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
+#'    and each mean parameter is optimised once only.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -173,6 +179,7 @@ runLineagePulse <- function(matCounts,
   boolContPseudotimeFit = TRUE,
   scaWindowRadius=NULL,
   boolEstimateNoiseBasedOnH0=FALSE,
+  boolVecWindowsAsBFGS=FALSE,
   strMuModel="impulse",
   strDispModel = "constant",
   boolPlotZINBfits = FALSE,
@@ -256,6 +263,7 @@ runLineagePulse <- function(matCounts,
       vecSizeFactors=vecSizeFactors,
       scaWindowRadius=scaWindowRadius,
       boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
+      boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
       strMuModel=strMuModel,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
