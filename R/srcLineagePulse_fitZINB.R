@@ -179,9 +179,6 @@ fitZINBMu <- function( matCountsProc,
     matMuModel <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
       
       # Decompress parameters
-      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
-        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-        vecInterval=NULL )
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
         lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
         vecInterval=NULL)
