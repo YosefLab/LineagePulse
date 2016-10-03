@@ -140,7 +140,7 @@ source("srcLineagePulse_plotGene.R")
 #' @param boolValidateZINBfit: (bool) [Default TRUE]
 #'    Whether to generate evaluation metrics and plots
 #'    for parameter values of inferred ZINB model.
-#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
+#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
 #'    zero-inflated negative binomial model as coordinate ascent.
@@ -184,7 +184,7 @@ runLineagePulse <- function(matCounts,
   strDispModel = "constant",
   boolPlotZINBfits = FALSE,
   boolValidateZINBfit=TRUE,
-  scaMaxCycles=20,
+  scaMaxEstimationCycles=20,
   nProc=1,
   verbose=TRUE,
   boolSuperVerbose=FALSE,
@@ -268,7 +268,7 @@ runLineagePulse <- function(matCounts,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
       nProc=nProc,
-      scaMaxCycles=scaMaxCycles,
+      scaMaxEstimationCycles=scaMaxEstimationCycles,
       verbose=verbose,
       boolSuperVerbose=boolSuperVerbose )
     lsMuModelH1 <- lsZINBFit$lsMuModelA

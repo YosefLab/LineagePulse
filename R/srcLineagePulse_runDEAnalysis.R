@@ -125,8 +125,8 @@ runDEAnalysis <- function(matCountsProc,
     return(list( scaLogLikFull=scaLogLikFull,
       scaLogLikRed=scaLogLikRed ))
   })
-  vecLogLikFull <- sapply(lsLL, function(LL_i) LLi[["scaLogLikFull"]])
-  vecLogLikRed <- sapply(lsLL, function(LL_i) LLi[["scaLogLikRed"]])
+  vecLogLikFull <- sapply(lsLL, function(LL_i) LLi["scaLogLikFull"])
+  vecLogLikRed <- sapply(lsLL, function(LL_i) LLi["scaLogLikRed"])
   
   # (II) Differential expression analysis
   # Compute difference in degrees of freedom between null model and alternative model.

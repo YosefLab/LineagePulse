@@ -346,7 +346,7 @@ fitZINBMu <- function( matCountsProc,
 #'    Pseudotime coordinates of cells. Only required if mean model
 #'    or dispersion model are fit as a function of pseudotime, 
 #'    e.g. impulse model for means.
-#' @param scaMaxCycles: (integer) [Default 20] Maximium number 
+#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
 #'    zero-inflated negative binomial model as coordinate ascent.
@@ -430,7 +430,7 @@ fitZINB <- function(matCountsProc,
   boolEstimateNoiseBasedOnH0=TRUE,
   boolVecWindowsAsBFGS=FALSE,
   vecPseudotime=NULL,
-  scaMaxCycles=100,
+  scaMaxEstimationCycles=20,
   verbose=FALSE,
   boolSuperVerbose=FALSE,
   nProc=1,
@@ -448,8 +448,8 @@ fitZINB <- function(matCountsProc,
   # in the objective (loglikelihood).
   
   # Store EM convergence
-  vecEMLogLikModelA <- array(NA,scaMaxCycles)
-  vecEMLogLikModelB <- array(NA,scaMaxCycles)
+  vecEMLogLikModelA <- array(NA,scaMaxEstimationCycles)
+  vecEMLogLikModelB <- array(NA,scaMaxEstimationCycles)
   scaPredictors <- 2
   matPiConstPredictors <- NULL
   
@@ -606,7 +606,7 @@ fitZINB <- function(matCountsProc,
   scaLogLikOld <- NA
   
   tm_cycle <- system.time({
-    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxCycles)){
+    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
       tm_iter <- system.time({
         #####  1. Cell-wise parameter estimation
         # Dropout rate
@@ -814,7 +814,7 @@ fitZINB <- function(matCountsProc,
   
   tm_cycle <- system.time({
     while(scaIter == 1 |
-        (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxCycles)){
+        (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
       tm_iter <- system.time({
         ##### Gene-wise parameter estimation: 
         # a) Negative binomial mean parameter
