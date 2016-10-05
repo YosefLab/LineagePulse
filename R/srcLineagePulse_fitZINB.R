@@ -347,8 +347,6 @@ fitZINBMu <- function( matCountsProc,
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
 #'    zero-inflated negative binomial model as coordinate ascent.
-#' @param nProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
 #' @param verbose: (bool) Whether to follow EM-algorithm
 #'    convergence.
 #' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
@@ -430,7 +428,6 @@ fitZINB <- function(matCountsProc,
   scaMaxEstimationCycles=20,
   verbose=FALSE,
   boolSuperVerbose=FALSE,
-  nProc=1,
   boolMemorySaving=FALSE ){
   
   ####################################################
@@ -493,11 +490,6 @@ fitZINB <- function(matCountsProc,
   
   ####################################################
   # Initialise function
-  # Set number of processes to be used for parallelisation
-  # This function is currently not parallelised to reduce memory usage.
-  # Read function description for further information.
-  register(MulticoreParam(workers=nProc, timeout=Inf))
-  
   vecClusterAssign <- paste0(rep("cluster_",length(lsResultsClustering$Assignments)),lsResultsClustering$Assignments)
   vecClusters <- unique(vecClusterAssign)
   vecindClusterAssign <- match(vecClusterAssign, vecClusters)

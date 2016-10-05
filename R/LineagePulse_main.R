@@ -190,6 +190,12 @@ runLineagePulse <- function(matCounts,
   boolSuperVerbose=FALSE,
   dirOut=NULL ){
   
+  print("Register parallelisation parameters.")
+  # Set number of processes to be used for parallelisation
+  # This function is currently not parallelised to reduce memory usage.
+  # Read function description for further information.
+  register(MulticoreParam(workers=nProc, timeout=Inf))
+  
   # 1. Data preprocessing
   print("1. Data preprocessing:")
   lsProcessedSCData <- processSCData( matCounts=matCounts,
@@ -287,7 +293,6 @@ runLineagePulse <- function(matCounts,
       strMuModel=strMuModel,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
-      nProc=nProc,
       scaMaxEstimationCycles=scaMaxEstimationCycles,
       verbose=verbose,
       boolSuperVerbose=boolSuperVerbose )
