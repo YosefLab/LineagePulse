@@ -210,6 +210,26 @@ runLineagePulse <- function(matCounts,
   rm(matCounts)
   rm(vecPseudotime)
   
+  # Save input parameters into list (not data files)
+  lsInputParam <- list( scaKClusters=scaKClusters,
+    scaSmallRun=scaSmallRun,
+    boolPseudotime=boolPseudotime,
+    boolContPseudotimeFit = boolContPseudotimeFit,
+    scaWindowRadius=scaWindowRadius,
+    boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
+    boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
+    strMuModel=strMuModel,
+    strDispModel=strDispModel,
+    boolPlotZINBfits=boolPlotZINBfits,
+    boolValidateZINBfit=boolValidateZINBfit,
+    scaMaxEstimationCycles=scaMaxEstimationCycles,
+    nProc=nProc,
+    verbose=verbose,
+    boolSuperVerbose=boolSuperVerbose,
+    dirOut=dirOut )
+  save(lsInputParam,file=file.path(dirOut,"LineagePulse_lsInputParam.RData"))
+  rm(lsInputParam)
+  
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
   tm_clustering <- system.time({
@@ -271,10 +291,10 @@ runLineagePulse <- function(matCounts,
       scaMaxEstimationCycles=scaMaxEstimationCycles,
       verbose=verbose,
       boolSuperVerbose=boolSuperVerbose )
-    lsMuModelH1 <- lsZINBFit$lsMuModelA
-    lsDispModelH1 <- lsZINBFit$lsDispModelA
-    lsMuModelH0 <- lsZINBFit$lsMuModelB
-    lsDispModelH0 <- lsZINBFit$lsDispModelB
+    lsMuModelH1 <- lsZINBFit$lsMuModelH1
+    lsDispModelH1 <- lsZINBFit$lsDispModelH1
+    lsMuModelH0 <- lsZINBFit$lsMuModelH0
+    lsDispModelH0 <- lsZINBFit$lsDispModelH0
     lsDropModel <- lsZINBFit$lsDropModel
     lsFitZINBReporters <- lsZINBFit$lsFitZINBReporters
   })

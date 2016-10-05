@@ -496,7 +496,7 @@ fitZINB <- function(matCountsProc,
   # Set number of processes to be used for parallelisation
   # This function is currently not parallelised to reduce memory usage.
   # Read function description for further information.
-  register(MulticoreParam(nProc))
+  register(MulticoreParam(workers=nProc, timeout=Inf))
   
   vecClusterAssign <- paste0(rep("cluster_",length(lsResultsClustering$Assignments)),lsResultsClustering$Assignments)
   vecClusters <- unique(vecClusterAssign)

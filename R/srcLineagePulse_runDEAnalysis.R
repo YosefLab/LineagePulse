@@ -81,23 +81,23 @@ runDEAnalysis <- function(matCountsProc,
     vecboolNotZeroObserved <- vecCounts >0 & !is.na(vecCounts)
     vecboolZero <- vecCounts==0
     
-    # Decompress parameters by gene
-    vecMuParamH0 <- decompressMeans( vecMuModel=lsMuModelH0$matMuModel[i,],
+    # Decompress parameters by gene H0
+    vecMuParamH0 <- decompressMeansByGene( vecMuModel=lsMuModelH0$matMuModel[i,],
       lsMuModelGlobal=lsMuModelH0$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH0 <- decompressDispersions( vecDispModel=lsDispModelH0$matDispModel[i,],
-      lsDispModel=lsDispersionModelH0$lsDispModelGlobal,
+    vecDispParamH0 <- decompressDispByGene( vecDispModel=lsDispModelH0$matDispModel[i,],
+      lsDispModelGlobal=lsDispModelH0$lsDispModelGlobal,
       vecInterval=NULL )
     vecDropoutParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH0,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     
-    # Decompress parameters by gene
-    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+    # Decompress parameters by gene H1
+    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
       lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModelGlobal=lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
     vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
