@@ -351,11 +351,6 @@ fitZINBMu <- function( matCountsProc,
 #'    convergence.
 #' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
 #'    progress in high detail with local convergence flags.
-#' @param boolMemorySaving: (bool) [Default FALSE]
-#'    Whether LineagePulse is run in memory saving mode:
-#'    In memory saving mode, the communication of files between
-#'    function is partially exported to writing and reading
-#'    files with fixed names from dirOut. 
 #' 
 #' @return (list)
 #'    \itemize{
@@ -426,9 +421,10 @@ fitZINB <- function(matCountsProc,
   boolVecWindowsAsBFGS=FALSE,
   vecPseudotime=NULL,
   scaMaxEstimationCycles=20,
+  nProc=2,
+  dirBPLogs,
   verbose=FALSE,
-  boolSuperVerbose=FALSE,
-  boolMemorySaving=FALSE ){
+  boolSuperVerbose=FALSE ){
   
   ####################################################
   # Internal Parameters:

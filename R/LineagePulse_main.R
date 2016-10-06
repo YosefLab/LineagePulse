@@ -10,6 +10,7 @@
 ################################################################################
 
 library(BiocParallel)
+library(BatchJobs)
 library(compiler)
 library(ggplot2)
 library(MASS)
@@ -190,12 +191,6 @@ runLineagePulse <- function(matCounts,
   boolSuperVerbose=FALSE,
   dirOut=NULL ){
   
-  print("Register parallelisation parameters.")
-  # Set number of processes to be used for parallelisation
-  # This function is currently not parallelised to reduce memory usage.
-  # Read function description for further information.
-  register(MulticoreParam(workers=nProc, timeout=Inf))
-  
   # 1. Data preprocessing
   print("1. Data preprocessing:")
   lsProcessedSCData <- processSCData( matCounts=matCounts,
@@ -235,6 +230,24 @@ runLineagePulse <- function(matCounts,
     dirOut=dirOut )
   save(lsInputParam,file=file.path(dirOut,"LineagePulse_lsInputParam.RData"))
   rm(lsInputParam)
+  
+  # Create log directory for parallelisation output
+  dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
+  dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
+  
+  print("Register parallelisation parameters.")
+  # Set the parallelisation environment in BiocParallel:
+  # Set worker time out to 60*60*24*7 (7 days)
+  # For single machine (FORK) cluster
+  register(MulticoreParam(workers=nProc, 
+    timeout=60*60*24*7,
+    log=TRUE, 
+    threshold="INFO", 
+    logdir=dirBPLogs))
+  # For multiple machine (SOCK) cluster
+  #register(SnowParam(workers=nProc, timeout=60*60*24*7))
+  # For debugging in serial mode
+  #register(SerialParam())
   
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
