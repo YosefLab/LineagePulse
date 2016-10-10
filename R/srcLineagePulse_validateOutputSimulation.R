@@ -381,7 +381,7 @@ validateOuputSimulation <- function(
   # Compute CDF under null p-value distribution: uniform
   # Scale by number of observations for constant model, against
   # which the null is compared
-  vecCDFBackgroundNull <- 1/log(10)*10^(vecX)*scaNumGenesConst
+  vecCDFBackgroundNull <- 10^(vecX)*scaNumGenesConst
   dfECDFPvalByModel <- data.frame( thres=vecX,
     pval=c(vecCDFConst,vecCDFImpulse,vecCDFBackgroundNull),
     model=c(rep("const",length(vecCDFConst)), 
