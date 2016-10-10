@@ -48,6 +48,7 @@ validateOuputSimulation <- function(
   # Load data
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_vecPseudotimeProc.RData")
+  load("LineagePulse_vecSizeFactors.RData")
   load("LineagePulse_lsMuModelH0.RData")
   load("LineagePulse_lsDispModelH0.RData")
   load("LineagePulse_lsMuModelH1.RData")
@@ -84,13 +85,15 @@ validateOuputSimulation <- function(
   print("# 1. Scatter plots of inferred versus true parameter sets")
   # a) Mean parameters H0
   print("# a) Mean parameters H0")
+  # Generate data frame for ggplot
   dfScatterMuModelvsMuInferredH0 <- data.frame(
-    x=log(lsMuModelH0$matMuMode)/log(10),
+    x=log(lsMuModelH0$matMuModel)/log(10),
     y=log(apply(matMuHidden,1, function(gene) mean(gene, na.rm=TRUE)) )/log(10),
     model=vecHiddenModelType )
-  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y, group=model)) +
+  # Generate plots
+  gScatterMuModelvsMuInferredH0 <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
-    labs(title="Inferred mean (H0) versus\n underlying model mean parameter.") +
+    labs(title="Inferred mean parameter (H0) versus\n underlying model mean parameter.") +
     xlab(paste0("log10 H0 inferred mean parameter")) +
     ylab(paste0("log10 gene-wise average of model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
@@ -98,25 +101,28 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_MuModelvsMuInferredH0.pdf",width=7,height=7)
-  print(gScatterDispvsMean)
+  # Plot
+  pdf("LineagePulseSim_Scatter_MuModelvsMuInferredH0.pdf",width=7,height=7)
+  print(gScatterMuModelvsMuInferredH0)
   dev.off()
   graphics.off()
   
   # b) Mean parameters H1: For one cell only
-  print("# b) Mean parameters H1: For one cell only")
-  vecMuParamCell1H1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-    decompressMeansByGene(vecMuModel=lsMuModelH1$matMuModel[i,],
+  print("# b) Mean parameters H1: Average over all cells")
+  vecMuParamAveH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+    mean( decompressMeansByGene(vecMuModel=lsMuModelH1$matMuModel[i,],
       lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
-      vecInterval=1)
+      vecInterval=NULL) )
   }))
+  # Generate data frame for ggplot
   dfScatterMuModelvsMuInferredH1 <- data.frame(
-    x=log(vecMuParamCell1H1)/log(10),
-    y=log(matMuHidden[,1])/log(10),
+    x=log(vecMuParamAveH1)/log(10),
+    y=log(apply(matMuHidden, 1, function(i) mean(i, na.rm=TRUE)))/log(10),
     model=vecHiddenModelType )
-  gScatterDispvsMean <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y, group=model)) +
+  # Generate plots
+  gScatterMuModelvsMuInferredH1 <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
-    labs(title="Inferred mean (H1) of first cell versus\n underlying model mean parameter.") +
+    labs(title="Average inferred mean parameter (H1) versus\n average underlying model mean parameter.") +
     xlab(paste0("log10 H1 inferred mean parameter")) +
     ylab(paste0("log10 model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
@@ -124,58 +130,78 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_MuModelvsMuInferredH1.pdf",width=7,height=7)
-  print(gScatterDispvsMean)
+  # Plot
+  pdf("LineagePulseSim_Scatter_MuModelvsMuInferredH1.pdf",width=7,height=7)
+  print(gScatterMuModelvsMuInferredH1)
   dev.off()
   graphics.off()
   
   # c) Dispersion parameters H0 (using dispersion of first cell from model)
-  print("# c) Dispersion parameters H0 (using dispersion of first cell from model)")
+  print("# c) Dispersion parameters H0")
+  # Generate data frame for ggplot
   dfScatterDispModelvsDispInferredH0 <- data.frame(
     x=lsDispModelH0$matDispModel,
-    y=matDispHidden[,1],
+    y=apply(matDispHidden, 1, function(i) median(i, na.rm=TRUE)),
     model=vecHiddenModelType )
-  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH0, aes(x=x, y=y, group=model)) +
+  # Outlier detection
+  boolOutlier <- dfScatterDispModelvsDispInferredH0$x < 0.001 |
+    dfScatterDispModelvsDispInferredH0$x > 1000
+  dfScatterDispModelvsDispInferredH0 <- dfScatterDispModelvsDispInferredH0[!boolOutlier,]
+  # Generate plots
+  gDispModelvsDispInferredH0 <- ggplot(
+    dfScatterDispModelvsDispInferredH0, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
-    labs(title="Inferred dispersion (H0) versus\n underlying model dispersion parameter.") +
-    xlab(paste0("H0 inferred dispersion parameter")) +
-    ylab(paste0("model dispersion parameter of first cell")) + 
+    labs(title=paste0("Inferred dispersion parameter (H0) versus\n",
+      " median underlying model dispersion parameter")) +
+    xlab(paste0("inferred dispersion parameter (H0)")) +
+    ylab(paste0("median underlying model dispersion parameter")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_DispModelvsDispInferredH0.pdf",width=7,height=7)
-  print(gScatterDispvsMean)
+  # Plot
+  pdf("LineagePulseSim_Scatter_DispModelMedianvsDispInferredH0.pdf",width=7,height=7)
+  print(gDispModelvsDispInferredH0)
   dev.off()
   
-  # d) Dispersion parameters H1: For one cell only
-  print("# d) Dispersion parameters H1: For one cell only")
-  vecDispParamH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-    decompressDispByGene(vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModelGlobal=lsDispModelH1$lsMuModelGlobal,
-      vecInterval=1)
-  }))
-  dfScatterDispModelvsDispInferredH1 <- data.frame(
+  # d) Dispersion parameters H1: Median
+  print("# d) Dispersion parameters H1: Median")
+  vecDispParamH1 <- sapply(seq(1,scaNumGenes), function(i){
+    vecDispParamH1Gene_i <- decompressDispByGene(vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModelGlobal=lsDispModelH1$lsDispModelGlobal,
+      vecInterval=NULL)
+    return(median(vecDispParamH1Gene_i, na.rm=TRUE))
+  })
+  # Generate data frame for ggplot
+  dfScatterDispModelvsDispInferredMedianH1 <- data.frame(
     x=vecDispParamH1,
     y=matDispHidden[,1],
     model=vecHiddenModelType )
-  gScatterDispvsMean <- ggplot(dfScatterDispModelvsDispInferredH1, aes(x=x, y=y, group=model)) +
+  # Outlier detection
+  boolOutlier <- dfScatterDispModelvsDispInferredMedianH1$x < 0.001 |
+    dfScatterDispModelvsDispInferredMedianH1$x > 1000
+  dfScatterDispModelvsDispInferredMedianH1 <- dfScatterDispModelvsDispInferredMedianH1[!boolOutlier,]
+  # Generate plots
+  gScatterDispModelvsDispInferredMedianH1 <- ggplot(
+    dfScatterDispModelvsDispInferredMedianH1, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
-    labs(title="Inferred dispersion (H1) versus\n underlying model dispersion parameter.") +
-    xlab(paste0("H1 inferred dispersion parameter of first cell")) +
-    ylab(paste0("model dispersion parameter of first cell")) + 
+    labs(title=paste0("median inferred dispersion parameter (H1) versus\n",
+      " median underlying model dispersion parameter.")) +
+    xlab(paste0("median inferred dispersion parameter (H1)")) +
+    ylab(paste0("median model dispersion parameter")) + 
     scale_fill_continuous(name = "Count") + 
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_DispModelvsDispInferredH1.pdf",width=7,height=7)
-  print(gScatterDispvsMean)
+  # Plot
+  pdf("LineagePulseSim_Scatter_DispModelMedianvsDispInferredMedianH1.pdf",width=7,height=7)
+  print(gScatterDispModelvsDispInferredMedianH1)
   dev.off()
   
   # 2. Dropout model
-  NCellsToPlot <- 50
+  NCellsToPlot <- 10
   print("# 2. Plot true and inferred dropout models by cell")
   # PDF with one page per cell: Plot data and inferred and true logistic model
   # Reshape matrices into single column first:
@@ -210,7 +236,7 @@ validateOuputSimulation <- function(
         title=element_text(size=14,face="bold"),
         legend.text=element_text(size=14))
   }
-  pdf("LineagePulse_AnalyseSimulated_DropoutModelByCell.pdf",width=7,height=7)
+  pdf("LineagePulseSim_DropoutModelByCell.pdf",width=7,height=7)
   for(gplot in lsGplotsDropoutModelsByCell){
     print(gplot)
   }
@@ -230,6 +256,9 @@ validateOuputSimulation <- function(
     }
     if(id %in% vecImpulseIDs){
       vecImpulseModelRefParam <- matImpulseModelHidden[id,]
+      vecImpulseModelRefParam[2] <- log(vecImpulseModelRefParam[2])
+      vecImpulseModelRefParam[3] <- log(vecImpulseModelRefParam[3])
+      vecImpulseModelRefParam[4] <- log(vecImpulseModelRefParam[4])
     } else {
       vecImpulseModelRefParam <- NULL
     }
@@ -243,7 +272,7 @@ validateOuputSimulation <- function(
       strGeneID=id,
       strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
   }
-  pdf("LineagePulse_AnalyseSimulated_ExpressionTraces.pdf")
+  pdf("LineagePulseSim_ExpressionTraces.pdf")
   for(gplot in lsGplotsGeneIDs){
     print(gplot)
   }
@@ -265,7 +294,7 @@ validateOuputSimulation <- function(
       log=TRUE), na.rm=TRUE)
   })
   vecZINBLLHiddenModel <- unlist(lapply( seq(1,scaNumGenes), function(i){
-    evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
+    evalLogLikGene(vecCounts=matCountsProc[i,],
       vecMu=matMuHiddenTemp[i,],
       vecSizeFactors=vecSizeFactorsHidden,
       vecDispEst=matDispHidden[i,], 
@@ -275,39 +304,38 @@ validateOuputSimulation <- function(
       scaWindowRadius=scaWindowRadius)
   }))
   # Compute loglikelihood of inferred model
-  # Recover zero predictions:
-  matMuTemp <- matMuH1
-  matMuTemp[matMuTemp==0] <- 10^(-4)
   vecNBLLH1Model <- sapply(seq(1,scaNumGenes), function(i){
-    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
       lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModel=lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    sum(dnbinom(x=matCountsProc[i,],
+    scaLL <- sum(dnbinom(x=matCountsProc[i,],
       mu=vecMuParamH1,
       size=vecDispParamH1,
       log=TRUE), na.rm=TRUE)
+    return(scaLL)
   })
   vecZINBLLH1Model <- unlist(lapply( seq(1,scaNumGenes), function(i){
-    vecMuParamH1 <- decompressMeans( vecMuModel=lsMuModelH1$matMuModel[i,],
+    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
       lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH1 <- decompressDispersions( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModel=lsDispersionModelH1$lsDispModelGlobal,
+    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
+      lsDispModel=lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
-      vecMu=vecMuParam,
-      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-    evalLogLikSmoothZINB_LinPulse_comp(vecCounts=matCountsProc[i,],
+    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
-      vecSizeFactors=vecSizeFactorsHidden,
+      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+    scaLL <- evalLogLikGene(vecCounts=matCountsProc[i,],
+      vecMu=vecMuParamH1,
+      vecSizeFactors=vecSizeFactors,
       vecDispEst=vecDispParamH1, 
       vecDropoutRateEst=vecDropoutParamH1,
       vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
       vecboolZero=matCountsProc[i,]==0,
       scaWindowRadius=scaWindowRadius)
+    return(scaLL)
   }))
   # LRT
   scaQThres <- 10^(-3)
@@ -317,7 +345,7 @@ validateOuputSimulation <- function(
   dfLRT_ZINB <- data.frame(value=vecLRT_ZINB)
   gHistLRT_NB <- ggplot( dfLRT_NB, aes(value)) +
     geom_histogram(alpha = 1, position = 'identity') +
-    ggtitle(paste0("log LRT value under NB model")) +
+    ggtitle(paste0("Log likelihoodratio under NB model\nLL(Inferred model H1) - LL(underlying model)")) +
     xlab("Difference in loglikelihood") +
     ylab("Frequency") +
     theme(axis.text=element_text(size=14),
@@ -325,12 +353,12 @@ validateOuputSimulation <- function(
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
   graphics.off()
-  pdf("LineagePulse_AnalyseSimulated_Hist_LRT_InferredH1vsHidden_NB.pdf")
+  pdf("LineagePulseSim_Hist_LRT_InferredH1vsHidden_NB.pdf")
   print(gHistLRT_NB)
   dev.off()
   gHistLRT_ZINB <- ggplot( dfLRT_ZINB, aes(value)) +
     geom_histogram(alpha = 1, position = 'identity') +
-    ggtitle(paste0("log LRT value under ZINB model")) +
+    ggtitle(paste0("Log likelihoodratio under ZINB model\nLL(Inferred model H1) - LL(underlying model)")) +
     xlab("Difference in loglikelihood") +
     ylab("Frequency") +
     theme(axis.text=element_text(size=14),
@@ -338,7 +366,7 @@ validateOuputSimulation <- function(
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
   graphics.off()
-  pdf("LineagePulse_AnalyseSimulated_Hist_LRT_InferredH1vsHidden_ZINB.pdf")
+  pdf("LineagePulseSim_Hist_LRT_InferredH1vsHidden_ZINB.pdf")
   print(gHistLRT_ZINB)
   dev.off() 
   
@@ -368,7 +396,7 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_ECDF_PvalByModelClass.pdf",width=7,height=7)
+  pdf("LineagePulseSim_ECDF_PvalByModelClass.pdf",width=7,height=7)
   print(gECDFPvalByModel)
   dev.off() 
   
@@ -391,7 +419,7 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_QvalvsMuModelByModel.pdf",width=7,height=7)
+  pdf("LineagePulseSim_Scatter_QvalvsMuModelByModel.pdf",width=7,height=7)
   print(gScatterQvalvsMean)
   dev.off()
   
@@ -412,7 +440,7 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_QvalvsDispModelByModel.pdf",width=7,height=7)
+  pdf("LineagePulseSim_Scatter_QvalvsDispModelByModel.pdf",width=7,height=7)
   print(gScatterQvalvsDisp)
   dev.off()
   
@@ -433,7 +461,7 @@ validateOuputSimulation <- function(
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
       legend.text=element_text(size=14))
-  pdf("LineagePulse_AnalyseSimulated_Scatter_QvalvsPiModelByModel.pdf",width=7,height=7)
+  pdf("LineagePulseSim_Scatter_QvalvsPiModelByModel.pdf",width=7,height=7)
   print(gScatterQvalvsDisp)
   dev.off()
     

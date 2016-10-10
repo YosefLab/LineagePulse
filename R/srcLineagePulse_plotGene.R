@@ -17,9 +17,11 @@
 #' @param vecDropoutRates: (numeric vector length cells) [Default NULL]
 #'    Dropout rates for observations.
 #' @param vecImpulseModelParam: (numeric vector length impulse parameters=6)
-#'    [Default NULL] Impulse model parameters for given gene.
+#'    [Default NULL] Impulse model parameters for given gene. 
+#'    Amplitudes in log format, like LineagePulse output!
 #' @param vecImpulseModelRefParam: (numeric vector length impulse parameters=6)
 #'    [Default NULL] Reference impulse model parameters for given gene.
+#'    Amplitudes in log format, like LineagePulse output!
 #' @param strNameImpulseModelRef: (str) [Default NULL] 
 #'    Name of reference impulse model for given gene.
 #' @param scaConstModelParam: (scalar) [Default NULL]

@@ -11,10 +11,10 @@
 #vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
 #  lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 #  vecInterval=NULL )
-#vecDispParam <- decompressDispersions( vecDispModel=lsDispModel$matDispModel[i,],
+#vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
 #  lsDispModel=lsDispersionModel$lsDispModelGlobal,
 #  vecInterval=NULL )
-#vecDropoutParam <- decompressDropoutRateByGene( vecDropModel=lsDropModel$matDropModel,
+#vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
 #  vecMu=vecMuParam,
 #  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
@@ -28,7 +28,7 @@
 #}))
 #vecDispParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
 #  decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-#    lsDispModelGlobal=lsDispModel$lsMuModelGlobal,
+#    lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
 #    vecInterval=cell)
 #}))
 #vecDropParam <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],

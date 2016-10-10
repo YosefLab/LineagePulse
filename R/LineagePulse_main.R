@@ -10,7 +10,7 @@
 ################################################################################
 
 library(BiocParallel)
-library(BatchJobs)
+#library(BatchJobs)
 library(compiler)
 library(ggplot2)
 library(MASS)
@@ -189,6 +189,7 @@ runLineagePulse <- function(matCounts,
   nProc=1,
   verbose=TRUE,
   boolSuperVerbose=FALSE,
+  boolBPlog=FALSE,
   dirOut=NULL ){
   
   # 1. Data preprocessing
@@ -232,18 +233,20 @@ runLineagePulse <- function(matCounts,
   rm(lsInputParam)
   
   # Create log directory for parallelisation output
-  dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
-  dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
+  if(boolBPlog){
+    dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
+    dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
+  }
   
   print("Register parallelisation parameters.")
   # Set the parallelisation environment in BiocParallel:
   # Set worker time out to 60*60*24*7 (7 days)
   # For single machine (FORK) cluster
-  register(MulticoreParam(workers=nProc, 
-    timeout=60*60*24*7,
-    log=TRUE, 
-    threshold="INFO", 
-    logdir=dirBPLogs))
+  register(MulticoreParam(workers=nProc)) 
+    #timeout=60*60*24*7,
+    #log=boolBPlog, 
+    #threshold="INFO", 
+    #logdir=dirBPLogs))
   # For multiple machine (SOCK) cluster
   #register(SnowParam(workers=nProc, timeout=60*60*24*7))
   # For debugging in serial mode

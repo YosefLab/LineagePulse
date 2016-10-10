@@ -28,8 +28,8 @@
 
 computeSizeFactors_LineagePulse <- function(matCountsProc){
   
-  boolDepth = FALSE
-  if(boolDepth){
+  boolUseDepth <- FALSE
+  if(boolUseDepth){
     # Size factors directly represent sequencing depth:
     # Normalised relative sequencing depth.
     vecSeqDepth <- apply(matCountsProc, 2,

@@ -641,6 +641,7 @@ fitZINB <- function(matCountsProc,
             lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
         })
+        colnames(lsMuModelA$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
         if(boolSuperVerbose){
           scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
             vecSizeFactors=vecSizeFactors,
@@ -814,6 +815,7 @@ fitZINB <- function(matCountsProc,
             lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
         })
+        colnames(lsMuModelB$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
         if(boolSuperVerbose){
           scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
             vecSizeFactors=vecSizeFactors,
