@@ -372,7 +372,7 @@ validateOuputSimulation <- function(
   
   # 5. ECDF q-values divided by const and impulse true model
   print("# 5. ECDF q-values divided by const and impulse true model")
-  vecX <- seq(max(-100,log(min(dfDEAnalysis$adj.p))/log(10)),0,by=0.5)
+  vecX <- seq(max(-100,round(log(min(dfDEAnalysis$adj.p))/log(10))),0,by=0.5)
   # Compute observed ECDF for constant and for impulse distributed genes
   vecCDFConst <- sapply(vecX, function(thres){
     sum(log(as.numeric(as.vector(dfDEAnalysis[vecConstIDs,]$p)))/log(10) <= thres, na.rm=TRUE)})
