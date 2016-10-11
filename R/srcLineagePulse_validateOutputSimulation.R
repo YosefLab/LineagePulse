@@ -90,6 +90,9 @@ validateOuputSimulation <- function(
     x=log(lsMuModelH0$matMuModel)/log(10),
     y=log(apply(matMuHidden,1, function(gene) mean(gene, na.rm=TRUE)) )/log(10),
     model=vecHiddenModelType )
+  # Get correlation
+  scaCorrMuModelvsMuInferredH0 <- round(cor(dfScatterMuModelvsMuInferredH0$x,
+    dfScatterMuModelvsMuInferredH0$y), 2)
   # Generate plots
   gScatterMuModelvsMuInferredH0 <- ggplot(dfScatterMuModelvsMuInferredH0, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
@@ -97,6 +100,10 @@ validateOuputSimulation <- function(
     xlab(paste0("log10 H0 inferred mean parameter")) +
     ylab(paste0("log10 gene-wise average of model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
+    geom_text(x=4/5*(max(dfScatterMuModelvsMuInferredH0$x)-min(dfScatterMuModelvsMuInferredH0$x)),
+      y=min(dfScatterMuModelvsMuInferredH0$x),
+      label=paste0("R^2=",scaCorrMuModelvsMuInferredH0),
+      size=5 ) +
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
@@ -119,6 +126,9 @@ validateOuputSimulation <- function(
     x=log(vecMuParamAveH1)/log(10),
     y=log(apply(matMuHidden, 1, function(i) mean(i, na.rm=TRUE)))/log(10),
     model=vecHiddenModelType )
+  # Get correlation
+  scaCorrMuModelvsMuInferredH1 <- round(cor(dfScatterMuModelvsMuInferredH1$x,
+    dfScatterMuModelvsMuInferredH1$y), 2)
   # Generate plots
   gScatterMuModelvsMuInferredH1 <- ggplot(dfScatterMuModelvsMuInferredH1, aes(x=x, y=y, group=model)) +
     geom_point(aes(colour = model)) + 
@@ -126,6 +136,10 @@ validateOuputSimulation <- function(
     xlab(paste0("log10 H1 inferred mean parameter")) +
     ylab(paste0("log10 model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
+    geom_text(x=4/5*(max(dfScatterMuModelvsMuInferredH1$x)-min(dfScatterMuModelvsMuInferredH1$x)),
+      y=min(dfScatterMuModelvsMuInferredH1$x),
+      label=paste0("R^2=",scaCorrMuModelvsMuInferredH1),
+      size=5 ) +
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
@@ -147,6 +161,9 @@ validateOuputSimulation <- function(
   boolOutlier <- dfScatterDispModelvsDispInferredH0$x < 0.01 |
     dfScatterDispModelvsDispInferredH0$x > 5
   dfScatterDispModelvsDispInferredH0 <- dfScatterDispModelvsDispInferredH0[!boolOutlier,]
+  # Get correlation
+  scaCorrDispModelvsDispInferredH0 <- round(cor(dfScatterDispModelvsDispInferredH0$x,
+    dfScatterDispModelvsDispInferredH0$y), 2)
   # Generate plots
   gDispModelvsDispInferredH0 <- ggplot(
     dfScatterDispModelvsDispInferredH0, aes(x=x, y=y, group=model)) +
@@ -156,6 +173,10 @@ validateOuputSimulation <- function(
     xlab(paste0("inferred dispersion parameter (H0)")) +
     ylab(paste0("median underlying model dispersion parameter")) + 
     scale_fill_continuous(name = "Count") + 
+    geom_text(x=4/5*(max(dfScatterDispModelvsDispInferredH0$x)-min(dfScatterDispModelvsDispInferredH0$x)),
+      y=min(dfScatterDispModelvsDispInferredH0$x),
+      label=paste0("R^2=",scaCorrDispModelvsDispInferredH0),
+      size=5 ) +
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
@@ -182,6 +203,9 @@ validateOuputSimulation <- function(
   boolOutlier <- dfScatterDispModelvsDispInferredMedianH1$x < 0.01 |
     dfScatterDispModelvsDispInferredMedianH1$x > 5
   dfScatterDispModelvsDispInferredMedianH1 <- dfScatterDispModelvsDispInferredMedianH1[!boolOutlier,]
+  # Get correlation
+  scaCorrDispModelvsDispInferredMedianH1 <- round(cor(dfScatterDispModelvsDispInferredMedianH1$x,
+    dfScatterDispModelvsDispInferredMedianH1$y), 2)
   # Generate plots
   gScatterDispModelvsDispInferredMedianH1 <- ggplot(
     dfScatterDispModelvsDispInferredMedianH1, aes(x=x, y=y, group=model)) +
@@ -190,7 +214,11 @@ validateOuputSimulation <- function(
       " median underlying model dispersion parameter.")) +
     xlab(paste0("median inferred dispersion parameter (H1)")) +
     ylab(paste0("median model dispersion parameter")) + 
-    scale_fill_continuous(name = "Count") + 
+    scale_fill_continuous(name = "Count") +
+    geom_text(x=4/5*(max(dfScatterDispModelvsDispInferredMedianH1$x)-min(dfScatterDispModelvsDispInferredMedianH1$x)),
+      y=min(dfScatterDispModelvsDispInferredMedianH1$x),
+      label=paste0("R^2=",scaCorrDispModelvsDispInferredMedianH1),
+      size=5 ) +
     theme(axis.text=element_text(size=14),
       axis.title=element_text(size=14,face="bold"),
       title=element_text(size=14,face="bold"),
