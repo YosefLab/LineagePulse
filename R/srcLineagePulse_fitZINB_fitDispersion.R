@@ -12,10 +12,8 @@
 #' dispersion parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
 #' dispersion factor shrinking beyond a numerical threshold to zero
-#' to avoid shrinkage of the dispersion factor to zero which 
-#' may cause numerical errors. Accordingly, growth above a numerical
-#' threshold to infinity (this correponds to Poissonian noise) is 
-#' also guarded against.
+#' and to growth above a threshold to avoid shrinkage of the 
+#' dispersion factor to zero/ expansion to infinity.
 #' 
 #' @seealso Called by \code{fitDispZINB_LinPulse}.
 #' 
@@ -152,7 +150,7 @@ fitDispZINB_LinPulse <- function( scaDispGuess,
 
   fitDisp["par"] <- exp(fitDisp["par"])
   
-  # Catch boundary of likelihood domain on mu space
+  # Catch boundary of likelihood domain on dispersion space
   if(fitDisp["par"] < .Machine$double.eps){fitDisp["par"] <- .Machine$double.eps}
   # Prevent dispersion estimate from growing to infinity
   # to avoid numerical errors:

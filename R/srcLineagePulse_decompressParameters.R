@@ -91,6 +91,11 @@ decompressMeansByGene <- function(vecMuModel,
       vecMu <- calcImpulse_comp(vecTheta=vecMuModel, 
         vecTimepoints=lsMuModelGlobal$vecPseudotime) 
     }
+    # Parameter shrinkage for the impulse model is caught at the model value
+    # evaluation, not at the parameteres themselves! Because model valuate
+    # can deviate from amplitudes if transition times are switched.
+    # Therefore, low values have to be caught at every decompression. 
+    vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
   } else if(lsMuModelGlobal$strMuModel=="clusters"){
     if(!is.null(vecInterval)){ 
       vecMu <- vecMuModel[lsMuModelGlobal$vecindClusterAssign[vecInterval]]
