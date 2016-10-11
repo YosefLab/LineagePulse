@@ -473,12 +473,13 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
-#' @return \enumerate{ 
-#'  \item vecBestFitParam: (numerical vector impulse parameters)
-#'  Parameter values of best impulse model fit found.
-#'  \item vecImpulseValue: (scalar) Loglikelihood of best 
-#'  impulse model fit
-#'  }
+#' @return list (length 3)
+#'    \itemize{
+#'      \item scaDisp: (scalar) Dispersion parameter estimate. 
+#'      \item vecImpulseParam: (numeric vector [beta, h0, h1, h2, t1, t2])
+#'        Impulse model parameter estimates.
+#'      \item scaConvergence: (scalar) Convergence status of optim.
+#'    }
 #' @export
 
 fitDispConstMuImpulseZINB <- function(vecCounts, 
@@ -698,8 +699,15 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #'    fitZINB by default in LineagePulse to save computation 
 #'    time.
 #' 
-#' @return matMuModel: (numeric matrix genes x mu model parameters)
-#'    Contains the model parameters according to the used model.
+#' @return list (length 3)
+#'    \itemize{
+#'      \item matMuModel: (numeric matrix genes x mu model parameters)
+#'        Contains the model parameters according to the used model.
+#'      \item matMuModel: (numeric matrix genes x mu model parameters)
+#'        Contains the model parameters according to the used model.
+#'      \item vecConvergence: (numeric vector number of genes) 
+#'        Convergence status of optim for each gene.
+#'    }
 #' @export
 
 fitZINBMuDisp <- function( matCountsProc,

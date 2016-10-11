@@ -201,13 +201,14 @@ validateOuputSimulation <- function(
   dev.off()
   
   # 2. Dropout model
-  NCellsToPlot <- 10
+  NCellsToPlot <- 100
+  NCellsToPlot <- min(scaNumCells,NCellsToPlot)
   print("# 2. Plot true and inferred dropout models by cell")
   # PDF with one page per cell: Plot data and inferred and true logistic model
   # Reshape matrices into single column first:
   lsGplotsDropoutModelsByCell <- list()
-  for(cell in seq(1,min(scaNumCells,NCellsToPlot))){
-    lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps), index.return=TRUE)
+  for(cell in seq(1,NCellsToPlot)){
+    lsMuHiddenSort <- sort(log(matMuHidden[,cell]+scaEps)/log(10), index.return=TRUE)
     vecMuHiddenSort <- lsMuHiddenSort$x
     vecDropoutHiddenSort <- (matDropoutRatesHidden[,cell])[lsMuHiddenSort$ix]
     vecMuParamH1 <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
