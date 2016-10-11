@@ -37,9 +37,14 @@
 # variance overestimated and drop-out rates are almost all zero if estimating
 # on many genes. This could be a bad local optimum of the likelihood, in which
 # the non-drop-out componen provides a lot of probability density for the zeros
-# and thereby pushing the drop-out component out. Avoid: initialise mu high,
+# and thereby pushing the drop-out component out. This seems to be show in the 
+# loglikelihood convergence as a large jump (10%) after the first dispersion
+# estimation. Avoid: initialise mu high,
 # variance low (dispersion high) and drop-out rate high. This works on a small
-# data set.
+# data set. Previously: mu= mean of nonzeros, phi = 0.001, dropout model:
+# offset = 0, mu param = -1. Now:  mu= mean of nonzeros, phi = 1, dropout model:
+# offset = log(scaPiTarget) - log(1-scaPiTarget) - scaPiLinModelMuParam*
+# log(min(vecMuModelInit, na.rm=TRUE)), mu param = -1.
 
 # HOWTO debug this: 
 # Set bplapply of estimation that throws error to lapply for proper error

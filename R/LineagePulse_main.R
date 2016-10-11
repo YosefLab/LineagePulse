@@ -44,6 +44,7 @@ source("srcLineagePulse_calcProbNB.R")
 source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
 source("srcLineagePulse_plotGene.R")
+source("srcLineagePulse_simulateDataSet.R")
 
 ################################################################################
 ### Main function
