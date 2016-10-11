@@ -144,8 +144,8 @@ validateOuputSimulation <- function(
     y=apply(matDispHidden, 1, function(i) median(i, na.rm=TRUE)),
     model=vecHiddenModelType )
   # Outlier detection
-  boolOutlier <- dfScatterDispModelvsDispInferredH0$x < 0.001 |
-    dfScatterDispModelvsDispInferredH0$x > 1000
+  boolOutlier <- dfScatterDispModelvsDispInferredH0$x < 0.01 |
+    dfScatterDispModelvsDispInferredH0$x > 5
   dfScatterDispModelvsDispInferredH0 <- dfScatterDispModelvsDispInferredH0[!boolOutlier,]
   # Generate plots
   gDispModelvsDispInferredH0 <- ggplot(
@@ -179,8 +179,8 @@ validateOuputSimulation <- function(
     y=matDispHidden[,1],
     model=vecHiddenModelType )
   # Outlier detection
-  boolOutlier <- dfScatterDispModelvsDispInferredMedianH1$x < 0.001 |
-    dfScatterDispModelvsDispInferredMedianH1$x > 1000
+  boolOutlier <- dfScatterDispModelvsDispInferredMedianH1$x < 0.01 |
+    dfScatterDispModelvsDispInferredMedianH1$x > 5
   dfScatterDispModelvsDispInferredMedianH1 <- dfScatterDispModelvsDispInferredMedianH1[!boolOutlier,]
   # Generate plots
   gScatterDispModelvsDispInferredMedianH1 <- ggplot(
@@ -244,40 +244,97 @@ validateOuputSimulation <- function(
   graphics.off()
   
   # 3. Mean model by gene
+  scaNGenesToPlot <- 50
   print("# 3. Plot inferred pseudotime expression models by gene.")
-  # Plot data, true and inferred model by gene. qvalue
-  vecIDsToPlot <- rownames(matCountsProc)[seq(1,min(200,scaNumGenes))]
-  lsGplotsGeneIDs <- list()
-  for(id in vecIDsToPlot){
-    if(id %in% vecConstIDs){
+  # Plot data, true and inferred model by gene.
+  if(!is.null(vecConstIDs) & !is.null(vecImpulseIDs)){
+    # Plot constant genes
+    print("# a) Plot constant genes.")
+    vecIDsToPlot <- vecConstIDs[seq(1,min(scaNGenesToPlot,length(vecConstIDs)))]
+    lsGplotsConstantIDs <- list()
+    for(id in vecIDsToPlot){
       scaConstModelRefParam <- matMuHidden[id,1]
-    } else {
-      scaConstModelRefParam <- NULL
+      vecImpulseModelRefParam <- NULL
+      
+      lsGplotsConstantIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
+        vecPseudotime=vecPseudotimeProc,
+        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
+        vecImpulseModelRefParam=vecImpulseModelRefParam,
+        scaConstModelParam=lsMuModelH0$matMuModel[id,],
+        scaConstModelRefParam=scaConstModelRefParam,
+        strGeneID=id,
+        strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
     }
-    if(id %in% vecImpulseIDs){
+    pdf("LineagePulseSim_ExpressionTracesConstant.pdf")
+    for(gplot in lsGplotsConstantIDs){
+      print(gplot)
+    }
+    dev.off()
+    graphics.off()
+    
+    # Plot impulse genes
+    print("# b) Plot impulse genes.")
+    vecIDsToPlot <- vecImpulseIDs[seq(1,min(scaNGenesToPlot,length(vecImpulseIDs)))]
+    lsGplotsImpulseIDs <- list()
+    for(id in vecIDsToPlot){
+      scaConstModelRefParam <- NULL
       vecImpulseModelRefParam <- matImpulseModelHidden[id,]
       vecImpulseModelRefParam[2] <- log(vecImpulseModelRefParam[2])
       vecImpulseModelRefParam[3] <- log(vecImpulseModelRefParam[3])
       vecImpulseModelRefParam[4] <- log(vecImpulseModelRefParam[4])
-    } else {
-      vecImpulseModelRefParam <- NULL
+      
+      lsGplotsImpulseIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
+        vecPseudotime=vecPseudotimeProc,
+        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
+        vecImpulseModelRefParam=vecImpulseModelRefParam,
+        scaConstModelParam=lsMuModelH0$matMuModel[id,],
+        scaConstModelRefParam=scaConstModelRefParam,
+        strGeneID=id,
+        strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
     }
-    lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
-      vecPseudotime=vecPseudotimeProc,
-      vecDropoutRates=matDropoutRatesHidden[id,],
-      vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
-      vecImpulseModelRefParam=vecImpulseModelRefParam,
-      scaConstModelParam=lsMuModelH0$matMuModel[id,],
-      scaConstModelRefParam=scaConstModelRefParam,
-      strGeneID=id,
-      strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
+    pdf("LineagePulseSim_ExpressionTracesImpulse.pdf")
+    for(gplot in lsGplotsImpulseIDs){
+      print(gplot)
+    }
+    dev.off()
+    graphics.off()
+    
+  } else {
+    vecIDsToPlot <- rownames(matCountsProc)[seq(1,min(scaNGenesToPlot,scaNumGenes))]
+    lsGplotsGeneIDs <- list()
+    for(id in vecIDsToPlot){
+      if(id %in% vecConstIDs){
+        scaConstModelRefParam <- matMuHidden[id,1]
+      } else {
+        scaConstModelRefParam <- NULL
+      }
+      if(id %in% vecImpulseIDs){
+        vecImpulseModelRefParam <- matImpulseModelHidden[id,]
+        vecImpulseModelRefParam[2] <- log(vecImpulseModelRefParam[2])
+        vecImpulseModelRefParam[3] <- log(vecImpulseModelRefParam[3])
+        vecImpulseModelRefParam[4] <- log(vecImpulseModelRefParam[4])
+      } else {
+        vecImpulseModelRefParam <- NULL
+      }
+      lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
+        vecPseudotime=vecPseudotimeProc,
+        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
+        vecImpulseModelRefParam=vecImpulseModelRefParam,
+        scaConstModelParam=lsMuModelH0$matMuModel[id,],
+        scaConstModelRefParam=scaConstModelRefParam,
+        strGeneID=id,
+        strTitleSuffix=paste0("Q-value ", round(dfDEAnalysis[id,"adj.p"],3)))
+    }
+    pdf("LineagePulseSim_ExpressionTraces.pdf")
+    for(gplot in lsGplotsGeneIDs){
+      print(gplot)
+    }
+    dev.off()
+    graphics.off()
   }
-  pdf("LineagePulseSim_ExpressionTraces.pdf")
-  for(gplot in lsGplotsGeneIDs){
-    print(gplot)
-  }
-  dev.off()
-  graphics.off()
   
   # 4. LRT hist
   print("# 4. LRT histogram")

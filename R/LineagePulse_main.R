@@ -238,19 +238,22 @@ runLineagePulse <- function(matCounts,
     dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
   }
   
-  print("Register parallelisation parameters.")
+  print(paste0("Register parallelisation parameters: ", nProc, " threads."))
   # Set the parallelisation environment in BiocParallel:
-  # Set worker time out to 60*60*24*7 (7 days)
-  # For single machine (FORK) cluster
-  register(MulticoreParam(workers=nProc)) 
+  if(nProc > 1){
+    # Set worker time out to 60*60*24*7 (7 days)
+    # For single machine (FORK) cluster
+    register(MulticoreParam(workers=nProc)) 
     #timeout=60*60*24*7,
     #log=boolBPlog, 
     #threshold="INFO", 
     #logdir=dirBPLogs))
-  # For multiple machine (SOCK) cluster
-  #register(SnowParam(workers=nProc, timeout=60*60*24*7))
-  # For debugging in serial mode
-  #register(SerialParam())
+    # For multiple machine (SOCK) cluster
+    #register(SnowParam(workers=nProc, timeout=60*60*24*7))
+    # For debugging in serial mode
+  } else {
+    register(SerialParam())
+  }
   
   # 2. Cluster cells in pseudo-time
   print("2. Clustering:")

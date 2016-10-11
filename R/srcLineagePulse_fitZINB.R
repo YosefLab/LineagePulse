@@ -33,10 +33,18 @@
 # Dispersion is initialised low, if initialised higher, effects are stronger
 # in first iteration already. Is this inaccuracy in reporting parameters? Wouldnt
 # be so bad in first iteration with low dispersion param!?
+# Arrived at a converging version with ok results -> means are underestimated,
+# variance overestimated and drop-out rates are almost all zero if estimating
+# on many genes. This could be a bad local optimum of the likelihood, in which
+# the non-drop-out componen provides a lot of probability density for the zeros
+# and thereby pushing the drop-out component out. Avoid: initialise mu high,
+# variance low (dispersion high) and drop-out rate high. This works on a small
+# data set.
 
 # HOWTO debug this: 
 # Set bplapply of estimation that throws error to lapply for proper error
-# reporting.
+# reporting. Or - give nProc=1 and BiocParallel operates in SerialMode with
+# proper error reporting -> all estiamtions are sequential though.
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Coordinate mean parameter estimation step
@@ -559,14 +567,22 @@ fitZINB <- function(matCountsProc,
       vecPseudotime=vecPseudotime,
       vecindClusterAssign=vecindClusterAssign) )
   if(strDispModelA=="constant"){
-    lsDispModelA$matDispModel <- matrix(0.001, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+    lsDispModelA$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=1, byrow=FALSE)
   } else {
     stop(paste0("ERROR fitZINB(): strDispModelA=", strDispModelA, " not recognised."))
   }
   
   lsDropModel <- list(matDropoutLinModel=NA,
     matPiConstPredictors=matPiConstPredictors)
-  lsDropModel$matDropoutLinModel <- cbind(rep(0, scaNumCells), rep(-1, scaNumCells),
+  # Target initialisation drop-out rate: 0.9, linear model mu
+  # parameter = -1 -> solve for offset of linear model:
+  scaPiTarget <- 0.99
+  scaPiLinModelMuParam <- -1
+  scaPiLinModelOffset <- log(scaPiTarget) - log(1-scaPiTarget) - 
+    scaPiLinModelMuParam*log(min(vecMuModelInit, na.rm=TRUE))
+  lsDropModel$matDropoutLinModel <- cbind(
+    rep(scaPiLinModelOffset, scaNumCells), 
+    rep(scaPiLinModelMuParam, scaNumCells),
     matrix(0, nrow=scaNumCells, ncol=scaPredictors-2))
   
   ####################################################
