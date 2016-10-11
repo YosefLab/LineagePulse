@@ -24,6 +24,7 @@ source("srcLineagePulse_evalLogLikZINB.R")
 source("srcLineagePulse_fitZINB.R")
 source("srcLineagePulse_fitZINB_fitMean.R")
 source("srcLineagePulse_fitZINB_fitDispersion.R")
+source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
 # Compile function
 evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
@@ -33,6 +34,8 @@ evalLogLikMuVecWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikMuVecWindowsZINB_Li
 evalLogLikMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikMuConstZINB_LinPulse)
 evalLogLikDispZINB_LinPulse_comp <- cmpfun(evalLogLikDispZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
+evalLogLikDispConstMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuConstZINB_LinPulse)
+evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB_LinPulse)
 source("srcLineagePulse_clusterCellsInPseudotime.R")
 source("srcLineagePulse_createAnnotation.R")
 source("srcLineagePulse_computeSizeFactors.R")
@@ -128,6 +131,22 @@ source("srcLineagePulse_simulateDataSet.R")
 #'    one the latest estimates of neighbours. The latter case
 #'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
 #'    and each mean parameter is optimised once only.
+#' @param boolCoEstDispMean: (bool) [Default TRUE]
+#'    Whether mean and dispersion parameters are to be co-estimated
+#'    (simulatneous optimisation). Only available for certain 
+#'    dispersion and mean models:
+#'    dispersion models: constant
+#'    mean models: constant, impulse
+#'    Note that co-estimation in model estimation B (without drop-
+#'    out model estimation) leads to a single step estimation as 
+#'    mean and dispersion parameter don't have to be iterated over.
+#'    This makes estimation of large data sets with complex H1 mean
+#'    model (e.g. impulse) possible, as the drop-out model can be 
+#'    estimated based on H0 (boolEstimateNoiseBasedOnH0) so that
+#'    the complex model only has to be estimated once (simultaneous
+#'    with the dispersion parameters). This may generally lead to better
+#'    convergence as the steps in coordinate-ascent are in a larger
+#'    space, closer to full gradient ascent.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -182,6 +201,7 @@ runLineagePulse <- function(matCounts,
   scaWindowRadius=NULL,
   boolEstimateNoiseBasedOnH0=FALSE,
   boolVecWindowsAsBFGS=FALSE,
+  boolCoEstDispMean=TRUE,
   strMuModel="impulse",
   strDispModel = "constant",
   boolPlotZINBfits = FALSE,
@@ -310,6 +330,7 @@ runLineagePulse <- function(matCounts,
       scaWindowRadius=scaWindowRadius,
       boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
       boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
+      boolCoEstDispMean=boolCoEstDispMean,
       strMuModel=strMuModel,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,

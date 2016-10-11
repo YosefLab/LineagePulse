@@ -218,7 +218,7 @@ validateOuputSimulation <- function(
     vecDropParamH1 <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[cell,],
       vecMu=vecMuParamH1,
       matPiConstPredictors=lsDropModel$matPiConstPredictors )
-    lsMuH1Sort <- sort(log(vecMuParamH1+scaEps), index.return=TRUE)
+    lsMuH1Sort <- sort(log(vecMuParamH1+scaEps)/log(10), index.return=TRUE)
     vecMuH1Sort <- lsMuH1Sort$x
     vecDropParamH1Sort <- vecDropParamH1[lsMuH1Sort$ix] 
     dfDropoutModelsByCell <- data.frame(
