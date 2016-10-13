@@ -74,7 +74,7 @@ plotGene <- function(vecCounts,
     by=(max(vecPseudotime)-min(vecPseudotime))/(scaNPoints-1) )
   # Impulse model
   if(!is.null(vecImpulseModelParam)){
-    vecImpulseValues <- calcImpulse_comp(vecTheta=vecImpulseModelParam,
+    vecImpulseValues <- evalImpulseModel_comp(vecTheta=vecImpulseModelParam,
       vecTimepoints=vecPTCoord)
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValues)
@@ -86,7 +86,7 @@ plotGene <- function(vecCounts,
   }
   # Reference impulse model (e.g. true model if handling simulated data)
   if(!is.null(vecImpulseModelRefParam)){
-    vecImpulseValuesRef <- calcImpulse_comp(vecTheta=vecImpulseModelRefParam,
+    vecImpulseValuesRef <- evalImpulseModel_comp(vecTheta=vecImpulseModelRefParam,
       vecTimepoints=vecPTCoord)
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValuesRef)

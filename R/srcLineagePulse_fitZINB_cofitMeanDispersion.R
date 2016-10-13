@@ -133,7 +133,7 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
 #' 
 #' @seealso Called by \code{fitImpulse}::\code{fitImpulse_matrix}::
 #' \code{fitImpulse_gene}::\code{optimiseImpulseModelFit}.
-#' Calls \code{calcImpulse} and \code{evalLogLikZINB_comp}.
+#' Calls \code{evalImpulseModel} and \code{evalLogLikZINB_comp}.
 #' 
 #' @param vecTheta: (numeric vector dispersion (1) and impulse parameters (6)) 
 #'    Dispersion model and impulse model parameter estimates.
@@ -178,8 +178,8 @@ evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   # (I) Linker functions
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
-  # Log linker for amplitudes is in calcImpulse_comp.
-  vecImpulseValue <- calcImpulse_comp(vecTheta[2:7],vecPseudotime)[vecindTimepointAssign]
+  # Log linker for amplitudes and catching of low model values is in evalImpulseModel_comp
+  vecImpulseValue <- evalImpulseModel_comp(vecTheta[2:7],vecPseudotime)[vecindTimepointAssign]
   
   # (II) Prevent parameter shrinkage/explosion
   # Prevent dispersion estimate from shrinking to zero
@@ -190,11 +190,6 @@ evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   # to avoid numerical errors:
   if(scaDisp > 1/.Machine$double.eps){ scaDisp <- 1/.Machine$double.eps }
   vecDisp <- rep(scaDisp, length(vecCounts))
-  
-  # Parameter shrinkage for the impulse model is caught at the model value
-  # evaluation, not at the parameteres themselves! Because model valuate
-  # can deviate from amplitudes if transition times are switched.
-  vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
   
   # (III) Compute drop-out rates
   vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
@@ -351,10 +346,12 @@ fitDispConstMuConstZINB <- function(vecCounts,
 #'    time points (vecPseudotime).
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval length.
-#' @param MAXIT: (scalar) [Default 100] Number of iterations, which are performed 
-#'    to fit the impulse model to the clusters.
+#' @param MAXIT: (integer) [Default 1000] Maximum number of 
+#'    estimation iterations optim.
+#' @param RELTOL: (scalar) [Default sqrt(.Machine$double.eps)]
+#'    Relative tolerance for optim.
 #'   
-#' @return list: (length 2)
+#' @return list: (length 4)
 #'    \itemize{
 #'      \item scaDisp: (scalar) Dispersion parameter estimate. 
 #'      \item vecImpulseParam: (numeric vector [beta, h0, h1, h2, t1, t2])
@@ -373,7 +370,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
   vecNormConst,
   vecindTimepointAssign,
   scaWindowRadius=NULL,
-  MAXIT=100,
+  MAXIT=1000,
   RELTOL=sqrt(.Machine$double.eps),
   trace=0,
   REPORT=10 ){
@@ -434,24 +431,21 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
     scaConvergence=scaConvergence) )
 }
 
-#' Fit impulse model as mean parameter estimation
+#' Fit means as impulse model and dispersions as constant
 #' 
 #' Computes impulse parameter initialisation for valley
 #' and peak model and uses both and the prior parameter fit
 #' in three separate optimisation runs to obtain the best 
-#' impulse model fit to the data. To avoid convergence and
-#' numerical errors, the best fit is compared against the prior
-#' fit and the better one kept. Low impulse model values
-#' are masked.
-#' This function contains parts of \code{fitImpulse_gene} from
-#' ImpulseDE2.
+#' impulse model fit to the data, simultaneous with fitting a 
+#' constant dispersion factor.
 #' 
-#' @seealso Called by \code{fitZINB}. Code similar to \code{
-#' ImpulseDE2::fitImpulse_gene}.
+#' @seealso Called by \code{fitZINB}. Calls optimisation wrapper
+#' \code{fitDispConstMuImpulseOneInitZINB} for each initialisation.
+#' Code similar to \code{ImpulseDE2::fitImpulse_gene}.
 #' 
 #' @param vecCounts: (vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
-#' @param scaDispGuess: (numerical scalar) Negative binomial
+#' @param scaDispGuess: (scalar) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecImpulseParamGuess: (numerical vector impulse parameters)
 #'    Previous impulse model parameter values.
@@ -472,6 +466,10 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #'    Pseudotime coordinates of cells.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
+#' @param MAXIT: (integer) [Default 1000] Maximum number of 
+#'    estimation iterations optim.
+#' @param RELTOL: (scalar) [Default sqrt(.Machine$double.eps)]
+#'    Relative tolerance for optim.
 #' 
 #' @return list (length 3)
 #'    \itemize{
@@ -580,13 +578,13 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   scaConvergence <- lsFitBest$scaConvergence
   
   # THIS CODE IS ONLY FOR DEVELOPERS TO DEBUG IMPULSE FITTING
-  # Follow the choise of model and loglikelihoods
+  # Follow the choice of model and loglikelihoods
+  # Last time this code flagged a convergence problem, a parameter
+  # was assigned wrongly in the function calls above (vecPseudotime).s
   if(FALSE){
     # Compute predicted means
-    vecImpulseValue <- calcImpulse_comp(vecImpulseParam,vecTimepoints)[vecindTimepointAssign]
-    vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
-    vecImpulseValueOld <- calcImpulse_comp(vecImpulseParamGuess,vecTimepoints)[vecindTimepointAssign]
-    vecImpulseValueOld[vecImpulseValueOld < .Machine$double.eps] <- .Machine$double.eps
+    vecImpulseValue <- evalImpulseModel_comp(vecImpulseParam,vecTimepoints)[vecindTimepointAssign]
+    vecImpulseValueOld <- evalImpulseModel_comp(vecImpulseParamGuess,vecTimepoints)[vecindTimepointAssign]
     
     # Compute best set from last iteration
     vecLinModelOutOld <- sapply(seq(1, length(vecCounts)), function(cell){
