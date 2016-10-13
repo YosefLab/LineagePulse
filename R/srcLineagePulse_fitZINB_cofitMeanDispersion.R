@@ -495,7 +495,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   RELTOL=sqrt(.Machine$double.eps) ){
   
   # Set reporter parameters for optim BFGS optimisation
-  trace <- 0 # Report typp: 0 none, 2 yes
+  trace <- 0 # Report typ: 0 none, 2 yes
   REPORT <- 1 # Frequency of reporting in iterations
   # Try new peak and valley initialisations?
   # Increases time complexity of mean estimation by factor 3
@@ -511,8 +511,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   # (II) Fit Impulse model
   # The previous parameter estiamte is kept as a reference and
   # used as an initialisation
-  vecParamGuessPrior <- vecImpulseParamGuess
-  # Compute initialisations
+  # Compute initialisations for peak and valley
   lsParamGuesses <- estimateImpulseParam(
     vecTimepoints=vecTimepoints, 
     vecCounts=vecCounts,
@@ -529,9 +528,9 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   # 1. Initialisation: Prior best fit
   lsFitPrior <- fitDispConstMuImpulseOneInitZINB(
     scaDispGuess=scaDispGuess,
-    vecImpulseParamGuess=vecParamGuessPrior,
+    vecImpulseParamGuess=vecImpulseParamGuess,
     vecCounts=vecCounts,
-    vecPseudotime=vecTimepoints, 
+    vecPseudotime=vecPseudotime, 
     matDropoutLinModel=matDropoutLinModel,
     vecPiConstPredictors=vecPiConstPredictors,
     vecNormConst=vecNormConst,
@@ -545,7 +544,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       scaDispGuess=scaDispGuess,
       vecImpulseParamGuess=vecParamGuessPeak,
       vecCounts=vecCounts,
-      vecPseudotime=vecTimepoints, 
+      vecPseudotime=vecPseudotime, 
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
@@ -558,7 +557,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       scaDispGuess=scaDispGuess,
       vecImpulseParamGuess=vecParamGuessValley,
       vecCounts=vecCounts,
-      vecPseudotime=vecTimepoints, 
+      vecPseudotime=vecPseudotime, 
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
@@ -586,9 +585,10 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     # Compute predicted means
     vecImpulseValue <- calcImpulse_comp(vecImpulseParam,vecTimepoints)[vecindTimepointAssign]
     vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
+    vecImpulseValueOld <- calcImpulse_comp(vecImpulseParamGuess,vecTimepoints)[vecindTimepointAssign]
+    vecImpulseValueOld[vecImpulseValueOld < .Machine$double.eps] <- .Machine$double.eps
     
     # Compute best set from last iteration
-    vecImpulseValueOld <- calcImpulse_comp(vecParamGuessPrior,vecTimepoints)[vecindTimepointAssign]
     vecLinModelOutOld <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
@@ -599,10 +599,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecDropoutRateEst=vecDropoutOld,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
       vecboolZero=vecCounts==0 )
-    print(paste0("Old:", scaLLOld))
     
     # report all new parame
-    print(paste0("New from optim ", lsFitBest$scaLL))
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
@@ -613,7 +611,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecDropoutRateEst=vecDropout,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
       vecboolZero=vecCounts==0 )
-    print(paste0("New recomputed", scaLLRef))
+    print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
+      scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
   }
   
   return(list(scaDisp=scaDisp,

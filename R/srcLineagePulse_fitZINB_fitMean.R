@@ -442,18 +442,15 @@ fitImpulse_gene_LP <- function(vecCounts,
     vecBestFitParam <- vecFitPrior[1:6]
   }
   
-  # Compute predicted means
-  vecImpulseValue <- calcImpulse_comp(vecBestFitParam,vecTimepoints)[vecindTimepointAssign]
-  vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
-
-  if(FALSE){
-    # Follow choice of model (For algorithm building only)
-    # Valley is chosen very often (?) and reported likelihoods are wrong for valley
-    # Was reporting observed values and not zeros for valley initialisation
-    # to optimisation... routine -> seems to have solved the problem
-    
-    # Compute best set from last iteration
+  # THIS CODE IS ONLY FOR DEVELOPERS TO DEBUG IMPULSE FITTING
+  # Follow the choise of model and loglikelihoods
+  if(TRUE){
+    # Compute predicted means
+    vecImpulseValue <- calcImpulse_comp(vecBestFitParam,vecTimepoints)[vecindTimepointAssign]
+    vecImpulseValue[vecImpulseValue < .Machine$double.eps] <- .Machine$double.eps
     vecImpulseValueOld <- calcImpulse_comp(vecParamGuessPrior,vecTimepoints)[vecindTimepointAssign]
+    vecImpulseValueOld[vecImpulseValueOld < .Machine$double.eps] <- .Machine$double.eps
+    
     vecLinModelOutOld <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
@@ -482,8 +479,7 @@ fitImpulse_gene_LP <- function(vecCounts,
     print(scaLLRef)
   }
   
-  return(list(vecBestFitParam=vecBestFitParam,
-    vecImpulseValue=vecImpulseValue))
+  return(list(vecBestFitParam=vecBestFitParam))
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
