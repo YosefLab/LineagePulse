@@ -49,6 +49,7 @@ evalLogLikMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikMuImpulseZINB_LinPulse
 evalLogLikDispConstZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
 evalLogLikDispConstMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuConstZINB_LinPulse)
+evalLogLikDispConstMuClustersZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuClustersZINB_LinPulse)
 evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB_LinPulse)
 
 ################################################################################

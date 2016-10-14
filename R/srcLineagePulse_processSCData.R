@@ -83,7 +83,7 @@ processSCData <- function(matCounts,
     } else {
       if(!is.null(rownames(matPiConstPredictors))){
         stop(paste0("ERROR: Named genes in matPiConstPredictors",
-          " but not in matCounts.")).
+          " but not in matCounts."))
       }
     }
   }

@@ -638,85 +638,6 @@ fitMuVecWindowsZINB<- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-
-#' Fit negative binomial mean parameter to a cluster of cells
-#' 
-#' Fits negative binomial mean parameter numerically as maximum likelihood estimator
-#' to a cell in an interval.
-#' 
-#' @seealso Called by \code{fitZINBMu}.
-#' 
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
-#' @param scaMuGuess: (scalar) 
-#' @param vecDisp: (vector number of cells) Negative binomial
-#'    dispersion parameter estimate.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
-#'    Logistic linear model parameters of the dropout rate 
-#'    as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
-#'    Constant gene-wise coeffiecients, i.e. predictors which are not
-#'    the offset and not the mean parameter.
-#' 
-#' @return scaMu: (scalar) MLE of mean parameter.
-#' @export
-
-fitMuClusterZINB <- function(vecCounts,
-  scaMuGuess,
-  vecDisp,
-  vecNormConst,
-  matDropoutLinModel,
-  vecPiConstPredictors ){ 
-  
-  # scaWindowRadius is set to NULL because smoothing
-  # within clusters does't make sense - the clusters already impose
-  # a constraint on the means.
-  fitMu <- tryCatch({
-    unlist(optim(    
-      par=log(scaMuGuess),
-      evalLogLikMuConstZINB_LinPulse_comp,
-      vecCounts=vecCounts,
-      vecDisp=vecDisp,
-      matDropoutLinModel=matDropoutLinModel,
-      vecPiConstPredictors=vecPiConstPredictors,
-      vecNormConst=vecNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
-      scaWindowRadius=NULL,
-      method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
-  }, error=function(strErrorMsg){
-    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuWindowZINB().",
-      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
-    print(paste0("log(vecMu) ",log(log(vecMu))))
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
-    print("matDropoutLinModel")
-    print(matDropoutLinModel)
-    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
-    lsErrorCausingGene <- list(vecCounts, vecDisp, matDropoutLinModel, vecNormConst)
-    names(lsErrorCausingGene) <- c("vecCounts", "vecDisp",
-      "matDropoutLinModel", "vecNormConst")
-    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-    stop(strErrorMsg)
-  })
-  
-  # (II) Extract results and correct for sensitivity boundaries
-  scaMu <- exp(fitMu[1])
-  # Catch boundary of likelihood domain on mu space
-  if(scaMu < .Machine$double.eps){ scaMu <- .Machine$double.eps }
-  
-  scaConvergence <- fitMu[2]
-  
-  return(list(scaMu=scaMu,
-    scaConvergence=scaConvergence))
-}
-
-
 #' Fit an impulse model to observations of a gene
 #' 
 #' Given a parameter initialisation, this function
@@ -1208,20 +1129,20 @@ fitZINBMu <- function( matCountsProc,
         vecInterval=NULL)
       
       # Estimate mean parameters
-      scaConvergence <- 0
-      fitMu <- lapply(seq(1,max(lsMuModel$lsMuModelGlobal$vecindClusterAssign)), function(k){
+      fitMu <- lapply(unique(lsMuModel$lsMuModelGlobal$vecindClusterAssign), function(k){
         vecInterval <- lsMuModel$lsMuModelGlobal$vecindClusterAssign==k
-        fitMuCluster <- fitMuClusterZINB(
+        fitMuCluster <- fitMuConstZINB(
           vecCounts=matCountsProc[i,vecInterval],
           scaMuGuess=lsMuModel$matMuModel[i,k],
           vecDisp=vecDispParam[vecInterval],
-          vecNormConst=vecSizeFactors[vecInterval],
           matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
-          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-        if(fitMuCluster$scaConvergence){ scaConvergence <- fitMu$scaConvergence }
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          vecNormConst=vecSizeFactors[vecInterval],
+          scaWindowRadius=NULL )
         return(fitMuCluster)
       })
       vecMu <- sapply(fitMu, function(k) k$scaMu )
+      scaConvergence <- max(sapply(fitMu, function(k) k$scaConvergence ))
 
       return(list(vecMu=vecMu,
           scaConvergence=scaConvergence))
