@@ -111,6 +111,219 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
   return(scaLogLik)
 }
 
+#' Cost function zero-inflated negative binomial model for mean and
+#' dispersion parameter fitting under sliding windows mean model 
+#' for single mean (coordinate ascent) and constant dispersion factor
+#' 
+#' Log likelihood of zero inflated  negative binomial model. 
+#' This function is designed to allow numerical optimisation
+#' of negative binomial mean paramater on single gene given
+#' the drop-out rate and negative binomial dispersion parameter.
+#' The mean is modelled by cell and constrained to fit a sliding 
+#' window of cells. This function is used if the means for 
+#' observations of a gene are fit sequentially (coordinate ascent).
+#' The dispersion parameteris modelled as a constant and is
+#' re-estimated in every coordinate-ascent step.
+#' 
+#' The mean parameter is fit in log space and is therefore fit
+#' as a positive scalar. The cost function is insensitive to the
+#' mean parameter shrinking beyond a numerical threshold to zero.
+#' 
+#' @seealso Called by \code{fitZINB}.
+#' 
+#' @param vecTheta: (numeric vector length 2) 
+#'    Log of dispersion and log of mean parameter estimates.
+#' @param vecCounts: (vector number of cells) Observed expression values 
+#'    of gene in cells in cluster.
+#' @param vecMu: (vector number of cells in neighbourhood) Mean
+#'    parameter estimates in neighourhood of target cell.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter. 
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#'    Whether sample is not NA (observed) and has non-zero count.
+#' @param vecboolZero: (bool vector number of samples)
+#'    Whether sample has zero count.
+#' @param scaTarget: (integer) Position of target cell
+#'    (whose mean is to be estimated) within given interval.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#' 
+#' @return scaLogLik: (scalar) Value of cost function:
+#'    zero-inflated negative binomial likelihood.
+#' @export
+
+evalLogLikDispConstMuWindowZINB_LinPulse <- function(vecTheta,
+  vecCounts,
+  vecMu,
+  matDropoutLinModel,
+  vecPiConstPredictors,
+  vecNormConst,
+  vecboolNotZeroObserved,
+  vecboolZero,
+  scaTarget,
+  scaWindowRadius){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  scaMuNew <- exp(vecTheta[2])
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < .Machine$double.eps){ scaDisp <- .Machine$double.eps }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/.Machine$double.eps){ scaDisp <- 1/.Machine$double.eps }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  if(scaMuNew < .Machine$double.eps){ scaMuNew <- .Machine$double.eps }
+  
+  scaN <- length(vecCounts)
+  # (III) Compute drop-out rates
+  vecLogMuNeighbourhoodCurrent <- log(vecMu) # Means which are not updated
+  vecLogMuNeighbourhoodCurrent[scaTarget] <- log(scaMuNew) # Mean which is updated
+  vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
+    sum(matDropoutLinModel[cell,] * c(1,vecLogMuNeighbourhoodCurrent[cell],vecPiConstPredictors))
+  })
+  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  
+  # (IV) Evaluate loglikelihood (this is the cost function) 
+  # Compute loglikelihood terms with contribution from new mean parameter
+  # Cis terms: From neighbourhood around target parameter
+  scaLogLikCis <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
+    vecMu=scaMuNew*vecNormConst,
+    vecDispEst=rep(vecDisp[scaTarget],scaN), 
+    vecDropoutRateEst=vecDropoutRateEst,
+    vecboolNotZeroObserved=vecboolNotZeroObserved, 
+    vecboolZero=vecboolZero )
+  # Trans terms: From other neighbourhoods via drop-out rate as function
+  # of target mean parameter.
+  if(scaN>1){
+    if(scaTarget==1){ vecindTransTerms <- seq(2,scaN)
+    } else if(scaTarget==scaN){ vecindTransTerms <- seq(1,scaN-1)
+    } else { vecindTransTerms <- c(seq(1,scaTarget-1),seq(scaTarget+1,scaN)) }
+    scaLogLikTrans <- evalLogLikZINB_LinPulse_comp( vecCounts=rep(vecCounts[scaTarget],length(vecindTransTerms)),
+      vecMu=vecMu[vecindTransTerms]*vecNormConst[scaTarget],
+      vecDispEst=vecDisp[vecindTransTerms], 
+      vecDropoutRateEst=rep(vecDropoutRateEst[scaTarget],length(vecindTransTerms)),
+      vecboolNotZeroObserved=rep(vecboolNotZeroObserved[scaTarget],length(vecindTransTerms)), 
+      vecboolZero=rep(vecboolZero[scaTarget],length(vecindTransTerms)) )
+  } else {
+    scaLogLikTrans<- 0
+  }
+  scaLogLik <- scaLogLikCis + scaLogLikTrans
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
+}
+
+#' Cost function zero-inflated negative binomial model for mean fitting
+#' under sliding windows mean model for multiple means (BFGS)
+#' 
+#' Log likelihood of zero inflated  negative binomial model. 
+#' This function is designed to allow numerical optimisation
+#' of negative binomial mean paramater on single gene given
+#' the drop-out rate and negative binomial dispersion parameter.
+#' The mean is modelled by cell and constrained to fit a sliding 
+#' window of cells. This function is used if the means for 
+#' observations of a gene are fit simulatneously (BFGS).
+#' 
+#' The mean parameter is fit in log space and is therefore fit
+#' as a positive scalar. The cost function is insensitive to the
+#' mean parameter shrinking beyond a numerical threshold to zero.
+#' 
+#' @seealso Called by \code{fitZINB}.
+#' 
+#' @param vecTheta: (numeric vector 1 + number of cells) 
+#'    Log of dispersion and log of mean parameter estimates.
+#' @param vecCounts: (vector number of cells) Observed expression values 
+#'    of gene in cells in cluster.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter. 
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#'    Whether sample is not NA (observed) and has non-zero count.
+#' @param vecboolZero: (bool vector number of samples)
+#'    Whether sample has zero count.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#' 
+#' @return scaLogLik: (scalar) Value of cost function:
+#'    zero-inflated negative binomial likelihood.
+#' @export
+
+evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
+  vecCounts,
+  matDropoutLinModel,
+  vecPiConstPredictors,
+  vecNormConst,
+  vecboolNotZeroObserved,
+  vecboolZero,
+  scaWindowRadius){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  vecMu <- exp(vecTheta[2:length(vecTheta)])
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < .Machine$double.eps){ scaDisp <- .Machine$double.eps }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/.Machine$double.eps){ scaDisp <- 1/.Machine$double.eps }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
+  
+  # (III) Compute drop-out rates
+  vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
+    sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
+  })
+  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  
+  # (IV) Evaluate loglikelihood (this is the cost function) 
+  scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(
+    vecCounts=vecCounts,
+    vecMu=vecMu,
+    vecSizeFactors=vecNormConst,
+    vecDispEst=vecDisp, 
+    vecDropoutRateEst=vecDropoutRateEst,
+    vecboolNotZeroObserved=vecboolNotZeroObserved, 
+    vecboolZero=vecboolZero,
+    scaWindowRadius=scaWindowRadius)
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
+}
+
 #' Cost function zero-inflated negative binomial model for dispersion
 #' and mean co-estimation under constant dispersion and cluster mean model
 #' 
@@ -397,6 +610,198 @@ fitDispConstMuConstZINB <- function(vecCounts,
   
   return(list(scaDisp=scaDisp,
     scaMu=scaMu,
+    scaConvergence=scaConvergence))
+}
+
+#' Fits negative binomial mean parameter and dispersion parameter
+#' to an observations of a gene. The mean parameter is modelled
+#' by local smoothing (window) and the dispersion parameter as a constant.
+#' 
+#' Fits negative binomial mean parameters and dispersion parameter
+#' to all observations of a gene. The mean parameter is modelled
+#' by local smoothing (windows) and the dispersion parameter as a constant.
+#' This function only estimates one mean parameter.
+#' 
+#' @seealso Called by \code{fitZINBMuDisp}. Alternative to simultaneous
+#' maximum likelihood estimation of mean parameters of all cells in
+#' interval used in \code{fitDispConstMuWindowZINB}.
+#' 
+#' @param vecCounts: (vector number of cells) Observed expression values 
+#'    of gene in cells in cluster.
+#' @param vecMu: (vector number of cells in neighbourhood)
+#'    [Defaul NULL] 
+#'    Mean parameter estimates in neighourhood of target cell.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter.
+#' @param vecProbNB: (numeric vector number of cells) Posterior
+#'    of observation not being drop-out for closed-form MLE.
+#' @param scaTarget: (integer) Position of target cell
+#'    (whose mean is to be estimated) within given interval.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#' 
+#' @return scaMu: (scalar) MLE of mean parameter.
+#' @export
+
+fitDispConstMuWindowZINB <- function(vecCounts,
+  scaDispGuess,
+  vecMu,
+  vecNormConst,
+  matDropoutLinModel,
+  vecPiConstPredictors,
+  scaTarget,
+  scaWindowRadius=NULL ){ 
+  
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=c(log(scaDispGuess), vecMu[scaTarget]),
+      evalLogLikDispConstMuWindowZINB_LinPulse_comp,
+      vecCounts=vecCounts,
+      vecMu=vecMu,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst,
+      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+      vecboolZero=vecCounts==0,
+      scaTarget=scaTarget,
+      scaWindowRadius=scaWindowRadius,
+      method="BFGS",
+      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuWindowZINB().",
+      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(paste0("log(vecMu[scaTarget]) ",log(vecMu[scaTarget])))
+    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
+    print(paste0("vecMu", paste(vecMu,collapse=" ")))
+    print("matDropoutLinModel")
+    print(matDropoutLinModel)
+    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    print(paste0("scaTarget ", paste(scaTarget,collapse=" ")))
+    lsErrorCausingGene <- list(vecCounts, scaDispGuess, matDropoutLinModel, vecNormConst)
+    names(lsErrorCausingGene) <- c("vecCounts", "scaDispGuess",
+      "matDropoutLinModel", "vecNormConst")
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < .Machine$double.eps){scaDisp <- .Machine$double.eps}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/.Machine$double.eps){scaDisp <- 1/.Machine$double.eps}
+  
+  scaMu <- exp(fitDispMu[2])
+  # Catch boundary of likelihood domain on mu space
+  if(scaMu < .Machine$double.eps){scaMu <- .Machine$double.eps}
+  
+  scaConvergence <- fitDispMu[3]
+  
+  return(list(scaDisp=scaDisp,
+    scaMu=scaMu,
+    scaConvergence=scaConvergence))
+}
+
+#' Fit negative binomial means and dispersion to all observations of a gene
+#' 
+#' Fits negative binomial mean parameters and dispersion parameter
+#' to all observations of a gene. The mean parameter is modelled
+#' by local smoothing (windows) and the dispersion parameter as a constant.
+#' 
+#' @seealso Called by \code{fitZINBMuDisp}. Alternative to cell-wise sequential
+#' maximum likelihood estimation used in \code{fitDispConstMuWindowZINB}.
+#' 
+#' @param vecCounts: (vector number of cells) Observed expression values 
+#'    of gene in cells in cluster.
+#' @param vecMuGuess: (vector number of cells in neighbourhood)
+#'    [Defaul NULL] 
+#'    Mean parameter estimates in neighourhood of target cell.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors for each observation which take
+#'    sequencing depth into account (size factors). One size
+#'    factor per cell.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter.
+#' @param vecProbNB: (numeric vector number of cells) Posterior
+#'    of observation not being drop-out for closed-form MLE.
+#' @param scaTarget: (integer) Position of target cell
+#'    (whose mean is to be estimated) within given interval.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#' 
+#' @return scaMu: (scalar) MLE of mean parameter.
+#' @export
+
+fitDispConstMuVecWindowsZINB<- function(vecCounts,
+  scaDispGuess,
+  vecMuGuess,
+  vecNormConst,
+  matDropoutLinModel,
+  vecPiConstPredictors,
+  scaWindowRadius=NULL ){
+  
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=c(log(scaDispGuess), log(vecMuGuess)),
+      evalLogLikDispConstMuVecWindowsZINB_LinPulse_comp,
+      vecCounts=vecCounts,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst,
+      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+      vecboolZero=vecCounts==0,
+      scaWindowRadius=scaWindowRadius,
+      method="BFGS",
+      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
+      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(paste0("log(vecMuGuess) ",log(vecMuGuess)))
+    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
+    print("matDropoutLinModel")
+    print(matDropoutLinModel)
+    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    lsErrorCausingGene <- list(vecCounts, vecMuGuess, scaDispGuess, 
+      matDropoutLinModel, vecNormConst)
+    names(lsErrorCausingGene) <- c("vecCounts", "vecMuGuess","scaDispGuess",
+      "matDropoutLinModel", "vecNormConst")
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < .Machine$double.eps){scaDisp <- .Machine$double.eps}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/.Machine$double.eps){scaDisp <- 1/.Machine$double.eps}
+  
+  vecMu <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
+  # Catch boundary of likelihood domain on mu space
+  vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
+  
+  scaConvergence <- fitDispMu[length(fitDispMu)]
+  
+  return(list(scaDisp=scaDisp,
+    vecMu=vecMu,
     scaConvergence=scaConvergence))
 }
 
@@ -941,7 +1346,67 @@ fitZINBMuDisp <- function( matCountsProc,
   
   # Nest mean models within dispersion models
   if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-    if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
+    if(lsMuModel$lsMuModelGlobal$strMuModel=="windows"){
+      # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
+      # interval with cell density centred at target cell.
+      # Note that this corresponds to maximising smoothed log likelihood but instead
+      # of using the implemented cost function evalLogLikSmoothZINB_LinPulse for an entire
+      # gene, the optimisation problem is broken up into 1D problems for each mean.
+      lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
+        # Note: Mean parameter estimates of gene i depend on each other:
+        # Either estimate all parameters for gene i together 
+        # (quasi-Newton estimation with BFGS: boolVecWindowsAsBFGS=TRUE)
+        # or use the latest updates of the remaining parameters during 
+        # one-by-one estimation (coordinate ascent, boolVecWindowsAsBFGS=TRUE).
+        
+        # Decompress parameters
+        vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          vecInterval=NULL )
+        scaDispParam <- lsDispModel$matDispModel[i,]
+
+        if(lsMuModel$lsMuModelGlobal$boolVecWindowsAsBFGS){
+          fitDispMu <- fitDispConstMuVecWindowsZINB(
+            vecCounts=matCountsProc[i,],
+            scaDispGuess=lsDispModel$matDispModel[i,],
+            vecMu=vecMuParam,
+            vecNormConst=vecSizeFactors,
+            matDropoutLinModel=lsDropModel$matDropoutLinModel,
+            vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+            scaWindowRadius=scaWindowRadius )
+        } else {
+          vecMu <- vecMuParam
+          scaDisp <- scaDispParam
+          scaConvergence <- 0
+          for(j in seq(1,scaNumCells)){
+            scaindIntervalStart <- max(1,j-scaWindowRadius)
+            scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+            vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+            fitDispMu <- fitDispConstMuWindowZINB(vecCounts=matCountsProc[i,vecInterval],
+              scaDispGuess=scaDisp,
+              vecMu=vecMu[vecInterval],
+              vecNormConst=vecSizeFactors[vecInterval],
+              matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+              vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+              scaTarget=match(j,vecInterval),
+              scaWindowRadius=scaWindowRadius )
+            # Update parameter vector for next step of coordinate ascent
+            # within this mu vector estimation.
+            scaDisp <- fitDispMu$scaDisp
+            vecMu[j] <- fitDispMu$scaMu
+            if(fitDispMu$scaConvergence){ scaConvergence <- fitDispMu$scaConvergence }
+          }
+          fitDispMu <- list(scaDisp=scaDisp,
+            vecMu=vecMu,
+            scaConvergence=scaConvergence)
+        }
+        return(fitDispMu)
+      })
+      matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
+      matMuModel <- do.call(rbind, lapply(lsFitDispMu, function(i) i$vecMu ))
+      vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
+      
+    } else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
       # Estimate mean parameter by cluster. No smoothing is used.
       lsFitsDispMu <- bplapply(seq(1,scaNumGenes), function(i){        
         # Estimate mean parameters
@@ -953,7 +1418,7 @@ fitZINBMuDisp <- function( matCountsProc,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           vecNormConst=vecSizeFactors,
           vecindClusterAssign=lsMuModel$lsMuModelGlobal$vecindClusterAssign )
-
+        
         return(fitDispMu)
       })
       matMuModel <- do.call(rbind, lapply(lsFitsDispMu, function(i) i$vecMu ))

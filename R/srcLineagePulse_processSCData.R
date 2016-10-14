@@ -121,10 +121,14 @@ processSCData <- function(matCounts,
       "constant, windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
       " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
   }
-  if(boolVecWindowsAsBFGS & strMuModel=="windows"){
+  if(boolVecWindowsAsBFGS & !strMuModel=="windows"){
     stop(paste0("boolVecWindowsAsBFGS set to TRUE but strMuModel=",
-      boolVecWindowsAsBFGS, ". boolVecWindowsAsBFGS is only used",
+      strMuModel, ". boolVecWindowsAsBFGS is only used",
       " with strMuModel=windows."))
+  }
+  if(strMuModel=="windows" & is.null(scaWindowRadius)){
+    stop(paste0("Cannot use strMuModel=windows with scaWindowRadius=NULL.",
+      " Means have to be regularised by smoothing in windows mode."))
   }
   
   # 3. Check dispersion model
@@ -137,9 +141,9 @@ processSCData <- function(matCounts,
   # Note: These functions are implemented separately from
   # single mean and dispersion estimation.
   if(boolCoEstDispMean){
-    if(!(strMuModel %in% c("clusters","impulse","constant"))){
+    if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
     stop(paste0("strMuModel not recognised: ", strMuModel, 
-      " Must be one of: clusters, impulse, constant if co-estimation",
+      " Must be one of: windows, clusters, impulse, constant if co-estimation",
         " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
     }
     if(!(strDispModel %in% c("constant"))){

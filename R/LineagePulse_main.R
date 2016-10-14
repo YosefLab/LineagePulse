@@ -49,6 +49,8 @@ evalLogLikMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikMuImpulseZINB_LinPulse
 evalLogLikDispConstZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstZINB_LinPulse)
 evalLogLikPiZINB_LinPulse_comp <- cmpfun(evalLogLikPiZINB_LinPulse)
 evalLogLikDispConstMuConstZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuConstZINB_LinPulse)
+evalLogLikDispConstMuWindowZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuWindowZINB_LinPulse)
+evalLogLikDispConstMuVecWindowsZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuVecWindowsZINB_LinPulse)
 evalLogLikDispConstMuClustersZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuClustersZINB_LinPulse)
 evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB_LinPulse)
 
@@ -161,7 +163,11 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #'    the complex model only has to be estimated once (simultaneous
 #'    with the dispersion parameters). This may generally lead to better
 #'    convergence as the steps in coordinate-ascent are in a larger
-#'    space, closer to full gradient ascent.
+#'    space, closer to full gradient ascent. Setting to TRUE
+#'    is encouraged. Optimisation routines for individual mean 
+#'    and dispersion fitting (if FALSE) exist, but these may be viewed
+#'    as non-deprecated parts of an earlier implementation of the
+#'    alorithm.
 #' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
