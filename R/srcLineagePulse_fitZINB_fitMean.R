@@ -306,8 +306,8 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #'    Impulse model parameter estimates.
 #' @param vecCounts: (integer vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
-#' @param vecPseudotime: (numerical vector number of cells)
-#'    Pseudotime coordinates of cells.
+#' @param vecTimepoints: (numerical vector number of unique time coordinates)
+#'    Unique (pseudo)time coordinates of cells.
 #' @param vecDisp: (numeric vector number of cells)
 #'    Dispersion parameter estimates for observations of a gene.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
@@ -321,8 +321,8 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecindTimepointAssign (numeric vector number samples) 
-#'    Index of time point assigned to sample in list of sorted
-#'    time points (vecPseudotime).
+#'    Index of time point assigned to cell in list of sorted
+#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
 #' @param vecboolNotZeroObserved: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
@@ -335,7 +335,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 
 evalLogLikMuImpulseZINB_LinPulse <- function(vecTheta,
   vecCounts,
-  vecPseudotime,
+  vecTimepoints,
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
@@ -347,7 +347,7 @@ evalLogLikMuImpulseZINB_LinPulse <- function(vecTheta,
   
   # (I) Linker functions
   # Log linker for amplitudes and catching of low model values is in evalImpulseModel_comp
-  vecImpulseValue <- evalImpulseModel_comp(vecTheta,vecPseudotime)[vecindTimepointAssign]
+  vecImpulseValue <- evalImpulseModel_comp(vecTheta,vecTimepoints)[vecindTimepointAssign]
   
   # (II) Compute drop-out rates
   vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
@@ -735,8 +735,8 @@ fitMuClusterZINB <- function(vecCounts,
 #'    Impulse model parameter estimates for given gene.
 #' @param vecCounts: (integer vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
-#' @param vecPseudotime: (numerical vector number of cells)
-#'    Pseudotime coordinates of cells.
+#' @param vecTimepoints: (numerical vector number of unique time points)
+#'    Unique (pseudo)time coordinates of cells.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
@@ -748,8 +748,8 @@ fitMuClusterZINB <- function(vecCounts,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecindTimepointAssign (numeric vector number samples) 
-#'    Index of time point assigned to sample in list of sorted
-#'    time points (vecPseudotime).
+#'    Index of time point assigned to cell in list of sorted
+#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval length.
 #' @param MAXIT: (integer) [Default 1000] Maximum number of 
@@ -768,7 +768,7 @@ fitMuClusterZINB <- function(vecCounts,
 
 fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
   vecCounts,
-  vecPseudotime,
+  vecTimepoints,
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
@@ -785,7 +785,7 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
       par=vecImpulseParamGuess, 
       fn=evalLogLikMuImpulseZINB_LinPulse_comp, 
       vecCounts=vecCounts,
-      vecPseudotime=vecPseudotime,
+      vecTimepoints=vecTimepoints,
       vecDisp=vecDisp,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -805,16 +805,16 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(paste0("vecImpulseParamGuess ", paste(vecImpulseParamGuess,collapse=" ")))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print(paste0("vecPseudotime ", paste(vecPseudotime,collapse=" ")))
+    print(paste0("vecTimepoints ", paste(vecTimepoints,collapse=" ")))
     print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
     print(paste0("matDropoutLinModel ", paste(matDropoutLinModel,collapse=" ")))
     print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
     print(paste0("vecindTimepointAssign ", paste(vecindTimepointAssign,collapse=" ")))
     print(paste0("scaWindowRadius", paste(scaWindowRadius,collapse=" ")))
     print(paste0("MAXIT ", MAXIT))
-    lsErrorCausingGene <- list(, vecImpulseParamGuess, vecCounts, vecPseudotime, 
+    lsErrorCausingGene <- list(, vecImpulseParamGuess, vecCounts, vecTimepoints, 
       vecDisp, vecNormConst, vecindTimepointAssign, scaWindowRadius, MAXIT)
-    names(lsErrorCausingGene) <- c("vecImpulseParamGuess", "vecCounts", "vecPseudotime",
+    names(lsErrorCausingGene) <- c("vecImpulseParamGuess", "vecCounts", "vecTimepoints",
       "vecDisp", "vecNormConst", "vecindTimepointAssign", "scaWindowRadius", "MAXIT")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
@@ -880,12 +880,12 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 
 fitMuImpulseZINB <- function(vecCounts,
   vecImpulseParamGuess,
+  lsMuModelGlobal,
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
   vecProbNB,
   vecNormConst,
-  vecPseudotime,
   scaWindowRadius=NULL,
   MAXIT=1000,
   RELTOL=sqrt(.Machine$double.eps) ){
@@ -898,34 +898,39 @@ fitMuImpulseZINB <- function(vecCounts,
   # but seems to make a difference on simulated data.
   boolUseNewInits <- TRUE
   
-  # (I) Process data
+  # (I) Get unique time points to reduce number of evaluations
   # Compute time point specifc parameters
-  vecTimepoints <- sort(unique( vecPseudotime ))
+  vecTimepoints <- unique( lsMuModelGlobal$vecPseudotime )
   # Get vector of numeric time point assignment indices:
-  vecindTimepointAssign <- match(vecPseudotime, vecTimepoints)
+  vecindTimepointAssign <- match(lsMuModelGlobal$vecPseudotime, vecTimepoints)
   
-  # (II) Fit Impulse model
+  # (II) Initialise impulse model
+  # Decompress parameters for initialisation
+  vecMuParam <- decompressMeansByGene( vecMuModel=vecImpulseParamGuess,
+    lsMuModelGlobal=lsMuModelGlobal,
+    vecInterval=NULL )
+  vecDropoutParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
+    vecMu=vecMuParam,
+    vecPiConstPredictors=vecPiConstPredictors )
   # The previous parameter estiamte is kept as a reference and
   # used as an initialisation
   # Compute initialisations for peak and valley
-  lsParamGuesses <- estimateImpulseParam(
-    vecTimepoints=vecTimepoints, 
-    vecCounts=vecCounts,
-    vecDropoutRate=vecDropoutRate, 
-    vecProbNB=vecProbNB,
-    vecTimepointAssign=vecPseudotime, 
+  lsParamGuesses <- initialiseImpulseParametes(vecCounts=vecCounts,
+    lsMuModelGlobal=lsMuModelGlobal,
+    vecMu=vecMuParam,
+    vecDisp=vecDisp,
+    vecDrop=vecDropoutParam,
     vecNormConst=vecNormConst,
-    strMode="singlecell",
-    strSCMode="continuous" )
+    scaWindowRadius=scaWindowRadius)
   vecParamGuessPeak <- lsParamGuesses$peak
   vecParamGuessValley <- lsParamGuesses$valley
   
-  # (II) Compute new parameters
+  # (III) Compute new parameters
   # 1. Initialisation: Prior best fit
   lsFitPrior <- fitMuImpulseOneInitZINB(
     vecImpulseParamGuess=vecImpulseParamGuess,
     vecCounts=vecCounts,
-    vecPseudotime=vecPseudotime,
+    vecTimepoints=vecTimepoints,
     vecDisp=vecDisp,
     matDropoutLinModel=matDropoutLinModel,
     vecPiConstPredictors=vecPiConstPredictors,
@@ -939,7 +944,7 @@ fitMuImpulseZINB <- function(vecCounts,
     lsFitPeak <- fitMuImpulseOneInitZINB(
       vecImpulseParamGuess=vecParamGuessPeak,
       vecCounts=vecCounts,
-      vecPseudotime=vecPseudotime, 
+      vecTimepoints=vecTimepoints,
       vecDisp=vecDisp,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -952,7 +957,7 @@ fitMuImpulseZINB <- function(vecCounts,
     lsFitValley <- fitMuImpulseOneInitZINB(
       vecImpulseParamGuess=vecParamGuessValley,
       vecCounts=vecCounts,
-      vecPseudotime=vecPseudotime,
+      vecTimepoints=vecTimepoints,
       vecDisp=vecDisp,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -1144,34 +1149,19 @@ fitZINBMu <- function( matCountsProc,
     lsFitMu <- bplapply(seq(1,scaNumGenes), function(i){
       
       # Decompress parameters
-      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
-        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-        vecInterval=NULL )
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
         lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
         vecInterval=NULL)
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
-        vecMu=vecMuParam,
-        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-      
-      #  Compute posterior for parameter
-      vecZ <- calcPostDrop_Vector( vecMu=vecMuParam,
-        vecDispersions=vecDispParam,
-        vecDropout=vecDropoutParam,
-        vecboolZero= matCountsProc[i,]==0,
-        vecboolNotZeroObserved= !is.na(matCountsProc[i,]) & matCountsProc[i,]>0,
-        scaWindowRadius=scaWindowRadius )
       
       # Estimate mean parameters
       fitMu <- fitMuImpulseZINB(
         vecCounts=matCountsProc[i,],
         vecImpulseParamGuess=lsMuModel$matMuModel[i,],
+        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
         vecDisp=vecDispParam,
         matDropoutLinModel=lsDropModel$matDropoutLinModel,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-        vecProbNB=1-vecZ,
         vecNormConst=vecSizeFactors,
-        vecPseudotime=lsMuModel$lsMuModelGlobal$vecPseudotime,
         scaWindowRadius=scaWindowRadius,
         MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_Impulse,
         RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_Impulse )

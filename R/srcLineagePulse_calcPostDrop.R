@@ -18,9 +18,9 @@
 #' 
 #' @param vecMu: (numeric vector samples)
 #'    Negative binomial mean parameters of samples.
-#' @param vecDispersions: (numeric vector samples)
+#' @param vecDisp: (numeric vector samples)
 #'    Negative binomial mean parameters of samples.
-#' @param vecDropout: (numeric vector samples)
+#' @param vecDrop: (numeric vector samples)
 #'   Drop out rates of samples.
 #' @param vecboolZero: (bool matrix genes x cells)
 #'    Whether observation is zero.
@@ -35,8 +35,8 @@
 #' @export
 
 calcPostDrop_Vector <- function( vecMu,
-  vecDispersions,
-  vecDropout,
+  vecDisp,
+  vecDrop,
   vecboolZero,
   vecboolNotZeroObserved,
   scaWindowRadius ){
@@ -45,7 +45,7 @@ calcPostDrop_Vector <- function( vecMu,
   
   # Compute probability of zero counts under 
   # negative binomial model.
-  vecNBZero <- (vecDispersions/(vecDispersions+vecMu))^vecDispersions
+  vecNBZero <- (vecDisp/(vecDisp+vecMu))^vecDisp
   # Compute posterior of drop-out.
   vecZ <- sapply(seq(1,scaNumSamples), function(j){
     if(vecboolNotZeroObserved[j]){
@@ -58,8 +58,8 @@ calcPostDrop_Vector <- function( vecMu,
       } else {
         vecInterval <- j
       }
-      scaZ <- sum(vecDropout[j]/(vecDropout[j] + 
-          (1-vecDropout[j])*vecNBZero[vecInterval])) *
+      scaZ <- sum(vecDrop[j]/(vecDrop[j] + 
+          (1-vecDrop[j])*vecNBZero[vecInterval])) *
         1/length(vecInterval)
     } else {
       scaZ <- NA
@@ -82,9 +82,9 @@ calcPostDrop_Vector <- function( vecMu,
 #' 
 #' @param matMu: (numeric matrix genes x cells)
 #'    Inferred zero inflated negative binomial drop out rates.
-#' @param matDispersions: (vector number of genes) Gene-wise 
+#' @param matDisp: (vector number of genes) Gene-wise 
 #'    negative binomial dispersion coefficients.
-#' @param matDropout: (numeric matrix genes x cells)
+#' @param matDrop: (numeric matrix genes x cells)
 #'    Inferred zero inflated negative binomial drop out rates.
 #' @param matboolZero: (bool matrix genes x cells)
 #'    Whether observation is zero.
@@ -98,9 +98,9 @@ calcPostDrop_Vector <- function( vecMu,
 #'    by drop-out.
 #' @export
 
-calcProbNB <- function( matMu,
-  matDispersions,
-  matDropout,
+calcPostDrop_Matrix <- function( matMu,
+  matDisp,
+  matDrop,
   matboolZero,
   matboolNotZeroObserved,
   scaWindowRadius ){
@@ -111,7 +111,7 @@ calcProbNB <- function( matMu,
   # Compute probability of zero counts under 
   # negative binomial model.
   matNBZero <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-    (matDispersions[i,]/(matDispersions[i,]+matMu[i,]))^matDispersions[i,]
+    (matDisp[i,]/(matDisp[i,]+matMu[i,]))^matDisp[i,]
   }))
   # Compute posterior of drop-out.
   matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
@@ -126,8 +126,8 @@ calcProbNB <- function( matMu,
         } else {
           vecInterval <- j
         }
-        scaZ <- sum(matDropout[i,j]/(matDropout[i,j] + 
-            (1-matDropout[i,j])*matNBZero[i,vecInterval])) *
+        scaZ <- sum(matDrop[i,j]/(matDrop[i,j] + 
+            (1-matDrop[i,j])*matNBZero[i,vecInterval])) *
           1/length(vecInterval)
       } else {
         scaZ <- NA

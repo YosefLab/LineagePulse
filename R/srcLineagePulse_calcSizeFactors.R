@@ -26,7 +26,7 @@
 #'    factor per cell.
 #' @export
 
-computeSizeFactors_LineagePulse <- function(matCountsProc){
+calcSizeFactors <- function(matCountsProc){
   
   boolUseDepth <- FALSE
   if(boolUseDepth){

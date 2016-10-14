@@ -9,7 +9,7 @@
 #' 
 #' @seealso Called by \code{fitImpulse_gene}.
 #' 
-#' @param vecTimepoints: (numeric vector number of timepoints) 
+#' @param vecPseudotime: (numeric vector number of timepoints) 
 #'    Time-points at which gene was sampled.
 #' @param vecCounts: (count vector number of samples) Count data.
 #' #' @param vecDropoutRate: (probability vector number of samples) 
@@ -31,68 +31,67 @@
 #'    corresponding to a peak.
 #' @export
 
-initialiseImpulseParametes <- function(vecTimepoints, 
-  vecCounts,
-  vecDropoutRate=NULL,
-  vecProbNB=NULL,
-  strSCMode="clustered",
-  vecTimepointAssign, 
+initialiseImpulseParametes <- function(vecCounts,
+  lsMuModelGlobal,
+  vecMu,
+  vecDisp,
+  vecDrop,
   vecNormConst,
-  strMode){
+  scaWindowRadius){
   
-  # Compute general statistics for initialisation:
-  # Expression means by timepoint
-  if(strMode=="batch" | strMode=="longitudinal"){
-    vecExpressionMeans <- sapply(vecTimepoints,
-      function(tp){mean(vecCounts[vecTimepointAssign==tp], na.rm=TRUE)})
-  } else if(strMode=="singlecell"){
-    if(strSCMode=="clustered"){
-      vecExpressionMeans <- unlist(sapply( vecTimepoints, function(tp){
-        sum((vecCounts/vecNormConst*vecProbNB)[vecTimepointAssign==tp], na.rm=TRUE)/
-          sum(vecProbNB[vecTimepointAssign==tp], na.rm=TRUE)
-      } ))
-      # Catch exception: sum(vecProbNB[vecTimepointAssign==tp])==0
-      vecExpressionMeans[is.na(vecExpressionMeans)] <- 0
-    } else if(strSCMode=="continuous"){
-      vecTimepointAssignSort <- sort(vecTimepointAssign, index.return=TRUE)
-      vecCountsSort <- vecCounts[vecTimepointAssignSort$ix]
-      vecProbNBSort <- vecProbNB[vecTimepointAssignSort$ix]
-      scaWindows <- 10
-      scaCellsPerClus <- round(length(vecCountsSort)/scaWindows)
-      vecExpressionMeans <- array(NA, scaWindows)
-      vecTimepoints <- array(NA, scaWindows)
-      scaidxNew <- 0
-      for(k in seq(1,scaWindows)){
-        # Define clusters as groups of cells of uniform size
-        scaidxLast <- scaidxNew + 1
-        scaidxNew <- scaidxLast + scaCellsPerClus - 1
-        # Pick up remaining cells in last cluster
-        if(k==scaWindows){scaidxNew=length(vecCountsSort)}
-        vecidxK <- seq(scaidxLast, scaidxNew)
-        # Infer negative binomial mean parameter
-        # Mean estimation here has to be replaced if size factors
-        # are used.
-        vecExpressionMeans[k] <- sum((vecCountsSort*vecProbNBSort)[vecidxK], na.rm=TRUE)/
-          sum(vecProbNBSort[vecidxK], na.rm=TRUE)
-        vecTimepoints[k] <- mean((vecTimepointAssignSort$x)[vecidxK], na.rm=TRUE)
-      }
-      # Catch exception: sum(vecProbNB[vecTimepointAssign==tp])==0
-      vecExpressionMeans[is.na(vecExpressionMeans)] <- 0
-    } else {
-      stop(paste0("ERROR: Unrecognised strSCMode in fitImpulse(): ",strSCMode))
-    }
+  # Compute posterior of drop-out
+  vecPostNB <- 1-calcPostDrop_Vector( vecMu=vecMu,
+    vecDisp=vecDisp,
+    vecDrop=vecDrop,
+    vecboolZero= vecCounts==0,
+    vecboolNotZeroObserved= !is.na(vecCounts)&vecCounts>0,
+    scaWindowRadius=scaWindowRadius )
+
+  # Observations are pooled to give rough estimates of expression
+  # levels in local environment. The pooling are either the clusters
+  # of cells (if the mean model is clusters) or cells grouped
+  # by proximity in pseudotime.
+  if(lsMuModelGlobal$strMuModel=="clusters"){
+    vecidxGroups <- lsMuModelGlobal$vecindClusterAssign
   } else {
-    stop(paste0("ERROR: Unrecognised strMode in fitImpulse(): ",strMode))
+    scaGroups <- 10
+    scaCellsPerGroup <- round(length(vecCounts)/scaGroups)
+    vecidxGroups <- array(NA, length(vecCounts))
+    scaidxNew <- 0
+    for(k in seq(1,scaGroups)){
+      # Define clusters as groups of cells of uniform size
+      scaidxLast <- scaidxNew + 1
+      scaidxNew <- scaidxLast + scaCellsPerGroup - 1
+      # Pick up remaining cells in last cluster
+      if(k==scaGroups){scaidxNew=length(vecCounts)}
+      vecidxGroups[seq(scaidxLast, scaidxNew)] <- k
+    }
   }
-  nTimepts <- length(vecTimepoints)
-  scaMaxMiddleMean <- max(vecExpressionMeans[2:(nTimepts-1)], na.rm=TRUE)
-  scaMinMiddleMean <- min(vecExpressionMeans[2:(nTimepts-1)], na.rm=TRUE)
+  
+  # Compute characteristics of the groups: Expression level
+  # and time coordinate.
+  vecGroupExprMean <- array(NA, scaGroups)
+  vecGroupTimeCoord <- array(NA, scaGroups)
+  for(k in unique(vecidxGroups)){
+    vecidxK <- match(k, vecidxGroups) 
+    vecGroupExprMean[k] <- sum(vecCounts[vecidxK]/vecNormConst[vecidxK]*
+        vecPostNB[vecidxK], na.rm=TRUE)/
+      sum(vecPostNB[vecidxK], na.rm=TRUE)
+    vecGroupTimeCoord[k] <- mean(lsMuModelGlobal$vecPseudotime[vecidxK], na.rm=TRUE)  
+  }
+  # Catch exception: sum(vecPostNB[vecTimepointAssign==tp])==0
+  vecGroupExprMean[is.na(vecGroupExprMean)] <- 0
+  
+  # Comute characteristics of the expression trajectory in groups.
+  nTimepts <- length(vecGroupTimeCoord)
+  scaMaxMiddleMean <- max(vecGroupExprMean[2:(nTimepts-1)], na.rm=TRUE)
+  scaMinMiddleMean <- min(vecGroupExprMean[2:(nTimepts-1)], na.rm=TRUE)
   # +1 to push indicices up from middle stretch to entire window (first is omitted here)
-  indMaxMiddleMean <- match(scaMaxMiddleMean,vecExpressionMeans[2:(nTimepts-1)]) + 1
-  indMinMiddleMean <- match(scaMinMiddleMean,vecExpressionMeans[2:(nTimepts-1)]) + 1
+  indMaxMiddleMean <- match(scaMaxMiddleMean,vecGroupExprMean[2:(nTimepts-1)]) + 1
+  indMinMiddleMean <- match(scaMinMiddleMean,vecGroupExprMean[2:(nTimepts-1)]) + 1
   # Gradients between neighbouring points
   vecGradients <- unlist( lapply(c(1:(nTimepts-1)),function(x){
-    (vecExpressionMeans[x+1]-vecExpressionMeans[x])/(vecTimepoints[x+1]-vecTimepoints[x])}) )
+    (vecGroupExprMean[x+1]-vecGroupExprMean[x])/(vecGroupTimeCoord[x+1]-vecGroupTimeCoord[x])}) )
   vecGradients[is.na(vecGradients) | !is.finite(vecGradients)] <- 0
   
   # Compute peak initialisation
@@ -104,10 +103,10 @@ initialiseImpulseParametes <- function(vecTimepoints,
   indUpperInflexionPoint <- indMaxMiddleMean - 1 + match(
     min(vecGradients[indMaxMiddleMean:length(vecGradients)], na.rm=TRUE), 
     vecGradients[indMaxMiddleMean:length(vecGradients)])
-  vecParamGuessPeak <- c(1,log(vecExpressionMeans[1]+1),
-    log(scaMaxMiddleMean+1),log(vecExpressionMeans[nTimepts]+1),
-    (vecTimepoints[indLowerInflexionPoint]+vecTimepoints[indLowerInflexionPoint+1])/2,
-    (vecTimepoints[indUpperInflexionPoint]+vecTimepoints[indUpperInflexionPoint+1])/2)
+  vecParamGuessPeak <- c(1,log(vecGroupExprMean[1]+1),
+    log(scaMaxMiddleMean+1),log(vecGroupExprMean[nTimepts]+1),
+    (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
+    (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2)
   
   # Compute valley initialisation
   # Beta: Has to be negative, Theta1: High, Theta2: Low, Theta3: High
@@ -118,11 +117,11 @@ initialiseImpulseParametes <- function(vecTimepoints,
   indUpperInflexionPoint <- indMinMiddleMean - 1 + match(
     max(vecGradients[indMinMiddleMean:(nTimepts-1)], na.rm=TRUE), 
     vecGradients[indMinMiddleMean:(nTimepts-1)])
-  vecParamGuessValley <- c(1,log(vecExpressionMeans[1]+1),
-    log(scaMinMiddleMean+1),log(vecExpressionMeans[nTimepts]+1),
-    (vecTimepoints[indLowerInflexionPoint]+vecTimepoints[indLowerInflexionPoint+1])/2,
-    (vecTimepoints[indUpperInflexionPoint]+vecTimepoints[indUpperInflexionPoint+1])/2 )
+  vecParamGuessValley <- c(1,log(vecGroupExprMean[1]+1),
+    log(scaMinMiddleMean+1),log(vecGroupExprMean[nTimepts]+1),
+    (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
+    (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2 )
   
-  lsParamGuesses <- list(peak=vecParamGuessPeak, valley=vecParamGuessValley)
-  return(lsParamGuesses)
+  return( list(peak=vecParamGuessPeak,
+    valley=vecParamGuessValley) )
 }
