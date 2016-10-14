@@ -254,14 +254,17 @@ runLineagePulse <- function(matCounts,
     dirOut=dirOut )
   matCountsProc <- lsProcessedSCData$matCountsProc
   matCountsProcFull <- lsProcessedSCData$matCountsProcFull
+  matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
   dirOut <- lsProcessedSCData$dirOut
   
   save(matCountsProc,file=file.path(dirOut,"LineagePulse_matCountsProc.RData"))
   save(matCountsProcFull,file=file.path(dirOut,"LineagePulse_matCountsProcFull.RData"))
+  save(matPiConstPredictorsProc,file=file.path(dirOut,"LineagePulse_matPiConstPredictorsProc.RData"))
   save(vecPseudotimeProc,file=file.path(dirOut,"LineagePulse_vecPseudotimeProc.RData"))
   # Clear memory
   rm(matCounts)
+  rm(matPiConstPredictors)
   rm(vecPseudotime)
   
   # Save input parameters into list (not data files)
@@ -342,7 +345,7 @@ runLineagePulse <- function(matCounts,
   print("5. Fit ZINB mixture model for both H1 and H0.")
   tm_fitmm <- system.time({
     lsZINBFit <- fitZINB( matCountsProc=matCountsProc,
-      matPiConstPredictors=matPiConstPredictors,
+      matPiConstPredictors=matPiConstPredictorsProc,
       lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
       scaWindowRadius=scaWindowRadius,

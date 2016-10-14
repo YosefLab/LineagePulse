@@ -66,19 +66,6 @@ processSCData <- function(matCounts,
       stop(paste0( "ERROR: ", strMatInput, " contains negative elements. Requires count data." ))
     }
   }
-
-  # Name genes if names are not given.
-  nameGenes <- function(matInput){
-    if(is.null(rownames(matInput))){
-      rownames(matInput) <- paste0("Region_", seq(1,nrow(matInput)))
-    }
-    if(any(is.na(rownames(matInput)))){
-      scaNAs <- sum(is.na(rownames(matInput)))
-      idxNAs <- is.na(rownames(matInput))
-      (rownames(matInput))[idxNAs] <- paste0("Gene_", seq(1,scaNAs))
-    }
-    return(matInput)
-  }
   
   # (I) Check input data
   # 1. matCounts
@@ -88,6 +75,17 @@ processSCData <- function(matCounts,
   # 2. matPiConstPredictors
   if(!is.null(matPiConstPredictors)){
     checkNumeric(matPiConstPredictors,"matPiConstPredictors")
+    if(!is.null(rownames(matCounts))){
+      if(!rownames(matCounts) %in% rownames(matPiConstPredictors)){
+        stop(paste0("ERROR: Some genes named in rows of matCounts do not ",
+          "occur in rows of matPiConstPredictors."))   
+      }
+    } else {
+      if(!is.null(rownames(matPiConstPredictors))){
+        stop(paste0("ERROR: Named genes in matPiConstPredictors",
+          " but not in matCounts.")).
+      }
+    }
   }
   
   # 3. vecPseudotime
@@ -152,13 +150,18 @@ processSCData <- function(matCounts,
   }
   
   # (III) Process data
-  # Convert from data frame to matrix for ziber()
+  # Convert from data frame to matrix
   if(is.list(matCounts)){
     matCounts <- data.matrix(matCounts)
   }
+  # Name genes if names not given
+  if(is.null(rownames(matCounts))){
+    rownames(matCounts) <- paste0("Gene_", seq(1,nrow(matCounts)))
+    rownames(matPiConstPredictors) <- rownames(matCounts)
+  }
   # Take out cells with NA pseudotime coordinate
   vecidxPT <- !is.na(vecPseudotime)
-  vecPseudotimeProc <- vecPseudotime[vecidxPT]
+  vecPseudotimeProc <- sort(vecPseudotime[vecidxPT])
   matCountsProc <- matCounts[,names(vecPseudotimeProc)]
   # Remove all zero or NA genes/cells
   vecidxGenes <- apply(matCountsProc, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
@@ -181,8 +184,8 @@ processSCData <- function(matCounts,
     print(paste0("Operating on subset of data, set by scaSmallRun: ",scaSmallRun," out of ",dim(matCountsProcFull)[1]," genes."))
   }
   
-  # Name nameless gene:
-  matCountsProc <- nameGenes(matCountsProc)
+  # Reduce matPiConstPredictors to genes in matCountsProc
+  matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
   
   # Process output directory
   if(is.null(dirOut)){
@@ -191,6 +194,7 @@ processSCData <- function(matCounts,
   
   return(list(matCountsProc=matCountsProc,
     matCountsProcFull=matCountsProcFull,
+    matPiConstPredictorsProc=matPiConstPredictorsProc,
     vecPseudotimeProc=vecPseudotimeProc,
     dirOut=dirOut ))
 }
