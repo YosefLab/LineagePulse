@@ -1,5 +1,5 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++#++++    Decompress parameters: Compute parameter values from model  ++++++#
+#++++++++    Decompress parameters: Compute parameter values from model  ++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 # EXAMPLE CODE:
@@ -164,7 +164,7 @@ decompressDispByGene <- function(vecDispModel,
 #' @seealso Called by \code{fitZINB}.
 #'
 #' @param vecPiModel: (numerical matrix genes x number of model parameters)
-#'    {offset parameter, log(mu) paramter, parameters belonging to
+#'    {offset parameter, log(mu) parameter, parameters belonging to
 #'    constant predictors}
 #'    Parameters of dropout rate model for all cells.
 #' @param vecMu: (numerical vector number of genes)

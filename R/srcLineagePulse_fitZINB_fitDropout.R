@@ -88,10 +88,56 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #'    Other gene-specific predictors can be added.
 #' @param vecCounts: (numeric vector number of genes) Observed expression values 
 #'    of gene in target cell.
-#' @param matMu: (matrix genes x neighbourhood) Negative binomial
-#'    mean parameter estimate.
-#' @param matDisp: (matrix genes x neighbourhood) Negative binomial
-#'    dispersion parameter estimate.
+#' @param lsMuModel: (list length 2)
+#'    All objects necessary to compute mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModel: (list length 2)
+#'    All objects necessary to compute dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strDispModel: (str) {"constant"} 
+#'        Name of the dispersion model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'      }
+#'    }
 #' @param scaNormConst: (numeric vector number of cells in neighbourhood) 
 #'    Model scaling factors for cell which takes
 #'    sequencing depth into account (size factors). One size

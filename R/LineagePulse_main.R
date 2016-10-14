@@ -14,9 +14,6 @@ library(BiocParallel)
 library(compiler)
 library(ggplot2)
 library(MASS)
-#source("/Users/davidsebastianfischer/MasterThesis/code/ImpulseDE2/R/ImpulseDE2_main.R")
-#source("/data/yosef2/users/fischerd/code/ImpulseDE2/R/ImpulseDE2_main.R")
-
 setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
 
@@ -62,63 +59,75 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #' 
 #' This function is the wrapper function for the LineagePulse algorithm,
 #' which performs data processing, clustering, zero-inflated negative
-#' binomial model identification (hyperparameter estimation) and 
-#' model-based differential expression analysis with ImpulseDE2 in 
-#' the singlecell mode or model-free differential expression analysis.
-#' Differential expression is defined as differential expression over
-#' time within one condition, PseuoDE does not handle case-control
-#' comparisons at the moment.
+#' binomial model estimation), differential expression analysis and
+#' output validation. Read up on the options you have in LineagePulse
+#' in the input parameter annotation of this function. In short,
+#' you have to:
+#' 1. Supply data: Count data (matCounts) and pseudotime coordinates
+#' of the cells (vecPseudotime).
+#' 2. Decide whether you want to run a test run on a few genes only 
+#' (scaSmallRun).
+#' 3. Chose the model constraining mean (strMuModel) and dispersion 
+#' parameters (strDispModel) for each gene. If you run clusters,
+#' you may decide to force the number of clusters (scaKCluster)
+#' rather than using internal model selection or use clusters
+#' based on true time (time of sampling) (boolClusterInPseudotime).
+#' 4. Decide whether you want to use local negative binomial model
+#' smooting (scaWindowRadius). 
+#' 5. Supply gene-specific drop-out predictors if wanted.
+#' 6. Set optimisation parameters (boolEstimateNoiseBasedOnH0,
+#' boolVecWindowsAsBFGS, boolCoEstDispMean, scaMaxEstimationCycles)
+#' 7. Chose the number of processes you want to use (scaNProc), LineagePulse
+#' is parallelised on all computation intensive steps.
+#' 8. Set the validation output you want to receive to visualise
+#' the results (boolPlotZINBfits, boolValidateZINBfit).
+#' 9. Set the level of detail with which you want to follow
+#' progress through text printed on the console during a run
+#' (verbose, boolSuperVerbose).
+#' 10. Chose the directory into which you want to have 
+#' temporary and final output objects to be saved into
+#' (dirOut).
 #' 
-#' @details The computational complexity of ImpulseDE2 is linear in the
+#' Note on parameter objects:
+#' To save memory, not the entire parameter matrix (genes x cells) but
+#' the parmater models are stored in the objects lsMuModel, lsDispModel
+#' and lsDropModel. These objects are described in detail in the annotation
+#' of the return values of the function. In short, these object contain
+#' the gene/cell-wise parameters of the model used to constrain the parameter
+#' in question and the predictors necessary to evaluate the parameter model
+#' to receive the observation-wise paramter values. Example: Impulse model
+#' for the mean parameter: lsMuModel contains the parameter estimates for an
+#' impulse model for each gene and pseudotime coordinates. Therefore, the
+#' mean parameter for each observation can be computed as the value of the
+#' impulse model evaluated at the pseudotime points for each gene.
+#' 
+#' @details The computational complexity of LineagePulse is linear in the
 #' number of genes and linear in the number of cells.
-#' \enumerate{
-#' \item \textbf{Cluster cells in pseudo-time with K-means:}
-#' The number of clusters $K$ is selected based on the gap-statistic.
-#' \item \textbf{Hyperparameter estimation:}
-#' A zero-inflated negative binomial model is fit to the clusters for each gene with SCONE.
-#' Drop-out rates and dispersion factors are retained as hyperparameters.
-#' \item \textbf{Differential expression analysis in pseudo time:}
-#' \enumerate{
-#'    \item \textbf{Model-free:}
-#'    A zero-inflated negative binomial model with an overall mean is fit to the data with SCONE (null model).
-#'    The fit of the null model is compared to the fit of the alternative model (cluster-wise zero-inflated negative binomial models from hyperparameter estimation)
-#'    with a loglikelihood ratio test.
-#'    \item \textbf{Model-based:}
-#'    ImpulseDE2 (in the batch mode) fits the impulse model to the data based on a zero-inflated negative binomial cost function 
-#'    with drop-out rate and dispersion factor set by SCONE.
-#'    ImpulseDE2 performs differential expression analysis based on a loglikelihood ratio test.
-#'    }
-#' }
 #' 
-#' @aliases LineagePulse
+#' @aliases LineagePulse wrapper
 #' 
 #' @param matCounts: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
+#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
+#' @param boolClusterInPseudotime: (bool) [Default TRUE]
+#'    Whether to cluster cells in pseudotime. If FALSE,
+#'    time points supplied in vecPseudotime are treated as clusters.
+#'    This requires that time points in vecPseudotime occur 
+#'    multiple times and are for example the real time of sampling
+#'    of a cell (e.g. how many hours into the experiment).
 #' @param scaKCluster: (integer) [Default NULL] Forces number of centroids
 #'    in K-means to be K: setting this to an integer (not NULL) skips model
 #'    selection in clusterting.
 #' @param scaSmallRun: (integer) [Default NULL] Number of rows
 #'    on which ImpulseDE2 is supposed to be run, the full
 #'    data set is only used for size factor estimation.
-#' @param boolPseudotime: (bool) [Default TRUE]
-#'    Whether to treat time as pseudotime or real time. If FALSE,
-#'    time points are treated as clusters. This means that the time
-#'    of sampling of the single cells is used as their time coordinate:
-#'    e.g. 0,24,28,72 hours in the HSMM data set of the Monocle paper.
-#' @param boolContPseudotimeFit: (bool) [Default TRUE]
-#'    Whether to fit the impulse model to the pseudotime coordinates
-#'    of the cells. If false, the pseudotime centroids of the clusters
-#'    are chose: Impulse fitting is done based on the same clusters
-#'    as hyperparameter estimation.
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
 #' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
 #'    Whether to co-estimate logistic drop-out model with the 
 #'    constant null model or with the alternative model. The
@@ -152,6 +161,10 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #'    with the dispersion parameters). This may generally lead to better
 #'    convergence as the steps in coordinate-ascent are in a larger
 #'    space, closer to full gradient ascent.
+#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
+#'    of estimation cycles performed in fitZINB(). One cycle
+#'    contain one estimation of of each parameter of the 
+#'    zero-inflated negative binomial model as coordinate ascent.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -160,17 +173,19 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
 #' @param boolPlotZINBfits: (bool) [Default TRUE]
 #'    Whether to plot zero-inflated negative binomial fits to selected genes
 #'    and clusters.
 #' @param boolValidateZINBfit: (bool) [Default TRUE]
 #'    Whether to generate evaluation metrics and plots
 #'    for parameter values of inferred ZINB model.
-#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
-#'    of estimation cycles performed in fitZINB(). One cycle
-#'    contain one estimation of of each parameter of the 
-#'    zero-inflated negative binomial model as coordinate ascent.
-#' @param nProc: (scalar) [Default 1] Number of processes for 
+#' @param scaNProc: (scalar) [Default 1] Number of processes for 
 #'    parallelisation.
 #' @param verbose: (bool) [Defaul TRUE]
 #'    Whether progress of coordinate ascent within fitZINB is 
@@ -178,6 +193,13 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #' @param boolSuperVerbose: (bool) [Defaul FALSE]
 #'    Whether coordinate ascent within fitZINB is followed
 #'    step-by-step rather than reporting once per iteration.
+#'    Note: This increases run-time as the loglikelihood is computed
+#'    more often. This is usually not a major contributor to runtime
+#'    though.
+#' @param boolBPlog: (bool) [Default FALSE] Save status of each 
+#'    worker into text files in parallelisation. Have to include
+#'    library(BatchJobs) above and set the BiocParallel registration
+#'    to adjust the reporting. Use only for debugging.
 #' @param dirOut: (str directory) [Default NULL]
 #'    Directory to which detailed output is saved to.
 #'    Defaults to current working directory if NULL.
@@ -197,23 +219,23 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #' 
 #' @export
 
-runLineagePulse <- function(matCounts, 
+runLineagePulse <- function(matCounts,
+  matPiConstPredictors=NULL,
   vecPseudotime,
-  scaKClusters=NULL,
   scaSmallRun=NULL,
-  boolPseudotime = TRUE,
-  boolContPseudotimeFit = TRUE,
+  strMuModel="impulse",
+  strDispModel="constant",
+  boolClusterInPseudotime=TRUE,
+  scaKClusters=NULL,
   scaWindowRadius=NULL,
   boolEstimateNoiseBasedOnH0=FALSE,
   boolVecWindowsAsBFGS=FALSE,
   boolCoEstDispMean=TRUE,
-  strMuModel="impulse",
-  strDispModel = "constant",
+  scaMaxEstimationCycles=20,
+  scaNProc=1,
   boolPlotZINBfits = FALSE,
   boolValidateZINBfit=TRUE,
-  scaMaxEstimationCycles=20,
-  nProc=1,
-  verbose=TRUE,
+  boolVerbose=TRUE,
   boolSuperVerbose=FALSE,
   boolBPlog=FALSE,
   dirOut=NULL ){
@@ -221,10 +243,14 @@ runLineagePulse <- function(matCounts,
   # 1. Data preprocessing
   print("1. Data preprocessing:")
   lsProcessedSCData <- processSCData( matCounts=matCounts,
+    matPiConstPredictors=matPiConstPredictors,
     vecPseudotime=vecPseudotime,
     scaSmallRun=scaSmallRun,
     strMuModel=strMuModel,
+    strDispModel=strDispModel,
     scaWindowRadius=scaWindowRadius,
+    boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
+    boolCoEstDispMean=boolCoEstDispMean,
     dirOut=dirOut )
   matCountsProc <- lsProcessedSCData$matCountsProc
   matCountsProcFull <- lsProcessedSCData$matCountsProcFull
@@ -241,8 +267,7 @@ runLineagePulse <- function(matCounts,
   # Save input parameters into list (not data files)
   lsInputParam <- list( scaKClusters=scaKClusters,
     scaSmallRun=scaSmallRun,
-    boolPseudotime=boolPseudotime,
-    boolContPseudotimeFit = boolContPseudotimeFit,
+    boolClusterInPseudotime=boolClusterInPseudotime,
     scaWindowRadius=scaWindowRadius,
     boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
     boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
@@ -251,46 +276,44 @@ runLineagePulse <- function(matCounts,
     boolPlotZINBfits=boolPlotZINBfits,
     boolValidateZINBfit=boolValidateZINBfit,
     scaMaxEstimationCycles=scaMaxEstimationCycles,
-    nProc=nProc,
-    verbose=verbose,
+    scaNProc=scaNProc,
+    boolVerbose=boolVerbose,
     boolSuperVerbose=boolSuperVerbose,
     dirOut=dirOut )
   save(lsInputParam,file=file.path(dirOut,"LineagePulse_lsInputParam.RData"))
   rm(lsInputParam)
   
+  # 2. Inialise parallelisation
   # Create log directory for parallelisation output
   if(boolBPlog){
     dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
     dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
   }
   
-  print(paste0("Register parallelisation parameters: ", nProc, " threads."))
+  print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
   # Set the parallelisation environment in BiocParallel:
-  if(nProc > 1){
+  if(scaNProc > 1){
     # Set worker time out to 60*60*24*7 (7 days)
     # For single machine (FORK) cluster
-    register(MulticoreParam(workers=nProc)) 
+    register(MulticoreParam(workers=scaNProc)) 
     #timeout=60*60*24*7,
     #log=boolBPlog, 
     #threshold="INFO", 
     #logdir=dirBPLogs))
     # For multiple machine (SOCK) cluster
-    #register(SnowParam(workers=nProc, timeout=60*60*24*7))
+    #register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
     # For debugging in serial mode
   } else {
     register(SerialParam())
   }
   
-  # 2. Cluster cells in pseudo-time
+  # 3. Cluster cells in pseudo-time
   print("2. Clustering:")
   tm_clustering <- system.time({
-    if(boolPseudotime){
+    if(boolClusterInPseudotime){
       # Cluster in pseudotime
       lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
         Kexternal=scaKClusters)
-      # Plot clustering
-      plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
-        lsResultsClustering=lsResultsClustering)
     } else {
       # Take observation time points as clusters
       print("Chose grouping by given time points.")
@@ -300,24 +323,13 @@ runLineagePulse <- function(matCounts,
       lsResultsClustering[[3]] <- length(unique(vecPseudotimeProc))
       names(lsResultsClustering) <- c("Assignments","Centroids","K")
     }
+    # Plot clustering
+    plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
+      lsResultsClustering=lsResultsClustering)
   })
   save(lsResultsClustering,file=file.path(dirOut,"LineagePulse_lsResultsClustering.RData"))
   print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
     " min",sep=""))
-  
-  # 3. Create annotation table
-  print("3. Create annotation table")
-  if(boolContPseudotimeFit){
-    # Fit time trace by cell
-    dfAnnotation <- createAnnotationByCell(matCounts=matCountsProc,
-      vecPseudotime=vecPseudotimeProc)
-  } else {
-    # Fit time trace by cluster
-    dfAnnotation <- createAnnotationByCluster(matCounts=matCountsProc,
-      vecPseudotime=vecPseudotimeProc,
-      lsResultsClustering=lsResultsClustering)
-  }
-  save(dfAnnotation,file=file.path(dirOut,"LineagePulse_dfAnnotation.RData"))
   
   # 4. Compute size factors
   print("4. Compute size factors:")
@@ -329,7 +341,8 @@ runLineagePulse <- function(matCounts,
   # 5. Fit ZINB mixture model for both H1 and H0.
   print("5. Fit ZINB mixture model for both H1 and H0.")
   tm_fitmm <- system.time({
-    lsZINBFit <- fitZINB( matCountsProc=matCountsProc, 
+    lsZINBFit <- fitZINB( matCountsProc=matCountsProc,
+      matPiConstPredictors=matPiConstPredictors,
       lsResultsClustering=lsResultsClustering,
       vecSizeFactors=vecSizeFactors,
       scaWindowRadius=scaWindowRadius,
@@ -340,7 +353,7 @@ runLineagePulse <- function(matCounts,
       strDispModel=strDispModel,
       vecPseudotime=vecPseudotimeProc,
       scaMaxEstimationCycles=scaMaxEstimationCycles,
-      verbose=verbose,
+      boolVerbose=boolVerbose,
       boolSuperVerbose=boolSuperVerbose )
     lsMuModelH1 <- lsZINBFit$lsMuModelH1
     lsDispModelH1 <- lsZINBFit$lsDispModelH1
@@ -414,9 +427,6 @@ runLineagePulse <- function(matCounts,
     suppressWarnings( validateOutput(dirOutLineagePulse=dirOut,
       dirOutValidation=dirOut) )
   }
-  
-  # TODO: return mu matrix with constant fits and impulse fits
-  # if significant.
   
   print("LineagePulse complete.")
   return(dfDEAnalysis=dfDEAnalysis)

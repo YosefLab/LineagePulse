@@ -449,6 +449,28 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #'    dispersion parameter estimate.
 #' @param vecImpulseParamGuess: (numerical vector impulse parameters)
 #'    Previous impulse model parameter values.
+#' @param lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'    \itemize{
+#'      \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'    "windows"} Name of the mean model.
+#'      \item scaNumCells: (scalar) [Default NA] Number of cells
+#'    for which model is evaluated. Used for constant model.
+#'      \item vecPseudotime: (numerical vector number of cells)
+#'    [Default NA] Pseudotime coordinates of cells. Used for
+#'    impulse model.
+#'      \item vecindClusterAssign: (integer vector length number of
+#'    cells) [Default NA] Index of cluster assigned to each cell.
+#'    Used for clusters model.
+#'      \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'    of a gene are simultaneously estiamted as a vector with BFGS
+#'    in windows mode.
+#'      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'    for BFGS estimation of impulse model with optim (termination criterium).
+#'      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'    change in objective function for BFGS estimation of impulse 
+#'    model with optim (termination criterium).
+#'    }
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
@@ -466,10 +488,6 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #'    Pseudotime coordinates of cells.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
-#' @param MAXIT: (integer) [Default 1000] Maximum number of 
-#'    estimation iterations optim.
-#' @param RELTOL: (scalar) [Default sqrt(.Machine$double.eps)]
-#'    Relative tolerance for optim.
 #' 
 #' @return list (length 3)
 #'    \itemize{
@@ -487,9 +505,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   matDropoutLinModel,
   vecPiConstPredictors,
   vecNormConst,
-  scaWindowRadius=NULL,
-  MAXIT=1000,
-  RELTOL=sqrt(.Machine$double.eps) ){
+  scaWindowRadius=NULL ){
   
   # Set reporter parameters for optim BFGS optimisation
   trace <- 0 # Report typ: 0 none, 2 yes
@@ -538,7 +554,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     vecNormConst=vecNormConst,
     vecindTimepointAssign=vecindTimepointAssign,
     scaWindowRadius=scaWindowRadius,
-    MAXIT=MAXIT, RELTOL=RELTOL, 
+    MAXIT=lsMuModelGlobal$MAXIT, 
+    RELTOL=lsMuModelGlobal$RELTOL, 
     trace=trace, REPORT=REPORT )  
   if(boolUseNewInits){
     # 2. Initialisation: Peak
@@ -552,7 +569,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=MAXIT, RELTOL=RELTOL, 
+      MAXIT=lsMuModelGlobal$MAXIT, 
+      RELTOL=lsMuModelGlobal$RELTOL, 
       trace=trace, REPORT=REPORT )
     # 3. Initialisation: Valley
     lsFitValley <- fitDispConstMuImpulseOneInitZINB(
@@ -565,7 +583,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=MAXIT, RELTOL=RELTOL, 
+      MAXIT=lsMuModelGlobal$MAXIT, 
+      RELTOL=lsMuModelGlobal$RELTOL, 
       trace=trace, REPORT=REPORT )
     
     # (IV) Find best fit
@@ -641,64 +660,76 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecPseudotime: (numerical vector number of cells)
-#'    [Default NULL]
-#'    Pseudotime coordinates of cells. Only required if mean model
-#'    or dispersion model are fit as a function of pseudotime, 
-#'    e.g. impulse model for means.
-#' @param vecindClusterAssign: (integer vector length number of
-#'    cells) [Default NULL] Index of cluster assigned to each cell.
-#' @param matMu: (numeric matrix genes x cells) [Default NULL]
-#'    Inferred zero inflated negative binomial mean parameters on 
-#'    which estimation in this step  is conditioned on. 
-#'    Not required for all models.
-#' @param  matDispersions: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial dispersion parameters
-#'    on which estimation in this step is conditioned on.
-#' @param matDropout: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates
-#'    on which estimation in this step is conditioned on.
-#'    These are the observation-wise point estimates, not the
-#'    logistic functions.
-#' @param matPiConstPredictors: (numeric matrix genes x external 
-#'    predictors) [Default NULL]
-#' @param matDropoutLinModel: (numeric matrix genes x predictors)
-#'    [Default NULL]
-#' @param matImpulseParam: (numeric matrix genes x impulse 
-#'    parameters 6) Inferred impulse model parameters
-#'    if strMuModel is "impulse". NA for all other strMuModel.
-#' @param matboolZero: (numeric matrix genes x cells)
-#'    [Default NULL] Whether observation is zero.
-#' @param matboolNotZeroObserved: (numeric matrix genes x cells)
-#'    [Default NULL] Whether observation is non-zero and real.
+#' @param lsMuModel: (list length 2)
+#'    All objects necessary to compute mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModel: (list length 2)
+#'    All objects necessary to compute dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strDispModel: (str) {"constant"} 
+#'        Name of the dispersion model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'      }
+#'    }
+#' @param lsDropModel: (list length 2)
+#'    All objects necessary to compute drop-out parameters for all
+#'    observations, omitting mean parameters (which are stored in lsMeanModel).
+#'    \itemize{
+#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
+#'    {offset parameter, log(mu) parameter, parameters belonging to
+#'    constant predictors}
+#'    Parameters of drop-out model for each cell
+#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
+#'    }
 #' @param scaWindowRadius: (integer) [Default NULL]
 #'    Smoothing interval radius of cells within pseudotemporal
 #'    ordering. Each negative binomial model inferred on
 #'    observation [gene i, cell j] is fit and evaluated on 
 #'    the observations [gene i, cells in neighbourhood of j],
 #'    the model is locally smoothed in pseudotime.
-#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
-#'    mean parameters of a gene are co-estimated in "windows"
-#'    mode with BFGS algorithm (optimisation with dimensionality
-#'    of number of cells) or estimated one by one, conditioned
-#'    one the latest estimates of neighbours. The latter case
-#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
-#'    and each mean parameter is optimised once only.
-#' @param strMuModel: (str) {"constant"}
-#'    [Default "impulse"] Model according to which the mean
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
-#' @param MAXIT_BFGS_Impulse: (scalar) [Default 1000]
-#'    Maximum number of BFGS iterations used to estiamte
-#'    an impulse model for a gene.
-#' @param RELTOL_BFGS_Impulse: (scalar) [Default 
-#'    sqrt(.Machine$double.eps)] Minimum relativ decrease
-#'    in the loglikelihood objective within one iteration
-#'    of BFGS impulse model fitting to gene for the estimation
-#'    to not complete as converged. The default is the 
-#'    default of optim which is overridden by the value set in
-#'    fitZINB by default in LineagePulse to save computation 
-#'    time.
 #' 
 #' @return list (length 3)
 #'    \itemize{
@@ -739,9 +770,7 @@ fitZINBMuDisp <- function( matCountsProc,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           vecNormConst=vecSizeFactors,
-          scaWindowRadius=scaWindowRadius,
-          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_Impulse,
-          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_Impulse )
+          scaWindowRadius=scaWindowRadius )
         return(fitDispMu)
       })
       matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))

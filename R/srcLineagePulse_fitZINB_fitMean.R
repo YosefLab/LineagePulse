@@ -846,6 +846,28 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #'    of gene in cells in cluster.
 #' @param vecImpulseParamGuess: (numerical vector impulse parameters)
 #'    Previous impulse model parameter values.
+#' @param lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'    \itemize{
+#'      \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'    "windows"} Name of the mean model.
+#'      \item scaNumCells: (scalar) [Default NA] Number of cells
+#'    for which model is evaluated. Used for constant model.
+#'      \item vecPseudotime: (numerical vector number of cells)
+#'    [Default NA] Pseudotime coordinates of cells. Used for
+#'    impulse model.
+#'      \item vecindClusterAssign: (integer vector length number of
+#'    cells) [Default NA] Index of cluster assigned to each cell.
+#'    Used for clusters model.
+#'      \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'    of a gene are simultaneously estiamted as a vector with BFGS
+#'    in windows mode.
+#'      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'    for BFGS estimation of impulse model with optim (termination criterium).
+#'      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'    change in objective function for BFGS estimation of impulse 
+#'    model with optim (termination criterium).
+#'    }
 #' @param vecDisp: (numerical vector) Negative binomial
 #'    dispersion parameter estimates for each cell.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
@@ -854,9 +876,6 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter.
-#' @param vecProbNB: (vector number of cells) Posterior probability
-#'    of not being drop-out for all observations. Used for impulse
-#'    model initialisation (not for likelihood evaluation!).
 #' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
@@ -865,10 +884,6 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #'    Pseudotime coordinates of cells.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
-#' @param MAXIT: (integer) [Default 1000] Maximum number of 
-#'    estimation iterations optim.
-#' @param RELTOL: (scalar) [Default sqrt(.Machine$double.eps)]
-#'    Relative tolerance for optim.
 #' 
 #' @return list (length 3)
 #'    \itemize{
@@ -884,7 +899,6 @@ fitMuImpulseZINB <- function(vecCounts,
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecProbNB,
   vecNormConst,
   scaWindowRadius=NULL,
   MAXIT=1000,
@@ -937,7 +951,8 @@ fitMuImpulseZINB <- function(vecCounts,
     vecNormConst=vecNormConst,
     vecindTimepointAssign=vecindTimepointAssign,
     scaWindowRadius=scaWindowRadius,
-    MAXIT=MAXIT, RELTOL=RELTOL, 
+    MAXIT=lsMuModelGlobal$MAXIT, 
+    RELTOL=lsMuModelGlobal$RELTOL, 
     trace=trace, REPORT=REPORT )  
   if(boolUseNewInits){
     # 2. Initialisation: Peak
@@ -951,7 +966,8 @@ fitMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=MAXIT, RELTOL=RELTOL, 
+      MAXIT=lsMuModelGlobal$MAXIT, 
+      RELTOL=lsMuModelGlobal$RELTOL,  
       trace=trace, REPORT=REPORT )
     # 3. Initialisation: Valley
     lsFitValley <- fitMuImpulseOneInitZINB(
@@ -964,7 +980,8 @@ fitMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=MAXIT, RELTOL=RELTOL, 
+      MAXIT=lsMuModelGlobal$MAXIT, 
+      RELTOL=lsMuModelGlobal$RELTOL,  
       trace=trace, REPORT=REPORT )
     
     # (IV) Find best fit
@@ -1036,6 +1053,70 @@ fitMuImpulseZINB <- function(vecCounts,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
+#' @param lsMuModel: (list length 2)
+#'    All objects necessary to compute mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModel: (list length 2)
+#'    All objects necessary to compute dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strDispModel: (str) {"constant"} 
+#'        Name of the dispersion model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'      }
+#'    }
+#' @param lsDropModel: (list length 2)
+#'    All objects necessary to compute drop-out parameters for all
+#'    observations, omitting mean parameters (which are stored in lsMeanModel).
+#'    \itemize{
+#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
+#'    {offset parameter, log(mu) parameter, parameters belonging to
+#'    constant predictors}
+#'    Parameters of drop-out model for each cell
+#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
+#'    }
 #' @param scaWindowRadius: (integer) [Default NULL]
 #'    Smoothing interval radius of cells within pseudotemporal
 #'    ordering. Each negative binomial model inferred on
@@ -1043,7 +1124,11 @@ fitMuImpulseZINB <- function(vecCounts,
 #'    the observations [gene i, cells in neighbourhood of j],
 #'    the model is locally smoothed in pseudotime.
 #' 
-#' @return 
+#' @return list (length 2)
+#'    \itemize{
+#'      \item matMuModel:
+#'      \item vecConvergence:
+#'    }
 #' @export
 
 fitZINBMu <- function( matCountsProc,
@@ -1162,9 +1247,7 @@ fitZINBMu <- function( matCountsProc,
         matDropoutLinModel=lsDropModel$matDropoutLinModel,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
         vecNormConst=vecSizeFactors,
-        scaWindowRadius=scaWindowRadius,
-        MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_Impulse,
-        RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_Impulse )
+        scaWindowRadius=scaWindowRadius )
       return(fitMu)
     })
     matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$vecImpulseParam ))

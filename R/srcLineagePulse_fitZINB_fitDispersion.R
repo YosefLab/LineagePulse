@@ -114,6 +114,8 @@ evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell. 
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
@@ -124,8 +126,6 @@ fitDispZINB <- function( scaDispGuess,
   vecMuEst,
   vecSizeFactors,
   vecDropoutRateEst,
-  vecboolNotZeroObserved,
-  vecboolZero,
   scaWindowRadius=NULL ){ 
   
   fitDisp <- tryCatch({ 
@@ -136,8 +136,8 @@ fitDispZINB <- function( scaDispGuess,
       vecMuEst=vecMuEst,
       vecSizeFactors=vecSizeFactors,
       vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero,
+      vecboolNotZeroObserved= !is.na(vecCounts)&vecCounts>0, 
+      vecboolZero= vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
       control=list(maxit=1000, fnscale=-1)
@@ -186,6 +186,70 @@ fitDispZINB <- function( scaDispGuess,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
+#' @param lsMuModel: (list length 2)
+#'    All objects necessary to compute mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModel: (list length 2)
+#'    All objects necessary to compute dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strDispModel: (str) {"constant"} 
+#'        Name of the dispersion model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'      }
+#'    }
+#' @param lsDropModel: (list length 2)
+#'    All objects necessary to compute drop-out parameters for all
+#'    observations, omitting mean parameters (which are stored in lsMeanModel).
+#'    \itemize{
+#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
+#'    {offset parameter, log(mu) parameter, parameters belonging to
+#'    constant predictors}
+#'    Parameters of drop-out model for each cell
+#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
+#'    }
 #' @param scaWindowRadius: (integer) [Default NULL]
 #'    Smoothing interval radius of cells within pseudotemporal
 #'    ordering. Each negative binomial model inferred on
@@ -222,8 +286,6 @@ fitZINBDisp <- function( matCountsProc,
         vecSizeFactors=vecSizeFactors,
         vecMuEst=vecMuParam,
         vecDropoutRateEst=vecDropoutParam,
-        vecboolNotZeroObserved= !is.na(matCountsProc[i,]) & matCountsProc[i,]>0, 
-        vecboolZero= matCountsProc[i,]==0,
         scaWindowRadius=scaWindowRadius )
       return(fitDisp)
     })

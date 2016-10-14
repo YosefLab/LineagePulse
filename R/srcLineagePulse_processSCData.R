@@ -30,10 +30,14 @@
 #' @export
 
 processSCData <- function(matCounts,
+  matPiConstPredictors,
   vecPseudotime,
   scaSmallRun,
   strMuModel,
+  strDispModel,
   scaWindowRadius,
+  boolCoEstDispMean,
+  boolVecWindowsAsBFGS,
   dirOut ){
   
   # Check whether object was supplied (is not NULL).
@@ -76,19 +80,25 @@ processSCData <- function(matCounts,
     return(matInput)
   }
   
-  # (I) Check input
+  # (I) Check input data
   # 1. matCounts
   checkNull(matCounts,"matCounts")
   checkCounts(matCounts,"matCounts")
   
-  # 2. vecPseudotime
+  # 2. matPiConstPredictors
+  if(!is.null(matPiConstPredictors)){
+    checkNumeric(matPiConstPredictors,"matPiConstPredictors")
+  }
+  
+  # 3. vecPseudotime
   checkNull(vecPseudotime,"vecPseudotime")
   checkNumeric(vecPseudotime,"vecPseudotime")
   if(!all(names(vecPseudotime) %in% colnames(matCounts))){
     stop("ERROR: Not all cells in vecPseudotime are given matCounts.")
   }
   
-  # 3. Check scaSmallRun
+  # (II) Check settings
+  # 1. Check scaSmallRun
   if(!is.null(scaSmallRun)){
     checkCounts(scaSmallRun, "scaSmallRun")
     if(scaSmallRun > dim(matCounts)[1]){
@@ -97,7 +107,7 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 4. Check mean model
+  # 2. Check mean model
   if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
     stop(paste0("strMuModel not recognised: ", strMuModel, 
       " Must be one of: windows, clusters, impulse, constant."))
@@ -113,8 +123,35 @@ processSCData <- function(matCounts,
       "constant, windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
       " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
   }
+  if(boolVecWindowsAsBFGS & strMuModel=="windows"){
+    stop(paste0("boolVecWindowsAsBFGS set to TRUE but strMuModel=",
+      boolVecWindowsAsBFGS, ". boolVecWindowsAsBFGS is only used",
+      " with strMuModel=windows."))
+  }
   
-  # (II) Process data
+  # 3. Check dispersion model
+  if(!(strDispModel %in% c("constant"))){
+    stop(paste0("strDispModel not recognised: ", strDispModel, 
+      " Must be one of: constant."))
+  }
+  
+  # 4. Check co-estimation models
+  # Note: These functions are implemented separately from
+  # single mean and dispersion estimation.
+  if(boolCoEstDispMean){
+    if(!(strMuModel %in% c("clusters","impulse","constant"))){
+    stop(paste0("strMuModel not recognised: ", strMuModel, 
+      " Must be one of: clusters, impulse, constant if co-estimation",
+        " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+    }
+    if(!(strDispModel %in% c("constant"))){
+      stop(paste0("strDispModel not recognised: ", strDispModel, 
+        " Must be one of: constant if co-estimation",
+        " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+    }
+  }
+  
+  # (III) Process data
   # Convert from data frame to matrix for ziber()
   if(is.list(matCounts)){
     matCounts <- data.matrix(matCounts)
