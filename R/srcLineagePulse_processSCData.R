@@ -105,11 +105,7 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 2. Check mean model
-  if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
-    stop(paste0("strMuModel not recognised: ", strMuModel, 
-      " Must be one of: windows, clusters, impulse, constant."))
-  }
+  # 2. Check general mean estimation settings
   if(!is.null(scaWindowRadius)){
     if(scaWindowRadius==0){
       stop(paste0("LineagePulse received scaWindowRadius=0.", 
@@ -131,10 +127,18 @@ processSCData <- function(matCounts,
       " Means have to be regularised by smoothing in windows mode."))
   }
   
-  # 3. Check dispersion model
-  if(!(strDispModel %in% c("constant"))){
-    stop(paste0("strDispModel not recognised: ", strDispModel, 
-      " Must be one of: constant."))
+  # 3. Check single mean-/dispersion estimation models
+  if(!boolCoEstDispMean){
+    # a) Mean models
+    if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
+      stop(paste0("strMuModel not recognised: ", strMuModel, 
+        " Must be one of: windows, clusters, impulse, constant."))
+    }
+    # b) Dispersion models
+    if(!(strDispModel %in% c("constant"))){
+      stop(paste0("strDispModel not recognised: ", strDispModel, 
+        " Must be one of: constant."))
+    }
   }
   
   # 4. Check co-estimation models
@@ -142,15 +146,23 @@ processSCData <- function(matCounts,
   # single mean and dispersion estimation.
   if(boolCoEstDispMean){
     if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
-    stop(paste0("strMuModel not recognised: ", strMuModel, 
-      " Must be one of: windows, clusters, impulse, constant if co-estimation",
+      stop(paste0("strMuModel not recognised: ", strMuModel, 
+        " Must be one of: windows, clusters, impulse, constant if co-estimation",
         " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
     }
-    if(!(strDispModel %in% c("constant"))){
-      stop(paste0("strDispModel not recognised: ", strDispModel, 
-        " Must be one of: constant if co-estimation",
-        " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+    if(strMuModel=="windows" & !boolVecWindowsAsBFGS){
+      stop(paste0("The dispersion parameter co-estimation couples all LL",
+        " terms of a gene so that there is no computational",
+        " advantage in not estimating all mean parameters",
+        " simultaneously. Set boolVecWindowsAsBFGS=TRUE",
+        " if (strMuModel==windows and boolCoEstDispMean=TRUE)."))
     }
+    if(strMuModel=="windows")
+      if(!(strDispModel %in% c("constant"))){
+        stop(paste0("strDispModel not recognised: ", strDispModel, 
+          " Must be one of: constant if co-estimation",
+          " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+      }
   }
   
   # (III) Process data

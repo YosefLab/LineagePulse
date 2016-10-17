@@ -53,7 +53,7 @@ calcPostDrop_Vector <- function( vecMu,
     } else if(vecboolZero[j]) {
       if(!is.null(scaWindowRadius)){
         scaindIntervalStart <- max(1,j-scaWindowRadius)
-        scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+        scaindIntervalEnd <- min(scaNumSamples,j+scaWindowRadius)
         vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
       } else {
         vecInterval <- j

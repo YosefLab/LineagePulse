@@ -145,8 +145,8 @@ runDEAnalysis <- function(matCountsProc,
     "loglik_full"=vecLogLikFull,
     "loglik_red"=vecLogLikRed,
     "deviance"=vecDeviance,
-    "mean_H0"=lsMuModelH0$matMuModel,
-    "dispersion_H0"=lsDispModelH0$matDispModel,
+    "mean_H0"=array(lsMuModelH0$matMuModel),
+    "dispersion_H0"=array(lsDispModelH0$matDispModel),
     stringsAsFactors = FALSE))
   
   # Order data frame by adjusted p-value
