@@ -148,6 +148,7 @@ runDEAnalysis <- function(matCountsProc,
     "mean_H0"=array(lsMuModelH0$matMuModel),
     "dispersion_H0"=array(lsDispModelH0$matDispModel),
     stringsAsFactors = FALSE))
+  rownames(dfModelFreeDEAnalysis) <- dfModelFreeDEAnalysis$Gene
   
   # Order data frame by adjusted p-value
   dfModelFreeDEAnalysis$adj.p <- as.numeric(as.character(dfModelFreeDEAnalysis$adj.p))

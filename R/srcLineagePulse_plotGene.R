@@ -51,6 +51,7 @@ plotGene <- function(vecCounts,
   scaNumCells <- length(vecCounts)
   # Set drop-out rates as constant for visualistion if not given.
   if(is.null(vecDropoutRates)){ vecDropoutRates <- array(0, scaNumCells) }
+  
   dfScatterCounts <- data.frame(
     pt=vecPseudotime,
     counts=vecCounts,
@@ -67,6 +68,8 @@ plotGene <- function(vecCounts,
       legend.text=element_text(size=14)) +
     annotate("text", x=(max(vecPseudotime)-min(vecPseudotime))*3/4,
       y=max(vecCounts)*9/10, label="[Line legend]\nUnderlying model: dashed,\nInferred model: solid")
+  # Set plotting threshold based on observed data
+  scaMaxPlot <- 2 * max(vecCounts)
   
   # Add models to plot
   scaNPoints <- 100 # Points to plot for each model
@@ -76,6 +79,7 @@ plotGene <- function(vecCounts,
   if(!is.null(vecImpulseModelParam)){
     vecImpulseValues <- evalImpulseModel_comp(vecTheta=vecImpulseModelParam,
       vecTimepoints=vecPTCoord)
+    vecImpulseValues[vecImpulseValues > scaMaxPlot] <- NA
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValues)
     gGenePlot <- gGenePlot + 
@@ -88,6 +92,7 @@ plotGene <- function(vecCounts,
   if(!is.null(vecImpulseModelRefParam)){
     vecImpulseValuesRef <- evalImpulseModel_comp(vecTheta=vecImpulseModelRefParam,
       vecTimepoints=vecPTCoord)
+    vecImpulseValuesRef[vecImpulseValuesRef > scaMaxPlot] <- NA
     dfLineImpulse <- data.frame( pt=vecPTCoord,
       impulse=vecImpulseValuesRef)
     gGenePlot <- gGenePlot + geom_line(data=dfLineImpulse, 
@@ -98,6 +103,7 @@ plotGene <- function(vecCounts,
   # Constant model
   if(!is.null(scaConstModelParam)){
     vecConstValues <- c(scaConstModelParam,scaConstModelParam)
+    vecConstValues[vecConstValues > scaMaxPlot] <- NA
     vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
     dfLineConst <- data.frame( pt=vecPTCoordConst,
       const=vecConstValues)
@@ -109,6 +115,7 @@ plotGene <- function(vecCounts,
   # Reference constant model
   if(!is.null(scaConstModelRefParam)){
     vecConstRefValues <- c(scaConstModelRefParam,scaConstModelRefParam)
+    vecConstRefValues[vecConstRefValues > scaMaxPlot] <- NA
     vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
     dfLineConstRef <- data.frame( pt=vecPTCoordConst,
       const=vecConstRefValues)
