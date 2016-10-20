@@ -10,7 +10,7 @@ library(reshape2)
 #' 
 #' Compare inferred parameters with underlying model parameters.
 #' 
-#' @seealso Auxillary method not called during ImpulseDE2 running.
+#' @seealso Auxillary method not called by LineagePulse wrapper.
 #' Called separately by user.
 #' 
 #' @param matQval: matrix with p-values by methods
