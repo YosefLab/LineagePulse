@@ -326,7 +326,7 @@ runLineagePulse <- function(matCounts,
         Kexternal=scaKClusters)
     } else {
       # Take observation time points as clusters
-      print("Chose grouping by given time points.")
+      print("Chose given grouping (time points, cell types, conditions...).")
       lsResultsClustering <- list()
       lsResultsClustering[[1]] <- match(vecPseudotimeProc, sort(unique(vecPseudotimeProc)))
       lsResultsClustering[[2]] <- sort( unique(vecPseudotimeProc) )
