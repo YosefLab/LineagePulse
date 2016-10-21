@@ -198,12 +198,24 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB_LinPulse().",
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
+    scaLLInit <- evalLogLikPiZINB_LinPulse_comp(
+      vecTheta=vecParamGuess,
+      matPredictorsPi=matPiPredictors,
+      vecCounts=vecCounts,
+      matMu=matMuParam,
+      matDisp=matDispParam,
+      scaNormConst=scaNormConst,
+      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+      vecboolZero=vecCounts==0)
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("matDispParam ", paste(matDispParam,collapse=" ")))
     print(paste0("matMuParam ", paste(matMuParam,collapse=" ")))
     print(paste0("scaNormConst ", paste(scaNormConst,collapse=" ")))
-    lsErrorCausingGene <- list(vecCounts, matDispParam, matMuParam, scaNormConst)
-    names(lsErrorCausingGene) <- c("vecCounts", "matDispParam", "matMuParam","scaNormConst")
+    print(paste0("scaLLInit", scaLLInit))
+    lsErrorCausingGene <- list(vecCounts, matDispParam, matMuParam, 
+      scaNormConst, scaLLInit)
+    names(lsErrorCausingGene) <- c("vecCounts", "matDispParam", "matMuParam",
+      "scaNormConst", "scaLLInit")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })

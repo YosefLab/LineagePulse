@@ -464,6 +464,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuConstZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
     scaLLInit <- evalLogLikDispConstMuConstZINB_LinPulse_comp(
       vecTheta=c(log(scaDispGuess), log(scaMuGuess)),
       vecCounts=vecCounts,
@@ -566,6 +567,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
     scaLLInit <- evalLogLikDispConstMuVecWindowsZINB_LinPulse_comp(
       vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
       vecCounts=vecCounts,
@@ -672,6 +674,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
     scaLLInit <- evalLogLikDispConstMuClustersZINB_LinPulse_comp(
       vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
       vecCounts=vecCounts,
@@ -803,6 +806,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
     scaLLInit <- evalLogLikDispConstMuImpulseZINB_LinPulse_comp(
       vecTheta=c(log(scaDispGuess), vecImpulseParamGuess),
       vecCounts=vecCounts,
