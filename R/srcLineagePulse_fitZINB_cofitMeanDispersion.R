@@ -784,6 +784,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
   trace=0,
   REPORT=10 ){
   
+  boolError <- FALSE
   fitDispImpulse <- tryCatch({
     unlist( optim(
       par=c(log(scaDispGuess), vecImpulseParamGuess), 
@@ -831,16 +832,20 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
     names(lsErrorCausingGene) <- c("vecParamGuess", "vecCounts", "vecTimepoints",
       "vecNormConst", "vecindTimepointAssign", "scaWindowRadius", "MAXIT", scaLLInit)
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-    stop(strErrorMsg)
+    #stop(strErrorMsg)
+    boolError <- TRUE
+    return(array(NA, 9))    
   })
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispImpulse[1])
-  # Catch boundary of likelihood domain on dispersion space
-  if(scaDisp < .Machine$double.eps){scaDisp <- .Machine$double.eps}
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/.Machine$double.eps){scaDisp <- 1/.Machine$double.eps}
+  if(!boolError){
+    # Catch boundary of likelihood domain on dispersion space
+    if(scaDisp < .Machine$double.eps){scaDisp <- .Machine$double.eps}
+    # Prevent dispersion estimate from growing to infinity
+    # to avoid numerical errors:
+    if(scaDisp > 1/.Machine$double.eps){scaDisp <- 1/.Machine$double.eps}
+  }
   
   vecImpulseParam <- fitDispImpulse[2:7]
   scaLL <- fitDispImpulse[8]
@@ -1011,10 +1016,51 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     # (IV) Find best fit
     lsFits <- list(lsFitPeak, lsFitValley, lsFitPrior)
     vecLL <- sapply(lsFits , function(fit) fit$scaLL)
-    indMaxLL <- match(max(vecLL), vecLL)
-    lsFitBest <- lsFits[[indMaxLL]]
+    if(all(!is.na(vecLL))){
+      # If any impulse fitting (of the three initialisations)
+      # was successful.
+      # Chose best value
+      indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
+      lsFitBest <- lsFits[[indMaxLL]]
+    } else if(is.na(vecLL[3])){
+      # If optimisation of previous fit was not successfull:
+      # Make sure new value is better than previous
+      scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+        vecMu=vecMuParam*vecNormConst,
+        vecDispEst=rep(scaDispGuess, length(vecCounts)), 
+        vecDropoutRateEst=vecDropoutParam,
+        vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
+        vecboolZero=vecCounts==0 )
+      indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
+      if(vecLL[indMaxLL] < scaLLGuess){
+        lsFitBest <- list(scaDisp=scaDispGuess,
+          vecImpulseParam=vecImpulseParamGuess,
+          scaConvergence=1002)
+      } else {
+        lsFitBest <- lsFits[[indMaxLL]]
+      }
+    } else {
+      # If none of the three initilisations was successful:
+      # Use prior paramter values
+      lsFitBest <- list(scaDisp=scaDispGuess,
+        vecImpulseParam=vecImpulseParamGuess,
+        scaConvergence=1001)
+    }
   } else {
-    lsFitBest <- lsFitPrior
+    # Make sure new value is better than previous
+    scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+      vecMu=vecMuParam*vecNormConst,
+      vecDispEst=rep(scaDispGuess, length(vecCounts)), 
+      vecDropoutRateEst=vecDropoutParam,
+      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
+      vecboolZero=vecCounts==0 )
+    if(lsFitPrior$scaLL < scaLLGuess){
+      lsFitBest <- list(scaDisp=scaDispGuess,
+        vecImpulseParam=vecImpulseParamGuess,
+        scaConvergence=1002)
+    } else {
+      lsFitBest <- lsFitPrior
+    }
   }
   
   scaDisp <- lsFitBest$scaDisp

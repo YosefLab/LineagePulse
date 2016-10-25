@@ -605,7 +605,7 @@ fitZINB <- function(matCountsProc,
       # Iteration complete
       if(boolSuperVerbose){
         if(any(vecboolDispEstConvergedA != 0)){
-          print(paste0("Dispersion estimation did not converge in ", 
+          print(paste0("(Mean-) Dispersion estimation did not converge in ", 
             sum(vecboolDispEstConvergedA), " cases."))
         }
         if(boolCoEstDispMean){
