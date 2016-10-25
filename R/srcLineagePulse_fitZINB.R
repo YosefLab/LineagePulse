@@ -333,12 +333,14 @@ fitZINB <- function(matCountsProc,
   # Internal Parameters:
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations:
-  scaPrecEM <- 1-10^(-6)
+  scaPrecEM <- 1-10^(-4)
   MAXIT_BFGS_Impulse <- 1000 # optim default is 1000
   RELTOL_BFGS_Impulse <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
   # Lowering RELTOL_BFGS_IMPULSE gives drastic run time improvements.
   # Set to 10^(-4) to maintain sensible fits without running far into saturation
   # in the objective (loglikelihood).
+  MAXIT_BFGS_Pi <- 1000 
+  RELTOL_BFGS_Pi <- 10^(-4)
   
   # Store EM convergence
   vecEMLogLikModelA <- array(NA,scaMaxEstimationCycles)
@@ -448,7 +450,10 @@ fitZINB <- function(matCountsProc,
   }
   
   lsDropModel <- list(matDropoutLinModel=NA,
-    matPiConstPredictors=matPiConstPredictors)
+    matPiConstPredictors=matPiConstPredictors,
+    lsPiOptimHyperparam=list(
+      MAXIT_BFGS_Pi=MAXIT_BFGS_Pi,
+      RELTOL_BFGS_Pi=RELTOL_BFGS_Pi))
   # Target initialisation drop-out rate: 0.9, linear model mu
   # parameter = -1 -> solve for offset of linear model:
   scaPiTarget <- 0.99
@@ -492,27 +497,29 @@ fitZINB <- function(matCountsProc,
         # Dropout rate
         # Drop-out estimation is independent between cells and can be parallelised.
         tm_pi <- system.time({
-          lsDropModel$matDropoutLinModel <- do.call(rbind, 
-            bplapply(seq(1, scaNumCells), function(cell){
-              if(!is.null(scaWindowRadius)){
-                scaindIntervalStart <- max(1,cell-scaWindowRadius)
-                scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
-                vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-              } else {
-                vecInterval <- cell
-              }
-              
-              vecDropoutLinModel <- fitPiZINB_LinPulse(
-                vecCounts=matCountsProc[,cell],
-                vecDropoutLinModel=lsDropModel$matDropoutLinModel[cell,],
-                matPiConstPredictors=lsDropModel$matPiConstPredictors,
-                lsMuModel=lsMuModelA,
-                lsDispModel=lsDispModelA,
-                scaNormConst=vecSizeFactors[cell],
-                vecInterval=vecInterval,
-                scaTarget=match(cell, vecInterval))
-              return(vecDropoutLinModel)
-            }))
+          lsFitsPi <- bplapply(seq(1, scaNumCells), function(cell){
+            if(!is.null(scaWindowRadius)){
+              scaindIntervalStart <- max(1,cell-scaWindowRadius)
+              scaindIntervalEnd <- min(scaNumCells,cell+scaWindowRadius)
+              vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+            } else {
+              vecInterval <- cell
+            }
+            
+            lsFitPi <- fitPiZINB_LinPulse(
+              vecCounts=matCountsProc[,cell],
+              vecDropoutLinModel=lsDropModel$matDropoutLinModel[cell,],
+              matPiConstPredictors=lsDropModel$matPiConstPredictors,
+              lsPiOptimHyperparam=lsDropModel$lsPiOptimHyperparam,
+              lsMuModel=lsMuModelA,
+              lsDispModel=lsDispModelA,
+              scaNormConst=vecSizeFactors[cell],
+              vecInterval=vecInterval,
+              scaTarget=match(cell, vecInterval))
+            return(lsFitPi)
+          })
+          lsDropModel$matDropoutLinModel <-  do.call(rbind, lapply(lsFitsPi, function(cell) cell$vecLinModel))
+          vecboolPiEstConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)  
         })
         colnames(lsDropModel$matDropoutLinModel) <- NULL # Want this so that column names dont grow to par.par.par...
         if(boolSuperVerbose){
@@ -522,6 +529,15 @@ fitZINB <- function(matCountsProc,
             lsDispModel=lsDispModelA, 
             lsDropModel=lsDropModel,
             scaWindowRadius=scaWindowRadius )
+          if(any(vecboolPiEstConverged != 0)){
+            print(paste0("Dropout estimation did not converge in ", 
+              sum(vecboolPiEstConverged), " cases [codes: ",
+              paste(unique(vecboolPiEstConverged[vecboolPiEstConverged!=0])), "]."))
+          }
+          if(any(vecboolPiEstConverged==1001)){
+            print(paste0("Fatal dropout estimation error in ", 
+              sum(vecboolPiEstConverged==1001), " cases."))
+          }
           print(paste0("# ",scaIter,".1) Drop-out estimation complete: ",
             "loglikelihood of     ", scaLogLikTemp, " in ",
             round(tm_pi["elapsed"]/60,2)," min."))
@@ -550,7 +566,7 @@ fitZINB <- function(matCountsProc,
           # Estimate mean and dispersion parameters sequentially.
           # a) Negative binomial mean parameter
           tm_mu <- system.time({
-             lsFitMu <- fitZINBMu( matCountsProc=matCountsProc,
+            lsFitMu <- fitZINBMu( matCountsProc=matCountsProc,
               vecSizeFactors=vecSizeFactors,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA,
@@ -606,7 +622,8 @@ fitZINB <- function(matCountsProc,
       if(boolSuperVerbose){
         if(any(vecboolDispEstConvergedA != 0)){
           print(paste0("(Mean-) Dispersion estimation did not converge in ", 
-            sum(vecboolDispEstConvergedA), " cases."))
+            sum(vecboolDispEstConvergedA), " cases [codes: ",
+            paste(unique(vecboolDispEstConvergedA[vecboolDispEstConvergedA!=0])), "]."))
         }
         if(boolCoEstDispMean){
           print(paste0("# ",scaIter, ".2) Mean+Disp co-estimation complete: ",
@@ -738,7 +755,8 @@ fitZINB <- function(matCountsProc,
       if(boolSuperVerbose){
         if(any(vecboolDispEstConvergedB != 0)){
           print(paste0("Mean-Dispersion estimation did not converge in ", 
-            sum(vecboolMuEstConvergedB), " cases."))
+            sum(vecboolMuEstConvergedB), " cases [codes: ",
+            paste(unique(vecboolMuEstConvergedB[vecboolMuEstConvergedB!=0])), "]."))
         }
       } 
       if(boolVerbose){print(paste0("Mean+Disp estimation complete: ",
@@ -811,7 +829,8 @@ fitZINB <- function(matCountsProc,
         if(boolSuperVerbose){
           if(any(vecboolDispEstConvergedB != 0)){
             print(paste0("Dispersion estimation did not converge in ", 
-              sum(vecboolDispEstConvergedB), " cases."))
+              sum(vecboolDispEstConvergedB), " cases [codes: ",
+              paste(unique(vecboolDispEstConvergedB[vecboolDispEstConvergedB!=0])), "]."))
           }
           print(paste0("# ",scaIter, ".2) Dispersion estimation complete: ",
             "loglikelihood of ", scaLogLikNew, " in ",

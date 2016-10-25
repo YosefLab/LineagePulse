@@ -153,6 +153,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 
 fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   matPiConstPredictors,
+  lsPiOptimHyperparam,
   vecCounts,
   lsMuModel,
   lsDispModel,
@@ -160,6 +161,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   vecInterval,
   scaTarget){ 
   
+  scaMaxItPi <- 10000
   scaNumGenes <- length(vecCounts)
   # Decompress parameters
   matMuParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
@@ -180,6 +182,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   #vecParamGuess <- rep(1, dim(matPredictorsPi)[2])
   vecParamGuess <- vecDropoutLinModel
   vecParamGuess[2] <- log(-vecParamGuess[2])
+  boolError <- FALSE
   lsLinModelFit <- tryCatch({
     optim(
       par=vecParamGuess,
@@ -192,7 +195,9 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
       vecboolZero=vecCounts==0,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1)
+      control=list(maxit=lsPiOptimHyperparam$MAXIT_BFGS_Pi,
+        reltol=lsPiOptimHyperparam$RELTOL_BFGS_Pi,
+        fnscale=-1)
     )[c("par","convergence")]
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB_LinPulse().",
@@ -217,11 +222,19 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     names(lsErrorCausingGene) <- c("vecCounts", "matDispParam", "matMuParam",
       "scaNormConst", "scaLLInit")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-    stop(strErrorMsg)
+    #stop(strErrorMsg)
+    boolError <- TRUE
+    # Return intialisation
+    return(vecParamGuess)
   })
   vecLinModel <- unlist(lsLinModelFit["par"])
   vecLinModel[2] <- -exp(vecLinModel[2])
-  scaConvergence <- unlist(lsLinModelFit["convergence"]) # Not used atm
+  if(boolError){
+    scaConvergence <- 1001
+  } else {
+    scaConvergence <- unlist(lsLinModelFit["convergence"])    
+  }
   
-  return(vecLinModel)
+  return( list(vecLinModel=vecLinModel,
+    scaConvergence=scaConvergence) )
 }
