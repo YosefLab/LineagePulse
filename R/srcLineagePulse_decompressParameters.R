@@ -185,9 +185,18 @@ decompressDropoutRateByGene <- function(matDropModel,
   vecMu,
   vecPiConstPredictors ){
   
+  # Offset of probability boundaries 0 and 1.
+  # This thresholding removes the dependence of the drop-out in 
+  # extreme mu parameter ranges so that there is not force
+  # on mu to grow/shrink infinitely in extreme cases.
+  # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
+  # decompressDropoutRateByCell and decompressDropoutRateByGene.
+  scaOffset <- 0.001
   vecPi <- sapply(seq(1,length(vecMu)), function(j){
     1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
   })
+  vecPi[vecPi < scaOffset] <- scaOffset
+  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }
@@ -220,9 +229,18 @@ decompressDropoutRateByCell <- function(vecDropModel,
   vecMu,
   matPiConstPredictors ){
   
+  # Offset of probability boundaries 0 and 1.
+  # This thresholding removes the dependence of the drop-out in 
+  # extreme mu parameter ranges so that there is not force
+  # on mu to grow/shrink infinitely in extreme cases.
+  # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
+  # decompressDropoutRateByCell and decompressDropoutRateByGene.
+  scaOffset <- 0.001
   vecPi <- sapply(seq(1,length(vecMu)), function(i){
     1/(1+exp(-( vecDropModel %*% c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
   })
+  vecPi[vecPi < scaOffset] <- scaOffset
+  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }

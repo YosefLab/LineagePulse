@@ -32,7 +32,7 @@
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso evalLogLikDispConstMuConstZINB_LinPulse_comp
 #' 
 #' @param vecTheta: (numeric vector length 2) Log of dispersion parameter 
 #'    estimate and log of mean parameter estimate.
@@ -474,8 +474,9 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0,
       scaWindowRadius=scaWindowRadius)
-    print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", c(log(scaDispGuess), log(scaMuGuess))))
-    print(paste0("scaLLInit", scaLLInit))
+    print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", 
+      paste(c(log(scaDispGuess), log(scaMuGuess)),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(vecCounts=vecCounts,
       vecParamGuess=c(log(scaDispGuess), log(scaMuGuess)),
       matDropoutLinModel=matDropoutLinModel, 
@@ -575,8 +576,8 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0)
-    print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
-    print(paste0("scaLLInit", scaLLInit))
+    print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(
       vecParamGuess=c(scaDispGuess, vecMuGuess), 
       vecCounts=vecCounts, 
@@ -681,8 +682,8 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecindClusterAssign=vecindClusterAssign,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0)
-    print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
-    print(paste0("scaLLInit", scaLLInit))
+    print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(
       vecParamGuess=c(scaDispGuess, vecMuGuess), 
       vecCounts=vecCounts, 
@@ -816,8 +817,8 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0,
       scaWindowRadius=scaWindowRadius)
-    print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecImpulseParamGuess),collapse=" ")))
-    print(paste0("scaLLInit", scaLLInit))
+    print(paste0("c(log(scaDispGuess), vecImpulseParamGuess) ", paste(c(log(scaDispGuess), vecImpulseParamGuess),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(
       vecParamGuess=c(scaDispGuess, vecImpulseParamGuess), 
       vecCounts=vecCounts, 
