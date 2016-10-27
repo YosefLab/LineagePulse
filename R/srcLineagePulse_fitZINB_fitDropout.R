@@ -212,17 +212,16 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       scaNormConst=scaNormConst,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
       vecboolZero=vecCounts==0)
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print(paste0("matDispParam ", paste(matDispParam,collapse=" ")))
-    print(paste0("matMuParam ", paste(matMuParam,collapse=" ")))
-    print(paste0("scaNormConst ", paste(scaNormConst,collapse=" ")))
     print(paste0("scaLLInit", scaLLInit))
-    lsErrorCausingGene <- list(vecCounts, matDispParam, matMuParam, 
-      scaNormConst, scaLLInit)
-    names(lsErrorCausingGene) <- c("vecCounts", "matDispParam", "matMuParam",
-      "scaNormConst", "scaLLInit")
+    print(paste0("vecParamGuess ", vecParamGuess))
+    lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,
+      vecCountsvecCounts, 
+      matPredictorsPi=matPredictorsPi,
+      matMuParam=matMuParam, 
+      matDispParam=matDispParam,
+      scaNormConst=scaNormConst, 
+      scaLLInit=scaLLInit )
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-    #stop(strErrorMsg)
     boolError <- TRUE
     # Return intialisation
     return(vecParamGuess)

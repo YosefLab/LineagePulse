@@ -325,6 +325,9 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 #'    of gene in cells in cluster.
 #' @param vecTimepoints: (numerical vector number of unique time coordinates)
 #'    Unique (pseudo)time coordinates of cells.
+#' @param vecindTimepointAssign (numeric vector number samples) 
+#'    Index of time point assigned to cell in list of sorted
+#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
@@ -335,9 +338,6 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecindTimepointAssign (numeric vector number samples) 
-#'    Index of time point assigned to cell in list of sorted
-#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
 #' @param vecboolNotZeroObserved: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
@@ -351,10 +351,10 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   vecCounts,
   vecTimepoints,
+  vecindTimepointAssign,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecNormConst,
-  vecindTimepointAssign, 
+  vecNormConst, 
   vecboolNotZeroObserved, 
   vecboolZero,
   scaWindowRadius=NULL){  
@@ -474,16 +474,15 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0,
       scaWindowRadius=scaWindowRadius)
-    print(paste0("scaMeanGuess ",scaMeanGuess))
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print("matDropoutLinModel")
-    print(matDropoutLinModel)
-    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", c(log(scaDispGuess), log(scaMuGuess))))
     print(paste0("scaLLInit", scaLLInit))
-    lsErrorCausingGene <- list(vecCounts, matDropoutLinModel, 
-      vecNormConst, scaLLInit)
-    names(lsErrorCausingGene) <- c("vecCounts",
-      "matDropoutLinModel", "vecNormConst", "scaLLInit")
+    lsErrorCausingGene <- list(vecCounts=vecCounts,
+      vecParamGuess=c(log(scaDispGuess), log(scaMuGuess)),
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst, 
+      scaWindowRadius=scaWindowRadius,
+      scaLLInit=scaLLInit)
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -574,19 +573,17 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
-      scaWindowRadius=scaWindowRadius)
-    print(paste0("log(vecMuGuess) ",log(vecMuGuess)))
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print("matDropoutLinModel")
-    print(matDropoutLinModel)
-    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= vecCounts==0)
+    print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
     print(paste0("scaLLInit", scaLLInit))
-    lsErrorCausingGene <- list(vecCounts, vecMuGuess, scaDispGuess, 
-      matDropoutLinModel, vecNormConst, scaLLInit)
-    names(lsErrorCausingGene) <- c("vecCounts", "vecMuGuess","scaDispGuess",
-      "matDropoutLinModel", "vecNormConst", "scaLLInit")
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecMuGuess), 
+      vecCounts=vecCounts, 
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst, 
+      scaLLInit=scaLLInit )
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -681,20 +678,19 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      ecindClusterAssign=vecindClusterAssign,
+      vecindClusterAssign=vecindClusterAssign,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= vecCounts==0)
-    print(paste0("log(vecMuGuess) ",log(log(vecMuGuess))))
-    print(paste0("scaDispGuess ", paste(scaDispGuess,collapse=" ")))
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print("matDropoutLinModel")
-    print(matDropoutLinModel)
-    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
     print(paste0("scaLLInit", scaLLInit))
-    lsErrorCausingGene <- list(vecCounts, scaDispGuess, matDropoutLinModel, 
-      vecNormConst, scaLLInit)
-    names(lsErrorCausingGene) <- c("vecCounts", "scaDispGuess",
-      "matDropoutLinModel", "vecNormConst", "scaLLInit")
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecMuGuess), 
+      vecCounts=vecCounts, 
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst, 
+      vecindClusterAssign=vecindClusterAssign, 
+      scaLLInit=scaLLInit )
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -791,6 +787,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       fn=evalLogLikDispConstMuImpulseZINB_LinPulse_comp, 
       vecCounts=vecCounts,
       vecTimepoints=vecTimepoints,
+      vecindTimepointAssign=vecindTimepointAssign,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
@@ -812,6 +809,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecTheta=c(log(scaDispGuess), vecImpulseParamGuess),
       vecCounts=vecCounts,
       vecTimepoints=vecTimepoints,
+      vecindTimepointAssign=vecindTimepointAssign,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
@@ -819,18 +817,17 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecboolZero= vecCounts==0,
       scaWindowRadius=scaWindowRadius)
     print(paste0("vecParamGuess ", paste(c(scaDispGuess, vecImpulseParamGuess),collapse=" ")))
-    print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
-    print(paste0("vecTimepoints ", paste(vecTimepoints,collapse=" ")))
-    print(paste0("matDropoutLinModel ", paste(matDropoutLinModel,collapse=" ")))
-    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
-    print(paste0("vecindTimepointAssign ", paste(vecindTimepointAssign,collapse=" ")))
-    print(paste0("scaWindowRadius", paste(scaWindowRadius,collapse=" ")))
-    print(paste0("MAXIT ", MAXIT))
     print(paste0("scaLLInit", scaLLInit))
-    lsErrorCausingGene <- list(c(scaDispGuess, vecImpulseParamGuess), vecCounts, vecTimepoints, 
-      vecNormConst, vecindTimepointAssign, scaWindowRadius, MAXIT, scaLLInit)
-    names(lsErrorCausingGene) <- c("vecParamGuess", "vecCounts", "vecTimepoints",
-      "vecNormConst", "vecindTimepointAssign", "scaWindowRadius", "MAXIT", scaLLInit)
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecImpulseParamGuess), 
+      vecCounts=vecCounts, 
+      vecTimepoints=vecTimepoints, 
+      vecindTimepointAssign=vecindTimepointAssign, 
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecNormConst=vecNormConst, 
+      scaWindowRadius=scaWindowRadius, 
+      scaLLInit=scaLLInit )
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     #stop(strErrorMsg)
     boolError <- TRUE

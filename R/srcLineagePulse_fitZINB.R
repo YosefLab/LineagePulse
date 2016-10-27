@@ -334,11 +334,13 @@ fitZINB <- function(matCountsProc,
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations:
   scaPrecEM <- 1-10^(-4)
+  # Numerical optmisation of impulse model hyperparameters
   MAXIT_BFGS_Impulse <- 1000 # optim default is 1000
   RELTOL_BFGS_Impulse <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
   # Lowering RELTOL_BFGS_IMPULSE gives drastic run time improvements.
   # Set to 10^(-4) to maintain sensible fits without running far into saturation
   # in the objective (loglikelihood).
+  # Numerical optmisation of dropout model hyperparameters
   MAXIT_BFGS_Pi <- 1000 
   RELTOL_BFGS_Pi <- 10^(-4)
   
