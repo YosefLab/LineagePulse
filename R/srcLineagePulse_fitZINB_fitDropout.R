@@ -52,10 +52,16 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
   scaOffset <- 0.001
-  # Estimate drop-out rate parameters according to proposed
-  # linear model:
-  # Force link to mean to be negative
+  
+  # (I) Linker functions
+  # Force mean parameter to be negative
   vecTheta[2] <- -exp(vecTheta[2])
+  
+  # (II) Prevent parameter shrinkage/explosion
+  vecTheta[vecTheta < -1/.Machine$double.eps] <- -1/.Machine$double.eps
+  vecTheta[vecTheta > 1/.Machine$double.eps] <- 1/.Machine$double.eps
+  if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
+  
   vecLinModelOut <- matPredictorsPi %*% vecTheta
   vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
   vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
@@ -186,7 +192,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   matPiPredictors <- cbind(1, log(matMuParam[,scaTarget]), 
     matPiConstPredictors)
   
-  # Numerical maximum likelihood estimaton of linear model
+  # (I) Numerical maximum likelihood estimation of linear model
   # Initialise optimisation of linear model:
   #vecParamGuess <- rep(1, dim(matPredictorsPi)[2])
   vecParamGuess <- vecDropoutLinModel
@@ -222,9 +228,9 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
       vecboolZero=vecCounts==0)
     print(paste0("scaLLInit", scaLLInit))
-    print(paste0("vecParamGuess ", vecParamGuess))
+    print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
     lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,
-      vecCountsvecCounts, 
+      vecCounts=vecCounts, 
       matPredictorsPi=matPredictorsPi,
       matMuParam=matMuParam, 
       matDispParam=matDispParam,
@@ -235,8 +241,15 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     # Return intialisation
     return(vecParamGuess)
   })
+  
+  # (II) Extract results and correct for sensitivity boundaries
   vecLinModel <- unlist(lsLinModelFit["par"])
   vecLinModel[2] <- -exp(vecLinModel[2])
+  # # Catch boundary of likelihood domain on parameter space
+  vecLinModel[vecLinModel < -1/.Machine$double.eps] <- -1/.Machine$double.eps
+  vecLinModel[vecLinModel > 1/.Machine$double.eps] <- 1/.Machine$double.eps
+  if(vecLinModel[2] > -.Machine$double.eps){ vecLinModel[2] <- -.Machine$double.eps }
+  
   if(boolError){
     scaConvergence <- 1001
   } else {
