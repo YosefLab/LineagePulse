@@ -424,7 +424,7 @@ fitMuConstZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
@@ -518,8 +518,8 @@ fitMuWindowZINB <- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaTarget=scaTarget,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
@@ -605,8 +605,8 @@ fitMuVecWindowsZINB<- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
@@ -712,7 +712,7 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS", 
       control=list(maxit=MAXIT,
@@ -936,7 +936,7 @@ fitMuImpulseZINB <- function(vecCounts,
       vecDispEst=vecDisp, 
       vecDropoutRateEst=vecDropoutOld,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero=vecCounts==0 )
+      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     
     # report all new parame
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
@@ -948,7 +948,7 @@ fitMuImpulseZINB <- function(vecCounts,
       vecDispEst=vecDisp, 
       vecDropoutRateEst=vecDropout,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero=vecCounts==0 )
+      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
       scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
   }

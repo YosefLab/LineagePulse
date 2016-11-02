@@ -43,8 +43,8 @@ initialiseImpulseParametes <- function(vecCounts,
   vecPostNB <- 1-calcPostDrop_Vector( vecMu=vecMu,
     vecDisp=vecDisp,
     vecDrop=vecDrop,
-    vecboolZero= vecCounts==0,
-    vecboolNotZeroObserved= !is.na(vecCounts)&vecCounts>0,
+    vecboolZero= !is.na(vecCounts) & vecCounts==0,
+    vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
     scaWindowRadius=scaWindowRadius )
 
   # Observations are pooled to give rough estimates of expression

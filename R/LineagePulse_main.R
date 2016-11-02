@@ -14,7 +14,7 @@ library(BiocParallel)
 library(compiler)
 library(ggplot2)
 library(MASS)
-setwd("/Users/davidsebastianfischer/MasterThesis/code/LineagePulse/R")
+setwd("/Users/davidsebastianfischer/gitDevelopment/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
 
 source("srcLineagePulse_clusterCellsInPseudotime.R")

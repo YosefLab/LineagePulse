@@ -386,7 +386,7 @@ validateOuputSimulation <- function(
       vecDispEst=matDispHidden[i,], 
       vecDropoutRateEst=matDropoutRatesHidden[i,],
       vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
-      vecboolZero=matCountsProc[i,]==0,
+      vecboolZero=matCountsProc[i,]==0 & !is.na(matCountsProc[i,]),
       scaWindowRadius=scaWindowRadius)
   }))
   # Compute loglikelihood of inferred model
@@ -419,7 +419,7 @@ validateOuputSimulation <- function(
       vecDispEst=vecDispParamH1, 
       vecDropoutRateEst=vecDropoutParamH1,
       vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
-      vecboolZero=matCountsProc[i,]==0,
+      vecboolZero=matCountsProc[i,]==0 & !is.na(matCountsProc[i,]),
       scaWindowRadius=scaWindowRadius)
     return(scaLL)
   }))

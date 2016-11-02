@@ -209,7 +209,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       matDisp=matDispParam,
       scaNormConst=scaNormConst,
       vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       method="BFGS",
       control=list(maxit=lsPiOptimHyperparam$MAXIT_BFGS_Pi,
         reltol=lsPiOptimHyperparam$RELTOL_BFGS_Pi,
@@ -226,8 +226,8 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
       matMu=matMuParam,
       matDisp=matDispParam,
       scaNormConst=scaNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0)
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("scaLLInit", scaLLInit))
     print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
     lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,

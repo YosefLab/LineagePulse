@@ -457,7 +457,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
@@ -472,7 +472,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius)
     print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", 
       paste(c(log(scaDispGuess), log(scaMuGuess)),collapse=" ")))
@@ -559,8 +559,8 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
@@ -575,7 +575,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0)
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
     print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(
@@ -665,8 +665,8 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecindClusterAssign=vecindClusterAssign,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
-      vecboolZero=vecCounts==0,
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
@@ -681,7 +681,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindClusterAssign=vecindClusterAssign,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0)
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
     print(paste0("scaLLInit ", scaLLInit))
     lsErrorCausingGene <- list(
@@ -793,7 +793,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS", 
       control=list(maxit=MAXIT,
@@ -815,7 +815,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius)
     print(paste0("c(log(scaDispGuess), vecImpulseParamGuess) ", paste(c(log(scaDispGuess), vecImpulseParamGuess),collapse=" ")))
     print(paste0("scaLLInit ", scaLLInit))
@@ -1027,8 +1027,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
         vecMu=vecMuParam*vecNormConst,
         vecDispEst=rep(scaDispGuess, length(vecCounts)), 
         vecDropoutRateEst=vecDropoutParam,
-        vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-        vecboolZero=vecCounts==0 )
+        vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+        vecboolZero= !is.na(vecCounts) &vecCounts==0 )
       indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
       if(vecLL[indMaxLL] < scaLLGuess){
         lsFitBest <- list(scaDisp=scaDispGuess,
@@ -1050,8 +1050,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecMu=vecMuParam*vecNormConst,
       vecDispEst=rep(scaDispGuess, length(vecCounts)), 
       vecDropoutRateEst=vecDropoutParam,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero=vecCounts==0 )
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecboolZero= !is.na(vecCounts) &vecCounts==0 )
     if(lsFitPrior$scaLL < scaLLGuess){
       lsFitBest <- list(scaDisp=scaDispGuess,
         vecImpulseParam=vecImpulseParamGuess,
@@ -1083,8 +1083,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecMu=vecImpulseValueOld*vecNormConst,
       vecDispEst=rep(scaDispGuess, length(vecCounts)), 
       vecDropoutRateEst=vecDropoutOld,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero=vecCounts==0 )
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     
     # report all new parame
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
@@ -1095,8 +1095,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecMu=vecImpulseValue*vecNormConst,
       vecDispEst=rep(scaDisp, length(vecCounts)), 
       vecDropoutRateEst=vecDropout,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero=vecCounts==0 )
+      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
       scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
   }

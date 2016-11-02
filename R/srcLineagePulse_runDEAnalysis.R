@@ -78,8 +78,8 @@ runDEAnalysis <- function(matCountsProc,
   # (I) Compute log likelihoods
   lsLL <- bplapply( seq(1,dim(matCountsProc)[1]), function(i){
     vecCounts <- matCountsProc[i,]
-    vecboolNotZeroObserved <- vecCounts >0 & !is.na(vecCounts)
-    vecboolZero <- vecCounts==0
+    vecboolNotZeroObserved <- !is.na(vecCounts) & vecCounts>0
+    vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
     # Decompress parameters by gene H0
     vecMuParamH0 <- decompressMeansByGene( vecMuModel=lsMuModelH0$matMuModel[i,],

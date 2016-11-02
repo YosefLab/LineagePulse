@@ -181,7 +181,7 @@ evalLogLikMatrix <- function(matCounts,
       # Compute boolean observation vectors
       vecCounts <- matCounts[i,]
       vecboolNotZeroObserved <- !is.na(vecCounts) & vecCounts>0
-      vecboolZero <- vecCounts==0
+      vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
       # Evaluate loglikelihood of gene
       scaLL <- evalLogLikGene(vecCounts=vecCounts,
