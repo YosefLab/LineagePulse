@@ -191,13 +191,13 @@ decompressDropoutRateByGene <- function(matDropModel,
   # on mu to grow/shrink infinitely in extreme cases.
   # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
-  scaOffset <- 0.0001
+  scaOffset <- 0.01
   vecPi <- sapply(seq(1,length(vecMu)), function(j){
-    #scaOffset+(1-scaOffset)*1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
-    1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
+    scaOffset+(1-scaOffset)*1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
+    #1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
   })
-  vecPi[vecPi < scaOffset] <- scaOffset
-  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }
@@ -236,14 +236,14 @@ decompressDropoutRateByCell <- function(vecDropModel,
   # on mu to grow/shrink infinitely in extreme cases.
   # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
-  scaOffset <- 0.0001
+  scaOffset <- 0.01
   vecPi <- sapply(seq(1,length(vecMu)), function(i){
-    #scaOffset+(1-scaOffset)*1/(1+exp(-( vecDropModel %*% 
-    #    c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
-    1/(1+exp(-( vecDropModel %*% c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
+    scaOffset+(1-scaOffset)*1/(1+exp(-( vecDropModel %*% 
+        c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
+    #1/(1+exp(-( vecDropModel %*% c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
   })
-  vecPi[vecPi < scaOffset] <- scaOffset
-  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }

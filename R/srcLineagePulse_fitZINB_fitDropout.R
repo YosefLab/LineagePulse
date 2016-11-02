@@ -51,7 +51,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   # on mu to grow/shrink infinitely in extreme cases.
   # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
-  scaOffset <- 0.0001
+  scaOffset <- 0.01
   
   # (I) Linker functions
   # Force mean parameter to be negative
@@ -63,10 +63,10 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
   
   vecLinModelOut <- matPredictorsPi %*% vecTheta
-  vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
-  vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
-  vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
-  #vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
+  #vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
+  vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
   
   # Loglikelihood is evaluated on each window which was has
   # target cell in its neighbourhood. Note that the negative binomial
