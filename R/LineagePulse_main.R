@@ -299,7 +299,6 @@ runLineagePulse <- function(matCounts,
     dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
     dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
   }
-  
   print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
   # Set the parallelisation environment in BiocParallel:
   if(scaNProc > 1){

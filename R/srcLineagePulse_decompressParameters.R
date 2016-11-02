@@ -193,10 +193,10 @@ decompressDropoutRateByGene <- function(matDropModel,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
   scaOffset <- 0.001
   vecPi <- sapply(seq(1,length(vecMu)), function(j){
-    1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
+    scaOffset+(1-scaOffset)*1/(1+exp(-( matDropModel[j,] %*% c(1, log(vecMu[j]), vecPiConstPredictors) )))
   })
-  vecPi[vecPi < scaOffset] <- scaOffset
-  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }
@@ -237,10 +237,11 @@ decompressDropoutRateByCell <- function(vecDropModel,
   # decompressDropoutRateByCell and decompressDropoutRateByGene.
   scaOffset <- 0.001
   vecPi <- sapply(seq(1,length(vecMu)), function(i){
-    1/(1+exp(-( vecDropModel %*% c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
+    scaOffset+(1-scaOffset)*1/(1+exp(-( vecDropModel %*% 
+        c(1, log(vecMu[i]), matPiConstPredictors[i,]) )))
   })
-  vecPi[vecPi < scaOffset] <- scaOffset
-  vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   return(vecPi)
 }
