@@ -42,6 +42,7 @@ source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
 # Pre-compile function
 evalImpulseModel_comp <- cmpfun(evalImpulseModel)
+evalDropoutModel_comp <- cmpfun(evalDropoutModel)
 evalLogLikZINB_LinPulse_comp <- cmpfun(evalLogLikZINB_LinPulse)
 evalLogLikSmoothZINB_LinPulse_comp <- cmpfun(evalLogLikSmoothZINB_LinPulse)
 evalLogLikMuWindowZINB_LinPulse_comp <- cmpfun(evalLogLikMuWindowZINB_LinPulse)

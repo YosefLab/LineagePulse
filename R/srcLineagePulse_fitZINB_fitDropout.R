@@ -55,7 +55,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
 
   vecDropoutRateFit <- sapply(seq(1,dim(matPredictorsPi)[1]), function(i){
-    evalDropoutModel(vecPiModel=vecTheta, 
+    evalDropoutModel_comp(vecPiModel=vecTheta, 
       vecPiPredictors=matPredictorsPi[i,])
   })
   #vecLinModelOut <- matPredictorsPi %*% vecTheta

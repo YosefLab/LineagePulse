@@ -27,6 +27,9 @@
 #'    [Default NULL]
 #'    Size factors for data set. Size factors are set to 1 if this is
 #'    not specified (NULL).
+#' @param matDropoutModelExternal: (numeric matrix cells x 2) 
+#'    [Default NULL] External drop-out model, has to have
+#'    one row for each simulated cell.
 #' @param dirOutSimulation: (str directory)
 #'    Directory to which simulated parameter objects are 
 #'    saved to.
@@ -45,6 +48,7 @@ simulateDataSet <- function(scaNCells,
   scaMumax=1000,
   scaSDImpulseAmplitude=1,
   vecSizeFactorsExternal=NULL,
+  matDropoutModelExternal=NULL,
   dirOutSimulation){
   
   ####
@@ -147,11 +151,19 @@ simulateDataSet <- function(scaNCells,
   
   # 3. Apply drop out
   # a. Set drop out models
-  a1 <- c(-2,-2,-4)
-  a2 <- c(0.01,0.001,0.01)
-  a1 <- array(a1, scaNCells)
-  a2 <- array(a2, scaNCells)
-  matDropoutLinModelHidden <- cbind(-a1,-a2)
+  if(is.null(matDropoutModelExternal)){
+    a1 <- c(-2,-2,-4)
+    a2 <- c(0.01,0.001,0.01)
+    a1 <- array(a1, scaNCells)
+    a2 <- array(a2, scaNCells)
+    matDropoutLinModelHidden <- cbind(-a1,-a2)
+  } else {
+    if(scaNCells!=dim(matDropoutModelExternal)[1]){
+      stop("Size of matDropoutModelExternal does not correspond to size of simulated data set.")
+    } else {
+      matDropoutLinModelHidden <- matDropoutModelExternal
+    }
+  }
   rownames(matDropoutLinModelHidden) <- names(vecPT)
   
   # b. Draw drop-out rates

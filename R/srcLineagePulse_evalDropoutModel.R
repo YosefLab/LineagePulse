@@ -2,13 +2,12 @@
 #++++++++++++++++++     Evaluate logistic drop-out model    ++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Compute value of impulse function given parameters.
+#' Compute value of logistic dropout function given with scale boundaries
 #' 
-#' Compute value of impulse function given parameters. Contains
-#' log linker for amplitude paramteres. Low impulse model values
-#' are caught to avoid mean parameters close to or below zero.
+#' Computes value of logistic function for one observation and uses offset
+#' to correct model.
 #' 
-#' @aliases evalImpulseModel_comp
+#' @aliases evalDropoutModel_comp
 #' 
 #' @param vecPiModel: (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
@@ -17,14 +16,14 @@
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
 #' 
-#' @return vecY (vec number of vecTimepoints) 
-#'    Model expression values of given gene for time points
+#' @return scaDropoutRate (scalar): 
+#'    Drop-out rate estimate.
 #' @export
 
 evalDropoutModel <- function(vecPiModel, vecPiPredictors){
   
   # Set offset parameter
-  scaOffset <- 0.01
+  scaOffset <- 0.001
   
   #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
   #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
