@@ -63,10 +63,10 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
   
   vecLinModelOut <- matPredictorsPi %*% vecTheta
-  #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
-  #vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
-  vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
+  vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
+  vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
+  #vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
   
   # Loglikelihood is evaluated on each window which was has
   # target cell in its neighbourhood. Note that the negative binomial

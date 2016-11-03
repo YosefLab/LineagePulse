@@ -456,7 +456,7 @@ fitZINB <- function(matCountsProc,
     lsPiOptimHyperparam=list(
       MAXIT_BFGS_Pi=MAXIT_BFGS_Pi,
       RELTOL_BFGS_Pi=RELTOL_BFGS_Pi))
-  # Target initialisation drop-out rate: 0.9, linear model mu
+  # Target initialisation drop-out rate: 0.99, linear model mu
   # parameter = -1 -> solve for offset of linear model:
   scaPiTarget <- 0.99
   scaPiLinModelMuParam <- -1
