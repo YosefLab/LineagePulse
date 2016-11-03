@@ -45,14 +45,6 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   vecboolNotZeroObserved,
   vecboolZero ){ 
   
-  # Offset of probability boundaries 0 and 1.
-  # This thresholding removes the dependence of the drop-out in 
-  # extreme mu parameter ranges so that there is not force
-  # on mu to grow/shrink infinitely in extreme cases.
-  # This parameter has to be the same in evalLogLikPiZINB_LinPulse,
-  # decompressDropoutRateByCell and decompressDropoutRateByGene.
-  scaOffset <- 0.01
-  
   # (I) Linker functions
   # Force mean parameter to be negative
   vecTheta[2] <- -exp(vecTheta[2])
@@ -61,12 +53,16 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   vecTheta[vecTheta < -1/.Machine$double.eps] <- -1/.Machine$double.eps
   vecTheta[vecTheta > 1/.Machine$double.eps] <- 1/.Machine$double.eps
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
-  
-  vecLinModelOut <- matPredictorsPi %*% vecTheta
+
+  vecDropoutRateFit <- sapply(seq(1,dim(matPredictorsPi)[1]), function(i){
+    evalDropoutModel(vecPiModel=vecTheta, 
+      vecPiPredictors=matPredictorsPi[i,])
+  })
+  #vecLinModelOut <- matPredictorsPi %*% vecTheta
   #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
   #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
   #vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
-  vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
   
   # Loglikelihood is evaluated on each window which was has
   # target cell in its neighbourhood. Note that the negative binomial

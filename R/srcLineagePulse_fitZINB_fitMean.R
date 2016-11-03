@@ -70,10 +70,13 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
   if(scaMu < .Machine$double.eps){ scaMu <- .Machine$double.eps }
   
   # (II) Compute drop-out rates
-  vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-    sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
-  })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+    vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
+    vecPiConstPredictors=vecPiConstPredictors )
+  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
+  #  sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
+  #})
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   if(is.null(scaWindowRadius)){
@@ -166,12 +169,15 @@ evalLogLikMuWindowZINB_LinPulse <- function(scaTheta,
   
   scaN <- length(vecCounts)
   # (II) Compute drop-out rates
-  vecLogMuNeighbourhoodCurrent <- log(vecMu) # Means which are not updated
-  vecLogMuNeighbourhoodCurrent[scaTarget] <- log(scaMuNew) # Mean which is updated
-  vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-    sum(matDropoutLinModel[cell,] * c(1,vecLogMuNeighbourhoodCurrent[cell],vecPiConstPredictors))
-  })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  vecMuNeighbourhoodCurrent <- vecMu # Means which are not updated
+  vecMuNeighbourhoodCurrent[scaTarget] <- scaMuNew # Mean which is updated
+  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+    vecMu=vecMuNeighbourhoodCurrent,
+    vecPiConstPredictors=vecPiConstPredictors )
+  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
+  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMuNeighbourhoodCurrent[cell]),vecPiConstPredictors))
+  #})
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   # Compute loglikelihood terms with contribution from new mean parameter
@@ -265,10 +271,13 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
   vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
   
   # (II) Compute drop-out rates
-  vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-    sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
-  })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+    vecMu=vecMu,
+    vecPiConstPredictors=vecPiConstPredictors )
+  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
+  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
+  #})
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(
@@ -350,10 +359,13 @@ evalLogLikMuImpulseZINB_LinPulse <- function(vecTheta,
   vecImpulseValue <- evalImpulseModel_comp(vecTheta,vecTimepoints)[vecindTimepointAssign]
   
   # (II) Compute drop-out rates
-  vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
-    sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
-  })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+    vecMu=vecImpulseValue,
+    vecPiConstPredictors=vecPiConstPredictors )
+  #vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
+  #  sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
+  #})
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood of estimate
   if(is.null(scaWindowRadius)){
