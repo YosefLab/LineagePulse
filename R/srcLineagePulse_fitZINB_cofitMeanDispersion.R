@@ -86,7 +86,11 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
   vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
     sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
   })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  scaOffset <- 0.01
+  vecDropoutRateEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateEst[vecDropoutRateEst < scaOffset] <- scaOffset
+  #vecDropoutRateEst[vecDropoutRateEst > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
   if(is.null(scaWindowRadius)){
@@ -379,7 +383,11 @@ evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
     sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
   })
-  vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  scaOffset <- 0.01
+  vecDropoutRateEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  #vecDropoutRateEst[vecDropoutRateEst < scaOffset] <- scaOffset
+  #vecDropoutRateEst[vecDropoutRateEst > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
   if(is.null(scaWindowRadius)){
