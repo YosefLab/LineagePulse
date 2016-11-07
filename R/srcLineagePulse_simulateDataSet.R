@@ -58,10 +58,6 @@ simulateDataSet <- function(scaNCells,
     return(1/h1* (h0+(h1-h0)*1/(1+exp(-beta*(t-t1))))*
         (h2+(h1-h2)*1/(1+exp(beta*(t-t2)))))
   }
-  # Evaluate logisitic model at mean parameter values
-  evalLogistic <- function(mu, a1, a2){
-    return(1/(1+exp(-(a1+a2*mu))))
-  }
   
   ####
   # Simulate data
@@ -168,9 +164,9 @@ simulateDataSet <- function(scaNCells,
   
   # b. Draw drop-out rates
   lsDropoutRatesHidden <- lapply(seq(1,scaNCells), function(cell){
-    return(1 - evalLogistic(mu=matMuHidden[,cell], 
-      a1=matDropoutLinModelHidden[cell,1], 
-      a2=matDropoutLinModelHidden[cell,2]))
+    decompressDropoutRateByCell(vecDropModel=matDropoutLinModelHidden[cell,],
+      vecMu=matMuHidden[,cell],
+      matPiConstPredictors=NULL)
   })
   matDropoutRatesHidden <- do.call(cbind, lsDropoutRatesHidden)
   rownames(matDropoutRatesHidden) <- rownames(matMuHidden)
