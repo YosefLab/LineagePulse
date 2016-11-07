@@ -156,7 +156,7 @@ simulateDataSet <- function(scaNCells,
     a2 <- c(0.01,0.001,0.01)
     a1 <- array(a1, scaNCells)
     a2 <- array(a2, scaNCells)
-    matDropoutLinModelHidden <- cbind(-a1,-a2)
+    matDropoutLinModelHidden <- cbind(a1,a2)
   } else {
     if(scaNCells!=dim(matDropoutModelExternal)[1]){
       stop("Size of matDropoutModelExternal does not correspond to size of simulated data set.")
@@ -169,8 +169,8 @@ simulateDataSet <- function(scaNCells,
   # b. Draw drop-out rates
   lsDropoutRatesHidden <- lapply(seq(1,scaNCells), function(cell){
     return(1 - evalLogistic(mu=matMuHidden[,cell], 
-      a1=a1[cell], 
-      a2=a2[cell]))
+      a1=matDropoutLinModelHidden[cell,1], 
+      a2=matDropoutLinModelHidden[cell,2]))
   })
   matDropoutRatesHidden <- do.call(cbind, lsDropoutRatesHidden)
   rownames(matDropoutRatesHidden) <- rownames(matMuHidden)

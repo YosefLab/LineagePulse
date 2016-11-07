@@ -14,8 +14,8 @@
 #'    gene.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @param vecDropoutRates: (numeric vector length cells) [Default NULL]
-#'    Dropout rates for observations.
+#' @param vecDropoutParamH1: (numeric vector length cells) [Default NULL]
+#'    Dropout rates for observations under alternative model.
 #' @param vecImpulseModelParam: (numeric vector length impulse parameters=6)
 #'    [Default NULL] Impulse model parameters for given gene. 
 #'    Amplitudes in log format, like LineagePulse output!
@@ -39,25 +39,83 @@
 
 plotGene <- function(vecCounts,
   vecPseudotime,
-  vecDropoutRates=NULL,
+  vecDropoutParamH1=NULL,
   vecImpulseModelParam=NULL,
   vecImpulseModelRefParam=NULL,
   strNameImpulseModelRef=NULL,
   scaConstModelParam=NULL,
   scaConstModelRefParam=NULL,
   strGeneID,
-  strTitleSuffix=NULL){
+  strTitleSuffix=NULL,
+  boolScaleByLL=FALSE,
+  vecMuParamH0=NULL,
+  vecMuParamH1=NULL,
+  vecDispParamH0=NULL,
+  vecDispParamH1=NULL,
+  vecDropoutParamH0=NULL,
+  vecSizeFactors=NULL){
   
   scaNumCells <- length(vecCounts)
   # Set drop-out rates as constant for visualistion if not given.
-  if(is.null(vecDropoutRates)){ vecDropoutRates <- array(0, scaNumCells) }
+  if(is.null(vecDropoutParamH1)){ vecDropoutParamH1 <- array(0, scaNumCells) }
+  
+  if(boolScaleByLL){
+    # Compute observation-wise loglikelihoods under null model
+    vecLogLikH0 <- sapply(seq(1,scaNumCells), 
+      function(j){
+        if(is.null(scaWindowRadius)){
+          vecInterval <- j
+        } else {
+          scaindIntervalStart <- max(1,j-scaWindowRadius)
+          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+        }
+        
+        scaLogLikCell <- evalLogLikZINB_LinPulse_comp(
+          vecCounts=vecCounts[vecInterval],
+          vecMu=vecMuParamH0[j]*vecSizeFactors[vecInterval],
+          vecDispEst=rep(vecDispParamH0[j], length(vecInterval)), 
+          vecDropoutRateEst=vecDropoutParamH0[vecInterval], 
+          vecboolNotZeroObserved= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
+          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0 )
+        return(scaLogLikCell)
+      }) 
+    
+    # Compute observation-wise loglikelihoods under alternative model
+    vecLogLikH1 <- sapply(seq(1,scaNumCells), 
+      function(j){
+        if(is.null(scaWindowRadius)){
+          vecInterval <- j
+        } else {
+          scaindIntervalStart <- max(1,j-scaWindowRadius)
+          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+        }
+        
+        scaLogLikCell <- evalLogLikZINB_LinPulse_comp(
+          vecCounts=vecCounts[vecInterval],
+          vecMu=vecMuParamH1[j]*vecSizeFactors[vecInterval],
+          vecDispEst=rep(vecDispParamH1[j], length(vecInterval)), 
+          vecDropoutRateEst=vecDropoutParamH1[vecInterval], 
+          vecboolNotZeroObserved= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
+          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0 )
+        return(scaLogLikCell)
+      })
+    vecLogLikRatio <- vecLogLikH1-vecLogLikH0
+    # Project into size range
+    #vecLogLikRatio <- 4 + (vecLogLikRatio-min(vecLogLikRatio))*16/(
+    #  max(vecLogLikRatio, na.rm=TRUE) - min(vecLogLikRatio, na.rm=TRUE))
+  } else {
+    vecLogLikRatio <- array(1, scaNumCells)
+  }
   
   dfScatterCounts <- data.frame(
     pt=vecPseudotime,
     counts=vecCounts,
-    dropout_rate=vecDropoutRates )
+    dropout_rate=vecDropoutParamH1,
+    loglik_ratio=vecLogLikRatio)
   gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
-    geom_point(aes(colour=dropout_rate), show.legend=TRUE) + 
+    geom_point(aes(colour=dropout_rate, size=loglik_ratio), show.legend=TRUE) + 
     labs(title=paste0(strGeneID," ",strTitleSuffix)) +
     xlab(paste0("pseudotime")) +
     ylab(paste0("counts")) +

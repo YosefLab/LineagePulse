@@ -122,8 +122,8 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
         vecMu=vecMu[j]*vecSizeFactors[vecInterval],
         vecDispEst=rep(vecDispEst[j], length(vecInterval)), 
         vecDropoutRateEst=vecDropoutRateEst[vecInterval], 
-        vecboolNotZeroObserved[vecInterval], 
-        vecboolZero[vecInterval])
+        vecboolNotZeroObserved=vecboolNotZeroObserved[vecInterval], 
+        vecboolZero=vecboolZero[vecInterval])
       return(scaLogLikCell)
     }))
   return(scaLogLik)
@@ -185,13 +185,13 @@ evalLogLikMatrix <- function(matCounts,
     
       # Evaluate loglikelihood of gene
       scaLL <- evalLogLikGene(vecCounts=vecCounts,
-          vecMu=vecMuParam,
-          vecSizeFactors=vecSizeFactors,
-          vecDispEst=vecDispParam, 
-          vecDropoutRateEst=vecDropoutParam,
-          vecboolNotZeroObserved=vecboolNotZeroObserved, 
-          vecboolZero=vecboolZero,
-          scaWindowRadius=scaWindowRadius)
+        vecMu=vecMuParam,
+        vecSizeFactors=vecSizeFactors,
+        vecDispEst=vecDispParam, 
+        vecDropoutRateEst=vecDropoutParam,
+        vecboolNotZeroObserved=vecboolNotZeroObserved, 
+        vecboolZero=vecboolZero,
+        scaWindowRadius=scaWindowRadius)
       return(scaLL)
     })
   ))
