@@ -53,7 +53,8 @@ plotGene <- function(vecCounts,
   vecDispParamH0=NULL,
   vecDispParamH1=NULL,
   vecDropoutParamH0=NULL,
-  vecSizeFactors=NULL){
+  vecSizeFactors=NULL,
+  scaWindowRadius=NULL){
   
   scaNumCells <- length(vecCounts)
   # Set drop-out rates as constant for visualistion if not given.

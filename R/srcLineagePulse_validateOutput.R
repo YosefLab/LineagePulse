@@ -261,7 +261,8 @@ validateOutput <- function(dirOutLineagePulse,
       vecDispParamH0=vecDispParamH0,
       vecDispParamH1=vecDispParamH1,
       vecDropoutParamH0=vecDropoutParamH0,
-      vecSizeFactors=vecSizeFactors)
+      vecSizeFactors=vecSizeFactors,
+      scaWindowRadius=lsInputParam$scaWindowRadius)
   }
   pdf("LineagePulse_ImpulseTraces_LowQval_LLRatioByPoint.pdf")
   for(gplot in lsGplotsTopQval){
