@@ -100,7 +100,8 @@ validateOuputSimulation <- function(
     xlab(paste0("log10 H0 inferred mean parameter")) +
     ylab(paste0("log10 gene-wise average of model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
-    geom_text(x=4/5*(max(dfScatterMuModelvsMuInferredH0$x)-min(dfScatterMuModelvsMuInferredH0$x)),
+    geom_text(x=min(dfScatterMuModelvsMuInferredH0$x)+
+        1/2*(max(dfScatterMuModelvsMuInferredH0$x)-min(dfScatterMuModelvsMuInferredH0$x)),
       y=min(dfScatterMuModelvsMuInferredH0$x),
       label=paste0("R^2=",scaCorrMuModelvsMuInferredH0),
       size=5 ) +
@@ -136,7 +137,8 @@ validateOuputSimulation <- function(
     xlab(paste0("log10 H1 inferred mean parameter")) +
     ylab(paste0("log10 model mean parameter")) + 
     scale_fill_continuous(name = "Count") + 
-    geom_text(x=4/5*(max(dfScatterMuModelvsMuInferredH1$x)-min(dfScatterMuModelvsMuInferredH1$x)),
+    geom_text(x=min(dfScatterMuModelvsMuInferredH1$x)+
+        1/2*(max(dfScatterMuModelvsMuInferredH1$x)-min(dfScatterMuModelvsMuInferredH1$x)),
       y=min(dfScatterMuModelvsMuInferredH1$x),
       label=paste0("R^2=",scaCorrMuModelvsMuInferredH1),
       size=5 ) +
@@ -173,7 +175,8 @@ validateOuputSimulation <- function(
     xlab(paste0("inferred dispersion parameter (H0)")) +
     ylab(paste0("median underlying model dispersion parameter")) + 
     scale_fill_continuous(name = "Count") + 
-    geom_text(x=4/5*(max(dfScatterDispModelvsDispInferredH0$x)-min(dfScatterDispModelvsDispInferredH0$x)),
+    geom_text(x=min(dfScatterDispModelvsDispInferredH0$x)+
+        1/2*(max(dfScatterDispModelvsDispInferredH0$x)-min(dfScatterDispModelvsDispInferredH0$x)),
       y=min(dfScatterDispModelvsDispInferredH0$x),
       label=paste0("R^2=",scaCorrDispModelvsDispInferredH0),
       size=5 ) +
@@ -215,7 +218,8 @@ validateOuputSimulation <- function(
     xlab(paste0("median inferred dispersion parameter (H1)")) +
     ylab(paste0("median model dispersion parameter")) + 
     scale_fill_continuous(name = "Count") +
-    geom_text(x=4/5*(max(dfScatterDispModelvsDispInferredMedianH1$x)-min(dfScatterDispModelvsDispInferredMedianH1$x)),
+    geom_text(x=min(dfScatterDispModelvsDispInferredMedianH1$x)+
+        1/2*(max(dfScatterDispModelvsDispInferredMedianH1$x)-min(dfScatterDispModelvsDispInferredMedianH1$x)),
       y=min(dfScatterDispModelvsDispInferredMedianH1$x),
       label=paste0("R^2=",scaCorrDispModelvsDispInferredMedianH1),
       size=5 ) +
@@ -365,99 +369,8 @@ validateOuputSimulation <- function(
     graphics.off()
   }
   
-  # 4. LRT hist
-  print("# 4. LRT histogram")
-  # Overall deviation comparison: LRT
-  # Compare under negative binomial and under ZINB model
-  # Compute loglikelihood of true underlying model
-  # Recover zero predictions:
-  matMuHiddenTemp <- matMuHidden
-  matMuHiddenTemp[matMuHiddenTemp==0] <- 10^(-4)
-  vecNBLLHiddenModel <- sapply(seq(1,scaNumGenes), function(gene){
-    sum(dnbinom(x=matCountsProc[gene,],
-      mu=matMuHiddenTemp[gene,],
-      size=matDispHidden[gene,],
-      log=TRUE), na.rm=TRUE)
-  })
-  vecZINBLLHiddenModel <- unlist(lapply( seq(1,scaNumGenes), function(i){
-    evalLogLikGene(vecCounts=matCountsProc[i,],
-      vecMu=matMuHiddenTemp[i,],
-      vecSizeFactors=vecSizeFactorsHidden,
-      vecDispEst=matDispHidden[i,], 
-      vecDropoutRateEst=matDropoutRatesHidden[i,],
-      vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
-      vecboolZero=matCountsProc[i,]==0 & !is.na(matCountsProc[i,]),
-      scaWindowRadius=scaWindowRadius)
-  }))
-  # Compute loglikelihood of inferred model
-  vecNBLLH1Model <- sapply(seq(1,scaNumGenes), function(i){
-    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
-      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
-      vecInterval=NULL )
-    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModel=lsDispModelH1$lsDispModelGlobal,
-      vecInterval=NULL )
-    scaLL <- sum(dnbinom(x=matCountsProc[i,],
-      mu=vecMuParamH1,
-      size=vecDispParamH1,
-      log=TRUE), na.rm=TRUE)
-    return(scaLL)
-  })
-  vecZINBLLH1Model <- unlist(lapply( seq(1,scaNumGenes), function(i){
-    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
-      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
-      vecInterval=NULL )
-    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModel=lsDispModelH1$lsDispModelGlobal,
-      vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
-      vecMu=vecMuParamH1,
-      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-    scaLL <- evalLogLikGene(vecCounts=matCountsProc[i,],
-      vecMu=vecMuParamH1,
-      vecSizeFactors=vecSizeFactors,
-      vecDispEst=vecDispParamH1, 
-      vecDropoutRateEst=vecDropoutParamH1,
-      vecboolNotZeroObserved=matCountsProc[i,]>0 & !is.na(matCountsProc[i,]), 
-      vecboolZero=matCountsProc[i,]==0 & !is.na(matCountsProc[i,]),
-      scaWindowRadius=scaWindowRadius)
-    return(scaLL)
-  }))
-  # LRT
-  scaQThres <- 10^(-3)
-  vecLRT_NB <- vecNBLLH1Model-vecNBLLHiddenModel
-  vecLRT_ZINB <- vecZINBLLH1Model-vecZINBLLHiddenModel
-  dfLRT_NB <- data.frame(value=vecLRT_NB)
-  dfLRT_ZINB <- data.frame(value=vecLRT_ZINB)
-  gHistLRT_NB <- ggplot( dfLRT_NB, aes(value)) +
-    geom_histogram(alpha = 1, position = 'identity') +
-    ggtitle(paste0("Log likelihoodratio under NB model\nLL(Inferred model H1) - LL(underlying model)")) +
-    xlab("Difference in loglikelihood") +
-    ylab("Frequency") +
-    theme(axis.text=element_text(size=14),
-      axis.title=element_text(size=14,face="bold"),
-      title=element_text(size=14,face="bold"),
-      legend.text=element_text(size=14))
-  graphics.off()
-  pdf("LineagePulseSim_Hist_LRT_InferredH1vsHidden_NB.pdf")
-  print(gHistLRT_NB)
-  dev.off()
-  gHistLRT_ZINB <- ggplot( dfLRT_ZINB, aes(value)) +
-    geom_histogram(alpha = 1, position = 'identity') +
-    ggtitle(paste0("Log likelihoodratio under ZINB model\nLL(Inferred model H1) - LL(underlying model)")) +
-    xlab("Difference in loglikelihood") +
-    ylab("Frequency") +
-    theme(axis.text=element_text(size=14),
-      axis.title=element_text(size=14,face="bold"),
-      title=element_text(size=14,face="bold"),
-      legend.text=element_text(size=14))
-  graphics.off()
-  pdf("LineagePulseSim_Hist_LRT_InferredH1vsHidden_ZINB.pdf")
-  print(gHistLRT_ZINB)
-  dev.off() 
-  
-  # 5. ECDF q-values divided by const and impulse true model
-  print("# 5. ECDF q-values divided by const and impulse true model")
+  # 4. ECDF q-values divided by const and impulse true model
+  print("# 4. ECDF q-values divided by const and impulse true model")
   vecX <- seq(max(-100,round(log(min(dfDEAnalysis$adj.p))/log(10))),0,by=0.5)
   # Compute observed ECDF for constant and for impulse distributed genes
   vecCDFConst <- sapply(vecX, function(thres){
@@ -486,8 +399,8 @@ validateOuputSimulation <- function(
   print(gECDFPvalByModel)
   dev.off() 
   
-  # 6. Q-value as function of model parameters
-  print("# 6. Q-value as function of model parameters")
+  # 5. Q-value as function of model parameters
+  print("# 5. Q-value as function of model parameters")
   # a) Q-value as function of average true mean parameter
   print("# a) Q-value as function of average true mean parameter")
   # divided by const and impulse true model

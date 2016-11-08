@@ -103,20 +103,24 @@ plotGene <- function(vecCounts,
         return(scaLogLikCell)
       })
     vecLogLikRatio <- vecLogLikH1-vecLogLikH0
-    # Project into size range
-    #vecLogLikRatio <- 4 + (vecLogLikRatio-min(vecLogLikRatio))*16/(
-    #  max(vecLogLikRatio, na.rm=TRUE) - min(vecLogLikRatio, na.rm=TRUE))
+
+    dfScatterCounts <- data.frame(
+      pt=vecPseudotime,
+      counts=vecCounts,
+      dropout_rate=vecDropoutParamH1,
+      loglik_ratio=vecLogLikRatio)
+    gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
+      geom_point(aes(colour=dropout_rate, size=loglik_ratio), show.legend=TRUE)
   } else {
-    vecLogLikRatio <- array(1, scaNumCells)
+    dfScatterCounts <- data.frame(
+      pt=vecPseudotime,
+      counts=vecCounts,
+      dropout_rate=vecDropoutParamH1)
+    gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
+      geom_point(aes(colour=dropout_rate), show.legend=TRUE)
   }
   
-  dfScatterCounts <- data.frame(
-    pt=vecPseudotime,
-    counts=vecCounts,
-    dropout_rate=vecDropoutParamH1,
-    loglik_ratio=vecLogLikRatio)
-  gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
-    geom_point(aes(colour=dropout_rate, size=loglik_ratio), show.legend=TRUE) + 
+  gGenePlot <- gGenePlot + 
     labs(title=paste0(strGeneID," ",strTitleSuffix)) +
     xlab(paste0("pseudotime")) +
     ylab(paste0("counts")) +
