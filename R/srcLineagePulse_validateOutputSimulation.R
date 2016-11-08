@@ -229,7 +229,7 @@ validateOuputSimulation <- function(
   dev.off()
   
   # 2. Dropout model
-  NCellsToPlot <- 100
+  NCellsToPlot <- 20
   NCellsToPlot <- min(scaNumCells,NCellsToPlot)
   print("# 2. Plot true and inferred dropout models by cell")
   # PDF with one page per cell: Plot data and inferred and true logistic model
@@ -287,7 +287,7 @@ validateOuputSimulation <- function(
       
       lsGplotsConstantIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecDropoutParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],
@@ -315,7 +315,7 @@ validateOuputSimulation <- function(
       
       lsGplotsImpulseIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecDropoutParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],
@@ -349,7 +349,7 @@ validateOuputSimulation <- function(
       }
       lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutRates=matDropoutRatesHidden[id,],
+        vecDropoutParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],
