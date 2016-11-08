@@ -102,7 +102,7 @@ validateOuputSimulation <- function(
     scale_fill_continuous(name = "Count") + 
     geom_text(x=min(dfScatterMuModelvsMuInferredH0$x)+
         1/2*(max(dfScatterMuModelvsMuInferredH0$x)-min(dfScatterMuModelvsMuInferredH0$x)),
-      y=min(dfScatterMuModelvsMuInferredH0$x),
+      y=min(dfScatterMuModelvsMuInferredH0$y),
       label=paste0("R^2=",scaCorrMuModelvsMuInferredH0),
       size=5 ) +
     theme(axis.text=element_text(size=14),
@@ -139,7 +139,7 @@ validateOuputSimulation <- function(
     scale_fill_continuous(name = "Count") + 
     geom_text(x=min(dfScatterMuModelvsMuInferredH1$x)+
         1/2*(max(dfScatterMuModelvsMuInferredH1$x)-min(dfScatterMuModelvsMuInferredH1$x)),
-      y=min(dfScatterMuModelvsMuInferredH1$x),
+      y=min(dfScatterMuModelvsMuInferredH1$y),
       label=paste0("R^2=",scaCorrMuModelvsMuInferredH1),
       size=5 ) +
     theme(axis.text=element_text(size=14),
@@ -177,7 +177,7 @@ validateOuputSimulation <- function(
     scale_fill_continuous(name = "Count") + 
     geom_text(x=min(dfScatterDispModelvsDispInferredH0$x)+
         1/2*(max(dfScatterDispModelvsDispInferredH0$x)-min(dfScatterDispModelvsDispInferredH0$x)),
-      y=min(dfScatterDispModelvsDispInferredH0$x),
+      y=min(dfScatterDispModelvsDispInferredH0$y),
       label=paste0("R^2=",scaCorrDispModelvsDispInferredH0),
       size=5 ) +
     theme(axis.text=element_text(size=14),
@@ -220,7 +220,7 @@ validateOuputSimulation <- function(
     scale_fill_continuous(name = "Count") +
     geom_text(x=min(dfScatterDispModelvsDispInferredMedianH1$x)+
         1/2*(max(dfScatterDispModelvsDispInferredMedianH1$x)-min(dfScatterDispModelvsDispInferredMedianH1$x)),
-      y=min(dfScatterDispModelvsDispInferredMedianH1$x),
+      y=min(dfScatterDispModelvsDispInferredMedianH1$y),
       label=paste0("R^2=",scaCorrDispModelvsDispInferredMedianH1),
       size=5 ) +
     theme(axis.text=element_text(size=14),
