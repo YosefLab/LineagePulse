@@ -34,10 +34,13 @@
 #'    Directory to which simulated parameter objects are 
 #'    saved to.
 #' 
-#' @return vecPT: (numerical vector length number of cells)
+#' @return list: (length 2)
+#' \itemize{
+#'    \item vecPT: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @return matSampledCountsObserved: (matrix genes x cells)
+#'    \item matSampledCountsObserved: (matrix genes x cells)
 #'    Sampled count data of all cells after drop-out.
+#' }
 #' 
 #' @export
 

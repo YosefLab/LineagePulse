@@ -33,7 +33,6 @@ source("srcLineagePulse_initialiseImpulseParameters.R")
 source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_plotPseudotimeClustering.R")
-source("srcLineagePulse_plotZINBfits.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_simulateDataSet.R")
@@ -84,7 +83,7 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' 7. Chose the number of processes you want to use (scaNProc), LineagePulse
 #' is parallelised on all computation intensive steps.
 #' 8. Set the validation output you want to receive to visualise
-#' the results (boolPlotZINBfits, boolValidateZINBfit).
+#' the results (boolValidateZINBfit).
 #' 9. Set the level of detail with which you want to follow
 #' progress through text printed on the console during a run
 #' (verbose, boolSuperVerbose).
@@ -92,7 +91,7 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' temporary and final output objects to be saved into
 #' (dirOut).
 #' 
-#' Note on parameter objects:
+#' @details Note on parameter objects:
 #' To save memory, not the entire parameter matrix (genes x cells) but
 #' the parmater models are stored in the objects lsMuModel, lsDispModel
 #' and lsDropModel. These objects are described in detail in the annotation
@@ -104,11 +103,11 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' impulse model for each gene and pseudotime coordinates. Therefore, the
 #' mean parameter for each observation can be computed as the value of the
 #' impulse model evaluated at the pseudotime points for each gene.
-#' 
-#' @details The computational complexity of LineagePulse is linear in the
+#'
+#' The computational complexity of LineagePulse is linear in the
 #' number of genes and linear in the number of cells.
 #' 
-#' @aliases LineagePulse wrapper
+#' @aliases LineagePulse wrapper, main function
 #' 
 #' @param matCounts: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
@@ -189,9 +188,6 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #'    zero-inflated negative binomial model as coordinate ascent.
 #' @param scaNProc: (scalar) [Default 1] Number of processes for 
 #'    parallelisation.
-#' @param boolPlotZINBfits: (bool) [Default TRUE]
-#'    Whether to plot zero-inflated negative binomial fits to selected genes
-#'    and clusters.
 #' @param boolValidateZINBfit: (bool) [Default TRUE]
 #'    Whether to generate evaluation metrics and plots
 #'    for parameter values of inferred ZINB model.
@@ -240,7 +236,6 @@ runLineagePulse <- function(matCounts,
   boolCoEstDispMean=TRUE,
   scaMaxEstimationCycles=20,
   scaNProc=1,
-  boolPlotZINBfits = FALSE,
   boolValidateZINBfit=TRUE,
   boolVerbose=TRUE,
   boolSuperVerbose=FALSE,
@@ -283,7 +278,6 @@ runLineagePulse <- function(matCounts,
     boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
     strMuModel=strMuModel,
     strDispModel=strDispModel,
-    boolPlotZINBfits=boolPlotZINBfits,
     boolValidateZINBfit=boolValidateZINBfit,
     scaMaxEstimationCycles=scaMaxEstimationCycles,
     scaNProc=scaNProc,
@@ -380,38 +374,7 @@ runLineagePulse <- function(matCounts,
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
-  # 6. Compute posterior probability of drop-out under
-  # alternative model.
-  #matZH1 <- calcProbNB( matMu=matMuH1,
-  #  matDispersions=matDispersionsH1,
-  #  matDropout=matDropoutH1,
-  #  matboolZero= matCountsProc==0,
-  #  matboolNotZeroObserved= (!is.na(matCountsProc) & matCountsProc>0),
-  #  scaWindowRadius=scaWindowRadius )
-  #save(matZH1,file=file.path(dirOut,"LineagePulse_matZH1.RData"))
-
-  # 7. Plot ZINB fits to data.
-  #if(boolPlotZINBfits){
-  #  tm_plotZINBfits <- system.time({
-  #    graphics.off()
-  #    print("7. Plot ZINB fits to data.")
-  #    vecZINBfitPlotIDs <- rownames(matCountsProc)
-  #    vecZINBfitPlotIDs <- vecZINBfitPlotIDs[1:min(100,length(vecZINBfitPlotIDs))]
-  #    vecMuH0 <- matMuH0[,1]
-  #    vecDispersionsH0 <- matDispersionsH0[,1]
-  #    plotZINBfits( vecGeneIDs=vecZINBfitPlotIDs, 
-  #      matCounts=matCountsProc,
-  #      vecMu=vecMuH0, 
-  #      vecDispersions=vecDispersionsH0,
-  #      matProbNB=1-matZH1,
-  #      scaWindowRadius=scaWindowRadius,
-  #      strPDFname="LineagePulse_ZINBfits.pdf" )
-  #  })
-  #  print(paste("Time elapsed during plotting of ZINP fits: ",
-  #    round(tm_plotZINBfits["elapsed"]/60,2)," min",sep=""))
-  #}
-  
-  # 8. Differential expression analysis:
+  # 6. Differential expression analysis:
   print("8. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
     dfDEAnalysis <- runDEAnalysis(
@@ -430,7 +393,7 @@ runLineagePulse <- function(matCounts,
   print(paste("Time elapsed during differential expression analysis: ",
     round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
-  # 9. Generate validation metrics for inferred ZINB fits
+  # 7. Generate validation metrics for inferred ZINB fits
   if(boolValidateZINBfit){
     print("9. Generate ZINB model fit validation metrics:")
     suppressWarnings( validateOutput(dirOutLineagePulse=dirOut,

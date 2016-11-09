@@ -8,22 +8,31 @@ library(reshape2)
 
 #' Generate metrics for comparison of ZINB fit against underlying model
 #' 
-#' Compare inferred parameters with underlying model parameters.
+#' Compare inferred parameters with underlying model parameters. Loads
+#' all data from temporary files. This can only be done if data was 
+#' simulated and true data is known!
 #' 
 #' @seealso Auxillary method not called by LineagePulse wrapper.
 #' Called separately by user.
 #' 
-#' @param matQval: matrix with p-values by methods
+#' @param dirOutLineagePulse: (str directory)
+#'    Directory to which detailed LineagePulse output was saved to.
+#'    Data are loaded from here.
+#' @param dirOutSimulation: (str directory)
+#'    Directory to which detailed LineagePulse::simulateDataSet 
+#'    output was saved to. Data are loaded from here.
+#' @param dirOutValidation: (str directory)
+#'    Directory to which validation metrics/plots are saved to.
+#'    This is the output directory for this function.
 #' 
-#' @return NULL
+#' @return NULL: Output saved to dirOutValidation.
 #' 
 #' @export
 
 validateOuputSimulation <- function(
   dirOutLineagePulse,
   dirOutSimulation,
-  dirOutValidation,
-  scaWindowRadius=NULL ){
+  dirOutValidation ){
   
   dirCurrent <- getwd()
   

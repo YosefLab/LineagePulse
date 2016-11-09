@@ -17,30 +17,124 @@
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param matMuH1: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial mean parameters
-#'    under alternative model H1.
-#' @param matDispersionsH1: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial dispersion parameters
-#'    under alternative model H1.
-#' @param matDropoutH1: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#'    These are the observation-wise point estimates, not the
-#'    logistic functions. Fit under alternative model H1.
+#' @param lsMuModelH1: (list length 2)
+#'    All objects necessary to compute H1 mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'      Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'      common to all genes.
+#'      \itemize{
+#'        \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'      "windows"} Name of the mean model.
+#'        \item scaNumCells: (scalar) [Default NA] Number of cells
+#'      for which model is evaluated. Used for constant model.
+#'        \item vecPseudotime: (numerical vector number of cells)
+#'      [Default NA] Pseudotime coordinates of cells. Used for
+#'      impulse model.
+#'        \item vecindClusterAssign: (integer vector length number of
+#'      cells) [Default NA] Index of cluster assigned to each cell.
+#'      Used for clusters model.
+#'        \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'      of a gene are simultaneously estiamted as a vector with BFGS
+#'      in windows mode.
+#'        \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'      for BFGS estimation of impulse model with optim (termination criterium).
+#'        \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'      change in objective function for BFGS estimation of impulse 
+#'      model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModelH1: (list length 2)
+#'    All objects necessary to compute H1 dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'      \itemize{
+#'        \item strDispModel: (str) {"constant"} 
+#'      Name of the dispersion model.
+#'        \item scaNumCells: (scalar) [Default NA] Number of cells
+#'      for which model is evaluated. Used for constant model.
+#'        \item vecPseudotime: (numerical vector number of cells)
+#'      [Default NA] Pseudotime coordinates of cells. Used for
+#'      impulse model.
+#'        \item vecindClusterAssign: (integer vector length number of
+#'      cells) [Default NA] Index of cluster assigned to each cell.
+#'      Used for clusters model.
+#'      }
+#'    }
+#' @param lsMuModelH0: (list length 2)
+#'    All objects necessary to compute H0 mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'      Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'      common to all genes.
+#'      \itemize{
+#'        \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'      "windows"} Name of the mean model.
+#'        \item scaNumCells: (scalar) [Default NA] Number of cells
+#'      for which model is evaluated. Used for constant model.
+#'        \item vecPseudotime: (numerical vector number of cells)
+#'      [Default NA] Pseudotime coordinates of cells. Used for
+#'      impulse model.
+#'        \item vecindClusterAssign: (integer vector length number of
+#'      cells) [Default NA] Index of cluster assigned to each cell.
+#'      Used for clusters model.
+#'        \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'      of a gene are simultaneously estiamted as a vector with BFGS
+#'      in windows mode.
+#'        \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'      for BFGS estimation of impulse model with optim (termination criterium).
+#'        \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'      change in objective function for BFGS estimation of impulse 
+#'      model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModelH0: (list length 2)
+#'    All objects necessary to compute H0 dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'      \itemize{
+#'        \item strDispModel: (str) {"constant"} 
+#'      Name of the dispersion model.
+#'        \item scaNumCells: (scalar) [Default NA] Number of cells
+#'      for which model is evaluated. Used for constant model.
+#'        \item vecPseudotime: (numerical vector number of cells)
+#'      [Default NA] Pseudotime coordinates of cells. Used for
+#'      impulse model.
+#'        \item vecindClusterAssign: (integer vector length number of
+#'      cells) [Default NA] Index of cluster assigned to each cell.
+#'      Used for clusters model.
+#'      }
+#'    }
+#' @param lsDropModel: (list length 2)
+#'    All objects necessary to compute drop-out parameters for all
+#'    observations, omitting mean parameters (which are stored in lsMeanModel).
+#'    \itemize{
+#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
+#'      {offset parameter, log(mu) parameter, parameters belonging to
+#'      constant predictors}
+#'      Parameters of drop-out model for each cell
+#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
+#'      gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'      fit other than offset and mean parameter (i.e. parameters which
+#'      are constant for all observations in a gene and externally supplied.)
+#'      Is null if no constant predictors are supplied.
+#'    }
 #' @param scaKbyGeneH1: (scalar) Degrees of freedom
-#'    by gene used in alternative model H1. The logistic
+#'    by gene used in null model H1. The logistic
 #'    dropout model is ignored as it is shared between
 #'    alternative and null model.
-#' @param matMuH0: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial mean parameters
-#'    under null model H0.
-#' @param matDispersionsH0: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial dispersion parameters
-#'    under null model H0.
-#' @param matDropoutH0: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#'    These are the observation-wise point estimates, not the
-#'    logistic functions. Fit under null model H0.
 #' @param scaKbyGeneH0: (scalar) Degrees of freedom
 #'    by gene used in null model H0. The logistic
 #'    dropout model is ignored as it is shared between
@@ -54,14 +148,14 @@
 #' 
 #' @return dfModelFreeDEAnalysis: (data frame genes x reported variables) 
 #'    Summary of differential expression analysis, sorted by adj.p:
-#'    {Gene: gene ID,
+#'    Gene: gene ID,
 #'    p: raw p-value, 
-#'    adj.p: BH corrected p-value, 
+#'    adj.p: FDR corrected p-value, 
 #'    loglik_full: loglikelihood of alternative model H1,
 #'    loglik_red: loglikelihood of null model H0,
 #'    deviance: loglikelihood ratio test statistic (the deviance),
 #'    mean_H0: inferred gene-wise mean parameter (constant null model),
-#'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
+#'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)
 #' @export
 
 runDEAnalysis <- function(matCountsProc,

@@ -6,9 +6,8 @@
 #' 
 #' Check that input is correctly supplied and formatted. Then process input
 #' data for analysis.
-#' (I) Helper functions:
+#' Helper functions:
 #'    checkNull() Check whether object was supplied (is not NULL).
-#'    checkCounts() Checks whether elements are count data.
 #'    checkNumeric() Checks whether elements are numeric.
 #'    checkCounts() Checks whether elements are count data.
 #' 
@@ -16,17 +15,77 @@
 #' 
 #' @param matCounts: (matrix genes x samples)
 #'    Count data of all cells, unobserved entries are NA.
+#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
 #' @param scaSmallRun: (integer) [Default NULL] Number of rows
 #'    on which ImpulseDE2 is supposed to be run, the full
 #'    data set is only used for size factor estimation.
-#' @return matCountsProc: (matrix genes x samples)
+#' @param strMuModel: (str) {"constant"}
+#'    [Default "impulse"] Model according to which the mean
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#'    [Default "constant"] Model according to which dispersion
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
+#' @param boolCoEstDispMean: (bool) [Default TRUE]
+#'    Whether mean and dispersion parameters are to be co-estimated
+#'    (simulatneous optimisation). Only available for certain 
+#'    dispersion and mean models:
+#'    dispersion models: constant.
+#'    mean models: constant, cluster, sliding window vector, impulse.
+#'    Note that co-estimation in model estimation B (without drop-
+#'    out model estimation) leads to a single step estimation as 
+#'    mean and dispersion parameter don't have to be iterated over.
+#'    This makes estimation of large data sets with complex H1 mean
+#'    model (e.g. impulse) possible, as the drop-out model can be 
+#'    estimated based on H0 (boolEstimateNoiseBasedOnH0) so that
+#'    the complex model only has to be estimated once (simultaneous
+#'    with the dispersion parameters). This may generally lead to better
+#'    convergence as the steps in coordinate-ascent are in a larger
+#'    space, closer to full gradient ascent. Setting to TRUE
+#'    is encouraged. Optimisation routines for individual mean 
+#'    and dispersion fitting (if FALSE) exist, but these may be viewed
+#'    as non-deprecated parts of an earlier implementation of the
+#'    alorithm.
+#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
+#'    mean parameters of a gene are co-estimated in "windows"
+#'    mode with BFGS algorithm (optimisation with dimensionality
+#'    of number of cells) or estimated one by one, conditioned
+#'    one the latest estimates of neighbours. The latter case
+#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
+#'    and each mean parameter is optimised once only.
+#' @param dirOut: (str directory) [Default NULL]
+#'    Directory to which detailed output is saved to.
+#'    Defaults to current working directory if NULL.
+#'
+#' @return list: (length 4)
+#'    \itemize{
+#'        \item matCountsProc: (matrix genes x samples)
+#'    Processed count data of all cells, unobserved entries are NA,
+#'    trimmed by scaSmallRun.
+#'        \item matCountsProcFull: (matrix genes x samples)
 #'    Processed count data of all cells, unobserved entries are NA.
-#' @return vecPseudotimeProc: (numerical vector length number of cells)
+#'        \item vecPseudotimeProc: (numerical vector length number of cells)
 #'    Processed pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Names of elements are cell names.
+#'        \item dirOut: (str directory)
+#'    Directory to which detailed output is saved to.
+#'    Defaults to current working directory if NULL.
+#'    }
+
 #' @export
 
 processSCData <- function(matCounts,

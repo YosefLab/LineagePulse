@@ -6,11 +6,11 @@ library(gplots)
 library(ggplot2)
 library(reshape2)
 
-#' Compute AUC of logistic function
+#' Compute AUC of logistic function [Deprecated]
 #' 
 #' This is a measure for the intensity of the predicted drop-out effect in the
 #' given cell. Assumes that drop-out rate(mean) relationship in 
-#' monotonously decreasing.
+#' monotonously decreasing. Currently not used.
 #' 
 #' @seealso Called by \code{anlayseOuput}.
 #' 
