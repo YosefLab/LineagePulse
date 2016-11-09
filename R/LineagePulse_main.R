@@ -36,6 +36,7 @@ source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_simulateDataSet.R")
+source("srcLineagePulse_sortGeneTrajectories.R")
 source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
 # Pre-compile function
