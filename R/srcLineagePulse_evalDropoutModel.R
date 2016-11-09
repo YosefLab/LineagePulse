@@ -27,9 +27,9 @@ evalDropoutModel <- function(vecPiModel,
   # Set offset parameter
   scaOffset <- 0.001
   
+  # Deprecate: Alternative hard boundaries
   #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
   #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
-  #vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
   scaDropoutRate <- scaOffset+(1-scaOffset)*1/(1+exp(- (vecPiPredictors %*% vecPiModel )))
   
   return(scaDropoutRate)

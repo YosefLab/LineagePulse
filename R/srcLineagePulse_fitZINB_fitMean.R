@@ -81,10 +81,6 @@ evalLogLikMuConstZINB <- function(scaTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function)
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
@@ -175,10 +171,6 @@ evalLogLikMuWindowZINB <- function(scaTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMuNeighbourhoodCurrent,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMuNeighbourhoodCurrent[cell]),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   # Compute loglikelihood terms with contribution from new mean parameter
@@ -277,10 +269,6 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMu,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   scaLogLik <- evalLogLikSmoothZINB_comp(
@@ -365,10 +353,6 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecImpulseValue,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,

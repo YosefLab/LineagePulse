@@ -1,52 +1,4 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++++     Analyse LineagePulse output    ++++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-
-library(gplots)
-library(ggplot2)
-library(reshape2)
-
-#' Compute AUC of logistic function [Deprecated]
-#' 
-#' This is a measure for the intensity of the predicted drop-out effect in the
-#' given cell. Assumes that drop-out rate(mean) relationship in 
-#' monotonously decreasing. Currently not used.
-#' 
-#' @seealso Called by \code{anlayseOuput}.
-#' 
-#' @param vecLinearModel: (numeric vector length 2)
-#'    Two parameters of linear model of logistic function.
-#' 
-#' @return scaAUC: (scalar) Area under the logistic curve
-#'    from 0 to Inf.
-#' 
-#' @export
-
-computeAUCLogistic <- function(vecLinearModel){
-  
-  # The logistic function f is
-  # f(x) = 1/(1+e^(-(a1+a2*x))
-  # where a1,a2 is the linear model.
-  # Note that in our case a1 and a2 are always negative
-  # because the probability of drop-out decreases with
-  # increasing mean. 
-  # f*(x) = 1/(1+e^(+(-a1-a2*x))
-  # where -a1-a2*x >== 0 forall x >= 0
-  # The integral over f* is
-  # F*(x) = -ln(1+e^(-(-a1-a2*x)))+C 
-  # Accordingly, we compute the AUC = F*(x=Inf) - F(x=0)
-  # where F*(x=Inf) = 0 and F(x=0) is to be evaluted:
-  scaAUC <- log(1+exp(vecLinearModel[1]))
-  
-  # Catch exception in which a1,a2 are not <0:
-  if(vecLinearModel[1]>0 | vecLinearModel[2]>0){
-    scaAUC <- NA
-  }
-  
-  return(scaAUC)
-}
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 #+++++++++++++++++++  Validation metrics for ZINB fits  +++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
@@ -321,32 +273,7 @@ validateOutput <- function(dirOutLineagePulse,
   vecDepth <- apply(matCountsProc, 2, function(cell){sum(cell, na.rm=TRUE)})
   names(vecDepth) <- colnames(matCountsProc)
   
-  # a) AUC of logistic curve as measure for drop-out intensity
-  #print("# a) Scatter plot AUC logistic drop-out model versus sequencing depth by cell")
-  #vecAUCLogistic <- apply(lsDropModel$matDropoutLinModel, 1, function(cellmodel){
-  #  computeAUCLogistic(cellmodel)
-  #})
-  
-  #dfScatter2 <- data.frame(
-  #  x=log(vecDepth),
-  #  y=log(vecAUCLogistic))
-  #g2 <- ggplot(dfScatter2, aes(x=x, y=y)) +
-  #  geom_point() + 
-  #  labs(title="Scatter plot AUC logistic drop-out model\n versus sequencing depth by cell") +
-  #  xlab(paste0("log sequencing depth")) +
-  #  ylab(paste0("AUC logistic drop-out model")) + 
-  #  scale_fill_continuous(name = "Count") + 
-  #  theme(axis.text=element_text(size=14),
-  #    axis.title=element_text(size=14,face="bold"),
-  #    title=element_text(size=14,face="bold"),
-  #    legend.text=element_text(size=14))
-  #print("flag4")
-  #pdf("LineagePulse_Scatter_AUCDropoutvsDepth.pdf",width=7,height=7)
-  #print(g2)
-  #dev.off()
-  #graphics.off()
-  
-  # b) Inflexion point of logistic
+  # a) Inflexion point of logistic
   print("# b) Scatter plot inflexion point logistic drop-out model versus sequencing depth by cell")
   vecInflexLogistic <- apply(lsDropModel$matDropoutLinModel, 1, function(cellmodel){
     return(-cellmodel[1]/cellmodel[2])

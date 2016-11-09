@@ -60,11 +60,6 @@ evalLogLikPiZINB <- function(vecTheta,
     evalDropoutModel_comp(vecPiModel=vecTheta, 
       vecPiPredictors=matPiPredictors[i,])
   })
-  #vecLinModelOut <- matPiPredictors %*% vecTheta
-  #vecPiEst <- 1/(1+exp(-vecLinModelOut))
-  #vecPiEst[vecPiEst < scaOffset] <- scaOffset
-  #vecPiEst[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
-  #vecPiEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood of estimate
   # Loglikelihood is evaluated on each window which was has

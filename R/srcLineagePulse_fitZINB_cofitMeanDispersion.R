@@ -95,14 +95,6 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
-  #})
-  #scaOffset <- 0.01
-  #vecPi <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
-  #vecPi[vecPi < scaOffset] <- scaOffset
-  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
@@ -196,10 +188,6 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMu,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood (this is the cost function) 
   scaLogLik <- evalLogLikSmoothZINB_comp(
@@ -299,10 +287,6 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMuParam,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecMuParam[cell]),vecPiConstPredictors))
-  #})
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikZINB_comp( vecCounts=vecCounts,
@@ -398,14 +382,6 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecImpulseValue,
     vecPiConstPredictors=vecPiConstPredictors )
-  #vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
-  #  sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
-  #})
-  #scaOffset <- 0.01
-  #vecPi <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
-  #vecPi <- 1/(1+exp(-vecLinModelOut))
-  #vecPi[vecPi < scaOffset] <- scaOffset
-  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
