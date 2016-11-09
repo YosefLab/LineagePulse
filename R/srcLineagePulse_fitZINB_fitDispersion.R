@@ -26,20 +26,18 @@
 #' @seealso Called by \code{fitDispZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of dispersion estimate.
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecMuEst: (vector number of cells) Negative binomial
 #'    mean parameter estimate of clusters to which cells
 #'    belong.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecPi: (vector number of cells) Dropout estimate of cell. 
-#' @param vecboolObserved: (bool vector number of samples)
-#'    Whether sample is not NA (observed).
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
@@ -97,21 +95,23 @@ evalLogLikDispConstZINB <- function(scaTheta,
 #' @seealso Called by \code{fitZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of dispersion estimate.
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecMuEst: (vector number of cells) Negative binomial
 #'    mean parameter estimate of clusters to which cells
 #'    belong.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecPi: (vector number of cells) Dropout estimate of cell. 
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
-#'    zero-inflated negative binomial likelihood.
+#' @return list: (length 2)
+#'    \itemize{
+#'      \item scaDisp: (scalar) Negative binomial dispersion 
+#'        parameter estimate. 
+#'      \item scaConvergence: (scalar) Convergence status of optim.
+#'    }
 #' @export
 
 fitDispZINB <- function( scaDispGuess,
@@ -171,14 +171,11 @@ fitDispZINB <- function( scaDispGuess,
 #' Auxillary function that calls the estimation functions for the
 #' different dispersion models according to their needs.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
+#' \code{fitDispZINB}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
-#'    Count data of all cells, unobserved entries are NA.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Observed read counts, not observed are NA.
 #' @param lsMuModel: (list length 2)
 #'    All objects necessary to compute mean parameters for all
 #'    observations.
@@ -208,6 +205,8 @@ fitDispZINB <- function( scaDispGuess,
 #'        model with optim (termination criterium).
 #'      }
 #'    }
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param lsDispModel: (list length 2)
 #'    All objects necessary to compute dispersion parameters for all
 #'    observations.
@@ -250,12 +249,18 @@ fitDispZINB <- function( scaDispGuess,
 #'    the observations [gene i, cells in neighbourhood of j],
 #'    the model is locally smoothed in pseudotime.
 #' 
-#' @return 
+#' @return list (length 2)
+#'    \itemize{
+#'      \item matDispModel: (numeric matrix genes x disp model parameters)
+#'        Contains the dispersion model parameters according to the used model.
+#'      \item vecConvergence: (numeric vector number of genes) 
+#'        Convergence status of optim for each gene.
+#'    }
 #' @export
 
 fitZINBDisp <- function( matCountsProc,
-  vecNormConst,
   lsMuModel,
+  vecNormConst,
   lsDispModel,
   lsDropModel,
   scaWindowRadius ){

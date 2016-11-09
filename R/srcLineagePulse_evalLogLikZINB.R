@@ -21,20 +21,19 @@
 #' Moreover called by \code{plotGene}.
 #'
 #' @param vecCounts (count vector number of samples)
-#'    Observed expression values.
+#'    Observed read counts, not observed are NA.
 #' @param vecMu (vector number of samples) 
 #'    Negative binomial mean parameter.
 #' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors for each observation.
-#'    One normalisation constant per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecDisp: (scalar vector number of samples) 
 #'    Negative binomial dispersion parameters.
 #' @param vecPi: (probability vector number of samples) 
 #'    Drop-out rate estimates.
 #' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not zero and observed (not NA).
+#'    Whether observation is larger than zero.
 #' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#'    Whether observation is zero.
 #'    
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
@@ -97,20 +96,19 @@ evalLogLikZINB <- function(vecCounts,
 #' \code{evalLogLikZINB} on neighbourhoods.
 #'
 #' @param vecCounts (count vector number of samples)
-#'    Observed expression values.
+#'    Observed read counts, not observed are NA.
 #' @param vecMu (numeric vector number of samples) 
 #'    Negative binomial mean parameter.
 #' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors for each observation.
-#'    One normalisation constant per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecDisp: (numeric vector number of samples) 
 #'    Negative binomial dispersion parameters.
 #' @param vecPi: (probability vector number of samples) 
 #'    Drop-out rate estimates.
 #' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not zero and observed (not NA).
+#'    Whether observation is larger than zero.
 #' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #'    
@@ -166,21 +164,20 @@ evalLogLikSmoothZINB <- function(vecCounts,
 #' Additionally by \code[plotGene}. Calls either 
 #' \code{evalLogLikZINB} or \code{evalLogLikSmoothZINB}.
 #'
-#' @param vecCounts (count vector number of samples)
-#'    Observed expression values.
-#' @param vecMu (numeric vector number of samples) 
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
+#' @param vecMu (numeric vector number of cells) 
 #'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors for each observation.
-#'    One normalisation constant per cell.
-#' @param vecDisp: (numeric vector number of samples) 
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
+#' @param vecDisp: (numeric vector number of cells) 
 #'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
+#' @param vecPi: (probability vector number of cells) 
 #'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not zero and observed (not NA).
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #'    
@@ -229,9 +226,9 @@ evalLogLikGene <- function(vecCounts,
 #' convergence of estimation iteration on entire data set.
 #'
 #' @param matCountsProc: (matrix genes x cells)
-#'    Count data of all cells, unobserved entries are NA.
+#'    Observed read counts, not observed are NA.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling constants. One normalisation constant per cell.
+#'    Model scaling factors, one per cell.
 #' @param lsMuModel: (list length 2)
 #'    All objects necessary to compute mean parameters for all
 #'    observations.

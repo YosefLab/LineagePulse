@@ -1,51 +1,6 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 #+++++++++++++++++++++++++     Fit ZINB model    ++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-# DEVELOPER COMMENTS ON ALGORITHM BUILDING AND IMPLEMENTATION
-# Note: Most problems are numerical and not conceptual problems.
-
-# Previously encountered problems:
-# Genes with many zeros and few very high counts: If dispersion is initialised
-# too high (=1), the increase in LL cannot always be picked up by dnbinom which
-# disables convergence.
-# Still didnt see convergence, this might reoccur during fitting. Removed -Inf
-# masking from likelihood function for NB part. Seeing convergence of means now.
-# Still problems with drop-out rate -> Use more genes to get more reliable 
-# traces, still problems. Take out masking of dropout contribution of nonzeros
-# in likelihood and force logistic to be decreasing in means - good cnvergence
-# until 3rd/4th iter.
-# Try replace mean optimise with optim and put masking in likelihood again: Note
-# that optim becomes unstable if Inf is returned by objective, while optimise
-# seems to be forced out of the "bad" parameter region in which dnbinom yields
-# LL=-Inf, optim needs the low value masking to not break down. Optim can be
-# initialised outside of the bad parameter region to avoid it. Now only 
-# problems in mean estimation (3rd iteration). Remove bounds from BFGS
-# optimisation. Cleared problem by setting mean initialisation to log(max+1)
-# instead of log(mean+1), was it stuck in bad parameter region again? maybe.
-# Initialise mean and drop-out rate to prior value, converging fully!
-# Compared BFGS against Nelder-Mead in optim for mean estimation on 200x400
-# points: Completed 4 iter with BFGS in 36.03 min on 2 cores 
-# (LL=24536057.4015036). Completed 4 iter with Nelder-Mead in 35.22 min on 
-# 2 cores (LL=-24536058.6125272). Exact same data set. Both yield 172 DE genes.
-# Problem with impulse mode: LL returned from optim does not match LL
-# computed from parameters returned by optim. Effect not so heavy in first 
-# iteration but very heavy after that. Not due to matLinModel, is it dispersion?
-# Dispersion is initialised low, if initialised higher, effects are stronger
-# in first iteration already. Is this inaccuracy in reporting parameters? Wouldnt
-# be so bad in first iteration with low dispersion param!?
-# Arrived at a converging version with ok results -> means are underestimated,
-# variance overestimated and drop-out rates are almost all zero if estimating
-# on many genes. This could be a bad local optimum of the likelihood, in which
-# the non-drop-out componen provides a lot of probability density for the zeros
-# and thereby pushing the drop-out component out. This seems to be show in the 
-# loglikelihood convergence as a large jump (10%) after the first dispersion
-# estimation. Avoid: initialise mu high,
-# variance low (dispersion high) and drop-out rate high. This works on a small
-# data set. Previously: mu= mean of nonzeros, phi = 0.001, dropout model:
-# offset = 0, mu param = -1. Now:  mu= mean of nonzeros, phi = 1, dropout model:
-# offset = log(scaPiTarget) - log(1-scaPiTarget) - scaPiLinModelMuParam*
-# log(min(vecMuModelInit, na.rm=TRUE)), mu param = -1.
-
 # HOWTO debug this: 
 # Set bplapply of estimation that throws error to lapply for proper error
 # reporting. Or - give nProc=1 and BiocParallel operates in SerialMode with

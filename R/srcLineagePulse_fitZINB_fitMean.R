@@ -32,21 +32,25 @@
 #' @seealso Called by \code{fitZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of mean parameter estimate.
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param vecDispEst: (scalar vector number of samples) 
 #'    Negative binomial dispersion  parameter for given 
 #'    gene and observations.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecboolObserved: (bool vector number of samples)
-#'    Whether sample is not NA (observed).
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter. 
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
-#'    Smoothing interval length.
+#'    Smoothing interval radius.
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
@@ -54,8 +58,8 @@
 
 evalLogLikMuConstZINB <- function(scaTheta,
   vecCounts,
-  vecDisp,
   vecNormConst,
+  vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
   vecboolNotZero,
@@ -110,28 +114,26 @@ evalLogLikMuConstZINB <- function(scaTheta,
 #' @seealso Called by \code{fitZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of mean parameter estimate.
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
-#' @param vecDisp: (vector number of cells) Negative binomial
-#'    dispersion parameter estimate.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecMu: (vector number of cells in neighbourhood) Mean
 #'    parameter estimates in neighourhood of target cell.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter. 
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not NA (observed) and has non-zero count.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
 #' @param scaTarget: (integer) Position of target cell
 #'    (whose mean is to be estimated) within given interval.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
@@ -141,14 +143,14 @@ evalLogLikMuConstZINB <- function(scaTheta,
 
 evalLogLikMuWindowZINB <- function(scaTheta,
   vecCounts,
-  vecDisp,
   vecMu,
+  vecNormConst,
+  vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecNormConst,
+  scaTarget,
   vecboolNotZero,
   vecboolZero,
-  scaTarget,
   scaWindowRadius){ 
   
   # (I) Linker functions
@@ -219,8 +221,10 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 #' 
 #' @param vecTheta: (numeric vector number of means to be estimated) 
 #'    Log of mean parameter estimates.
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
@@ -229,14 +233,10 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 #' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter. 
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not NA (observed) and has non-zero count.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
@@ -246,10 +246,10 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 
 evalLogLikMuVecWindowsZINB <- function(vecTheta,
   vecCounts,
+  vecNormConst,
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecNormConst,
   vecboolNotZero,
   vecboolZero,
   scaWindowRadius){ 
@@ -304,10 +304,15 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
 #' 
 #' @param vecTheta: (numeric vector impulse parameters (6)) 
 #'    Impulse model parameter estimates.
-#' @param vecCounts: (integer vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param vecTimepoints: (numerical vector number of unique time coordinates)
 #'    Unique (pseudo)time coordinates of cells.
+#' @param vecindTimepointAssign (numeric vector number samples) 
+#'    Index of time point assigned to cell in list of sorted
+#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
 #' @param vecDisp: (numeric vector number of cells)
 #'    Dispersion parameter estimates for observations of a gene.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
@@ -316,31 +321,25 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
 #' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecindTimepointAssign (numeric vector number samples) 
-#'    Index of time point assigned to cell in list of sorted
-#'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether sample is not zero and observed (not NA).
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' @param scaWindowRadius: (integer) 
-#'    Smoothing interval length.
+#'    Smoothing interval radius.
 #'    
-#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik: (scalar) Value of cost function:
+#'    zero-inflated negative binomial likelihood.
 #' @export
 
 evalLogLikMuImpulseZINB <- function(vecTheta,
   vecCounts,
+  vecNormConst,
   vecTimepoints,
+  vecindTimepointAssign, 
   vecDisp,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecNormConst,
-  vecindTimepointAssign, 
   vecboolNotZero, 
   vecboolZero,
   scaWindowRadius=NULL){  
@@ -382,21 +381,29 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
 #' 
 #' @seealso Called by \code{fitZINB}.
 #' 
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param scaMuGuess: (scalar) Initialisation for mean parameter
 #'    to be estimated.
 #' @param scaDispEst: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
+#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#'    Logistic linear model parameters of the dropout rate 
+#'    as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#'    Constant gene-wise coeffiecients, i.e. predictors which are not
+#'    the offset and not the mean parameter.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval length.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
-#'    zero-inflated negative binomial likelihood.
+#' @return list (length 2)
+#'    \itemize{
+#'      \item scaMu: (scalar)
+#'        Negative binomial mean parameter estimate.
+#'      \item scaConvergence: (scalar) Convergence status of optim.
+#'    }
 #' @export
 
 fitMuConstZINB <- function(vecCounts,
@@ -466,31 +473,32 @@ fitMuConstZINB <- function(vecCounts,
 #' maximum likelihood estimation of mean parameters of all cells in
 #' interval used in \code{fitMuVecZINB}.
 #' 
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecMu: (vector number of cells in neighbourhood)
 #'    [Defaul NULL] 
-#'    Mean parameter estimates in neighourhood of target cell.
+#'    Negative binomial mean parameter estimates in neighourhood of target cell.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
 #' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter.
-#' @param vecProbNB: (numeric vector number of cells) Posterior
-#'    of observation not being drop-out for closed-form MLE.
 #' @param scaTarget: (integer) Position of target cell
 #'    (whose mean is to be estimated) within given interval.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
-#' @return scaMu: (scalar) MLE of mean parameter.
+#' @return list (length 2)
+#'    \itemize{
+#'      \item scaMu: (scalar)
+#'        Negative binomial mean parameter estimate.
+#'      \item scaConvergence: (scalar) Convergence status of optim.
+#'    }
 #' @export
 
 fitMuWindowZINB <- function(vecCounts,
@@ -555,17 +563,15 @@ fitMuWindowZINB <- function(vecCounts,
 #' @seealso Called by \code{fitZINB}. Alternative to cell-wise sequential
 #' maximum likelihood estimation used in \code{fitMuZINB}.
 #' 
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecMuGuess: (vector number of cells in neighbourhood)
 #'    [Defaul NULL] 
 #'    Mean parameter estimates in neighourhood of target cell.
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    dispersion parameter estimate.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
 #'    Logistic linear model parameters of the dropout rate 
 #'    as a function of the mean and constant gene-wise coefficients.
@@ -579,7 +585,12 @@ fitMuWindowZINB <- function(vecCounts,
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
-#' @return scaMu: (scalar) MLE of mean parameter.
+#' @return list (length 2)
+#'    \itemize{
+#'      \item vecMu: (numeric vector number of cells)
+#'        Negative binomial mean parameter estimates.
+#'      \item scaConvergence: (scalar) Convergence status of optim.
+#'    }
 #' @export
 
 fitMuVecWindowsZINB<- function(vecCounts,
@@ -648,8 +659,8 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #'    Dispersion parameter estimate for given gene.
 #' @param vecParamGuessPeak (numeric vector number of parameters [6]) 
 #'    Impulse model parameter estimates for given gene.
-#' @param vecCounts: (integer vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecTimepoints: (numerical vector number of unique time points)
 #'    Unique (pseudo)time coordinates of cells.
 #' @param matDropoutLinModel: (matrix number of cells x number of predictors)
@@ -659,9 +670,7 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecindTimepointAssign (numeric vector number samples) 
 #'    Index of time point assigned to cell in list of sorted
 #'    time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
@@ -674,7 +683,8 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #'   
 #' @return list: (length 3)
 #'    \itemize{
-#'      \item vecImpulseParam: (numeric vector [beta, h0, h1, h2, t1, t2])
+#'      \item vecImpulseParam: (numeric vector lenth 6)
+#'        {beta, log(h0), log(h1), log(h2), t1, t2}
 #'        Impulse model parameter estimates.
 #'      \item scaLL: (scalar) Loglikelihood of fit.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
@@ -757,8 +767,8 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #' \code{fitDispConstMuImpulseOneInitZINB} for each initialisation.
 #' Code similar to \code{ImpulseDE2::fitImpulse_gene}.
 #' 
-#' @param vecCounts: (vector number of cells) Observed expression values 
-#'    of gene in cells in cluster.
+#' @param vecCounts (count vector number of cells)
+#'    Observed read counts, not observed are NA.
 #' @param vecImpulseParamGuess: (numerical vector impulse parameters)
 #'    Previous impulse model parameter values.
 #' @param lsMuModelGlobal: (list) Global variables for mean model,
@@ -792,9 +802,7 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #'    Constant gene-wise coeffiecients, i.e. predictors which are not
 #'    the offset and not the mean parameter.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param vecPseudotime: (numerical vector number of cells)
 #'    Pseudotime coordinates of cells.
 #' @param scaWindowRadius: (integer) 
@@ -802,7 +810,8 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #' 
 #' @return list (length 3)
 #'    \itemize{
-#'      \item vecImpulseParam: (numeric vector [beta, h0, h1, h2, t1, t2])
+#'      \item vecImpulseParam: (numeric vector lenth 6)
+#'        {beta, log(h0), log(h1), log(h2), t1, t2}
 #'        Impulse model parameter estimates.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
@@ -962,14 +971,13 @@ fitMuImpulseZINB <- function(vecCounts,
 #' Auxillary function that calls the estimation functions for the
 #' different mean models according to their needs.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
+#' \code{}
 #' 
 #' @param matCountsProc: (matrix genes x cells)
-#'    Count data of all cells, unobserved entries are NA.
+#'    Observed read counts, not observed are NA.
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param lsMuModel: (list length 2)
 #'    All objects necessary to compute mean parameters for all
 #'    observations.
@@ -1043,8 +1051,10 @@ fitMuImpulseZINB <- function(vecCounts,
 #' 
 #' @return list (length 2)
 #'    \itemize{
-#'      \item matMuModel:
-#'      \item vecConvergence:
+#'      \item matMuModel: (numeric matrix genes x mu model parameters)
+#'        Contains the mean model parameters according to the used model.
+#'      \item vecConvergence: (numeric vector number of genes) 
+#'        Convergence status of optim for each gene.
 #'    }
 #' @export
 

@@ -11,37 +11,35 @@
 #' 
 #' @seealso Called by \code{fitPiZINB}.
 #' 
-#' @param vecTheta: (numeric vector length linear model) Linear model
-#'    for drop-out rate in logit space.
+#' @param vecTheta: (numeric vector length linear model) 
+#'    Parameter estimates for logit linear model for drop-out rate.
+#' @param vecCounts (count vector number of genes)
+#'    Observed read counts, not observed are NA.
+#' @param vecMu: (vector number of cells) Negative binomial
+#'    mean parameter estimate.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    dispersion parameter estimate.
 #' @param matPiPredictors: (matrix genes x predictors) Predictors of
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
-#' @param vecCounts: (numeric vector number of genes) Observed expression values 
-#'    of gene in target cell.
-#' @param vecMu: (vector number of cells) Negative binomial
-#'    mean parameter estimate.
-#' @param vecDisp: (vector number of cells) Negative binomial
-#'    dispersion parameter estimate.
-#' @param scaNormConst: (scalar) 
-#'    Model scaling factors for cell which takes
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecboolObserved: (bool vector number of samples)
-#'    Whether sample is not NA (observed).
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether sample has zero count.
+#' @param vecboolNotZero: (bool vector number of cells)
+#'    Whether observation is larger than zero.
+#' @param vecboolZero: (bool vector number of cells)
+#'    Whether observation is zero.
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
 evalLogLikPiZINB <- function(vecTheta,
-  matPiPredictors,
   vecCounts,
   matMu,
-  matDisp,
   scaNormConst,
+  matDisp,
+  matPiPredictors,
   vecboolNotZero,
   vecboolZero ){ 
   
@@ -90,7 +88,8 @@ evalLogLikPiZINB <- function(vecTheta,
 #' Parameter estimation of the linear model is performed by maximum
 #' likelihood based on the overall likelihood.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
+#' \code{}
 #' 
 #' @param vecDropoutLinModel: (numeric vector length linear model)
 #'    Previous parameterisation of linear model for drop-out 
@@ -99,8 +98,8 @@ evalLogLikPiZINB <- function(vecTheta,
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
-#' @param vecCounts: (numeric vector number of genes) Observed expression values 
-#'    of gene in target cell.
+#' @param vecCounts (count vector number of genes)
+#'    Observed read counts, not observed are NA.
 #' @param lsMuModel: (list length 2)
 #'    All objects necessary to compute mean parameters for all
 #'    observations.
@@ -151,10 +150,8 @@ evalLogLikPiZINB <- function(vecTheta,
 #'        Used for clusters model.
 #'      }
 #'    }
-#' @param scaNormConst: (numeric vector number of cells in neighbourhood) 
-#'    Model scaling factors for cell which takes
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
 #' @param vecInterval: (integer vector neighbourhood)
 #'    Positions of cells within smooting interval (neighbourhood)
 #'    of target cell.
