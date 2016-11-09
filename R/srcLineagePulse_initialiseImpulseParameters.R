@@ -7,36 +7,59 @@
 #' The initialisations reflect intuitive parameter choices corresponding
 #' to a peak and to a valley model.
 #' 
-#' @seealso Called by \code{fitImpulse_gene}.
+#' @seealso Called by impulse model fitting wrappers:
+#' \code{fitMuImpulseZINB} and \code{fitDispConstMuImpulseZINB}.
 #' 
-#' @param vecPseudotime: (numeric vector number of timepoints) 
-#'    Time-points at which gene was sampled.
 #' @param vecCounts: (count vector number of samples) Count data.
-#' #' @param vecDropoutRate: (probability vector number of samples) 
-#'    [Default NULL] Dropout rate/mixing probability of zero inflated 
-#'    negative binomial mixturemodel for each gene and cell.
-#' @param vecProbNB: (probability vector number of samples) [Default NULL]
-#'    Probability of observations to come from negative binomial 
-#'    component of mixture model.
-#' @param vecTimepointAssign: (numeric vector number samples) 
-#'    Timepoints assigned to samples.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Normalisation constants for each sample.
-#' @param strMode: (str) [Default "batch"] 
-#'    {"batch","longitudinal","singlecell"}
-#'    Mode of model fitting.
+#' @param lsMuModelGlobal: (list) 
+#'    Global variables for mean model, common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#' @param vecMu: (vector number of cells) Negative binomial
+#'    mean parameter estimates.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell.
+#' @param vecDisp: (vector number of cells) Negative binomial
+#'    mean parameter estimated.
+#' @param vecDrop: (vector number of cells) Dropout estimates of cells. 
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
 #'    
-#' @return vecParamGuessPeak: (numeric vector number of impulse
+#' @return list (length 2)
+#'    \itemize{
+#'        \item peak: (numeric vector number of impulse
 #'    model parameters) Impulse model parameter initialisation 
 #'    corresponding to a peak.
+#'        \item valley: (numeric vector number of impulse
+#'    model parameters) Impulse model parameter initialisation 
+#'    corresponding to a valley.
+#'    }
 #' @export
 
 initialiseImpulseParametes <- function(vecCounts,
   lsMuModelGlobal,
   vecMu,
+  vecNormConst,
   vecDisp,
   vecDrop,
-  vecNormConst,
   scaWindowRadius){
   
   # Compute posterior of drop-out

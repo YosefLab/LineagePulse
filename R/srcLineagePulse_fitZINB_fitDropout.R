@@ -8,8 +8,12 @@
 #' This function is designed to allow numerical optimisation
 #' of logistic drop-out paramater model on single gene given
 #' the negative binomial mean and dispersion parameters.
+#'
+#' @aliases evalLogLikPiZINB_comp
 #' 
-#' @seealso Called by \code{fitPiZINB}.
+#' @seealso Called by fitting wrapper:
+#' \code{fitPiZINB}.
+#' Calls \code{evalLogLikZINB}.
 #' 
 #' @param vecTheta: (numeric vector length linear model) 
 #'    Parameter estimates for logit linear model for drop-out rate.
@@ -87,9 +91,10 @@ evalLogLikPiZINB <- function(vecTheta,
 #' on given gene-specific predictors (which enter the linear model).
 #' Parameter estimation of the linear model is performed by maximum
 #' likelihood based on the overall likelihood.
-#' 
-#' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
-#' \code{}
+#'
+#' @seealso Called by drop-out estimation wrapper code in \code{fitZINB}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikPiZINB}.
 #' 
 #' @param vecDropoutLinModel: (numeric vector length linear model)
 #'    Previous parameterisation of linear model for drop-out 

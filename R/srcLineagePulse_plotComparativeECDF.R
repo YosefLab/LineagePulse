@@ -15,6 +15,10 @@
 #'    dfDEResults is loaded.
 #' @param filePDF: (directory/filename)
 #'    File to which plot is saved (pdf).
+#' @param strRunLabels: (string vector arbitrary length)
+#'    Names of runs to be plotted. Correspond
+#'    to directories supplied in lsDirOutLineagePulse.
+#' @param strTitle: (string) Title of plot.
 #' 
 #' @return NULL
 #' 
@@ -26,7 +30,7 @@ plotComparativeECDF <- function(
   strRunLabels,
   strTitle="Comparative Q-value ECDF"){
   
-  if(length(lsDirOutLineagePulse) != length){
+  if(length(lsDirOutLineagePulse) != length(strRunLabels)){
     stop("Number of supplied directories and run names dont match.")
   }
   lsVecECDF <- list()

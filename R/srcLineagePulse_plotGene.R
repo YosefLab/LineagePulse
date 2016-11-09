@@ -7,6 +7,8 @@
 #' Plot counts and model for one gene as a scatter plot with line plots. 
 #' Dropout rates can be given and are visualised as the colour of the observation
 #' points. Inferred and underlying reference models can be plotted as lines.
+#' Has the option to scale the point size according to the difference in 
+#' loglikelihood of the observation under H0 and H1.
 #' 
 #' @seealso Called by \code{runLineagePulse} or separately by user.
 #' 
@@ -15,7 +17,7 @@
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #' @param vecPiParamH1: (numeric vector length cells) [Default NULL]
-#'    Dropout rates for observations under alternative model.
+#'    Dropout parameter estimates for all cells under H1 model.
 #' @param vecImpulseModelParam: (numeric vector length impulse parameters=6)
 #'    [Default NULL] Impulse model parameters for given gene. 
 #'    Amplitudes in log format, like LineagePulse output!
@@ -30,6 +32,30 @@
 #'    Reference constant model parameter for given gene: expression mean.
 #' @param strGeneID: (str) Name of gene, used for title of plot.
 #' @param strTitleSuffix: (str) String to be added to title.
+#' @param boolScaleByLL: (bool) [Default FALSE]
+#'    Whether to scale point size ccording to the difference in 
+#'    loglikelihood of the observation under H0 and H1.
+#' @param vecMuParamH0: (numeric vector number of cells)
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Mean parameter estimates for all cells under H0 model.
+#' @param vecMuParamH1: (numeric vector number of cells)
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Mean parameter estimates for all cells under H1 model.
+#' @param vecDispParamH0: (numeric vector number of cells)
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Dispersion parameter estimates for all cells under H0 model.
+#' @param vecDispParamH1: (numeric vector number of cells)
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Dispersion parameter estimates for all cells under H0 model.
+#' @param vecPiParamH0: (numeric vector number of cells)
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Dropout parameter estimates for all cells under H0 model.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Model scaling factors, one per cell.
+#' @param scaWindowRadius: (integer) 
+#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
+#'    Smoothing interval radius.
 #' 
 #' @return gGenePlot: (ggplot object) Plot which can be printed or saved
 #'    to pdf. Inferred impulse and constant model are plotted as 

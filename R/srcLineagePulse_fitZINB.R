@@ -9,6 +9,9 @@
 
 #' Fit zero-inflated negative binomial model to data
 #' 
+#' This is the algorithmic core wrapper of LineagePulse that carries out
+#' the entire parameter estimation for both H0 and H1.
+#'
 #' Fit alternative H1 and null H0 zero-inflated negative binomial model 
 #' to a data set using cycles of coordinate ascent. The algorithm first
 #' fits the either H1 or H0 together with the logistic dropout model by
@@ -51,7 +54,11 @@
 #' mean parameter for each observation can be computed as the value of the
 #' impulse model evaluated at the pseudotime points for each gene.
 #' 
-#' @seealso Called by \code{runLineagePulse}.
+#' @seealso Called by \code{runLineagePulse}. Calls parameter estimation
+#' wrappers:
+#' \code{fitPiZINB}, \code{fitZINBMu}, \code{fitZINBDisp} and
+#' \code{fitZINBMuDisp}.
+#' Calls \code{evalLogLikMatrix} to follow convergence.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
@@ -108,7 +115,7 @@
 #'    (simulatneous optimisation). Only available for certain 
 #'    dispersion and mean models:
 #'    dispersion models: constant
-#'    mean models: constant, impulse
+#'    mean models: constant, cluster, sliding window vector, impulse.
 #' @param vecPseudotime: (numerical vector number of cells)
 #'    Pseudotime coordinates of cells. Only required if mean model
 #'    or dispersion model are fit as a function of pseudotime, 
@@ -117,10 +124,11 @@
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
 #'    zero-inflated negative binomial model as coordinate ascent.
-#' @param verbose: (bool) Whether to follow EM-algorithm
-#'    convergence.
-#' @param boolSuperVerbose: (bool) Whether to follow EM-algorithm
-#'    progress in high detail with local convergence flags.
+#' @param verbose: (bool) Whether to follow convergence of the 
+#'    iterative parameter estimation with one report per cycle.
+#' @param boolSuperVerbose: (bool) Whether to follow convergence of the 
+#'    iterative parameter estimation in high detail with local 
+#'    convergence flags and step-by-step loglikelihood computation.
 #' 
 #' @return (list length 6)
 #'    \itemize{

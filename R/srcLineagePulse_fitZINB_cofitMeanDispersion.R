@@ -32,7 +32,11 @@
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @seealso evalLogLikDispConstMuConstZINB_comp
+#' @aliases evalLogLikDispConstMuConstZINB_comp
+#'
+#' @seealso Called by fitting wrapper:
+#' \code{fitDispConstMuConstZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector length 2) 
 #'    Log of dispersion parameter 
@@ -130,7 +134,11 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
 #' as a positive scalar. The cost function is insensitive to the
 #' mean parameter shrinking beyond a numerical threshold to zero.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @aliases evalLogLikDispConstMuVecWindowsZINB_comp
+#'
+#' @seealso Called by fitting wrapper:
+#' \code{fitDispConstMuVecWindowsZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector 1 + number of cells) 
 #'    Log of dispersion and log of mean parameter estimates.
@@ -227,7 +235,11 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @aliases evalLogLikDispConstMuClustersZINB_comp
+#'
+#' @seealso Called by fitting wrapper:
+#' \code{fitDispConstMuClusterZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector length 1+number of clusters) 
 #'    {Log dispersion parameter, log mean parameters}
@@ -323,10 +335,10 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
 #' dispersion factor to zero/ expansion to infinity.
 #' 
 #' @aliases evalLogLikDispConstMuImpulseZINB_comp
-#' 
-#' @seealso Called by \code{fitImpulse}::\code{fitImpulse_matrix}::
-#' \code{fitImpulse_gene}::\code{optimiseImpulseModelFit}.
-#' Calls \code{evalImpulseModel} and \code{evalLogLikZINB_comp}.
+#'
+#' @seealso Called by fitting wrapper:
+#' \code{fitDispConstMuImpulseOneInitZINB}.
+#' Calls \code{evalImpulseModel} and \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector dispersion (1) and impulse parameters (6)) 
 #'    Log dispersion and mean parameter estimates.
@@ -419,7 +431,9 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
 #' maximum likelihood estimators to a gene: Constant dispersion and
 #' constant mean model.
 #' 
-#' @seealso Called by \code{fitZINBMuDisp}.
+#' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikDispConstMuConstZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -520,8 +534,9 @@ fitDispConstMuConstZINB <- function(vecCounts,
 #' to all observations of a gene. The mean parameter is modelled
 #' by local smoothing (windows) and the dispersion parameter as a constant.
 #' 
-#' @seealso Called by \code{fitZINBMuDisp}. Alternative to cell-wise sequential
-#' maximum likelihood estimation used in \code{fitDispConstMuWindowZINB}.
+#' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikDispConstMuVecWindowsZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -624,7 +639,9 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
 #' fitDispConstMuConstZINB for each cluster as the dispersion
 #' parameter is assumed to be shared between clusters.
 #' 
-#' @seealso Called by \code{fitZINBMu}.
+#' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikDispConstMuClustersZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -732,10 +749,12 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 #' dispersion parameter and returns the fitted (maximum likelihood) model.
 #' This is the wrapper that calls optim.
 #' 
-#' @seealso Called by \code{fitImpulse_gene_LP}. This function
+#' @seealso Called by \code{fitDispConstMuImpulseZINB}. This function
 #' performs optimisation of one impulse model initialisation,
-#' \code{fitImpulse_gene_LP} coordinates the overall fitting
+#' \code{fitDispConstMuImpulseZINB} coordinates the overall fitting
 #' of an impulse model to a gene.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikDispConstMuImpulseZINB}.
 #' 
 #' @param scaDispGuess: (scalar) Initialisation for dispersion parameter
 #'    to be estimated.
@@ -873,9 +892,9 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #' impulse model fit to the data, simultaneous with fitting a 
 #' constant dispersion factor.
 #' 
-#' @seealso Called by \code{fitZINB}. Calls optimisation wrapper
-#' \code{fitDispConstMuImpulseOneInitZINB} for each initialisation.
-#' Code similar to \code{ImpulseDE2::fitImpulse_gene}.
+#' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
+#' Calls optimisation wrapper \code{fitDispConstMuImpulseOneInitZINB} 
+#' for each initialisation.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -1122,11 +1141,15 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #' Coordinate mean and dispersion parameter co-estimation step
 #' 
 #' Auxillary function that calls the estimation functions for the
-#' different mean models according to their needs. Note that one
+#' different mean and dispersion models according to their needs. Note that one
 #' function has to be coded for each combination of mean and dispersion
 #' models.
 #' 
 #' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
+#' \code{fitDispConstMuConstZINB},
+#' \code{fitDispConstMuClustersZINB},
+#' \code{fitDispConstMuVecWindowsZINB} and
+#' \code{fitDispConstMuImpulseZINB}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Observed read counts, not observed are NA.

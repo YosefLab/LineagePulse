@@ -28,8 +28,12 @@
 #' may cause numerical errors. Accordingly, growth above a numerical
 #' threshold to infinity (this correponds to Poissonian noise) is 
 #' also guarded against.
+#'
+#' @aliases evalLogLikMuConstZINB_comp
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by fitting wrapper:
+#' \code{fitMuConstZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param scaTheta: (scalar) Log of mean parameter estimate.
 #' @param vecCounts (count vector number of cells)
@@ -110,8 +114,12 @@ evalLogLikMuConstZINB <- function(scaTheta,
 #' The mean parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
 #' mean parameter shrinking beyond a numerical threshold to zero.
+#'
+#' @aliases evalLogLikMuWindowZINB_comp
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by fitting wrapper:
+#' \code{fitMuWindowZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param scaTheta: (scalar) Log of mean parameter estimate.
 #' @param vecCounts (count vector number of cells)
@@ -216,8 +224,12 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 #' The mean parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
 #' mean parameter shrinking beyond a numerical threshold to zero.
+#'
+#' @aliases evalLogLikMuVecWindowsZINB_comp
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by fitting wrapper:
+#' \code{fitMuVecWindowsZINB}.
+#' Calls \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector number of means to be estimated) 
 #'    Log of mean parameter estimates.
@@ -299,8 +311,9 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
 #' 
 #' @aliases evalLogLikMuImpulseZINB_comp 
 #' 
-#' @seealso Called by
-#' \code{fitDispConstMuImpulseOneInitZINB}.
+#' @seealso Called by fitting wrapper:
+#' \code{fitMuImpulseOneInitZINB}.
+#' Calls \code{evalImpulseModel} and \code{evalLogLikGene}.
 #' 
 #' @param vecTheta: (numeric vector impulse parameters (6)) 
 #'    Impulse model parameter estimates.
@@ -379,7 +392,9 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
 #' Fits single negative binomial mean parameters numerically as 
 #' maximum likelihood estimator to a gene: Constant mean model.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikMuConstZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -469,9 +484,9 @@ fitMuConstZINB <- function(vecCounts,
 #' to a set of observations and can be used in wrappers which compute
 #' every mean separately (assuming independence).
 #' 
-#' @seealso Called by \code{fitZINB}. Alternative to simultaneous
-#' maximum likelihood estimation of mean parameters of all cells in
-#' interval used in \code{fitMuVecZINB}.
+#' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikMuWindowZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -560,8 +575,9 @@ fitMuWindowZINB <- function(vecCounts,
 #' Fits negative binomial mean parameters numerically as maximum likelihood estimator
 #' to all cells in an interval simultaneously using BFGS.
 #' 
-#' @seealso Called by \code{fitZINB}. Alternative to cell-wise sequential
-#' maximum likelihood estimation used in \code{fitMuZINB}.
+#' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikMuVecWindowsZINB}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -650,10 +666,12 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #' likelihood function given the impulse model and returns
 #' the fitted (maximum likelihood) model.
 #' 
-#' @seealso Called by \code{fitImpulse_gene_LP}. This function
+#' @seealso Called by \code{fitMuImpulseZINB}. This function
 #' performs optimisation of one impulse model initialisation,
-#' \code{fitImpulse_gene_LP} coordinates the overall fitting
+#' \code{fitMuImpulseZINB} coordinates the overall fitting
 #' of an impulse model to a gene.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikMuImpulseZINB}.
 #' 
 #' @param scaDispGuess: (scalar) 
 #'    Dispersion parameter estimate for given gene.
@@ -763,9 +781,9 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #' impulse model fit to the data, simultaneous with fitting a 
 #' constant dispersion factor.
 #' 
-#' @seealso Called by \code{fitZINB}. Calls optimisation wrapper
-#' \code{fitDispConstMuImpulseOneInitZINB} for each initialisation.
-#' Code similar to \code{ImpulseDE2::fitImpulse_gene}.
+#' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
+#' Calls optimisation wrapper \code{fitMuImpulseOneInitZINB} 
+#' for each initialisation.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'    Observed read counts, not observed are NA.
@@ -969,10 +987,15 @@ fitMuImpulseZINB <- function(vecCounts,
 #' Chose mode of mean parameter estimation
 #' 
 #' Auxillary function that calls the estimation functions for the
-#' different mean models according to their needs.
+#' different mean models according to their needs. Note that one
+#' function has to be coded for each mean model.
 #' 
 #' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
-#' \code{}
+#' \code{fitMuConstZINB},
+#' \code{fitMuClustersZINB},
+#' \code{fitMuWindowZINB},
+#' \code{fitMuVecWindowsZINB} and
+#' \code{fitMuImpulseZINB}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Observed read counts, not observed are NA.

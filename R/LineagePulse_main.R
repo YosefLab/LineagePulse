@@ -167,8 +167,8 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #'    Whether mean and dispersion parameters are to be co-estimated
 #'    (simulatneous optimisation). Only available for certain 
 #'    dispersion and mean models:
-#'    dispersion models: constant
-#'    mean models: constant, impulse
+#'    dispersion models: constant.
+#'    mean models: constant, cluster, sliding window vector, impulse.
 #'    Note that co-estimation in model estimation B (without drop-
 #'    out model estimation) leads to a single step estimation as 
 #'    mean and dispersion parameter don't have to be iterated over.
@@ -195,12 +195,11 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' @param boolValidateZINBfit: (bool) [Default TRUE]
 #'    Whether to generate evaluation metrics and plots
 #'    for parameter values of inferred ZINB model.
-#' @param verbose: (bool) [Defaul TRUE]
-#'    Whether progress of coordinate ascent within fitZINB is 
-#'    reported once per iteration.
-#' @param boolSuperVerbose: (bool) [Defaul FALSE]
-#'    Whether coordinate ascent within fitZINB is followed
-#'    step-by-step rather than reporting once per iteration.
+#' @param verbose: (bool) Whether to follow convergence of the 
+#'    iterative parameter estimation with one report per cycle.
+#' @param boolSuperVerbose: (bool) Whether to follow convergence of the 
+#'    iterative parameter estimation in high detail with local 
+#'    convergence flags and step-by-step loglikelihood computation.
 #'    Note: This increases run-time as the loglikelihood is computed
 #'    more often. This is usually not a major contributor to runtime
 #'    though.

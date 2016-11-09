@@ -23,7 +23,11 @@
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @seealso Called by \code{fitDispZINB}.
+#' @aliases evalLogLikDispConstZINB_comp
+#' 
+#' @seealso Called by fitting wrapper:
+#' \code{fitConstDispZINB}.
+#' Calls \code{evalLogLikZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of dispersion estimate.
 #' @param vecCounts (count vector number of cells)
@@ -33,7 +37,8 @@
 #'    belong.
 #' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors, one per cell.
-#' @param vecPi: (vector number of cells) Dropout estimate of cell. 
+#' @param vecPi: (vector number of cells) 
+#'    Dropout estimates of cells. 
 #' @param vecboolNotZero: (bool vector number of cells)
 #'    Whether observation is larger than zero.
 #' @param vecboolZero: (bool vector number of cells)
@@ -92,7 +97,9 @@ evalLogLikDispConstZINB <- function(scaTheta,
 #' as maximum likelihood estimator to a gene as a constant.
 #' Guards against too large and too small dispersion parameters.
 #' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by dispersion estimation wrapper \code{fitZINBDisp}.
+#' Calls loglikelihood wrapper inside of optim:
+#' \code{evalLogLikDispConstZINB}.
 #' 
 #' @param scaTheta: (scalar) Log of dispersion estimate.
 #' @param vecCounts (count vector number of cells)
@@ -114,7 +121,7 @@ evalLogLikDispConstZINB <- function(scaTheta,
 #'    }
 #' @export
 
-fitDispZINB <- function( scaDispGuess,
+fitConstDispZINB <- function( scaDispGuess,
   vecCounts,
   vecMuEst,
   vecNormConst,
@@ -172,7 +179,7 @@ fitDispZINB <- function( scaDispGuess,
 #' different dispersion models according to their needs.
 #' 
 #' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
-#' \code{fitDispZINB}.
+#' \code{fitConstDispZINB}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Observed read counts, not observed are NA.
