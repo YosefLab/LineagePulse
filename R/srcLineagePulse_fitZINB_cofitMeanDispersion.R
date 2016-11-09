@@ -1025,12 +1025,13 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     } else if(is.na(vecLL[3])){
       # If optimisation of previous fit was not successfull:
       # Make sure new value is better than previous
-      scaLLGuess <- evalLogLikZINB_comp(vecCounts=vecCounts,
+      scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
         vecMu=vecMuParam*vecNormConst,
         vecDisp=rep(scaDispGuess, length(vecCounts)), 
         vecPi=vecPiParam,
         vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-        vecboolZero= !is.na(vecCounts) &vecCounts==0 )
+        vecboolZero= !is.na(vecCounts) &vecCounts==0,
+        scaWindowRadius=scaWindowRadius)
       indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
       if(vecLL[indMaxLL] < scaLLGuess){
         lsFitBest <- list(scaDisp=scaDispGuess,
@@ -1048,12 +1049,13 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     }
   } else {
     # Make sure new value is better than previous
-    scaLLGuess <- evalLogLikZINB_comp(vecCounts=vecCounts,
+    scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecMuParam*vecNormConst,
       vecDisp=rep(scaDispGuess, length(vecCounts)), 
       vecPi=vecPiParam,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-      vecboolZero= !is.na(vecCounts) &vecCounts==0 )
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
+      scaWindowRadius=scaWindowRadius)
     if(lsFitPrior$scaLL < scaLLGuess){
       lsFitBest <- list(scaDisp=scaDispGuess,
         vecImpulseParam=vecImpulseParamGuess,
@@ -1081,24 +1083,26 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
     vecDropoutOld <- 1/(1+exp(-vecLinModelOutOld))
-    scaLLOld <- evalLogLikZINB_comp(vecCounts=vecCounts,
+    scaLLOld <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecImpulseValueOld*vecNormConst,
       vecDisp=rep(scaDispGuess, length(vecCounts)), 
       vecPi=vecDropoutOld,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius)
     
     # report all new parame
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
     vecPiParam <- 1/(1+exp(-vecLinModelOut))
-    scaLLRef <- evalLogLikZINB_comp(vecCounts=vecCounts,
+    scaLLRef <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecImpulseValue*vecNormConst,
       vecDisp=rep(scaDisp, length(vecCounts)), 
       vecPi=vecPiParam,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius)
     print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
       scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
   }

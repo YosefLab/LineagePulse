@@ -2,29 +2,35 @@
 #++++++++++++++++++++++++++    Likelihood ZINB    +++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Compute log likelihood of zero-inflated negative binomial model for one gene
+#' Compute loglikelihood of zero-inflated negative binomial model
+#' for a vector of counts.
 #' 
 #' This liklihood function is appropriate for sequencing data with high drop 
 #' out rate, commonly observed in single cell data (e.g. scRNA-seq). This
 #' is the core function used for every maximum likelihood-based estimation
-#' in LineagePulse.
+#' in LineagePulse. It operates on a vector of counts, such as 
+#' observations of a gene.
 #' 
 #' @aliases evalLogLikZINB_comp
 #' 
 #' @seealso Called directly by likelihood wrappers 
-#'    \code{evalLogLikSmoothZINB} and \code{evalLogLikGene}.
-#'    Called directly by \code{evalLogLikDispConstMuClustersZINB}
-#'    and 
-#'    Moreover by \code{plotGene}.
+#' \code{evalLogLikSmoothZINB} and \code{evalLogLikGene}
+#' Called directly by \code{evalLogLikPiZINB},
+#' \code{evalLogLikDispConstMuClustersZINB}
+#' and \code{evalLogLikMuWindowZINB}
+#' Moreover called by \code{plotGene}.
 #'
-#' @param vecCounts (count vector number of amples)
-#'    Observed expression values for  given gene.
-#' @param vecMu (vector number of samples) Negative binomial
-#'    mean parameter for each sample.
-#' @param vecDisp: (scalar vector number of samples) Negative binomial dispersion 
-#'    parameter for given gene and observations.
+#' @param vecCounts (count vector number of samples)
+#'    Observed expression values.
+#' @param vecMu (vector number of samples) 
+#'    Negative binomial mean parameter.
+#' @param vecNormConst: (numeric vector number of samples) 
+#'    Model scaling factors for each observation.
+#'    One normalisation constant per cell.
+#' @param vecDisp: (scalar vector number of samples) 
+#'    Negative binomial dispersion parameters.
 #' @param vecPi: (probability vector number of samples) 
-#'    Dropout rate estimate for each cell for given gene.
+#'    Drop-out rate estimates.
 #' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
@@ -76,38 +82,40 @@ evalLogLikZINB <- function(vecCounts,
   return(scaLogLik)
 }
 
-#' Compute smoothed log likelihood of zero-inflated negative binomial model for one gene
+#' Compute smoothed loglikelihood of zero-inflated negative binomial model
+#' for a vector of counts.
 #' 
-#' This liklihood function is a wrapper for computing the likelihood with
-#' neighbourhood smoothing.
+#' This likelihood function is a wrapper for computing the likelihood with
+#' neighbourhood smoothing for a vector of counts.
 #' 
 #' @aliases evalLogLikSmoothZINB_comp
 #' 
 #' @seealso Called directly by \code{evalLogLikGene} and by
 #' loglikelihood wrappers that operate on sliding window mean
 #' estimates: \code{evalLogLikMuVecWindowsZINB} and
-#' \code{evalLogLikDispConstMuVecWindowsZINB}.
+#' \code{evalLogLikDispConstMuVecWindowsZINB}. Calls
+#' \code{evalLogLikZINB} on neighbourhoods.
 #'
-#' @param vecCounts (count vector number of amples)
-#'    Observed expression values for  given gene.
-#' @param vecMu (vector number of samples) Negative binomial
-#'    mean parameter for each sample.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
-#' @param vecDisp: (scalar vector number of samples) Negative binomial dispersion 
-#'    parameter for given gene and observations.
+#' @param vecCounts (count vector number of samples)
+#'    Observed expression values.
+#' @param vecMu (numeric vector number of samples) 
+#'    Negative binomial mean parameter.
+#' @param vecNormConst: (numeric vector number of samples) 
+#'    Model scaling factors for each observation.
+#'    One normalisation constant per cell.
+#' @param vecDisp: (numeric vector number of samples) 
+#'    Negative binomial dispersion parameters.
 #' @param vecPi: (probability vector number of samples) 
-#'    Dropout rate estimate for each cell for given gene.
+#'    Drop-out rate estimates.
 #' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
 #'    Whether sample has zero count.
 #' @param scaWindowRadius: (integer) 
-#'    Smoothing interval length.
+#'    Smoothing interval radius.
 #'    
-#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik: (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
 #' @export
 
 evalLogLikSmoothZINB <- function(vecCounts,
@@ -135,6 +143,50 @@ evalLogLikSmoothZINB <- function(vecCounts,
     }))
   return(scaLogLik)
 }
+
+#' Wrapper for log likelihood of zero-inflated negative binomial model
+#' for a vector of counts.
+#' 
+#' This likelihood function is a wrapper which choses whether to 
+#' compute smoothed or non-smoothed likelihood. Calling the 
+#' non-smoothed routing avoids the use of a for loop in the case
+#' of no smoothing.
+#' 
+#' 
+#' @seealso Called directly by \code{evalLogLikMatrix} and by
+#' loglikelihood wrappers for various models:
+#' \code{evalLogLikMuConstZINB},
+#' \code{evalLogLikDispConstZINB},
+#' \code{evalLogLikDispConstMuConstZINB},
+#' \code{evalLogLikMuImpulseZINB} and
+#' \code{evalLogLikDispConstMuImpulseZINB}.
+#' Called by fitting wrappers to ensure convergence:
+#' \code{fitMuImpulseZINB} and
+#' \code{fitDispConstMuImpulseZINB}.
+#' Additionally by \code[plotGene}. Calls either 
+#' \code{evalLogLikZINB} or \code{evalLogLikSmoothZINB}.
+#'
+#' @param vecCounts (count vector number of samples)
+#'    Observed expression values.
+#' @param vecMu (numeric vector number of samples) 
+#'    Negative binomial mean parameter.
+#' @param vecNormConst: (numeric vector number of samples) 
+#'    Model scaling factors for each observation.
+#'    One normalisation constant per cell.
+#' @param vecDisp: (numeric vector number of samples) 
+#'    Negative binomial dispersion parameters.
+#' @param vecPi: (probability vector number of samples) 
+#'    Drop-out rate estimates.
+#' @param vecboolNotZero: (bool vector number of samples)
+#'    Whether sample is not zero and observed (not NA).
+#' @param vecboolZero: (bool vector number of samples)
+#'    Whether sample has zero count.
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#'    
+#' @return scaLogLik: (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
+#' @export
 
 evalLogLikGene <- function(vecCounts,
   vecMu,
@@ -164,6 +216,92 @@ evalLogLikGene <- function(vecCounts,
   }
   return(scaLogLik)
 }
+
+#' Wrapper for log likelihood of zero-inflated negative binomial model
+#' for a matrix of counts (parallelised).
+#' 
+#' This likelihood function is a wrapper computes loglikelihood
+#' of entire data set by parallelising loglikelihood computation
+#' over genes.
+#' 
+#' 
+#' @seealso Called directly by \code{fitZINB} to track
+#' convergence of estimation iteration on entire data set.
+#'
+#' @param matCountsProc: (matrix genes x cells)
+#'    Count data of all cells, unobserved entries are NA.
+#' @param vecNormConst: (numeric vector number of cells) 
+#'    Model scaling constants. One normalisation constant per cell.
+#' @param lsMuModel: (list length 2)
+#'    All objects necessary to compute mean parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matMuModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of mean model for each gene.
+#'      \item lsMuModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
+#'        "windows"} Name of the mean model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
+#'        of a gene are simultaneously estiamted as a vector with BFGS
+#'        in windows mode.
+#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'        for BFGS estimation of impulse model with optim (termination criterium).
+#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
+#'        change in objective function for BFGS estimation of impulse 
+#'        model with optim (termination criterium).
+#'      }
+#'    }
+#' @param lsDispModel: (list length 2)
+#'    All objects necessary to compute dispersion parameters for all
+#'    observations.
+#'    \itemize{
+#'      \item matDispModel: (numerical matrix genes x number of model parameters)
+#'    Parameters of dispersion model for each gene.
+#'      \item lsDispModelGlobal: (list) Global variables for mean model,
+#'    common to all genes.
+#'        \itemize{
+#'          \item strDispModel: (str) {"constant"} 
+#'        Name of the dispersion model.
+#'          \item scaNumCells: (scalar) [Default NA] Number of cells
+#'        for which model is evaluated. Used for constant model.
+#'          \item vecPseudotime: (numerical vector number of cells)
+#'        [Default NA] Pseudotime coordinates of cells. Used for
+#'        impulse model.
+#'          \item vecindClusterAssign: (integer vector length number of
+#'        cells) [Default NA] Index of cluster assigned to each cell.
+#'        Used for clusters model.
+#'      }
+#'    }
+#' @param lsDropModel: (list length 2)
+#'    All objects necessary to compute drop-out parameters for all
+#'    observations, omitting mean parameters (which are stored in lsMeanModel).
+#'    \itemize{
+#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
+#'    {offset parameter, log(mu) parameter, parameters belonging to
+#'    constant predictors}
+#'    Parameters of drop-out model for each cell
+#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
+#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
+#'    fit other than offset and mean parameter (i.e. parameters which
+#'    are constant for all observations in a gene and externally supplied.)
+#'    Is null if no constant predictors are supplied.
+#'    }
+#' @param scaWindowRadius: (integer) 
+#'    Smoothing interval radius.
+#'
+#' @return scaLogLik: (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
+#' @export
 
 evalLogLikMatrix <- function(matCounts,
   vecNormConst,
