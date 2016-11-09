@@ -13,7 +13,7 @@
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -65,7 +65,7 @@
 #' @export
 
 runDEAnalysis <- function(matCountsProc,
-  vecSizeFactors,
+  vecNormConst,
   lsMuModelH1,
   lsDispModelH1,
   lsMuModelH0,
@@ -78,7 +78,7 @@ runDEAnalysis <- function(matCountsProc,
   # (I) Compute log likelihoods
   lsLL <- bplapply( seq(1,dim(matCountsProc)[1]), function(i){
     vecCounts <- matCountsProc[i,]
-    vecboolNotZeroObserved <- !is.na(vecCounts) & vecCounts>0
+    vecboolNotZero <- !is.na(vecCounts) & vecCounts>0
     vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
     # Decompress parameters by gene H0
@@ -88,7 +88,7 @@ runDEAnalysis <- function(matCountsProc,
     vecDispParamH0 <- decompressDispByGene( vecDispModel=lsDispModelH0$matDispModel[i,],
       lsDispModelGlobal=lsDispModelH0$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH0,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     
@@ -99,26 +99,26 @@ runDEAnalysis <- function(matCountsProc,
     vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
       lsDispModelGlobal=lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
     
     # Compute loglikelihoods
     scaLogLikFull <- evalLogLikGene(vecCounts=vecCounts,
-      vecSizeFactors=vecSizeFactors,
       vecMu=vecMuParamH1,
-      vecDispEst=vecDispParamH1, 
-      vecDropoutRateEst=vecDropoutParamH1,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecNormConst=vecNormConst,
+      vecDisp=vecDispParamH1, 
+      vecPi=vecPiParamH1,
+      vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
     
     scaLogLikRed <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecMuParamH0,
-      vecSizeFactors=vecSizeFactors,
-      vecDispEst=vecDispParamH0, 
-      vecDropoutRateEst=vecDropoutParamH0,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecNormConst=vecNormConst,
+      vecDisp=vecDispParamH0, 
+      vecPi=vecPiParamH0,
+      vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
     

@@ -13,7 +13,7 @@
 #' 
 #' @param vecTheta: (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
-#' @param matPredictorsPi: (matrix genes x predictors) Predictors of
+#' @param matPiPredictors: (matrix genes x predictors) Predictors of
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
@@ -37,12 +37,12 @@
 #' @export
 
 evalLogLikPiZINB_LinPulse <- function(vecTheta,
-  matPredictorsPi,
+  matPiPredictors,
   vecCounts,
   matMu,
   matDisp,
   scaNormConst,
-  vecboolNotZeroObserved,
+  vecboolNotZero,
   vecboolZero ){ 
   
   # (I) Linker functions
@@ -54,16 +54,17 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   vecTheta[vecTheta > 1/.Machine$double.eps] <- 1/.Machine$double.eps
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
 
-  vecDropoutRateFit <- sapply(seq(1,dim(matPredictorsPi)[1]), function(i){
+  vecPiEst <- sapply(seq(1,dim(matPiPredictors)[1]), function(i){
     evalDropoutModel_comp(vecPiModel=vecTheta, 
-      vecPiPredictors=matPredictorsPi[i,])
+      vecPiPredictors=matPiPredictors[i,])
   })
-  #vecLinModelOut <- matPredictorsPi %*% vecTheta
-  #vecDropoutRateFit <- 1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateFit[vecDropoutRateFit < scaOffset] <- scaOffset
-  #vecDropoutRateFit[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
-  #vecDropoutRateFit <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecLinModelOut <- matPiPredictors %*% vecTheta
+  #vecPiEst <- 1/(1+exp(-vecLinModelOut))
+  #vecPiEst[vecPiEst < scaOffset] <- scaOffset
+  #vecPiEst[vecDropoutRateFit > 1-scaOffset] <- 1-scaOffset
+  #vecPiEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
   
+  # (III) Evaluate loglikelihood of estimate
   # Loglikelihood is evaluated on each window which was has
   # target cell in its neighbourhood. Note that the negative binomial
   # parameters therefore change for each iteration as these represent
@@ -72,9 +73,9 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   scaLogLik <- sum(sapply(seq(1,dim(matMu)[2]), function(cell){
     evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
       vecMu=matMu[,cell]*scaNormConst,
-      vecDispEst=matDisp[,cell], 
-      vecDropoutRateEst=vecDropoutRateFit,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecDisp=matDisp[,cell], 
+      vecPi=vecPiEst,
+      vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero )
   }))
   
@@ -191,7 +192,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   
   # (I) Numerical maximum likelihood estimation of linear model
   # Initialise optimisation of linear model:
-  #vecParamGuess <- rep(1, dim(matPredictorsPi)[2])
+  #vecParamGuess <- rep(1, dim(matPiPredictors)[2])
   vecParamGuess <- vecDropoutLinModel
   vecParamGuess[2] <- log(-vecParamGuess[2])
   boolError <- FALSE
@@ -199,12 +200,12 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     optim(
       par=vecParamGuess,
       evalLogLikPiZINB_LinPulse_comp,
-      matPredictorsPi=matPiPredictors,
+      matPiPredictors=matPiPredictors,
       vecCounts=vecCounts,
       matMu=matMuParam,
       matDisp=matDispParam,
       scaNormConst=scaNormConst,
-      vecboolNotZeroObserved=!is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero=!is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       method="BFGS",
       control=list(maxit=lsPiOptimHyperparam$MAXIT_BFGS_Pi,
@@ -217,18 +218,18 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
     print(strErrorMsg)
     scaLLInit <- evalLogLikPiZINB_LinPulse_comp(
       vecTheta=vecParamGuess,
-      matPredictorsPi=matPiPredictors,
+      matPiPredictors=matPiPredictors,
       vecCounts=vecCounts,
       matMu=matMuParam,
       matDisp=matDispParam,
       scaNormConst=scaNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("scaLLInit", scaLLInit))
     print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
     lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,
       vecCounts=vecCounts, 
-      matPredictorsPi=matPredictorsPi,
+      matPiPredictors=matPiPredictors,
       matMuParam=matMuParam, 
       matDispParam=matDispParam,
       scaNormConst=scaNormConst, 

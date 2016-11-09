@@ -14,7 +14,7 @@
 #vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
 #  lsDispModel=lsDispersionModel$lsDispModelGlobal,
 #  vecInterval=NULL )
-#vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
+#vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
 #  vecMu=vecMuParam,
 #  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       

@@ -38,7 +38,7 @@
 #'    estimate and log of mean parameter estimate.
 #' @param vecCounts: (vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -58,7 +58,7 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
   vecNormConst,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecboolNotZeroObserved,
+  vecboolNotZero,
   vecboolZero,
   scaWindowRadius=NULL ){ 
   
@@ -83,36 +83,27 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
   if(scaMu < .Machine$double.eps){ scaMu <- .Machine$double.eps }
   
   # (III) Compute drop-out rates
-  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
     vecPiConstPredictors=vecPiConstPredictors )
   #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
   #  sum(matDropoutLinModel[cell,] * c(1,log(scaMu),vecPiConstPredictors))
   #})
   #scaOffset <- 0.01
-  #vecDropoutRateEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateEst[vecDropoutRateEst < scaOffset] <- scaOffset
-  #vecDropoutRateEst[vecDropoutRateEst > 1-scaOffset] <- 1-scaOffset
+  #vecPi <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecPi <- 1/(1+exp(-vecLinModelOut))
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
-  if(is.null(scaWindowRadius)){
-    scaLogLik <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
-      vecMu=scaMu*vecNormConst,
-      vecDispEst=vecDisp, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero )
-  } else {
-    scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp( vecCounts=vecCounts,
-      vecMu=rep(scaMu, length(vecCounts)),
-      vecSizeFactors=vecNormConst,
-      vecDispEst=vecDisp, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
-  }
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+    vecMu=rep(scaMu, length(scaMu)),
+    vecNormConst=vecNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero,
+    scaWindowRadius=scaWindowRadius )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
@@ -152,7 +143,7 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not NA (observed) and has non-zero count.
 #' @param vecboolZero: (bool vector number of samples)
 #'    Whether sample has zero count.
@@ -168,7 +159,7 @@ evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
   matDropoutLinModel,
   vecPiConstPredictors,
   vecNormConst,
-  vecboolNotZeroObserved,
+  vecboolNotZero,
   vecboolZero,
   scaWindowRadius){ 
   
@@ -193,22 +184,22 @@ evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
   vecMu[vecMu < .Machine$double.eps] <- .Machine$double.eps
   
   # (III) Compute drop-out rates
-  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMu,
     vecPiConstPredictors=vecPiConstPredictors )
   #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
   #  sum(matDropoutLinModel[cell,] * c(1,log(vecMu[cell]),vecPiConstPredictors))
   #})
-  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood (this is the cost function) 
   scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(
     vecCounts=vecCounts,
     vecMu=vecMu,
-    vecSizeFactors=vecNormConst,
-    vecDispEst=vecDisp, 
-    vecDropoutRateEst=vecDropoutRateEst,
-    vecboolNotZeroObserved=vecboolNotZeroObserved, 
+    vecNormConst=vecNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
     vecboolZero=vecboolZero,
     scaWindowRadius=scaWindowRadius)
   
@@ -242,7 +233,7 @@ evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #'    Log dispersion and mean parameter estimates which are optimised.
 #' @param vecCounts: (vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -262,7 +253,7 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
   vecNormConst,
   matDropoutLinModel,
   vecPiConstPredictors,
-  vecboolNotZeroObserved,
+  vecboolNotZero,
   vecboolZero,
   vecindClusterAssign ){ 
   
@@ -288,20 +279,20 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
   vecMuParam <- vecMu[vecindClusterAssign]
   
   # (III) Compute drop-out rates
-  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecMuParam,
     vecPiConstPredictors=vecPiConstPredictors )
   #vecLinModelOut <- sapply(seq(1,length(vecCounts)), function(cell){
   #  sum(matDropoutLinModel[cell,] * c(1,log(vecMuParam[cell]),vecPiConstPredictors))
   #})
-  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
+  #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
     vecMu=vecMuParam*vecNormConst,
-    vecDispEst=vecDisp, 
-    vecDropoutRateEst=vecDropoutRateEst,
-    vecboolNotZeroObserved=vecboolNotZeroObserved, 
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
     vecboolZero=vecboolZero )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
@@ -351,7 +342,7 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
 #'    Whether sample has zero count.
@@ -368,7 +359,7 @@ evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   matDropoutLinModel,
   vecPiConstPredictors,
   vecNormConst, 
-  vecboolNotZeroObserved, 
+  vecboolNotZero, 
   vecboolZero,
   scaWindowRadius=NULL){  
   
@@ -389,36 +380,27 @@ evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   # (III) Compute drop-out rates
-  vecDropoutRateEst <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
     vecMu=vecImpulseValue,
     vecPiConstPredictors=vecPiConstPredictors )
   #vecLinModelOut <- sapply(seq(1,length(vecImpulseValue)), function(cell){
   #  sum(matDropoutLinModel[cell,] * c(1,log(vecImpulseValue[cell]),vecPiConstPredictors))
   #})
   #scaOffset <- 0.01
-  #vecDropoutRateEst <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateEst <- 1/(1+exp(-vecLinModelOut))
-  #vecDropoutRateEst[vecDropoutRateEst < scaOffset] <- scaOffset
-  #vecDropoutRateEst[vecDropoutRateEst > 1-scaOffset] <- 1-scaOffset
+  #vecPi <- scaOffset+(1-scaOffset)*1/(1+exp(-vecLinModelOut))
+  #vecPi <- 1/(1+exp(-vecLinModelOut))
+  #vecPi[vecPi < scaOffset] <- scaOffset
+  #vecPi[vecPi > 1-scaOffset] <- 1-scaOffset
   
   # (IV) Evaluate loglikelihood of estimate
-  if(is.null(scaWindowRadius)){
-    scaLogLik <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
-      vecMu=vecImpulseValue*vecNormConst,
-      vecDispEst=vecDisp, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero )
-  } else {
-    scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp( vecCounts=vecCounts,
-      vecMu=vecImpulseValue,
-      vecSizeFactors=vecNormConst,
-      vecDispEst=vecDisp, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
-  }
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+    vecMu=vecImpulseValue,
+    vecNormConst=vecNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero,
+    scaWindowRadius=scaWindowRadius )
   
   return(scaLogLik)
 }
@@ -476,7 +458,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
@@ -491,7 +473,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius)
     print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", 
@@ -579,7 +561,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
@@ -594,7 +576,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
     print(paste0("scaLLInit ", scaLLInit))
@@ -685,7 +667,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecindClusterAssign=vecindClusterAssign,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
@@ -700,7 +682,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
       vecindClusterAssign=vecindClusterAssign,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0)
     print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
     print(paste0("scaLLInit ", scaLLInit))
@@ -812,7 +794,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS", 
@@ -834,7 +816,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
       vecNormConst=vecNormConst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius)
     print(paste0("c(log(scaDispGuess), vecImpulseParamGuess) ", paste(c(log(scaDispGuess), vecImpulseParamGuess),collapse=" ")))
@@ -970,7 +952,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   vecMuParam <- decompressMeansByGene( vecMuModel=vecImpulseParamGuess,
     lsMuModelGlobal=lsMuModelGlobal,
     vecInterval=NULL )
-  vecDropoutParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
+  vecPiParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
     vecMu=vecMuParam,
     vecPiConstPredictors=vecPiConstPredictors )
   # The previous parameter estiamte is kept as a reference and
@@ -980,7 +962,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     lsMuModelGlobal=lsMuModelGlobal,
     vecMu=vecMuParam,
     vecDisp=rep(scaDispGuess, length(vecCounts)),
-    vecDrop=vecDropoutParam,
+    vecDrop=vecPiParam,
     vecNormConst=vecNormConst,
     scaWindowRadius=scaWindowRadius)
   vecParamGuessPeak <- lsParamGuesses$peak
@@ -1045,9 +1027,9 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       # Make sure new value is better than previous
       scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
         vecMu=vecMuParam*vecNormConst,
-        vecDispEst=rep(scaDispGuess, length(vecCounts)), 
-        vecDropoutRateEst=vecDropoutParam,
-        vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+        vecDisp=rep(scaDispGuess, length(vecCounts)), 
+        vecPi=vecPiParam,
+        vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
         vecboolZero= !is.na(vecCounts) &vecCounts==0 )
       indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
       if(vecLL[indMaxLL] < scaLLGuess){
@@ -1068,9 +1050,9 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     # Make sure new value is better than previous
     scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
       vecMu=vecMuParam*vecNormConst,
-      vecDispEst=rep(scaDispGuess, length(vecCounts)), 
-      vecDropoutRateEst=vecDropoutParam,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecDisp=rep(scaDispGuess, length(vecCounts)), 
+      vecPi=vecPiParam,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
       vecboolZero= !is.na(vecCounts) &vecCounts==0 )
     if(lsFitPrior$scaLL < scaLLGuess){
       lsFitBest <- list(scaDisp=scaDispGuess,
@@ -1101,21 +1083,21 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     vecDropoutOld <- 1/(1+exp(-vecLinModelOutOld))
     scaLLOld <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValueOld*vecNormConst,
-      vecDispEst=rep(scaDispGuess, length(vecCounts)), 
-      vecDropoutRateEst=vecDropoutOld,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecDisp=rep(scaDispGuess, length(vecCounts)), 
+      vecPi=vecDropoutOld,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
       vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     
     # report all new parame
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
       sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
-    vecDropout <- 1/(1+exp(-vecLinModelOut))
+    vecPiParam <- 1/(1+exp(-vecLinModelOut))
     scaLLRef <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValue*vecNormConst,
-      vecDispEst=rep(scaDisp, length(vecCounts)), 
-      vecDropoutRateEst=vecDropout,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecDisp=rep(scaDisp, length(vecCounts)), 
+      vecPi=vecPiParam,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
       vecboolZero= !is.na(vecCounts) & vecCounts==0 )
     print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
       scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
@@ -1141,7 +1123,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -1228,7 +1210,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #' @export
 
 fitZINBMuDisp <- function( matCountsProc,
-  vecSizeFactors,
+  vecNormConst,
   lsMuModel,
   lsDispModel,
   lsDropModel,
@@ -1256,7 +1238,7 @@ fitZINBMuDisp <- function( matCountsProc,
           vecCounts=matCountsProc[i,],
           scaDispGuess=scaDispParam,
           vecMu=vecMuParam,
-          vecNormConst=vecSizeFactors,
+          vecNormConst=vecNormConst,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           scaWindowRadius=scaWindowRadius )
@@ -1276,7 +1258,7 @@ fitZINBMuDisp <- function( matCountsProc,
           scaDispGuess=lsDispModel$matDispModel[i,],
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-          vecNormConst=vecSizeFactors,
+          vecNormConst=vecNormConst,
           vecindClusterAssign=lsMuModel$lsMuModelGlobal$vecindClusterAssign )
         
         return(fitDispMu)
@@ -1300,7 +1282,7 @@ fitZINBMuDisp <- function( matCountsProc,
           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-          vecNormConst=vecSizeFactors,
+          vecNormConst=vecNormConst,
           scaWindowRadius=scaWindowRadius )
         return(fitDispMu)
       })
@@ -1318,7 +1300,7 @@ fitZINBMuDisp <- function( matCountsProc,
         fitDispMu <- fitDispConstMuConstZINB( vecCounts=matCountsProc[i,],
           scaDispGuess=lsDispModel$matDispModel[i,],
           scaMuGuess=lsMuModel$matMuModel[i,],
-          vecNormConst=vecSizeFactors,
+          vecNormConst=vecNormConst,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           scaWindowRadius=scaWindowRadius )

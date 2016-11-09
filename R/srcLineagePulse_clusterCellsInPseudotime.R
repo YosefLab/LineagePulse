@@ -14,7 +14,7 @@
 #' 
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @param Kexternal: (scalar) Externally set K.
+#' @param scaKexternal: (scalar) Externally set K.
 #' 
 #' @return (list {"Assignments","Centroids","K"})
 #'    \itemize{
@@ -27,23 +27,23 @@
 #' @export
 
 clusterCellsInPseudotime <- function(vecPseudotime,
-  Kexternal=NULL ){
+  scaKexternal=NULL ){
   
-  if(!is.null(Kexternal)){
+  if(!is.null(scaKexternal)){
     # Only run K-means on externally provided K
     # (I) Run K-means
-    if(Kexternal==1){
+    if(scaKexternal==1){
       lsKmeansResults <- kmeans(x=vecPseudotime,centers=1)
     } else {
       vecCentroidsInit <- c(min(vecPseudotime) +
-          (max(vecPseudotime)-min(vecPseudotime))*(seq(0,Kexternal-1)+0.5)/Kexternal)
+          (max(vecPseudotime)-min(vecPseudotime))*(seq(0,scaKexternal-1)+0.5)/scaKexternal)
       lsKmeansResults <- kmeans(x=vecPseudotime,centers=vecCentroidsInit)
     }
     # Summarise output:
-    lsResultsKhat <- list()
-    lsResultsKhat[[1]] <- lsKmeansResults$cluster
-    lsResultsKhat[[2]] <- lsKmeansResults$centers
-    lsResultsKhat[[3]] <- Kexternal
+    lsResultsKhat <- list(
+    	Assignments=lsKmeansResults$cluster,
+    	Centroids=lsKmeansResults$centers,
+    	K=scaKexternal )
   } else {
     # (I) Run K-means on range of K and do model selection
     # Range of K for K-means is number of unique cells
@@ -104,11 +104,11 @@ clusterCellsInPseudotime <- function(vecPseudotime,
     })))+1
     
     # Summarise output:
-    lsResultsKhat <- list()
-    lsResultsKhat[[1]] <- matAssignments[Khat,]
-    lsResultsKhat[[2]] <- sort( lsCentroids[[Khat]] )
-    lsResultsKhat[[3]] <- Khat
+    lsResultsKhat <- list(
+    	Assignments=matAssignments[Khat,],
+    	Centroids=sort( lsCentroids[[Khat]] ),
+    	K=Khat )
   }
-  names(lsResultsKhat) <- c("Assignments","Centroids","K")
+
   return(lsResultsKhat) 
 }

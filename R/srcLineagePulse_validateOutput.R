@@ -96,7 +96,7 @@ validateOutput <- function(dirOutLineagePulse,
   load(file=file.path(dirOutLineagePulse,"LineagePulse_lsDispModelH1.RData"))
   load(file=file.path(dirOutLineagePulse,"LineagePulse_lsDropModel.RData"))
   load(file=file.path(dirOutLineagePulse,"LineagePulse_dfDEAnalysis.RData"))
-  load(file=file.path(dirOutLineagePulse,"LineagePulse_vecSizeFactors.RData"))
+  load(file=file.path(dirOutLineagePulse,"LineagePulse_vecNormConst.RData"))
   
   # Initialise
   setwd(dirOutValidation)
@@ -141,7 +141,7 @@ validateOutput <- function(dirOutLineagePulse,
       vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[id,],
         lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
         vecInterval=NULL )
-      vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+      vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParamH1,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[id,] )
       if(lsMuModelH1$lsMuModelGlobal$strMuModel=="impulse"){
@@ -157,7 +157,7 @@ validateOutput <- function(dirOutLineagePulse,
       
       lsGplotsHighExpr[[match(id, vecIDsTopQvalHighExpre)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutParamH1=vecDropoutParamH1,
+        vecPiParamH1=vecPiParamH1,
         vecImpulseModelParam=vecImpulseModelParam,
         scaConstModelParam=scaConstModelParam,
         strGeneID=id,
@@ -182,7 +182,7 @@ validateOutput <- function(dirOutLineagePulse,
     vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[id,],
       lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[id,] )
     if(lsMuModelH1$lsMuModelGlobal$strMuModel=="impulse"){
@@ -198,7 +198,7 @@ validateOutput <- function(dirOutLineagePulse,
     
     lsGplotsTopQval[[match(id, vecIDsTopQval)]] <- plotGene(vecCounts=matCountsProc[id,],
       vecPseudotime=vecPseudotimeProc,
-      vecDropoutParamH1=vecDropoutParamH1,
+      vecPiParamH1=vecPiParamH1,
       vecImpulseModelParam=vecImpulseModelParam,
       scaConstModelParam=scaConstModelParam,
       strGeneID=id,
@@ -223,7 +223,7 @@ validateOutput <- function(dirOutLineagePulse,
     vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[id,],
       lsDispModelGlobal=lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[id,] )
     
@@ -233,7 +233,7 @@ validateOutput <- function(dirOutLineagePulse,
     vecDispParamH0 <- decompressDispByGene( vecDispModel=lsDispModelH0$matDispModel[id,],
       lsDispModelGlobal=lsDispModelH0$lsDispModelGlobal,
       vecInterval=NULL )
-    vecDropoutParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH0,
       vecPiConstPredictors=lsDropModel$matPiConstPredictors[id,] )
     
@@ -250,7 +250,7 @@ validateOutput <- function(dirOutLineagePulse,
     
     lsGplotsTopQval[[match(id, vecIDsTopQval)]] <- plotGene(vecCounts=matCountsProc[id,],
       vecPseudotime=vecPseudotimeProc,
-      vecDropoutParamH1=vecDropoutParamH1,
+      vecPiParamH1=vecPiParamH1,
       vecImpulseModelParam=vecImpulseModelParam,
       scaConstModelParam=scaConstModelParam,
       strGeneID=id,
@@ -260,8 +260,8 @@ validateOutput <- function(dirOutLineagePulse,
       vecMuParamH1=vecMuParamH1,
       vecDispParamH0=vecDispParamH0,
       vecDispParamH1=vecDispParamH1,
-      vecDropoutParamH0=vecDropoutParamH0,
-      vecSizeFactors=vecSizeFactors,
+      vecPiParamH0=vecPiParamH0,
+      vecNormConst=vecNormConst,
       scaWindowRadius=lsInputParam$scaWindowRadius)
   }
   pdf("LineagePulse_ImpulseTraces_LowQval_LLRatioByPoint.pdf")
@@ -283,7 +283,7 @@ validateOutput <- function(dirOutLineagePulse,
       vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[id,],
         lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
         vecInterval=NULL )
-      vecDropoutParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+      vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParamH1,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[id,] )
       if(lsMuModelH1$lsMuModelGlobal$strMuModel=="impulse"){
@@ -299,7 +299,7 @@ validateOutput <- function(dirOutLineagePulse,
       
       lsGplotsHighQval[[match(id, vecIDsWorstQval)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutParamH1=vecDropoutParamH1,
+        vecPiParamH1=vecPiParamH1,
         vecImpulseModelParam=vecImpulseModelParam,
         scaConstModelParam=scaConstModelParam,
         strGeneID=id,

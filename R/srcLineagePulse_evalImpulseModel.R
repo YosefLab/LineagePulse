@@ -10,11 +10,9 @@
 #' 
 #' @aliases evalImpulseModel_comp
 #' 
-#' @seealso Called by \code{evalLogLikImpulse},\code{evalLogLikMean}, 
-#'    \code{plotDEGenes}.
-#' 
-#' @param vecTheta (vector number of parameters) Numerical vector of impulse 
-#'    parameters with the order beta, h0, h1, h2, t1, t2.
+#' @param vecTheta (vector number of parameters) 
+#' 	  {beta, log(h0), log(h1), log(h2), t1, t2} 
+#'    Numerical vector of impulse parameters.
 #' @param vecTimepoints (vector number vecTimepoints) 
 #'    Observed vecTimepoints, numeric.
 #' 

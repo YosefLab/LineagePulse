@@ -113,7 +113,7 @@
 #'        one scalar per centroid.
 #'      \item   K: (scalar) Number of clusters selected.
 #'      }
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -317,7 +317,7 @@
 fitZINB <- function(matCountsProc,
   matPiConstPredictors,
   lsResultsClustering,
-  vecSizeFactors,
+  vecNormConst,
   scaWindowRadius=NULL,
   strMuModel="windows",
   strDispModel = "constant",
@@ -478,7 +478,7 @@ fitZINB <- function(matCountsProc,
   
   # Evaluate initialisation loglikelihood for model B
   scaLogLikInitA <- evalLogLikMatrix(matCounts=matCountsProc,
-    vecSizeFactors=vecSizeFactors,
+    vecNormConst=vecNormConst,
     lsMuModel=lsMuModelA,
     lsDispModel=lsDispModelA, 
     lsDropModel=lsDropModel,
@@ -515,7 +515,7 @@ fitZINB <- function(matCountsProc,
               lsPiOptimHyperparam=lsDropModel$lsPiOptimHyperparam,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA,
-              scaNormConst=vecSizeFactors[cell],
+              scaNormConst=vecNormConst[cell],
               vecInterval=vecInterval,
               scaTarget=match(cell, vecInterval))
             return(lsFitPi)
@@ -526,7 +526,7 @@ fitZINB <- function(matCountsProc,
         colnames(lsDropModel$matDropoutLinModel) <- NULL # Want this so that column names dont grow to par.par.par...
         if(boolSuperVerbose){
           scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
-            vecSizeFactors=vecSizeFactors,
+            vecNormConst=vecNormConst,
             lsMuModel=lsMuModelA,
             lsDispModel=lsDispModelA, 
             lsDropModel=lsDropModel,
@@ -551,7 +551,7 @@ fitZINB <- function(matCountsProc,
           # a/b) Negative binomial mean AND dispersion parameter.
           tm_mudisp <- system.time({
             lsFitMuDisp <- fitZINBMuDisp(matCountsProc=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA,
               lsDropModel=lsDropModel,
@@ -569,7 +569,7 @@ fitZINB <- function(matCountsProc,
           # a) Negative binomial mean parameter
           tm_mu <- system.time({
             lsFitMu <- fitZINBMu( matCountsProc=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA,
               lsDropModel=lsDropModel,
@@ -585,7 +585,7 @@ fitZINB <- function(matCountsProc,
                 sum(vecboolDispEstConvergedA), " cases."))
             }
             scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA, 
               lsDropModel=lsDropModel,
@@ -599,7 +599,7 @@ fitZINB <- function(matCountsProc,
           # Use MLE of dispersion factor: numeric optimisation of likelihood.
           tm_phi <-system.time({
             lsFitDispModelA <- fitZINBDisp( matCountsProc=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelA,
               lsDispModel=lsDispModelA,
               lsDropModel=lsDropModel,
@@ -613,7 +613,7 @@ fitZINB <- function(matCountsProc,
         # Evaluate Likelihood
         scaLogLikOld <- scaLogLikNew
         scaLogLikNew <- evalLogLikMatrix( matCounts=matCountsProc,
-          vecSizeFactors=vecSizeFactors,
+          vecNormConst=vecNormConst,
           lsMuModel=lsMuModelA,
           lsDispModel=lsDispModelA, 
           lsDropModel=lsDropModel,
@@ -710,7 +710,7 @@ fitZINB <- function(matCountsProc,
   
   # Evaluate initialisation loglikelihood for model B
   scaLogLikInitB <- evalLogLikMatrix(matCounts=matCountsProc,
-    vecSizeFactors=vecSizeFactors,
+    vecNormConst=vecNormConst,
     lsMuModel=lsMuModelB,
     lsDispModel=lsDispModelB, 
     lsDropModel=lsDropModel,
@@ -731,7 +731,7 @@ fitZINB <- function(matCountsProc,
         # Estimate mean and dispersion parameters simultaneously.
         # a/b) Negative binomial mean AND dispersion parameter.
         lsFitMuDisp <- fitZINBMuDisp(matCountsProc=matCountsProc,
-          vecSizeFactors=vecSizeFactors,
+          vecNormConst=vecNormConst,
           lsMuModel=lsMuModelB,
           lsDispModel=lsDispModelB,
           lsDropModel=lsDropModel,
@@ -746,7 +746,7 @@ fitZINB <- function(matCountsProc,
         
         # Evaluate Likelihood
         scaLogLik <- evalLogLikMatrix( matCounts=matCountsProc,
-          vecSizeFactors=vecSizeFactors,
+          vecNormConst=vecNormConst,
           lsMuModel=lsMuModelB,
           lsDispModel=lsDispModelB, 
           lsDropModel=lsDropModel,
@@ -777,7 +777,7 @@ fitZINB <- function(matCountsProc,
           # initialisation of impulse model.
           tm_mu <- system.time({
             lsFitMuModelB <- fitZINBMu( matCountsProc=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelB,
               lsDispModel=lsDispModelB,
               lsDropModel=lsDropModel,
@@ -793,7 +793,7 @@ fitZINB <- function(matCountsProc,
                 sum(vecboolMuEstConvergedB), " cases."))
             }
             scaLogLikTemp <- evalLogLikMatrix( matCounts=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelB,
               lsDispModel=lsDispModelB, 
               lsDropModel=lsDropModel,
@@ -807,7 +807,7 @@ fitZINB <- function(matCountsProc,
           # Use MLE of dispersion factor: numeric optimisation of likelihood.
           tm_phi <- system.time({
             lsFitDispModelB <- fitZINBDisp( matCountsProc=matCountsProc,
-              vecSizeFactors=vecSizeFactors,
+              vecNormConst=vecNormConst,
               lsMuModel=lsMuModelB,
               lsDispModel=lsDispModelB,
               lsDropModel=lsDropModel,
@@ -820,7 +820,7 @@ fitZINB <- function(matCountsProc,
           # Evaluate Likelihood
           scaLogLikOld <- scaLogLikNew
           scaLogLikNew <- evalLogLikMatrix( matCounts=matCountsProc,
-            vecSizeFactors=vecSizeFactors,
+            vecNormConst=vecNormConst,
             lsMuModel=lsMuModelB,
             lsDispModel=lsDispModelB, 
             lsDropModel=lsDropModel,

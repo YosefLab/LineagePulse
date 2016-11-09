@@ -35,7 +35,7 @@ validateOuputSimulation <- function(
   load(file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
-  load(file=file.path(dirOutSimulation,"Simulation_vecSizeFactorsHidden.RData"))
+  load(file=file.path(dirOutSimulation,"Simulation_vecNormConstHidden.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
   load(file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))
@@ -48,7 +48,7 @@ validateOuputSimulation <- function(
   # Load data
   load("LineagePulse_matCountsProc.RData")
   load("LineagePulse_vecPseudotimeProc.RData")
-  load("LineagePulse_vecSizeFactors.RData")
+  load("LineagePulse_vecNormConst.RData")
   load("LineagePulse_lsMuModelH0.RData")
   load("LineagePulse_lsDispModelH0.RData")
   load("LineagePulse_lsMuModelH1.RData")
@@ -63,7 +63,7 @@ validateOuputSimulation <- function(
   matDispHidden <- matDispHidden[vecAnalysedGenes,vecAnalysedCells]
   matDropoutRatesHidden <- matDropoutRatesHidden[vecAnalysedGenes,vecAnalysedCells]
   matDropoutLinModelHidden <- matDropoutLinModelHidden[vecAnalysedCells,]
-  vecSizeFactorsHidden <- vecSizeFactorsHidden[vecAnalysedCells]
+  vecNormConstHidden <- vecNormConstHidden[vecAnalysedCells]
   
   # Initialise
   setwd(dirOutValidation)
@@ -291,7 +291,7 @@ validateOuputSimulation <- function(
       
       lsGplotsConstantIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutParamH1=matDropoutRatesHidden[id,],
+        vecPiParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],
@@ -319,7 +319,7 @@ validateOuputSimulation <- function(
       
       lsGplotsImpulseIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutParamH1=matDropoutRatesHidden[id,],
+        vecPiParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],
@@ -353,7 +353,7 @@ validateOuputSimulation <- function(
       }
       lsGplotsGeneIDs[[match(id, vecIDsToPlot)]] <- plotGene(vecCounts=matCountsProc[id,],
         vecPseudotime=vecPseudotimeProc,
-        vecDropoutParamH1=matDropoutRatesHidden[id,],
+        vecPiParamH1=matDropoutRatesHidden[id,],
         vecImpulseModelParam=lsMuModelH1$matMuModel[id,],
         vecImpulseModelRefParam=vecImpulseModelRefParam,
         scaConstModelParam=lsMuModelH0$matMuModel[id,],

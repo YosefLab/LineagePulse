@@ -23,7 +23,7 @@
 #' @param scaSDImpulseAmplitude: (scalar) [Default 1]
 #'    Standard deviation of normal distribution form which the 
 #'    amplitude change within an impulse trace is drawn.
-#' @param vecSizeFactorsExternal: (numeric vector number of cells)
+#' @param vecNormConstExternal: (numeric vector number of cells)
 #'    [Default NULL]
 #'    Size factors for data set. Size factors are set to 1 if this is
 #'    not specified (NULL).
@@ -47,7 +47,7 @@ simulateDataSet <- function(scaNCells,
   scaPTmax=100,
   scaMumax=1000,
   scaSDImpulseAmplitude=1,
-  vecSizeFactorsExternal=NULL,
+  vecNormConstExternal=NULL,
   matDropoutModelExternal=NULL,
   dirOutSimulation){
   
@@ -113,19 +113,19 @@ simulateDataSet <- function(scaNCells,
   matMuHidden <- do.call(rbind, list(matMuConstHidden, matMuImpulseHidden))
   
   # Add size factors
-  if(is.null(vecSizeFactorsExternal)){
+  if(is.null(vecNormConstExternal)){
     print("Setting size factors uniformly =1")
-    vecSizeFactorsHidden <- array(1, dim(matMuHidden)[2])
+    vecNormConstHidden <- array(1, dim(matMuHidden)[2])
   } else {
     print("Use externally supplied size factors.")
-    if(length(vecSizeFactorsExternal) != scaNCells){
-      stop("vecSizeFactorsExternal has to be of the length of the number of cells scaNCells.")
+    if(length(vecNormConstExternal) != scaNCells){
+      stop("vecNormConstExternal has to be of the length of the number of cells scaNCells.")
     }
-    vecSizeFactorsHidden <- vecSizeFactorsExternal
+    vecNormConstHidden <- vecNormConstExternal
   }
-  names(vecSizeFactorsHidden) <- colnames(matMuImpulseHidden)
+  names(vecNormConstHidden) <- colnames(matMuImpulseHidden)
   
-  matMuHidden <- matMuHidden*matrix(vecSizeFactorsHidden,
+  matMuHidden <- matMuHidden*matrix(vecNormConstHidden,
     nrow=dim(matMuHidden)[1],
     ncol=dim(matMuHidden)[2], byrow=TRUE)
   
@@ -148,8 +148,8 @@ simulateDataSet <- function(scaNCells,
   # 3. Apply drop out
   # a. Set drop out models
   if(is.null(matDropoutModelExternal)){
-    a1 <- c(-2,-2,-4)
-    a2 <- c(0.01,0.001,0.01)
+    a1 <- c(2,2,4)
+    a2 <- c(-0.01,-0.001,-0.01)
     a1 <- array(a1, scaNCells)
     a2 <- array(a2, scaNCells)
     matDropoutLinModelHidden <- cbind(a1,a2)
@@ -195,7 +195,7 @@ simulateDataSet <- function(scaNCells,
   save(vecImpulseIDs,file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
   save(matImpulseModelHidden,file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
   save(matMuHidden,file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
-  save(vecSizeFactorsHidden,file=file.path(dirOutSimulation,"Simulation_vecSizeFactorsHidden.RData"))
+  save(vecNormConstHidden,file=file.path(dirOutSimulation,"Simulation_vecNormConstHidden.RData"))
   save(matDispHidden,file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
   save(matSampledDataHidden,file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
   save(matDropoutLinModelHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))

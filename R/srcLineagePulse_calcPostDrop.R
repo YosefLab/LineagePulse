@@ -4,7 +4,7 @@
 
 #' Calculate posterior of drop-out
 #' 
-#' Calculates posterior of observation being a drop-out. This posterior
+#' Calculates posterior of observation being a drop-out for a vector. This posterior
 #' is zero if an observation is non-zero, therefore, the data is read in 
 #' as a boolean matrix indicating zero-observations, the actual values
 #' are not required. Neighbourhood smoothing can be included. Does not use
@@ -12,7 +12,7 @@
 #' vectors do not produce format errors and usage within upstream parallelisation
 #' works.
 #' 
-#' @seealso Called by \code{fitZINB}. Same function as \code{calcProbNB_Vector}
+#' @seealso Called by \code{fitZINB}. Same function as \code{calcPostDrop_Matrix}
 #' but for vectors (i.e. one gene) as oppose to matrices: no 
 #' parallelisation and no formatting errors.
 #' 
@@ -22,9 +22,9 @@
 #'    Negative binomial mean parameters of samples.
 #' @param vecDrop: (numeric vector samples)
 #'   Drop out rates of samples.
-#' @param vecboolZero: (bool matrix genes x cells)
+#' @param vecboolZero: (bool vector samples)
 #'    Whether observation is zero.
-#' @param vecboolNotZeroObserved: (bool matrix genes x cells)
+#' @param vecboolNotZero: (bool vector samples)
 #'    Whether observation is real and non-zero.
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
@@ -38,7 +38,7 @@ calcPostDrop_Vector <- function( vecMu,
   vecDisp,
   vecDrop,
   vecboolZero,
-  vecboolNotZeroObserved,
+  vecboolNotZero,
   scaWindowRadius ){
   
   scaNumSamples <- length(vecMu)
@@ -48,7 +48,7 @@ calcPostDrop_Vector <- function( vecMu,
   vecNBZero <- (vecDisp/(vecDisp+vecMu))^vecDisp
   # Compute posterior of drop-out.
   vecZ <- sapply(seq(1,scaNumSamples), function(j){
-    if(vecboolNotZeroObserved[j]){
+    if(vecboolNotZero[j]){
       scaZ <- 0
     } else if(vecboolZero[j]) {
       if(!is.null(scaWindowRadius)){
@@ -73,7 +73,7 @@ calcPostDrop_Vector <- function( vecMu,
 
 #' Calculate posterior of drop-out
 #' 
-#' Calculates posterior of observation being a drop-out. This posterior
+#' Calculates posterior of observation being a drop-out for a matrix. This posterior
 #' is zero if an observation is non-zero, therefore, the data is read in 
 #' as a boolean matrix indicating zero-observations, the actual values
 #' are not required. Neighbourhood smoothing can be included.

@@ -18,9 +18,8 @@ setwd("/Users/davidsebastianfischer/gitDevelopment/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
 
 source("srcLineagePulse_clusterCellsInPseudotime.R")
-source("srcLineagePulse_createAnnotation.R")
 source("srcLineagePulse_calcPostDrop.R")
-source("srcLineagePulse_calcSizeFactors.R")
+source("srcLineagePulse_calcNormConst.R")
 source("srcLineagePulse_decompressParameters.R")
 source("srcLineagePulse_evalImpulseModel.R")
 source("srcLineagePulse_evalDropoutModel.R")
@@ -121,6 +120,17 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
+#' @param scaSmallRun: (integer) [Default NULL] Number of rows
+#'    on which ImpulseDE2 is supposed to be run, the full
+#'    data set is only used for size factor estimation.
+#' @param strMuModel: (str) {"constant"}
+#'    [Default "impulse"] Model according to which the mean
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#'    [Default "constant"] Model according to which dispersion
+#'    parameter is fit to each gene as a function of 
+#'    pseudotime in the alternative model (H1).
 #' @param boolClusterInPseudotime: (bool) [Default TRUE]
 #'    Whether to cluster cells in pseudotime. If FALSE,
 #'    time points supplied in vecPseudotime are treated as clusters.
@@ -130,9 +140,12 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #' @param scaKCluster: (integer) [Default NULL] Forces number of centroids
 #'    in K-means to be K: setting this to an integer (not NULL) skips model
 #'    selection in clusterting.
-#' @param scaSmallRun: (integer) [Default NULL] Number of rows
-#'    on which ImpulseDE2 is supposed to be run, the full
-#'    data set is only used for size factor estimation.
+#' @param scaWindowRadius: (integer) [Default NULL]
+#'    Smoothing interval radius of cells within pseudotemporal
+#'    ordering. Each negative binomial model inferred on
+#'    observation [gene i, cell j] is fit and evaluated on 
+#'    the observations [gene i, cells in neighbourhood of j],
+#'    the model is locally smoothed in pseudotime.
 #' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
 #'    Whether to co-estimate logistic drop-out model with the 
 #'    constant null model or with the alternative model. The
@@ -170,32 +183,18 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #'    and dispersion fitting (if FALSE) exist, but these may be viewed
 #'    as non-deprecated parts of an earlier implementation of the
 #'    alorithm.
-#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
+#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximum number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
 #'    zero-inflated negative binomial model as coordinate ascent.
-#' @param strMuModel: (str) {"constant"}
-#'    [Default "impulse"] Model according to which the mean
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
-#' @param strDispModel: (str) {"constant"}
-#'    [Default "constant"] Model according to which dispersion
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
+#' @param scaNProc: (scalar) [Default 1] Number of processes for 
+#'    parallelisation.
 #' @param boolPlotZINBfits: (bool) [Default TRUE]
 #'    Whether to plot zero-inflated negative binomial fits to selected genes
 #'    and clusters.
 #' @param boolValidateZINBfit: (bool) [Default TRUE]
 #'    Whether to generate evaluation metrics and plots
 #'    for parameter values of inferred ZINB model.
-#' @param scaNProc: (scalar) [Default 1] Number of processes for 
-#'    parallelisation.
 #' @param verbose: (bool) [Defaul TRUE]
 #'    Whether progress of coordinate ascent within fitZINB is 
 #'    reported once per iteration.
@@ -205,13 +204,13 @@ evalLogLikDispConstMuImpulseZINB_LinPulse_comp <- cmpfun(evalLogLikDispConstMuIm
 #'    Note: This increases run-time as the loglikelihood is computed
 #'    more often. This is usually not a major contributor to runtime
 #'    though.
+#' @param dirOut: (str directory) [Default NULL]
+#'    Directory to which detailed output is saved to.
+#'    Defaults to current working directory if NULL.
 #' @param boolBPlog: (bool) [Default FALSE] Save status of each 
 #'    worker into text files in parallelisation. Have to include
 #'    library(BatchJobs) above and set the BiocParallel registration
 #'    to adjust the reporting. Use only for debugging.
-#' @param dirOut: (str directory) [Default NULL]
-#'    Directory to which detailed output is saved to.
-#'    Defaults to current working directory if NULL.
 #' 
 #' @return dfDEAnalysis: (data frame genes x reported variables) 
 #'    Summary of differential expression analysis, sorted by adj.p:
@@ -324,7 +323,7 @@ runLineagePulse <- function(matCounts,
     if(boolClusterInPseudotime){
       # Cluster in pseudotime
       lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
-        Kexternal=scaKClusters)
+        scaKexternal=scaKClusters)
     } else {
       # Take observation time points as clusters
       print("Chose given grouping (time points, cell types, conditions...).")
@@ -342,10 +341,10 @@ runLineagePulse <- function(matCounts,
   print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
     " min",sep=""))
   
-  # 4. Compute size factors
-  print("4. Compute size factors:")
-  vecSizeFactors <- calcSizeFactors(matCountsProcFull)
-  save(vecSizeFactors,file=file.path(dirOut,"LineagePulse_vecSizeFactors.RData"))
+  # 4. Compute normalisation constants
+  print("4. Compute normalisation constants:")
+  vecNormConst <- calcNormConst(matCountsProcFull)
+  save(vecNormConst,file=file.path(dirOut,"LineagePulse_vecNormConst.RData"))
   # Clear memory
   rm(matCountsProcFull)
   
@@ -355,7 +354,7 @@ runLineagePulse <- function(matCounts,
     lsZINBFit <- fitZINB( matCountsProc=matCountsProc,
       matPiConstPredictors=matPiConstPredictorsProc,
       lsResultsClustering=lsResultsClustering,
-      vecSizeFactors=vecSizeFactors,
+      vecNormConst=vecNormConst,
       scaWindowRadius=scaWindowRadius,
       boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
       boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
@@ -418,7 +417,7 @@ runLineagePulse <- function(matCounts,
   tm_deanalysis_mf <- system.time({
     dfDEAnalysis <- runDEAnalysis(
       matCountsProc = matCountsProc,
-      vecSizeFactors=vecSizeFactors,
+      vecNormConst=vecNormConst,
       lsMuModelH1=lsMuModelH1,
       lsDispModelH1=lsDispModelH1,
       lsMuModelH0=lsMuModelH0,

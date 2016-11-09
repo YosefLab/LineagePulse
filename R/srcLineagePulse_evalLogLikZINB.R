@@ -5,34 +5,40 @@
 #' Compute log likelihood of zero-inflated negative binomial model for one gene
 #' 
 #' This liklihood function is appropriate for sequencing data with high drop 
-#' out rate, commonly observed in single cell data (e.g. scRNA-seq).
+#' out rate, commonly observed in single cell data (e.g. scRNA-seq). This
+#' is the core function used for every maximum likelihood-based estimation
+#' in LineagePulse.
 #' 
 #' @aliases evalLogLikZINB_comp
 #' 
-#' @seealso Called by \code{fitZINB} and
-#' \code{runModelFreeDEAnalysis}.
+#' @seealso Called directly by likelihood wrappers 
+#'    \code{evalLogLikSmoothZINB_LinPulse} and \code{evalLogLikGene}.
+#'    Called directly by \code{evalLogLikDispConstMuClustersZINB_LinPulse}
+#'    and 
+#'    Moreover by \code{plotGene}.
 #'
 #' @param vecCounts (count vector number of amples)
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
-#' @param vecDispEst: (scalar vector number of samples) Negative binomial dispersion 
+#' @param vecDisp: (scalar vector number of samples) Negative binomial dispersion 
 #'    parameter for given gene and observations.
-#' @param vecDropoutRateEst: (probability vector number of samples) 
+#' @param vecPi: (probability vector number of samples) 
 #'    Dropout rate estimate for each cell for given gene.
-#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
 #'    Whether sample has zero count.
 #'    
-#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik: (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
 #' @export
 
 evalLogLikZINB_LinPulse <- function(vecCounts,
   vecMu,
-  vecDispEst, 
-  vecDropoutRateEst, 
-  vecboolNotZeroObserved, 
+  vecDisp, 
+  vecPi, 
+  vecboolNotZero, 
   vecboolZero){  
 
   # Note on handling very low probabilities: vecLikZeros
@@ -46,18 +52,18 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
   scaLogPrecLim <- -323*log(10)
 
   # Likelihood of zero counts:
-  vecLogLikZeros <- log((1-vecDropoutRateEst[vecboolZero])*
-    (vecDispEst[vecboolZero]/(vecDispEst[vecboolZero] + 
-        vecMu[vecboolZero]))^vecDispEst[vecboolZero] +
-    vecDropoutRateEst[vecboolZero])
+  vecLogLikZeros <- log((1-vecPi[vecboolZero])*
+    (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
+        vecMu[vecboolZero]))^vecDisp[vecboolZero] +
+    vecPi[vecboolZero])
   vecLogLikZeros[vecLogLikZeros < scaLogPrecLim] <- scaLogPrecLim
   scaLogLikZeros <- sum(vecLogLikZeros)
   # Likelihood of non-zero counts:
-  vecLogLikNonzerosDropout <- log(1-vecDropoutRateEst[vecboolNotZeroObserved])
+  vecLogLikNonzerosDropout <- log(1-vecPi[vecboolNotZero])
   vecLogLikNonzerosNB <- dnbinom(
-      vecCounts[vecboolNotZeroObserved], 
-      mu=vecMu[vecboolNotZeroObserved], 
-      size=vecDispEst[vecboolNotZeroObserved], 
+      vecCounts[vecboolNotZero], 
+      mu=vecMu[vecboolNotZero], 
+      size=vecDisp[vecboolNotZero], 
       log=TRUE)
   vecLogLikNonzerosDropout[vecLogLikNonzerosDropout < scaLogPrecLim] <- scaLogPrecLim
   vecLogLikNonzerosNB[vecLogLikNonzerosNB < scaLogPrecLim] <- scaLogPrecLim
@@ -72,28 +78,26 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 
 #' Compute smoothed log likelihood of zero-inflated negative binomial model for one gene
 #' 
-#' This liklihood function is appropriate for sequencing data with high drop 
-#' out rate, commonly observed in single cell data (e.g. scRNA-seq). It includes
-#' a smoothin penalty on the means.
+#' This liklihood function is a wrapper for computing the likelihood with
+#' neighbourhood smoothing.
 #' 
 #' @aliases evalLogLikSmoothZINB_comp
 #' 
-#' @seealso Called by \code{fitZINB} and
-#' \code{runModelFreeDEAnalysis}.
+#' @seealso Called directly by \code{evalLogLikGene}.
 #'
 #' @param vecCounts (count vector number of amples)
 #'    Observed expression values for  given gene.
 #' @param vecMu (vector number of samples) Negative binomial
 #'    mean parameter for each sample.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecDispEst: (scalar vector number of samples) Negative binomial dispersion 
+#' @param vecDisp: (scalar vector number of samples) Negative binomial dispersion 
 #'    parameter for given gene and observations.
-#' @param vecDropoutRateEst: (probability vector number of samples) 
+#' @param vecPi: (probability vector number of samples) 
 #'    Dropout rate estimate for each cell for given gene.
-#' @param vecboolNotZeroObserved: (bool vector number of samples)
+#' @param vecboolNotZero: (bool vector number of samples)
 #'    Whether sample is not zero and observed (not NA).
 #' @param vecboolZero: (bool vector number of samples)
 #'    Whether sample has zero count.
@@ -105,10 +109,10 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 
 evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
   vecMu,
-  vecSizeFactors,
-  vecDispEst, 
-  vecDropoutRateEst, 
-  vecboolNotZeroObserved, 
+  vecNormConst,
+  vecDisp, 
+  vecPi, 
+  vecboolNotZero, 
   vecboolZero,
   scaWindowRadius=NULL ){
   
@@ -119,10 +123,10 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
       scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
       vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
       scaLogLikCell <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts[vecInterval],
-        vecMu=vecMu[j]*vecSizeFactors[vecInterval],
-        vecDispEst=rep(vecDispEst[j], length(vecInterval)), 
-        vecDropoutRateEst=vecDropoutRateEst[vecInterval], 
-        vecboolNotZeroObserved=vecboolNotZeroObserved[vecInterval], 
+        vecMu=vecMu[j]*vecNormConst[vecInterval],
+        vecDisp=rep(vecDisp[j], length(vecInterval)), 
+        vecPi=vecPi[vecInterval], 
+        vecboolNotZero=vecboolNotZero[vecInterval], 
         vecboolZero=vecboolZero[vecInterval])
       return(scaLogLikCell)
     }))
@@ -131,35 +135,35 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
 
 evalLogLikGene <- function(vecCounts,
   vecMu,
-  vecSizeFactors,
-  vecDispEst, 
-  vecDropoutRateEst,
-  vecboolNotZeroObserved, 
+  vecNormConst,
+  vecDisp, 
+  vecPi,
+  vecboolNotZero, 
   vecboolZero,
   scaWindowRadius=NULL ){
   
   if(!is.null(scaWindowRadius)){
     scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=vecCounts,
       vecMu=vecMu,
-      vecSizeFactors=vecSizeFactors,
-      vecDispEst=vecDispEst, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecNormConst=vecNormConst,
+      vecDisp=vecDisp, 
+      vecPi=vecPi,
+      vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
   } else {
     scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
-      vecMu=vecMu*vecSizeFactors,
-      vecDispEst=vecDispEst, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
+      vecMu=vecMu*vecNormConst,
+      vecDisp=vecDisp, 
+      vecPi=vecPi,
+      vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero )
   }
   return(scaLogLik)
 }
 
 evalLogLikMatrix <- function(matCounts,
-  vecSizeFactors,
+  vecNormConst,
   lsMuModel,
   lsDispModel, 
   lsDropModel,
@@ -174,23 +178,19 @@ evalLogLikMatrix <- function(matCounts,
       vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
         lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
         vecInterval=NULL )
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+      vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
-      # Compute boolean observation vectors
-      vecCounts <- matCounts[i,]
-      vecboolNotZeroObserved <- !is.na(vecCounts) & vecCounts>0
-      vecboolZero <- !is.na(vecCounts) & vecCounts==0
-    
       # Evaluate loglikelihood of gene
+      vecCounts <- matCounts[i,]
       scaLL <- evalLogLikGene(vecCounts=vecCounts,
         vecMu=vecMuParam,
-        vecSizeFactors=vecSizeFactors,
-        vecDispEst=vecDispParam, 
-        vecDropoutRateEst=vecDropoutParam,
-        vecboolNotZeroObserved=vecboolNotZeroObserved, 
-        vecboolZero=vecboolZero,
+        vecNormConst=vecNormConst,
+        vecDisp=vecDispParam, 
+        vecPi=vecPiParam,
+        vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+        vecboolZero= !is.na(vecCounts) & vecCounts==0,
         scaWindowRadius=scaWindowRadius)
       return(scaLL)
     })

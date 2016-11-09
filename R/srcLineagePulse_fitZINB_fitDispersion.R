@@ -31,11 +31,11 @@
 #' @param vecMuEst: (vector number of cells) Negative binomial
 #'    mean parameter estimate of clusters to which cells
 #'    belong.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell. 
+#' @param vecPi: (vector number of cells) Dropout estimate of cell. 
 #' @param vecboolObserved: (bool vector number of samples)
 #'    Whether sample is not NA (observed).
 #' @param vecboolZero: (bool vector number of samples)
@@ -50,12 +50,13 @@
 evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
   vecCounts,
   vecMuEst,
-  vecSizeFactors,
-  vecDropoutRateEst,
-  vecboolNotZeroObserved, 
+  vecNormConst,
+  vecPi,
+  vecboolNotZero, 
   vecboolZero,
   scaWindowRadius=NULL ){ 
   
+  # (I) Linker functions
   # Log linker function to fit positive dispersions
   scaDispEst <- exp(scaTheta)
   
@@ -69,23 +70,15 @@ evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
   
   vecDispersions <- rep(scaDispEst, length(vecCounts))
   
-  if(!is.null(scaWindowRadius)){
-    scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=vecCounts,
-      vecMu=vecMuEst,
-      vecSizeFactors=vecSizeFactors,
-      vecDispEst=vecDispersions, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
-  } else {
-    scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
-      vecMu=vecMuEst*vecSizeFactors,
-      vecDispEst=vecDispersions, 
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved=vecboolNotZeroObserved, 
-      vecboolZero=vecboolZero)
-  }
+  # (II) Evaluate loglikelihood of estimate
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+    vecMu=vecMuEst,
+    vecNormConst=vecNormConst,
+    vecDisp=vecDispersions, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero,
+    scaWindowRadius=scaWindowRadius )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
@@ -109,11 +102,11 @@ evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
 #' @param vecMuEst: (vector number of cells) Negative binomial
 #'    mean parameter estimate of clusters to which cells
 #'    belong.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param vecDropoutRateEst: (vector number of cells) Dropout estimate of cell. 
+#' @param vecPi: (vector number of cells) Dropout estimate of cell. 
 #' @param scaWindowRadius: (integer) 
 #'    Smoothing interval radius.
 #' 
@@ -124,8 +117,8 @@ evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
 fitDispZINB <- function( scaDispGuess,
   vecCounts,
   vecMuEst,
-  vecSizeFactors,
-  vecDropoutRateEst,
+  vecNormConst,
+  vecPi,
   scaWindowRadius=NULL ){ 
   
   fitDisp <- tryCatch({ 
@@ -134,9 +127,9 @@ fitDispZINB <- function( scaDispGuess,
       fn=evalLogLikDispConstZINB_LinPulse_comp,
       vecCounts=vecCounts,
       vecMuEst=vecMuEst,
-      vecSizeFactors=vecSizeFactors,
-      vecDropoutRateEst=vecDropoutRateEst,
-      vecboolNotZeroObserved= !is.na(vecCounts) & vecCounts>0, 
+      vecNormConst=vecNormConst,
+      vecPi=vecPi,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
@@ -147,10 +140,10 @@ fitDispZINB <- function( scaDispGuess,
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecMuEst ", paste(vecMuEst,collapse=" ")))
-    print(paste0("vecDropoutRateEst ", paste(vecDropoutRateEst,collapse=" ")))
-    print(paste0("vecSizeFactors ", paste(vecSizeFactors,collapse=" ")))
-    lsErrorCausingGene <- list(vecCounts, vecMuEst, log(scaDispGuess), vecSizeFactors, vecDropoutRateEst)
-    names(lsErrorCausingGene) <- c("vecCounts", "vecMuEst", "logscaDispEst", "vecSizeFactors", "vecDropoutRateEst")
+    print(paste0("vecPi ", paste(vecPi,collapse=" ")))
+    print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
+    lsErrorCausingGene <- list(vecCounts, vecMuEst, log(scaDispGuess), vecNormConst, vecPi)
+    names(lsErrorCausingGene) <- c("vecCounts", "vecMuEst", "logscaDispEst", "vecNormConst", "vecPi")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -182,7 +175,7 @@ fitDispZINB <- function( scaDispGuess,
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param vecSizeFactors: (numeric vector number of cells) 
+#' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
@@ -261,7 +254,7 @@ fitDispZINB <- function( scaDispGuess,
 #' @export
 
 fitZINBDisp <- function( matCountsProc,
-  vecSizeFactors,
+  vecNormConst,
   lsMuModel,
   lsDispModel,
   lsDropModel,
@@ -276,16 +269,16 @@ fitZINBDisp <- function( matCountsProc,
       vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
         lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
         vecInterval=NULL )
-      vecDropoutParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+      vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
         vecMu=vecMuParam,
         vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       
       # Estimate constant dispersion factor
       fitDisp <- fitDispZINB(scaDispGuess=lsDispModel$matDispModel[i,],
         vecCounts=matCountsProc[i,],
-        vecSizeFactors=vecSizeFactors,
+        vecNormConst=vecNormConst,
         vecMuEst=vecMuParam,
-        vecDropoutRateEst=vecDropoutParam,
+        vecPi=vecPiParam,
         scaWindowRadius=scaWindowRadius )
       return(fitDisp)
     })

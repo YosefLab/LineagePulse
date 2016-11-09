@@ -14,19 +14,18 @@
 #' for bulk data (c.f. ImpulseDE2) but this procedure might
 #' be unstable for single-cell data.
 #' 
-#' @seealso Called by \code{computeNormConst}.
+#' @seealso Called by \code{runLineagePulse}.
 #' 
 #' @param matCountsProc: (matrix genes x samples)
-#'    Count data: Reduced version of \code{matCounts}. 
-#'    For internal use.
+#'    Count data.
 #' 
-#' @return vecSizeFactors: (numeric vector number of cells) 
+#' @return vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
 #' @export
 
-calcSizeFactors <- function(matCountsProc){
+calcNormConst <- function(matCountsProc){
   
   boolUseDepth <- FALSE
   if(boolUseDepth){
@@ -34,18 +33,18 @@ calcSizeFactors <- function(matCountsProc){
     # Normalised relative sequencing depth.
     vecSeqDepth <- apply(matCountsProc, 2,
       function(cell){ sum(cell, na.rm=TRUE) })
-    vecSizeFactors <- vecSeqDepth/sum(vecSeqDepth)*length(vecSeqDepth)
-    names(vecSizeFactors) <- colnames(matCountsProc)
+    vecNormConst <- vecSeqDepth/sum(vecSeqDepth)*length(vecSeqDepth)
+    names(vecNormConst) <- colnames(matCountsProc)
   } else {
     print("All size factors set to one.")
-    vecSizeFactors <- array(1, dim(matCountsProc)[2])
-    names(vecSizeFactors) <- colnames(matCountsProc)
+    vecNormConst <- array(1, dim(matCountsProc)[2])
+    names(vecNormConst) <- colnames(matCountsProc)
   }
   
-  if(any(vecSizeFactors==0)){
+  if(any(vecNormConst==0)){
     warning("WARNING IN LINEAGEPULSE: Found size factors==0, setting these to 1.")
-    vecSizeFactors[vecSizeFactors==0] <- 1
+    vecNormConst[vecNormConst==0] <- 1
   }
   
-  return(vecSizeFactors)
+  return(vecNormConst)
 }

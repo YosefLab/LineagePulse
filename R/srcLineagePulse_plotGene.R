@@ -14,7 +14,7 @@
 #'    gene.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @param vecDropoutParamH1: (numeric vector length cells) [Default NULL]
+#' @param vecPiParamH1: (numeric vector length cells) [Default NULL]
 #'    Dropout rates for observations under alternative model.
 #' @param vecImpulseModelParam: (numeric vector length impulse parameters=6)
 #'    [Default NULL] Impulse model parameters for given gene. 
@@ -39,7 +39,7 @@
 
 plotGene <- function(vecCounts,
   vecPseudotime,
-  vecDropoutParamH1=NULL,
+  vecPiParamH1=NULL,
   vecImpulseModelParam=NULL,
   vecImpulseModelRefParam=NULL,
   strNameImpulseModelRef=NULL,
@@ -52,13 +52,13 @@ plotGene <- function(vecCounts,
   vecMuParamH1=NULL,
   vecDispParamH0=NULL,
   vecDispParamH1=NULL,
-  vecDropoutParamH0=NULL,
-  vecSizeFactors=NULL,
+  vecPiParamH0=NULL,
+  vecNormConst=NULL,
   scaWindowRadius=NULL){
   
   scaNumCells <- length(vecCounts)
   # Set drop-out rates as constant for visualistion if not given.
-  if(is.null(vecDropoutParamH1)){ vecDropoutParamH1 <- array(0, scaNumCells) }
+  if(is.null(vecPiParamH1)){ vecPiParamH1 <- array(0, scaNumCells) }
   
   if(boolScaleByLL){
     # Compute observation-wise loglikelihoods under null model
@@ -72,13 +72,15 @@ plotGene <- function(vecCounts,
           vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
         }
         
-        scaLogLikCell <- evalLogLikZINB_LinPulse_comp(
+        scaLogLikCell <- evalLogLikGene(
           vecCounts=vecCounts[vecInterval],
-          vecMu=vecMuParamH0[j]*vecSizeFactors[vecInterval],
-          vecDispEst=rep(vecDispParamH0[j], length(vecInterval)), 
-          vecDropoutRateEst=vecDropoutParamH0[vecInterval], 
-          vecboolNotZeroObserved= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
-          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0 )
+          vecMu=vecMuParamH0[j]*vecNormConst[vecInterval],
+          vecNormConst=vecNormConst,
+          vecDisp=rep(vecDispParamH0[j], length(vecInterval)), 
+          vecPi=vecPiParamH0[vecInterval], 
+          vecboolNotZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
+          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0,
+          scaWindowRadius=scaWindowRadius )
         return(scaLogLikCell)
       }) 
     
@@ -93,13 +95,15 @@ plotGene <- function(vecCounts,
           vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
         }
         
-        scaLogLikCell <- evalLogLikZINB_LinPulse_comp(
+        scaLogLikCell <- evalLogLikGene(
           vecCounts=vecCounts[vecInterval],
-          vecMu=vecMuParamH1[j]*vecSizeFactors[vecInterval],
-          vecDispEst=rep(vecDispParamH1[j], length(vecInterval)), 
-          vecDropoutRateEst=vecDropoutParamH1[vecInterval], 
-          vecboolNotZeroObserved= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
-          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0 )
+          vecMu=vecMuParamH1[j]*vecNormConst[vecInterval],
+          vecNormConst=vecNormConst,
+          vecDisp=rep(vecDispParamH1[j], length(vecInterval)), 
+          vecPi=vecPiParamH1[vecInterval], 
+          vecboolNotZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
+          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0,
+          scaWindowRadius=scaWindowRadius )
         return(scaLogLikCell)
       })
     vecLogLikRatio <- vecLogLikH1-vecLogLikH0
@@ -107,7 +111,7 @@ plotGene <- function(vecCounts,
     dfScatterCounts <- data.frame(
       pt=vecPseudotime,
       counts=vecCounts,
-      dropout_rate=vecDropoutParamH1,
+      dropout_rate=vecPiParamH1,
       loglik_ratio=vecLogLikRatio)
     gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
       geom_point(aes(colour=dropout_rate, size=loglik_ratio), show.legend=TRUE)
@@ -115,7 +119,7 @@ plotGene <- function(vecCounts,
     dfScatterCounts <- data.frame(
       pt=vecPseudotime,
       counts=vecCounts,
-      dropout_rate=vecDropoutParamH1)
+      dropout_rate=vecPiParamH1)
     gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
       geom_point(aes(colour=dropout_rate), show.legend=TRUE)
   }
