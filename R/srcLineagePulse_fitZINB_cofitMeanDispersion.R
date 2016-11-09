@@ -32,7 +32,7 @@
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @seealso evalLogLikDispConstMuConstZINB_LinPulse_comp
+#' @seealso evalLogLikDispConstMuConstZINB_comp
 #' 
 #' @param vecTheta: (numeric vector length 2) Log of dispersion parameter 
 #'    estimate and log of mean parameter estimate.
@@ -53,7 +53,7 @@
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
+evalLogLikDispConstMuConstZINB <- function(vecTheta,
   vecCounts,
   vecNormConst,
   matDropoutLinModel,
@@ -154,7 +154,7 @@ evalLogLikDispConstMuConstZINB_LinPulse <- function(vecTheta,
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
+evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   vecCounts,
   matDropoutLinModel,
   vecPiConstPredictors,
@@ -193,7 +193,7 @@ evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
   #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood (this is the cost function) 
-  scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(
+  scaLogLik <- evalLogLikSmoothZINB_comp(
     vecCounts=vecCounts,
     vecMu=vecMu,
     vecNormConst=vecNormConst,
@@ -248,7 +248,7 @@ evalLogLikDispConstMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
+evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   vecCounts,
   vecNormConst,
   matDropoutLinModel,
@@ -288,7 +288,7 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
   #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (IV) Evaluate loglikelihood of estimate
-  scaLogLik <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
+  scaLogLik <- evalLogLikZINB_comp( vecCounts=vecCounts,
     vecMu=vecMuParam*vecNormConst,
     vecDisp=vecDisp, 
     vecPi=vecPi,
@@ -317,7 +317,7 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 #' and to growth above a threshold to avoid shrinkage of the 
 #' dispersion factor to zero/ expansion to infinity.
 #' 
-#' @aliases evalLogLikDispConstMuImpulseZINB_LinPulse_comp
+#' @aliases evalLogLikDispConstMuImpulseZINB_comp
 #' 
 #' @seealso Called by \code{fitImpulse}::\code{fitImpulse_matrix}::
 #' \code{fitImpulse_gene}::\code{optimiseImpulseModelFit}.
@@ -352,7 +352,7 @@ evalLogLikDispConstMuClustersZINB_LinPulse <- function(vecTheta,
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #' @export
 
-evalLogLikDispConstMuImpulseZINB_LinPulse <- function(vecTheta,
+evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   vecCounts,
   vecTimepoints,
   vecindTimepointAssign,
@@ -453,7 +453,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
   fitDispMu <- tryCatch({
     unlist(optim(
       par=c(log(scaDispGuess), log(scaMuGuess)),
-      evalLogLikDispConstMuConstZINB_LinPulse_comp,
+      evalLogLikDispConstMuConstZINB_comp,
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -467,7 +467,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuConstZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
-    scaLLInit <- evalLogLikDispConstMuConstZINB_LinPulse_comp(
+    scaLLInit <- evalLogLikDispConstMuConstZINB_comp(
       vecTheta=c(log(scaDispGuess), log(scaMuGuess)),
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
@@ -556,7 +556,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
   fitDispMu <- tryCatch({
     unlist(optim(
       par=c(log(scaDispGuess), log(vecMuGuess)),
-      evalLogLikDispConstMuVecWindowsZINB_LinPulse_comp,
+      evalLogLikDispConstMuVecWindowsZINB_comp,
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -570,7 +570,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
-    scaLLInit <- evalLogLikDispConstMuVecWindowsZINB_LinPulse_comp(
+    scaLLInit <- evalLogLikDispConstMuVecWindowsZINB_comp(
       vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
@@ -661,7 +661,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
   fitDispMu <- tryCatch({
     unlist(optim(    
       par=c(log(scaDispGuess), log(vecMuGuess)),
-      evalLogLikDispConstMuClustersZINB_LinPulse_comp,
+      evalLogLikDispConstMuClustersZINB_comp,
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
       vecPiConstPredictors=vecPiConstPredictors,
@@ -675,7 +675,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
       " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
-    scaLLInit <- evalLogLikDispConstMuClustersZINB_LinPulse_comp(
+    scaLLInit <- evalLogLikDispConstMuClustersZINB_comp(
       vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
       vecCounts=vecCounts,
       matDropoutLinModel=matDropoutLinModel,
@@ -787,7 +787,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
   fitDispImpulse <- tryCatch({
     unlist( optim(
       par=c(log(scaDispGuess), vecImpulseParamGuess), 
-      fn=evalLogLikDispConstMuImpulseZINB_LinPulse_comp, 
+      fn=evalLogLikDispConstMuImpulseZINB_comp, 
       vecCounts=vecCounts,
       vecTimepoints=vecTimepoints,
       vecindTimepointAssign=vecindTimepointAssign,
@@ -808,7 +808,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
     print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
-    scaLLInit <- evalLogLikDispConstMuImpulseZINB_LinPulse_comp(
+    scaLLInit <- evalLogLikDispConstMuImpulseZINB_comp(
       vecTheta=c(log(scaDispGuess), vecImpulseParamGuess),
       vecCounts=vecCounts,
       vecTimepoints=vecTimepoints,
@@ -1025,7 +1025,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     } else if(is.na(vecLL[3])){
       # If optimisation of previous fit was not successfull:
       # Make sure new value is better than previous
-      scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+      scaLLGuess <- evalLogLikZINB_comp(vecCounts=vecCounts,
         vecMu=vecMuParam*vecNormConst,
         vecDisp=rep(scaDispGuess, length(vecCounts)), 
         vecPi=vecPiParam,
@@ -1048,7 +1048,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     }
   } else {
     # Make sure new value is better than previous
-    scaLLGuess <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLLGuess <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecMuParam*vecNormConst,
       vecDisp=rep(scaDispGuess, length(vecCounts)), 
       vecPi=vecPiParam,
@@ -1081,7 +1081,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
     vecDropoutOld <- 1/(1+exp(-vecLinModelOutOld))
-    scaLLOld <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLLOld <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValueOld*vecNormConst,
       vecDisp=rep(scaDispGuess, length(vecCounts)), 
       vecPi=vecDropoutOld,
@@ -1093,7 +1093,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
     vecPiParam <- 1/(1+exp(-vecLinModelOut))
-    scaLLRef <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLLRef <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValue*vecNormConst,
       vecDisp=rep(scaDisp, length(vecCounts)), 
       vecPi=vecPiParam,

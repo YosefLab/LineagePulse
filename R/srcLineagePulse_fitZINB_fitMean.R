@@ -52,7 +52,7 @@
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
+evalLogLikMuConstZINB <- function(scaTheta,
   vecCounts,
   vecDisp,
   vecNormConst,
@@ -139,7 +139,7 @@ evalLogLikMuConstZINB_LinPulse <- function(scaTheta,
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikMuWindowZINB_LinPulse <- function(scaTheta,
+evalLogLikMuWindowZINB <- function(scaTheta,
   vecCounts,
   vecDisp,
   vecMu,
@@ -173,7 +173,7 @@ evalLogLikMuWindowZINB_LinPulse <- function(scaTheta,
   # (III) Evaluate loglikelihood (this is the cost function) 
   # Compute loglikelihood terms with contribution from new mean parameter
   # Cis terms: From neighbourhood around target parameter
-  scaLogLikCis <- evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
+  scaLogLikCis <- evalLogLikZINB_comp( vecCounts=vecCounts,
     vecMu=scaMuNew*vecNormConst,
     vecDisp=rep(vecDisp[scaTarget],scaN), 
     vecPi=vecPi,
@@ -185,7 +185,7 @@ evalLogLikMuWindowZINB_LinPulse <- function(scaTheta,
     if(scaTarget==1){ vecindTransTerms <- seq(2,scaN)
     } else if(scaTarget==scaN){ vecindTransTerms <- seq(1,scaN-1)
     } else { vecindTransTerms <- c(seq(1,scaTarget-1),seq(scaTarget+1,scaN)) }
-    scaLogLikTrans <- evalLogLikZINB_LinPulse_comp( vecCounts=rep(vecCounts[scaTarget],length(vecindTransTerms)),
+    scaLogLikTrans <- evalLogLikZINB_comp( vecCounts=rep(vecCounts[scaTarget],length(vecindTransTerms)),
       vecMu=vecMu[vecindTransTerms]*vecNormConst[scaTarget],
       vecDisp=vecDisp[vecindTransTerms], 
       vecPi=rep(vecPi[scaTarget],length(vecindTransTerms)),
@@ -244,7 +244,7 @@ evalLogLikMuWindowZINB_LinPulse <- function(scaTheta,
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
+evalLogLikMuVecWindowsZINB <- function(vecTheta,
   vecCounts,
   vecDisp,
   matDropoutLinModel,
@@ -271,7 +271,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
   #vecPi <- 1/(1+exp(-vecLinModelOut))
   
   # (III) Evaluate loglikelihood (this is the cost function) 
-  scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(
+  scaLogLik <- evalLogLikSmoothZINB_comp(
     vecCounts=vecCounts,
     vecMu=vecMu,
     vecNormConst=vecNormConst,
@@ -297,7 +297,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #' amplitude parameters shrinking beyond a numerical threshold to zero which 
 #' may cause numerical errors.
 #' 
-#' @aliases evalLogLikMuImpulseZINB_LinPulse_comp 
+#' @aliases evalLogLikMuImpulseZINB_comp 
 #' 
 #' @seealso Called by
 #' \code{fitDispConstMuImpulseOneInitZINB}.
@@ -333,7 +333,7 @@ evalLogLikMuVecWindowsZINB_LinPulse <- function(vecTheta,
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #' @export
 
-evalLogLikMuImpulseZINB_LinPulse <- function(vecTheta,
+evalLogLikMuImpulseZINB <- function(vecTheta,
   vecCounts,
   vecTimepoints,
   vecDisp,
@@ -411,7 +411,7 @@ fitMuConstZINB <- function(vecCounts,
   fitMu <- tryCatch({
     unlist(optim(
       par=log(scaMuGuess),
-      evalLogLikMuConstZINB_LinPulse_comp,
+      evalLogLikMuConstZINB_comp,
       vecCounts=vecCounts,
       vecDisp=vecDisp,
       matDropoutLinModel=matDropoutLinModel,
@@ -464,7 +464,7 @@ fitMuConstZINB <- function(vecCounts,
 #' 
 #' @seealso Called by \code{fitZINB}. Alternative to simultaneous
 #' maximum likelihood estimation of mean parameters of all cells in
-#' interval used in \code{fitMuVecZINB_LinPulse}.
+#' interval used in \code{fitMuVecZINB}.
 #' 
 #' @param vecCounts: (vector number of cells) Observed expression values 
 #'    of gene in cells in cluster.
@@ -505,7 +505,7 @@ fitMuWindowZINB <- function(vecCounts,
   fitMu <- tryCatch({
     unlist(optim(
       par=log(vecMu[scaTarget]),
-      evalLogLikMuWindowZINB_LinPulse_comp,
+      evalLogLikMuWindowZINB_comp,
       vecCounts=vecCounts,
       vecMu=vecMu,
       vecDisp=vecDisp,
@@ -593,7 +593,7 @@ fitMuVecWindowsZINB<- function(vecCounts,
   fitMu <- tryCatch({
     unlist(optim(
       par=log(vecMuGuess),
-      evalLogLikMuVecWindowsZINB_LinPulse_comp,
+      evalLogLikMuVecWindowsZINB_comp,
       vecCounts=vecCounts,
       vecDisp=vecDisp,
       matDropoutLinModel=matDropoutLinModel,
@@ -698,7 +698,7 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
   fitDispImpulse <- tryCatch({
     unlist( optim(
       par=vecImpulseParamGuess, 
-      fn=evalLogLikMuImpulseZINB_LinPulse_comp, 
+      fn=evalLogLikMuImpulseZINB_comp, 
       vecCounts=vecCounts,
       vecTimepoints=vecTimepoints,
       vecDisp=vecDisp,
@@ -925,7 +925,7 @@ fitMuImpulseZINB <- function(vecCounts,
       sum(c(1,log(vecImpulseValueOld[cell])) * matDropoutLinModel[cell,])
     })
     vecPiOld <- 1/(1+exp(-vecLinModelOutOld))
-    scaLLOld <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLLOld <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValueOld*vecNormConst,
       vecDispEst=vecDisp, 
       vecPi=vecPiOld,
@@ -937,7 +937,7 @@ fitMuImpulseZINB <- function(vecCounts,
       sum(c(1,log(vecImpulseValue[cell])) * matDropoutLinModel[cell,])
     })
     vecDropout <- 1/(1+exp(-vecLinModelOut))
-    scaLLRef <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLLRef <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecImpulseValue*vecNormConst,
       vecDispEst=vecDisp, 
       vecPi=vecDropout,
@@ -1059,7 +1059,7 @@ fitZINBMu <- function( matCountsProc,
     # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
     # interval with cell density centred at target cell.
     # Note that this corresponds to maximising smoothed log likelihood but instead
-    # of using the implemented cost function evalLogLikSmoothZINB_LinPulse for an entire
+    # of using the implemented cost function evalLogLikSmoothZINB for an entire
     # gene, the optimisation problem is broken up into 1D problems for each mean.
     lsFitMu <- bplapply(seq(1,scaNumGenes), function(i){
       # Note: Mean parameter estimates of gene i depend on each other:

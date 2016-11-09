@@ -47,7 +47,7 @@
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikDispConstZINB_LinPulse <- function(scaTheta,
+evalLogLikDispConstZINB <- function(scaTheta,
   vecCounts,
   vecMuEst,
   vecNormConst,
@@ -124,7 +124,7 @@ fitDispZINB <- function( scaDispGuess,
   fitDisp <- tryCatch({ 
     unlist(optim(
       par=log(scaDispGuess),
-      fn=evalLogLikDispConstZINB_LinPulse_comp,
+      fn=evalLogLikDispConstZINB_comp,
       vecCounts=vecCounts,
       vecMuEst=vecMuEst,
       vecNormConst=vecNormConst,

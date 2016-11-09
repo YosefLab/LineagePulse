@@ -508,7 +508,7 @@ fitZINB <- function(matCountsProc,
               vecInterval <- cell
             }
             
-            lsFitPi <- fitPiZINB_LinPulse(
+            lsFitPi <- fitPiZINB(
               vecCounts=matCountsProc[,cell],
               vecDropoutLinModel=lsDropModel$matDropoutLinModel[cell,],
               matPiConstPredictors=lsDropModel$matPiConstPredictors,

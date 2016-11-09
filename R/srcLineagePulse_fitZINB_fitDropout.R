@@ -9,7 +9,7 @@
 #' of logistic drop-out paramater model on single gene given
 #' the negative binomial mean and dispersion parameters.
 #' 
-#' @seealso Called by \code{fitPiZINB_LinPulse}.
+#' @seealso Called by \code{fitPiZINB}.
 #' 
 #' @param vecTheta: (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
@@ -36,7 +36,7 @@
 #'    zero-inflated negative binomial likelihood.
 #' @export
 
-evalLogLikPiZINB_LinPulse <- function(vecTheta,
+evalLogLikPiZINB <- function(vecTheta,
   matPiPredictors,
   vecCounts,
   matMu,
@@ -71,7 +71,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
   # SEPARATE windows, and not a smoothing of the target cell to its 
   # neighbours. ("Trans-terms")
   scaLogLik <- sum(sapply(seq(1,dim(matMu)[2]), function(cell){
-    evalLogLikZINB_LinPulse_comp( vecCounts=vecCounts,
+    evalLogLikZINB_comp( vecCounts=vecCounts,
       vecMu=matMu[,cell]*scaNormConst,
       vecDisp=matDisp[,cell], 
       vecPi=vecPiEst,
@@ -164,7 +164,7 @@ evalLogLikPiZINB_LinPulse <- function(vecTheta,
 #'    Linear model for drop-out rate in logit space for given cell.
 #' @export
 
-fitPiZINB_LinPulse <- function( vecDropoutLinModel,
+fitPiZINB <- function( vecDropoutLinModel,
   matPiConstPredictors,
   lsPiOptimHyperparam,
   vecCounts,
@@ -199,7 +199,7 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
   lsLinModelFit <- tryCatch({
     optim(
       par=vecParamGuess,
-      evalLogLikPiZINB_LinPulse_comp,
+      evalLogLikPiZINB_comp,
       matPiPredictors=matPiPredictors,
       vecCounts=vecCounts,
       matMu=matMuParam,
@@ -213,10 +213,10 @@ fitPiZINB_LinPulse <- function( vecDropoutLinModel,
         fnscale=-1)
     )[c("par","convergence")]
   }, error=function(strErrorMsg){
-    print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB_LinPulse().",
+    print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB().",
       " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
-    scaLLInit <- evalLogLikPiZINB_LinPulse_comp(
+    scaLLInit <- evalLogLikPiZINB_comp(
       vecTheta=vecParamGuess,
       matPiPredictors=matPiPredictors,
       vecCounts=vecCounts,

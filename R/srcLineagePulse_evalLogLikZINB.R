@@ -12,8 +12,8 @@
 #' @aliases evalLogLikZINB_comp
 #' 
 #' @seealso Called directly by likelihood wrappers 
-#'    \code{evalLogLikSmoothZINB_LinPulse} and \code{evalLogLikGene}.
-#'    Called directly by \code{evalLogLikDispConstMuClustersZINB_LinPulse}
+#'    \code{evalLogLikSmoothZINB} and \code{evalLogLikGene}.
+#'    Called directly by \code{evalLogLikDispConstMuClustersZINB}
 #'    and 
 #'    Moreover by \code{plotGene}.
 #'
@@ -34,7 +34,7 @@
 #' 	  negative binomial model.
 #' @export
 
-evalLogLikZINB_LinPulse <- function(vecCounts,
+evalLogLikZINB <- function(vecCounts,
   vecMu,
   vecDisp, 
   vecPi, 
@@ -83,7 +83,10 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 #' 
 #' @aliases evalLogLikSmoothZINB_comp
 #' 
-#' @seealso Called directly by \code{evalLogLikGene}.
+#' @seealso Called directly by \code{evalLogLikGene} and by
+#' loglikelihood wrappers that operate on sliding window mean
+#' estimates: \code{evalLogLikMuVecWindowsZINB} and
+#' \code{evalLogLikDispConstMuVecWindowsZINB}.
 #'
 #' @param vecCounts (count vector number of amples)
 #'    Observed expression values for  given gene.
@@ -107,7 +110,7 @@ evalLogLikZINB_LinPulse <- function(vecCounts,
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #' @export
 
-evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
+evalLogLikSmoothZINB <- function(vecCounts,
   vecMu,
   vecNormConst,
   vecDisp, 
@@ -122,7 +125,7 @@ evalLogLikSmoothZINB_LinPulse <- function(vecCounts,
       scaindIntervalStart <- max(1,j-scaWindowRadius)
       scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
       vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-      scaLogLikCell <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts[vecInterval],
+      scaLogLikCell <- evalLogLikZINB_comp(vecCounts=vecCounts[vecInterval],
         vecMu=vecMu[j]*vecNormConst[vecInterval],
         vecDisp=rep(vecDisp[j], length(vecInterval)), 
         vecPi=vecPi[vecInterval], 
@@ -143,7 +146,7 @@ evalLogLikGene <- function(vecCounts,
   scaWindowRadius=NULL ){
   
   if(!is.null(scaWindowRadius)){
-    scaLogLik <- evalLogLikSmoothZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLogLik <- evalLogLikSmoothZINB_comp(vecCounts=vecCounts,
       vecMu=vecMu,
       vecNormConst=vecNormConst,
       vecDisp=vecDisp, 
@@ -152,7 +155,7 @@ evalLogLikGene <- function(vecCounts,
       vecboolZero=vecboolZero,
       scaWindowRadius=scaWindowRadius)
   } else {
-    scaLogLik <- evalLogLikZINB_LinPulse_comp(vecCounts=vecCounts,
+    scaLogLik <- evalLogLikZINB_comp(vecCounts=vecCounts,
       vecMu=vecMu*vecNormConst,
       vecDisp=vecDisp, 
       vecPi=vecPi,
