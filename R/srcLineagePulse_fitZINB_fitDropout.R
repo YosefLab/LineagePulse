@@ -36,6 +36,9 @@
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikPiZINB <- function(vecTheta,
@@ -159,6 +162,9 @@ evalLogLikPiZINB <- function(vecTheta,
 #' 
 #' @return vecLinModel: (numeric vector length linear model) 
 #'    Linear model for drop-out rate in logit space for given cell.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitPiZINB <- function( vecDropoutLinModel,

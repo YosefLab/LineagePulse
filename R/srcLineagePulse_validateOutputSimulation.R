@@ -10,7 +10,7 @@ library(reshape2)
 #' 
 #' Compare inferred parameters with underlying model parameters. Loads
 #' all data from temporary files. This can only be done if data was 
-#' simulated and true data is known!
+#' simulated and true data is known! All metrics are saved as plots to pdfs.
 #' 
 #' @seealso Auxillary method not called by LineagePulse wrapper.
 #' Called separately by user.
@@ -26,6 +26,8 @@ library(reshape2)
 #'    This is the output directory for this function.
 #' 
 #' @return NULL: Output saved to dirOutValidation.
+#'    
+#' @author David Sebastian Fischer
 #' 
 #' @export
 

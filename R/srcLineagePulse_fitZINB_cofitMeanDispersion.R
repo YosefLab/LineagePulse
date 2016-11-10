@@ -18,7 +18,7 @@
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow simultaneous numerical optimisation
-#' of negative binomial dispersionmean paramater on single gene given
+#' of negative binomial dispersion and mean paramater on single gene given
 #' the drop-out rate/model. The dispersion parameter is modelled as a constant
 #' and the mean parameter is modelled as a constant for the given gene.
 #' 
@@ -60,6 +60,9 @@
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikDispConstMuConstZINB <- function(vecTheta,
@@ -153,6 +156,9 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
@@ -209,9 +215,9 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow simultaneous numerical optimisation
-#' of negative binomial dispersionmean paramater on single gene given
+#' of negative binomial dispersion and mean paramater on single gene given
 #' the drop-out rate/model. The dispersion parameter is modelled as a constant
-#' and the mean parameter is modelled as by cluster for the given gene.
+#' and the mean parameter is modelled by cluster for the given gene.
 #' 
 #' The mean parameters are fit in log space and is therefore fit
 #' as positive scalars. The cost function is insensitive to the
@@ -251,6 +257,9 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikDispConstMuClustersZINB <- function(vecTheta,
@@ -307,7 +316,8 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
 #' This function is designed to allow simultaneous numerical optimisation
 #' of negative binomial dispersionmean paramater on single gene given
 #' the drop-out rate/model. The dispersion parameter is modelled as a constant
-#' and the mean parameter is modelled as a constant for the given gene.
+#' and the mean parameter is modelled by the impulse model for the given gene.
+#' 
 #' The impulse model amplitude parameters are fit in log space and are
 #' therefore fit as positive scalars. The cost function is insensitive to the
 #' amplitude parameters shrinking beyond a numerical threshold to zero which 
@@ -349,6 +359,9 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
 #'    Smoothing interval radius.
 #'    
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
@@ -400,12 +413,14 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
 # (II) FITTING COORDINATORS
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Cost function zero-inflated negative binomial model for mean fitting under
-#' constant dispersion and constant mean model
+#' Numerical fitting wrapper for constant dispersion and constant mean model
 #' 
 #' Fits single negative binomial mean and dispersion parameter numerically as 
 #' maximum likelihood estimators to a gene: Constant dispersion and
 #' constant mean model.
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
 #' Calls loglikelihood wrapper inside of optim:
@@ -434,6 +449,9 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
 #'        parameter estimate.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitDispConstMuConstZINB <- function(vecCounts,
@@ -504,11 +522,16 @@ fitDispConstMuConstZINB <- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit negative binomial means and dispersion to all observations of a gene
+#' Numerical fitting wrapper for constant dispersion and sliding window 
+#' mean model
 #' 
-#' Fits negative binomial mean parameters and dispersion parameter
-#' to all observations of a gene. The mean parameter is modelled
-#' by local smoothing (windows) and the dispersion parameter as a constant.
+#' Fits single negative binomial mean and dispersion parameter numerically as 
+#' maximum likelihood estimators to a gene: local smoothing (sliding windows) 
+#' mean model and constant dispersion model.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
 #' Calls loglikelihood wrapper inside of optim:
@@ -539,6 +562,9 @@ fitDispConstMuConstZINB <- function(vecCounts,
 #'        Negative binomial mean parameter estimates.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitDispConstMuVecWindowsZINB<- function(vecCounts,
@@ -606,14 +632,19 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit negative binomial mean parameter and dispersion parameter
-#' to a cluster of cells
+#' Numerical fitting wrapper for constant dispersion
+#' cluster-wise mean model
 #' 
-#' Fit negative binomial mean parameter and dispersion parameter
-#' to a cluster of cells. This is the wrapper performing numerical
-#' optimisation with optim. Note that this cannot be performed with
+#' Fits single negative binomial mean and dispersion parameter numerically as 
+#' maximum likelihood estimators to a gene: Constant dispersion and cluster-wise
+#' mean model.
+#' Note that this cannot be performed with
 #' fitDispConstMuConstZINB for each cluster as the dispersion
 #' parameter is assumed to be shared between clusters.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
 #' Calls loglikelihood wrapper inside of optim:
@@ -644,6 +675,9 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
 #'        Negative binomial mean parameter estimates for each cluster.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitDispConstMuClusterZINB <- function(vecCounts,
@@ -716,14 +750,18 @@ fitDispConstMuClusterZINB <- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit an impulse model and a constant dispersion parameter
-#' to a gene
+#' Numerical fitting wrapper for constant dispersion
+#' impulse mean model for single initialisation
 #' 
 #' Given a parameter initialisation, this function
 #' performs numerical optimisation using BFGS of the 
 #' likelihood function given the impulse model and a constant
 #' dispersion parameter and returns the fitted (maximum likelihood) model.
 #' This is the wrapper that calls optim.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by \code{fitDispConstMuImpulseZINB}. This function
 #' performs optimisation of one impulse model initialisation,
@@ -770,6 +808,9 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 #'      \item scaLL: (scalar) Loglikelihood of fit.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
@@ -860,7 +901,8 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
     scaConvergence=scaConvergence) )
 }
 
-#' Fit means as impulse model and dispersions as constant
+#' Numerical fitting wrapper for constant dispersion
+#' impulse mean model for multiple initialisation
 #' 
 #' Computes impulse parameter initialisation for valley
 #' and peak model and uses both and the prior parameter fit
@@ -920,6 +962,9 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #'        Impulse model parameter estimates.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitDispConstMuImpulseZINB <- function(vecCounts, 
@@ -1211,6 +1256,9 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #'      \item vecConvergence: (numeric vector number of genes) 
 #'        Convergence status of optim for each gene.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitZINBMuDisp <- function( matCountsProc,

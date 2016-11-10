@@ -5,7 +5,10 @@
 #' Prepare single cell data for analysis
 #' 
 #' Check that input is correctly supplied and formatted. Then process input
-#' data for analysis.
+#' data for analysis. This function catches downstream errors arising from 
+#' incorrect input parameter combinations and explains the input error
+#' to the user. Input passing this function should not lead to errors
+#' arising from incorrect input.
 #' Helper functions:
 #'    checkNull() Check whether object was supplied (is not NULL).
 #'    checkNumeric() Checks whether elements are numeric.
@@ -20,6 +23,11 @@
 #'    fit other than offset and mean parameter (i.e. parameters which
 #'    are constant for all observations in a gene and externally supplied.)
 #'    Is null if no constant predictors are supplied.
+#' @param vecNormConstExternal: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell. These factors will linearly 
+#'    scale the mean model for evaluation of the loglikelihood. 
+#'    Must be named according to the column names of matCounts.
+#'    Supplied by user.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
@@ -85,11 +93,14 @@
 #'    Directory to which detailed output is saved to.
 #'    Defaults to current working directory if NULL.
 #'    }
-
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 processSCData <- function(matCounts,
   matPiConstPredictors,
+  vecNormConstExternal,
   vecPseudotime,
   scaSmallRun,
   strMuModel,
@@ -147,7 +158,15 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 3. vecPseudotime
+  # 3. vecNormConstExternal
+  if(!is.null(vecNormConstExternal)){
+    checkNumeric(vecNormConstExternal,"vecNormConstExternal")
+    if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
+      stop("ERROR: Not all cells in matCounts are given in vecNormConstExternal")
+    }
+  }
+  
+  # 4. vecPseudotime
   checkNull(vecPseudotime,"vecPseudotime")
   checkNumeric(vecPseudotime,"vecPseudotime")
   if(!all(names(vecPseudotime) %in% colnames(matCounts))){
@@ -244,11 +263,13 @@ processSCData <- function(matCounts,
   vecPseudotimeProc <- vecPseudotimeProc[vecidxCells]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Reduce data set to small run size if required.
-  # Keep full data set for size factor estimation.
-  matCountsProcFull <- matCountsProc
   if(!is.null(scaSmallRun)){
     scaNRows <- min(scaSmallRun,dim(matCountsProc)[1])
     matCountsProc <- matCountsProc[1:scaNRows,]
+  }
+  # Keep target normalisation constants
+  if(!is.null(vecNormConstExternal)){
+    vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
   }
   
   # Print summary of processing
@@ -268,7 +289,7 @@ processSCData <- function(matCounts,
   }
   
   return(list(matCountsProc=matCountsProc,
-    matCountsProcFull=matCountsProcFull,
+    vecNormConstExternalProc=vecNormConstExternalProc,
     matPiConstPredictorsProc=matPiConstPredictorsProc,
     vecPseudotimeProc=vecPseudotimeProc,
     dirOut=dirOut ))

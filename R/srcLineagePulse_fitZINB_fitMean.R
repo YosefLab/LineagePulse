@@ -11,23 +11,19 @@
 # (I) OBJECTIVES
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Cost function zero-inflated negative binomial model for mean fitting
+#' Cost function zero-inflated negative binomial model for mean estimation under 
+#' constant mean model
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow numerical optimisation
-#' of negative binomial mean paramater on single gene given
-#' the drop-out rate and negative binomial dispersion parameter.
-#' The mean is modelled by cell and constrained to fit a sliding 
-#' window of cells. This is the objective for the constant mean model,
-#' either used for all cells of a gene or all cells withing a cluster
-#' of a gene.
+#' of negative binomial mean paramater on single gene given the dispersion 
+#' and drop-out rate/model. The mean parameter is modelled as a 
+#' constant for the given gene.
+#' 
 #' The mean parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
-#' dispersion factor shrinking beyond a numerical threshold to zero
-#' to avoid shrinkage of the dispersion factor to zero which 
-#' may cause numerical errors. Accordingly, growth above a numerical
-#' threshold to infinity (this correponds to Poissonian noise) is 
-#' also guarded against.
+#' mean factor shrinking beyond a numerical threshold to zero which 
+#' may cause numerical errors.
 #'
 #' @aliases evalLogLikMuConstZINB_comp
 #' 
@@ -58,6 +54,9 @@
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikMuConstZINB <- function(scaTheta,
@@ -96,20 +95,20 @@ evalLogLikMuConstZINB <- function(scaTheta,
   return(scaLogLik)
 }
 
-#' Cost function zero-inflated negative binomial model for mean fitting
-#' under sliding windows mean model for single mean (coordinate ascent)
+#' Cost function zero-inflated negative binomial model for mean estimation under 
+#' sliding window (single window) mean model
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow numerical optimisation
-#' of negative binomial mean paramater on single gene given
-#' the drop-out rate and negative binomial dispersion parameter.
-#' The mean is modelled by cell and constrained to fit a sliding 
-#' window of cells. This function is used if the means for 
-#' observations of a gene are fit sequentially (coordinate ascent).
+#' of negative binomial mean paramater on single gene given the dispersion 
+#' and drop-out rate/model. The mean parameter is modelled as a 
+#' sliding window for the given gene. This function only estimates
+#' the mean for a single window.
 #' 
 #' The mean parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
-#' mean parameter shrinking beyond a numerical threshold to zero.
+#' mean factor shrinking beyond a numerical threshold to zero which 
+#' may cause numerical errors.
 #'
 #' @aliases evalLogLikMuWindowZINB_comp
 #' 
@@ -143,6 +142,9 @@ evalLogLikMuConstZINB <- function(scaTheta,
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikMuWindowZINB <- function(scaTheta,
@@ -202,20 +204,20 @@ evalLogLikMuWindowZINB <- function(scaTheta,
   return(scaLogLik)
 }
 
-#' Cost function zero-inflated negative binomial model for mean fitting
-#' under sliding windows mean model for multiple means (BFGS)
+#' Cost function zero-inflated negative binomial model for mean estimation under 
+#' sliding window (all windows) mean model
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow numerical optimisation
-#' of negative binomial mean paramater on single gene given
-#' the drop-out rate and negative binomial dispersion parameter.
-#' The mean is modelled by cell and constrained to fit a sliding 
-#' window of cells. This function is used if the means for 
-#' observations of a gene are fit simulatneously (BFGS).
+#' of negative binomial mean paramater on single gene given the dispersion 
+#' and drop-out rate/model. The mean parameter is modelled as a 
+#' sliding window for the given gene. This function estimates
+#' the mean for all window in a window simultaneously.
 #' 
 #' The mean parameter is fit in log space and is therefore fit
 #' as a positive scalar. The cost function is insensitive to the
-#' mean parameter shrinking beyond a numerical threshold to zero.
+#' mean factor shrinking beyond a numerical threshold to zero which 
+#' may cause numerical errors.
 #'
 #' @aliases evalLogLikMuVecWindowsZINB_comp
 #' 
@@ -246,6 +248,9 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikMuVecWindowsZINB <- function(vecTheta,
@@ -285,16 +290,18 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
   return(scaLogLik)
 }
 
-#' Cost function zero-inflated negative binomial model mean co-estimation under constant dispersion and constant mean model
+#' Cost function zero-inflated negative binomial model for mean estimation under 
+#' impulse mean model
 #' 
 #' Log likelihood of zero inflated  negative binomial model. 
 #' This function is designed to allow numerical optimisation
-#' of negative binomial mean paramater on single gene given
-#' the drop-out rate/model. The mean parameter is modelled with 
-#' an impulse model for the given gene.
-#' The impulse model amplitude parameters are fit in log space and are
-#' therefore fit as positive scalars. The cost function is insensitive to the
-#' amplitude parameters shrinking beyond a numerical threshold to zero which 
+#' of negative binomial mean paramater on single gene given the dispersion 
+#' and drop-out rate/model. The mean parameter is modelled with 
+#' the impulse model.
+#' 
+#' The mean parameter is fit in log space and is therefore fit
+#' as a positive scalar. The cost function is insensitive to the
+#' mean factor shrinking beyond a numerical threshold to zero which 
 #' may cause numerical errors.
 #' 
 #' @aliases evalLogLikMuImpulseZINB_comp 
@@ -331,6 +338,9 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
 #'    
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikMuImpulseZINB <- function(vecTheta,
@@ -371,10 +381,14 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
 # (II) FITTING COORDINATORS
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Cost function zero-inflated negative binomial model for mean fitting
+#' Numerical fitting wrapper for constant mean model
 #' 
-#' Fits single negative binomial mean parameters numerically as 
-#' maximum likelihood estimator to a gene: Constant mean model.
+#' Fits single negative binomial mean numerically as 
+#' maximum likelihood estimators to a gene: constant mean model.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
 #' Calls loglikelihood wrapper inside of optim:
@@ -403,6 +417,9 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
 #'        Negative binomial mean parameter estimate.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitMuConstZINB <- function(vecCounts,
@@ -455,15 +472,16 @@ fitMuConstZINB <- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit negative binomial mean to single cell in 
-#' an interval (cluster or sliding windowmode, coordinate ascent)
+#' Numerical fitting wrapper for sliding window mean model (single window)
 #' 
-#' Fits negative binomial mean parameter numerically as maximum likelihood estimator
-#' to a cell in an interval. The routine distinguishes fitting to a cluster
-#' and fitting to a sliding window. Moreover, the routine allows for the
-#' use of the closed form maximum likelihood estimator if all normalisation
-#' constants are one and the drop-out rate is not fit dynamically (i.e. is
-#' handled as a constant).
+#' Fits single negative binomial mean numerically as 
+#' maximum likelihood estimators to a gene: sliding window mean model.
+#' This function only computes the mean of a single window.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
+#' 
 #' Note that this fitting routine is meant for fitting a single mean
 #' to a set of observations and can be used in wrappers which compute
 #' every mean separately (assuming independence).
@@ -498,6 +516,9 @@ fitMuConstZINB <- function(vecCounts,
 #'        Negative binomial mean parameter estimate.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitMuWindowZINB <- function(vecCounts,
@@ -554,10 +575,15 @@ fitMuWindowZINB <- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit negative binomial means to all cells in an interval (BFGS)
+#' Numerical fitting wrapper for sliding window mean model (all windows)
 #' 
-#' Fits negative binomial mean parameters numerically as maximum likelihood estimator
-#' to all cells in an interval simultaneously using BFGS.
+#' Fits single negative binomial mean numerically as 
+#' maximum likelihood estimators to a gene: sliding window mean model.
+#' This function only computes the mean of all windows.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
 #' Calls loglikelihood wrapper inside of optim:
@@ -591,6 +617,9 @@ fitMuWindowZINB <- function(vecCounts,
 #'        Negative binomial mean parameter estimates.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitMuVecWindowsZINB<- function(vecCounts,
@@ -643,12 +672,18 @@ fitMuVecWindowsZINB<- function(vecCounts,
     scaConvergence=scaConvergence))
 }
 
-#' Fit an impulse model to observations of a gene
+#' Numerical fitting wrapper for
+#' impulse mean model for single initialisation
 #' 
 #' Given a parameter initialisation, this function
 #' performs numerical optimisation using BFGS of the 
-#' likelihood function given the impulse model and returns
-#' the fitted (maximum likelihood) model.
+#' likelihood function given the impulse model and returns the fitted 
+#' (maximum likelihood) model. 
+#' This is the wrapper that calls optim.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
 #' 
 #' @seealso Called by \code{fitMuImpulseZINB}. This function
 #' performs optimisation of one impulse model initialisation,
@@ -691,6 +726,9 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #'      \item scaLL: (scalar) Loglikelihood of fit.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
@@ -757,13 +795,13 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
     scaConvergence=scaConvergence) )
 }
 
-#' Fit means as impulse model and dispersions as constant
+#' Numerical fitting wrapper for
+#' impulse mean model for multiple initialisation
 #' 
 #' Computes impulse parameter initialisation for valley
 #' and peak model and uses both and the prior parameter fit
 #' in three separate optimisation runs to obtain the best 
-#' impulse model fit to the data, simultaneous with fitting a 
-#' constant dispersion factor.
+#' impulse model fit to the data.
 #' 
 #' @seealso Called by mean estimation wrapper \code{fitZINBMu}.
 #' Calls optimisation wrapper \code{fitMuImpulseOneInitZINB} 
@@ -817,6 +855,9 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #'        Impulse model parameter estimates.
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitMuImpulseZINB <- function(vecCounts,
@@ -1063,6 +1104,9 @@ fitMuImpulseZINB <- function(vecCounts,
 #'      \item vecConvergence: (numeric vector number of genes) 
 #'        Convergence status of optim for each gene.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitZINBMu <- function( matCountsProc,

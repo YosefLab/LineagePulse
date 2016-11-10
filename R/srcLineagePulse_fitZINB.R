@@ -76,9 +76,7 @@
 #'      \item   K: (scalar) Number of clusters selected.
 #'      }
 #' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors for each observation which take
-#'    sequencing depth into account (size factors). One size
-#'    factor per cell.
+#'    Model scaling factors, one per cell.
 #' @param scaWindowRadius: (integer) [Default NULL]
 #'    Smoothing interval radius of cells within pseudotemporal
 #'    ordering. Each negative binomial model inferred on

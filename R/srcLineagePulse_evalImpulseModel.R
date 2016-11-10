@@ -17,7 +17,10 @@
 #'    Observed vecTimepoints, numeric.
 #' 
 #' @return vecY (vec number of vecTimepoints) 
-#'    Model expression values of given gene for time points
+#'    Model expression values of given gene for time points.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalImpulseModel <- function(vecTheta,vecTimepoints){

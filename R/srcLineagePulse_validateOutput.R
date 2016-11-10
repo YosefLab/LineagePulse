@@ -5,7 +5,8 @@
 #' Generate metrics for validation of ZINB fit
 #' 
 #' Compute and plot summary metrics that allow the user to judge
-#' whether the ZINB fit is sensible.
+#' whether the ZINB fit is sensible. All metrics are saved as plots
+#' to pdfs.
 #' 
 #' @seealso Called by \code{runLineagePulse} or separately by user.
 #' 
@@ -17,6 +18,8 @@
 #'    This is the output directory for this function.
 #' 
 #' @return NULL: Output saved to dirOutValidation.
+#'    
+#' @author David Sebastian Fischer
 #' 
 #' @export
 

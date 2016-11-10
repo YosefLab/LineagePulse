@@ -1,3 +1,7 @@
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++   Simulate a data set  +++++++++++++++++++++++++++#
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
 #' Simulate a data set for LinagePulse
 
 #' Simulates a data set with genes with constant and impulse
@@ -41,6 +45,8 @@
 #'    \item matSampledCountsObserved: (matrix genes x cells)
 #'    Sampled count data of all cells after drop-out.
 #' }
+#'    
+#' @author David Sebastian Fischer
 #' 
 #' @export
 

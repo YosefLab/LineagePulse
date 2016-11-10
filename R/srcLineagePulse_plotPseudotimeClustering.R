@@ -25,6 +25,9 @@
 #' @param strPDFname: (str) Name of .pdf with plots.
 #'          
 #' @return NULL
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 plotPseudotimeClustering <- function(vecPseudotime, 

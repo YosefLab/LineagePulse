@@ -48,6 +48,9 @@
 #' 
 #' @return scaLogLik: (scalar) Value of cost function:
 #'    zero-inflated negative binomial likelihood.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikDispConstZINB <- function(scaTheta,
@@ -119,6 +122,9 @@ evalLogLikDispConstZINB <- function(scaTheta,
 #'        parameter estimate. 
 #'      \item scaConvergence: (scalar) Convergence status of optim.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitConstDispZINB <- function( scaDispGuess,
@@ -263,6 +269,9 @@ fitConstDispZINB <- function( scaDispGuess,
 #'      \item vecConvergence: (numeric vector number of genes) 
 #'        Convergence status of optim for each gene.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 fitZINBDisp <- function( matCountsProc,

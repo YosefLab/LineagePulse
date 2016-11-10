@@ -5,7 +5,7 @@
 #' Compute value of logistic dropout function given with scale boundaries
 #' 
 #' Computes value of logistic function for one observation and uses offset
-#' to correct model. The drop-our magnitude boundary parameter scaOffset is
+#' to correct model. The drop-out magnitude boundary parameter scaOffset is
 #' set in here.
 #' 
 #' @aliases evalDropoutModel_comp
@@ -19,6 +19,9 @@
 #' 
 #' @return scaDropoutRate (scalar): 
 #'    Drop-out rate estimate.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalDropoutModel <- function(vecPiModel, 

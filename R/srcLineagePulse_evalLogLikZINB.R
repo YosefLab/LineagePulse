@@ -7,9 +7,11 @@
 #' 
 #' This liklihood function is appropriate for sequencing data with high drop 
 #' out rate, commonly observed in single cell data (e.g. scRNA-seq). This
-#' is the core function used for every maximum likelihood-based estimation
-#' in LineagePulse. It operates on a vector of counts, such as 
-#' observations of a gene.
+#' is the core function used for every likelihood evaluation 
+#' in LineagePulse, such as maximum likelihood-based estimation. 
+#' It operates on a vector of counts, such as observations of a gene. Note that
+#' for the sake of numerical stability, lower bounds on loglikelihood terms
+#' are implemented.
 #' 
 #' @aliases evalLogLikZINB_comp
 #' 
@@ -37,6 +39,9 @@
 #'    
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikZINB <- function(vecCounts,
@@ -114,6 +119,9 @@ evalLogLikZINB <- function(vecCounts,
 #'    
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikSmoothZINB <- function(vecCounts,
@@ -183,6 +191,9 @@ evalLogLikSmoothZINB <- function(vecCounts,
 #'    
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikGene <- function(vecCounts,
@@ -220,7 +231,6 @@ evalLogLikGene <- function(vecCounts,
 #' This likelihood function is a wrapper computes loglikelihood
 #' of entire data set by parallelising loglikelihood computation
 #' over genes.
-#' 
 #' 
 #' @seealso Called directly by \code{fitZINB} to track
 #' convergence of estimation iteration on entire data set.
@@ -298,6 +308,9 @@ evalLogLikGene <- function(vecCounts,
 #'
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 evalLogLikMatrix <- function(matCounts,

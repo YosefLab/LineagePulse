@@ -21,6 +21,8 @@
 #' @param strTitle: (string) Title of plot.
 #' 
 #' @return NULL
+#'    
+#' @author David Sebastian Fischer
 #' 
 #' @export
 

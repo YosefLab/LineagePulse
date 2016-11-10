@@ -60,6 +60,8 @@
 #' @return gGenePlot: (ggplot object) Plot which can be printed or saved
 #'    to pdf. Inferred impulse and constant model are plotted as 
 #'    a constant line, the underlying models as dashed.
+#'    
+#' @author David Sebastian Fischer
 #' 
 #' @export
 

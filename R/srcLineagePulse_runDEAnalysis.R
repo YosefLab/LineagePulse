@@ -156,6 +156,9 @@
 #'    deviance: loglikelihood ratio test statistic (the deviance),
 #'    mean_H0: inferred gene-wise mean parameter (constant null model),
 #'    dispersion_H0: inferred gene-wise dispersion parameter (constant null model)
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 runDEAnalysis <- function(matCountsProc,

@@ -61,14 +61,24 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 
 #' LineagePulse wrapper: Differential expression analysis in pseudotime
 #' 
-#' This function is the wrapper function for the LineagePulse algorithm,
-#' which performs data processing, clustering, zero-inflated negative
-#' binomial model estimation), differential expression analysis and
-#' output validation. Read up on the options you have in LineagePulse
+#' This function does everything for you, lean back.
+#' 
+#' This function is the wrapper function for the LineagePulse algorithm
+#' which performs zero-inflated negative binomial model fitting
+#' and differential expression analysis as well as
+#' output validation. Note that LineagePulse has many input parameters but
+#' only few will be relevant for you and you will be able to leave the 
+#' remaining ones as their defaults. Read up on specific input parameters
 #' in the input parameter annotation of this function. In short,
 #' you have to:
+#' 
 #' 1. Supply data: Count data (matCounts) and pseudotime coordinates
-#' of the cells (vecPseudotime).
+#' of the cells (vecPseudotime). You may decide to also provide cell-wise
+#' normalisation factors (such as factors accounting for sequencing depth)
+#' (vecNormConstExternal). To ease LineagePulse use when testing
+#' multiple lineages within one data set, the input that controls the 
+#' set of cells entering LineagePulse is vecPseudotime. Cells not
+#' mentioned in vecPseudotime are not included.
 #' 2. Decide whether you want to run a test run on a few genes only 
 #' (scaSmallRun).
 #' 3. Chose the model constraining mean (strMuModel) and dispersion 
@@ -78,11 +88,15 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' based on true time (time of sampling) (boolClusterInPseudotime).
 #' 4. Decide whether you want to use local negative binomial model
 #' smooting (scaWindowRadius). 
-#' 5. Supply gene-specific drop-out predictors if wanted.
+#' 5. Supply gene-specific drop-out predictors if wanted 
+#' (matPiConstPredictors).
 #' 6. Set optimisation parameters (boolEstimateNoiseBasedOnH0,
-#' boolVecWindowsAsBFGS, boolCoEstDispMean, scaMaxEstimationCycles)
+#' boolVecWindowsAsBFGS, boolCoEstDispMean, scaMaxEstimationCycles).
 #' 7. Chose the number of processes you want to use (scaNProc), LineagePulse
-#' is parallelised on all computation intensive steps.
+#' is parallelised on all computation intensive steps. Note that
+#' the current parallelisation scheme runs on Unix (MacOS) and Linux but
+#' not on windows. Adjust the code section within this wrapper to
+#' parallelise on windows.
 #' 8. Set the validation output you want to receive to visualise
 #' the results (boolValidateZINBfit).
 #' 9. Set the level of detail with which you want to follow
@@ -92,7 +106,32 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' temporary and final output objects to be saved into
 #' (dirOut).
 #' 
-#' @details Note on parameter objects:
+#' LineagePulse returns a data frame with the differential
+#' expression analysis results but also saves all relevant
+#' parameter estimates and temporary data to dirOut for further
+#' inspection.
+#' 
+#' Finally, after running LineagePulse, you may continue to work
+#' on your data set by:
+#' A) Regenerating observation-wise parameters,
+#' such as the mean parameter matrix which represents the hidden
+#' expression states, with the functions in srcLineagePulse_decompressParameters.R.
+#' B) You can also compute the observation-wise probability of 
+#' dropout with calcPostDrop.
+#' C) Moreover, you can have a closer look at the hidden expression
+#' states of the genes with sortGeneTrajectories.
+#' D) If you work on simulated data, you can create additional 
+#' validation metrics with validateOutputSimulation.
+#' 
+#' @details Note on optimisation strategies: LineagePulse gives the use
+#' control over how the large optimisation problem is broken up.
+#' We give the user this choice so that the user can adjust the 
+#' accuracy to the available computing infrastructure. Consult
+#' with the LineagePulse developers if you are unsure about he settings
+#' here, e.g. if you are not sure whether to estimate the noise
+#' model on the H1 or H0 expression model.
+#' 
+#' Note on parameter objects:
 #' To save memory, not the entire parameter matrix (genes x cells) but
 #' the parmater models are stored in the objects lsMuModel, lsDispModel
 #' and lsDropModel. These objects are described in detail in the annotation
@@ -104,6 +143,8 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' impulse model for each gene and pseudotime coordinates. Therefore, the
 #' mean parameter for each observation can be computed as the value of the
 #' impulse model evaluated at the pseudotime points for each gene.
+#' The observation-wise parameter estimates can be recovered with 
+#' the functions in: srcLineagePulse_decompressParameters.R
 #'
 #' The computational complexity of LineagePulse is linear in the
 #' number of genes and linear in the number of cells.
@@ -116,13 +157,16 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #'    gene-wise drop-out predictors) Predictors for logistic drop-out 
 #'    fit other than offset and mean parameter (i.e. parameters which
 #'    are constant for all observations in a gene and externally supplied.)
-#'    Is null if no constant predictors are supplied.
+#'    Is null if no constant predictors are supplied
+#' @param vecNormConstExternal: (numeric vector number of cells) 
+#'    Model scaling factors, one per cell. These factors will linearly 
+#'    scale the mean model for evaluation of the loglikelihood. 
+#'    Must be named according to the column names of matCounts.
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
 #' @param scaSmallRun: (integer) [Default NULL] Number of rows
-#'    on which ImpulseDE2 is supposed to be run, the full
-#'    data set is only used for size factor estimation.
+#'    on which a test run of LineagePulse is performed.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -225,6 +269,7 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 
 runLineagePulse <- function(matCounts,
   matPiConstPredictors=NULL,
+  vecNormConstExternal=NULL,
   vecPseudotime,
   scaSmallRun=NULL,
   strMuModel="impulse",
@@ -243,11 +288,14 @@ runLineagePulse <- function(matCounts,
   boolBPlog=FALSE,
   dirOut=NULL ){
   
+  print("LineagePulse v1.0")
+  
   # 1. Data preprocessing
   print("1. Data preprocessing:")
   lsProcessedSCData <- processSCData( matCounts=matCounts,
     matPiConstPredictors=matPiConstPredictors,
     vecPseudotime=vecPseudotime,
+    vecNormConstExternal=vecNormConstExternal,
     scaSmallRun=scaSmallRun,
     strMuModel=strMuModel,
     strDispModel=strDispModel,
@@ -256,13 +304,13 @@ runLineagePulse <- function(matCounts,
     boolCoEstDispMean=boolCoEstDispMean,
     dirOut=dirOut )
   matCountsProc <- lsProcessedSCData$matCountsProc
-  matCountsProcFull <- lsProcessedSCData$matCountsProcFull
+  vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
   dirOut <- lsProcessedSCData$dirOut
   
   save(matCountsProc,file=file.path(dirOut,"LineagePulse_matCountsProc.RData"))
-  save(matCountsProcFull,file=file.path(dirOut,"LineagePulse_matCountsProcFull.RData"))
+  save(vecNormConstExternalProc,file=file.path(dirOut,"LineagePulse_vecNormConstExternalProc.RData"))
   save(matPiConstPredictorsProc,file=file.path(dirOut,"LineagePulse_matPiConstPredictorsProc.RData"))
   save(vecPseudotimeProc,file=file.path(dirOut,"LineagePulse_vecPseudotimeProc.RData"))
   # Clear memory
@@ -304,10 +352,11 @@ runLineagePulse <- function(matCounts,
     #log=boolBPlog, 
     #threshold="INFO", 
     #logdir=dirBPLogs))
+    # Use this on windows or if SOCK clusters wanted:
     # For multiple machine (SOCK) cluster
     #register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
-    # For debugging in serial mode
   } else {
+    # For debugging in serial mode
     register(SerialParam())
   }
   
@@ -337,10 +386,9 @@ runLineagePulse <- function(matCounts,
   
   # 4. Compute normalisation constants
   print("4. Compute normalisation constants:")
-  vecNormConst <- calcNormConst(matCountsProcFull)
+  vecNormConst <- calcNormConst(matCountsProc,
+     vecNormConstExternal=vecNormConstExternalProc)
   save(vecNormConst,file=file.path(dirOut,"LineagePulse_vecNormConst.RData"))
-  # Clear memory
-  rm(matCountsProcFull)
   
   # 5. Fit ZINB mixture model for both H1 and H0.
   print("5. Fit ZINB mixture model for both H1 and H0.")
@@ -376,7 +424,7 @@ runLineagePulse <- function(matCounts,
     " min",sep=""))
   
   # 6. Differential expression analysis:
-  print("8. Differential expression analysis:")
+  print("6. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
     dfDEAnalysis <- runDEAnalysis(
       matCountsProc = matCountsProc,
@@ -396,7 +444,7 @@ runLineagePulse <- function(matCounts,
   
   # 7. Generate validation metrics for inferred ZINB fits
   if(boolValidateZINBfit){
-    print("9. Generate ZINB model fit validation metrics:")
+    print("7. Generate ZINB model fit validation metrics:")
     suppressWarnings( validateOutput(dirOutLineagePulse=dirOut,
       dirOutValidation=dirOut) )
   }

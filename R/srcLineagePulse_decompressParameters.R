@@ -66,6 +66,9 @@
 #'    
 #' @return vecMu: (numerical vector number of cells)
 #'    Mean parameter estimates for given gene given the mean model.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 decompressMeansByGene <- function(vecMuModel,
@@ -139,6 +142,9 @@ decompressMeansByGene <- function(vecMuModel,
 #' @return vecDisp: (numerical vector number of cells)
 #'    Dispersion parameter estimates for given gene 
 #'    (one per cell for given gene).
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 decompressDispByGene <- function(vecDispModel,
@@ -179,6 +185,9 @@ decompressDispByGene <- function(vecDispModel,
 #' @return vecPi: (numerical vector number of cells)
 #'    Dispersion parameter estimates for given gene 
 #'    (one per cell for given gene).
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 decompressDropoutRateByGene <- function(matDropModel,
@@ -215,6 +224,9 @@ decompressDropoutRateByGene <- function(matDropModel,
 #' @return vecPi: (numerical vector number of cells)
 #'    Dispersion parameter estimates for given gene 
 #'    (one per cell for given gene).
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 decompressDropoutRateByCell <- function(vecDropModel,

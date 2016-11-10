@@ -32,6 +32,9 @@
 #' @return vecZ:  (numeric vector samples)
 #'    Posterior probability of observation not being generated 
 #'    by drop-out.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 calcPostDrop_Vector <- function( vecMu,
@@ -78,7 +81,7 @@ calcPostDrop_Vector <- function( vecMu,
 #' as a boolean matrix indicating zero-observations, the actual values
 #' are not required. Neighbourhood smoothing can be included.
 #' 
-#' @seealso Called by \code{fitZINB} and \code{runLineagePulse}.
+#' @seealso Called by \code{fitZINB}. Can be called by user.
 #' 
 #' @param matMu: (numeric matrix genes x cells)
 #'    Inferred zero inflated negative binomial drop out rates.

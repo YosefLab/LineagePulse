@@ -48,6 +48,9 @@
 #'    
 #' @return vecSortedGenes: (string vector number of IDs)
 #'    IDs sorted by peak time in pseudotime.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 sortGeneTrajectories <- function(vecIDs,

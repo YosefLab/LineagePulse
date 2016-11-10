@@ -24,6 +24,9 @@
 #'        one scalar per centroid.
 #'      \item   K: (scalar) Number of clusters selected.
 #'      }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 clusterCellsInPseudotime <- function(vecPseudotime,

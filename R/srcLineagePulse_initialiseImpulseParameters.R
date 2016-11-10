@@ -5,7 +5,7 @@
 #' Estimate impulse model parameter initialisations
 #' 
 #' The initialisations reflect intuitive parameter choices corresponding
-#' to a peak and to a valley model.
+#' to a peak and to a valley model and are based on proximity binned data.
 #' 
 #' @seealso Called by impulse model fitting wrappers:
 #' \code{fitMuImpulseZINB} and \code{fitDispConstMuImpulseZINB}.
@@ -52,6 +52,9 @@
 #'    model parameters) Impulse model parameter initialisation 
 #'    corresponding to a valley.
 #'    }
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
 
 initialiseImpulseParametes <- function(vecCounts,
