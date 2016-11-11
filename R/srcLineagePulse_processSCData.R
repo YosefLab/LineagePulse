@@ -270,6 +270,8 @@ processSCData <- function(matCounts,
   # Keep target normalisation constants
   if(!is.null(vecNormConstExternal)){
     vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
+  } else {
+    vecNormConstExternalProc <- NULL
   }
   
   # Print summary of processing
