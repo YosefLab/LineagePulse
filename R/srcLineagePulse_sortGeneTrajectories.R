@@ -124,7 +124,7 @@ sortGeneTrajectories <- function(vecIDs,
     
     # Plot clusters by gene
     graphics.off()
-        pdf(paste0(dirHeatmap, "/LineagePulse_GenesSortedByPeakTime.pdf"))
+        pdf(paste0(dirHeatmap, "/LineagePulse_GenesClusteredByTrajectory.pdf"))
     heatmap.2(matMuNorm, 
       dendrogram="row", Rowv=TRUE, Colv=FALSE, 
       xlab = "pseudotime", ylab =  "genes",
