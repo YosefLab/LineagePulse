@@ -40,21 +40,12 @@ source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
 source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
-# Pre-compile function
-evalImpulseModel_comp <- cmpfun(evalImpulseModel)
-evalDropoutModel_comp <- cmpfun(evalDropoutModel)
-evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
-evalLogLikSmoothZINB_comp <- cmpfun(evalLogLikSmoothZINB)
+
 evalLogLikMuWindowZINB_comp <- cmpfun(evalLogLikMuWindowZINB)
 evalLogLikMuVecWindowsZINB_comp <- cmpfun(evalLogLikMuVecWindowsZINB)
 evalLogLikMuConstZINB_comp <- cmpfun(evalLogLikMuConstZINB)
 evalLogLikMuImpulseZINB_comp <- cmpfun(evalLogLikMuImpulseZINB)
 evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
-evalLogLikPiZINB_comp <- cmpfun(evalLogLikPiZINB)
-evalLogLikDispConstMuConstZINB_comp <- cmpfun(evalLogLikDispConstMuConstZINB)
-evalLogLikDispConstMuVecWindowsZINB_comp <- cmpfun(evalLogLikDispConstMuVecWindowsZINB)
-evalLogLikDispConstMuClustersZINB_comp <- cmpfun(evalLogLikDispConstMuClustersZINB)
-evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB)
 
 ################################################################################
 ### Main function

@@ -17,7 +17,7 @@
 #vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
 #  vecMu=vecMuParam,
 #  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-      
+
 # 2. How to extract parameters cell-wise?
 # Use decompressMeansByGene and decompressDispByGene in loop over genes
 # for a single cell and use decompressDropoutRateByCell.
@@ -72,8 +72,8 @@
 #' @export
 
 decompressMeansByGene <- function(vecMuModel,
-  lsMuModelGlobal,
-  vecInterval=NULL ){
+                                  lsMuModelGlobal,
+                                  vecInterval=NULL ){
   
   # Set interval to entire gene if not given
   # Dont do this to save time at the moment (dont reorder things
@@ -87,12 +87,12 @@ decompressMeansByGene <- function(vecMuModel,
       vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells) 
     }
   } else if(lsMuModelGlobal$strMuModel=="impulse"){
-    if(!is.null(vecInterval)){ 
-      vecMu <- evalImpulseModel_comp(vecTheta=vecMuModel, 
-        vecTimepoints=lsMuModelGlobal$vecPseudotime[vecInterval])
+    if(!is.null(vecInterval)){
+      vecMu <- evalImpulseModel_comp(vecImpulseParam=vecMuModel, 
+                                     vecTimepoints=lsMuModelGlobal$vecPseudotime[vecInterval])
     } else { 
-      vecMu <- evalImpulseModel_comp(vecTheta=vecMuModel, 
-        vecTimepoints=lsMuModelGlobal$vecPseudotime) 
+      vecMu <- evalImpulseModel_comp(vecImpulseParam=vecMuModel, 
+                                     vecTimepoints=lsMuModelGlobal$vecPseudotime) 
     }
   } else if(lsMuModelGlobal$strMuModel=="clusters"){
     if(!is.null(vecInterval)){ 
@@ -108,7 +108,7 @@ decompressMeansByGene <- function(vecMuModel,
     }
   } else {
     stop(paste0("ERROR decompressMeans(): lsMuModelGlobal$strMuModel=", 
-      lsMuModelGlobal$strMuModel, " not recognised."))
+                lsMuModelGlobal$strMuModel, " not recognised."))
   }
   
   return(vecMu)
@@ -148,18 +148,18 @@ decompressMeansByGene <- function(vecMuModel,
 #' @export
 
 decompressDispByGene <- function(vecDispModel,
-  lsDispModelGlobal,
-  vecInterval=NULL ){
-
+                                 lsDispModelGlobal,
+                                 vecInterval=NULL ){
+  
   if(lsDispModelGlobal$strDispModel=="constant"){
     if(!is.null(vecInterval)){ scaReps <- length(vecInterval)
     } else { scaReps <- lsDispModelGlobal$scaNumCells }
     vecDisp <- rep(vecDispModel, scaReps)
   } else {
     stop(paste0("ERROR decompressDispersions(): lsDispModelGlobal$strDispModel=", 
-      lsDispModelGlobal$strDispModel, " not recognised."))
+                lsDispModelGlobal$strDispModel, " not recognised."))
   }
-
+  
   return(vecDisp)
 }
 
@@ -191,12 +191,12 @@ decompressDispByGene <- function(vecDispModel,
 #' @export
 
 decompressDropoutRateByGene <- function(matDropModel,
-  vecMu,
-  vecPiConstPredictors ){
+                                        vecMu,
+                                        vecPiConstPredictors ){
   
   vecPi <- sapply(seq(1,length(vecMu)), function(j){
     evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
-      vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
+                          vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
   })
   
   return(vecPi)
@@ -230,12 +230,12 @@ decompressDropoutRateByGene <- function(matDropModel,
 #' @export
 
 decompressDropoutRateByCell <- function(vecDropModel,
-  vecMu,
-  matPiConstPredictors ){
+                                        vecMu,
+                                        matPiConstPredictors ){
   
   vecPi <- sapply(seq(1,length(vecMu)), function(i){
     evalDropoutModel_comp(vecPiModel=vecDropModel, 
-      vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
+                          vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
   })
   
   return(vecPi)

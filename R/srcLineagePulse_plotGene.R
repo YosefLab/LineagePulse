@@ -64,7 +64,6 @@
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 plotGene <- function(vecCounts,
   vecPseudotime,
   vecPiParamH1=NULL,

@@ -356,8 +356,12 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
   scaWindowRadius=NULL){  
   
   # (I) Linker functions
-  # Log linker for amplitudes and catching of low model values is in evalImpulseModel_comp
-  vecImpulseValue <- evalImpulseModel_comp(vecTheta,vecTimepoints)[vecindTimepointAssign]
+  # Log linker for amplitudes
+  vecImpulseParam <- vecTheta
+  vecImpulseParam[2:4] <- exp(vecImpulseParam[2:4])
+  
+  vecImpulseValue <- evalImpulseModel_comp(vecImpulseParam=vecTheta,
+                                           vecTimepoints=vecTimepoints)[vecindTimepointAssign]
   
   # (II) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
