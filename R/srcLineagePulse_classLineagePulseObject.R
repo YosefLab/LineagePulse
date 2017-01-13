@@ -67,8 +67,10 @@ setClassUnion('data.frameORNULL', members = c('data.frame', 'NULL'))
 #'    }
 #' @slot vecDEGenes (list number of genes) Genes IDs identified
 #'    as differentially expressed by LineagePulse at threshold \code{scaQThres}.
-#' @slot lsMuModel
-#' @slot lsDispModel
+#' @slot lsMuModelH1
+#' @slot lsDispModelH1
+#' @slot lsMuModelH0
+#' @slot lsDispModelH0
 #' @slot lsPiModel
 #' @slot dfAnnotationProc
 #' @slot scaNProc (scalar) Number of processes for 
@@ -85,12 +87,15 @@ setClass(
   slots = c(
     dfResults           = "data.frameORNULL",
     vecDEGenes          = "characterORNULL",
-    lsMuModel           = "listORNULL",
-    lsDispModel         = "listORNULL",
+    lsMuModelH1           = "listORNULL",
+    lsDispModelH1         = "listORNULL",
+    lsMuModelH0           = "listORNULL",
+    lsDispModelH0         = "listORNULL",
     lsPiModel           = "listORNULL",
-    dfAnnotationProc    = "data.frame",
+    lsFitZINBReporters  = "listORNULL",
+    dfAnnotationProc    = "data.frameORNULL",
     vecNormConst        = "numeric",
-    scaNProc            = "numeric", 
+    scaNProc            = "numericORNULL", 
     scaQThres           = "numericORNULL",
     strReport           = "characterORNULL"
   )
@@ -105,9 +110,12 @@ setClass(
 #'  
 #' @param object (object) Object from which to retrieve data.
 #' 
-#' @aliases get_lsMuModel
-#'    get_lsDispModel
+#' @aliases  get_lsMuModelH1
+#'    get_lsDispModelH1
+#'    get_lsMuModelH0
+#'    get_lsDispModelH0
 #'    get_lsPiModel
+#'    get_lsFitZINBReporters
 #'    get_dfAnnotationProc 
 #'    get_vecNormConst
 #'    get_scaNProc
@@ -125,9 +133,12 @@ NULL
 #' 
 #' @return The internal data object specified by the function.
 #' 
-#' @aliases get_lsMuModel,LineagePulseObject-method
-#'    get_lsDispModel,LineagePulseObject-method
+#' @aliases get_lsMuModelH1,LineagePulseObject-method
+#'    get_lsDispModelH1,LineagePulseObject-method
+#'    get_lsMuModelH0,LineagePulseObject-method
+#'    get_lsDispModelH0,LineagePulseObject-method
 #'    get_lsPiModel,LineagePulseObject-method
+#'    get_lsFitZINBReporters
 #'    get_dfAnnotationProc,LineagePulseObject-method
 #'    get_vecNormConst,LineagePulseObject-method
 #'    get_scaNProc,LineagePulseObject-method
@@ -142,21 +153,37 @@ NULL
 ### II. Define function on LineagePulseObject:
 ### setMethod('funName', 'LineagePulseObject', function(object) object@funName)
 
-#' @return (list) lsMuModel
+#' @return (list) lsMuModelH1
 #' @name LineagePulseObject_Generics_Accessors
 #' @export
-setGeneric('get_lsMuModel', function(object) standardGeneric('get_lsMuModel'), valueClass = 'listORNULL')
+setGeneric('get_lsMuModelH1', function(object) standardGeneric('get_lsMuModelH1'), valueClass = 'listORNULL')
 #' @name LineagePulseObject_Accessors
 #' @export
-setMethod('get_lsMuModel', 'LineagePulseObject', function(object) object@lsMuModel)
+setMethod('get_lsMuModelH1', 'LineagePulseObject', function(object) object@lsMuModelH1)
 
-#' @return (list) lsDispModel
+#' @return (list) lsDispModelH1
 #' @name LineagePulseObject_Generics_Accessors
 #' @export
-setGeneric('get_lsDispModel', function(object) standardGeneric('get_lsDispModel'), valueClass = 'listORNULL')
+setGeneric('get_lsDispModelH1', function(object) standardGeneric('get_lsDispModelH1'), valueClass = 'listORNULL')
 #' @name LineagePulseObject_Accessors
 #' @export
-setMethod('get_lsDispModel', 'LineagePulseObject', function(object) object@lsDispModel)
+setMethod('get_lsDispModelH1', 'LineagePulseObject', function(object) object@lsDispModelH1)
+
+#' @return (list) lsMuModelH0
+#' @name LineagePulseObject_Generics_Accessors
+#' @export
+setGeneric('get_lsMuModelH0', function(object) standardGeneric('get_lsMuModelH0'), valueClass = 'listORNULL')
+#' @name LineagePulseObject_Accessors
+#' @export
+setMethod('get_lsMuModelH0', 'LineagePulseObject', function(object) object@lsMuModelH0)
+
+#' @return (list) lsDispModelH0
+#' @name LineagePulseObject_Generics_Accessors
+#' @export
+setGeneric('get_lsDispModelH0', function(object) standardGeneric('get_lsDispModelH0'), valueClass = 'listORNULL')
+#' @name LineagePulseObject_Accessors
+#' @export
+setMethod('get_lsDispModelH0', 'LineagePulseObject', function(object) object@lsDispModelH0)
 
 #' @return (list) lsPiModel
 #' @name LineagePulseObject_Generics_Accessors
@@ -165,6 +192,14 @@ setGeneric('get_lsPiModel', function(object) standardGeneric('get_lsPiModel'), v
 #' @name LineagePulseObject_Accessors
 #' @export
 setMethod('get_lsPiModel', 'LineagePulseObject', function(object) object@lsPiModel)
+
+#' @return (list) lsFitZINBReporters
+#' @name LineagePulseObject_Generics_Accessors
+#' @export
+setGeneric('get_lsFitZINBReporters', function(object) standardGeneric('get_lsFitZINBReporters'), valueClass = 'listORNULL')
+#' @name LineagePulseObject_Accessors
+#' @export
+setMethod('get_lsFitZINBReporters', 'LineagePulseObject', function(object) object@lsFitZINBReporters)
 
 #' @return (data frame size genes x reported characteristics) dfAnnotationProc
 #' @name LineagePulseObject_Generics_Accessors

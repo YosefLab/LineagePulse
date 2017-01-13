@@ -13,11 +13,11 @@
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
-#' @param vecNormConst: (numeric vector number of cells) 
+#' @param objectLineagePulse@vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
 #'    sequencing depth into account (size factors). One size
 #'    factor per cell.
-#' @param lsMuModelH1: (list length 2)
+#' @param objectLineagePulse@lsMuModelH1: (list length 2)
 #'    All objects necessary to compute H1 mean parameters for all
 #'    observations.
 #'    \itemize{
@@ -46,7 +46,7 @@
 #'      model with optim (termination criterium).
 #'      }
 #'    }
-#' @param lsDispModelH1: (list length 2)
+#' @param objectLineagePulse@lsDispModelH1: (list length 2)
 #'    All objects necessary to compute H1 dispersion parameters for all
 #'    observations.
 #'    \itemize{
@@ -67,7 +67,7 @@
 #'      Used for clusters model.
 #'      }
 #'    }
-#' @param lsMuModelH0: (list length 2)
+#' @param objectLineagePulse@lsMuModelH0: (list length 2)
 #'    All objects necessary to compute H0 mean parameters for all
 #'    observations.
 #'    \itemize{
@@ -96,7 +96,7 @@
 #'      model with optim (termination criterium).
 #'      }
 #'    }
-#' @param lsDispModelH0: (list length 2)
+#' @param objectLineagePulse@lsDispModelH0: (list length 2)
 #'    All objects necessary to compute H0 dispersion parameters for all
 #'    observations.
 #'    \itemize{
@@ -117,7 +117,7 @@
 #'      Used for clusters model.
 #'      }
 #'    }
-#' @param lsDropModel: (list length 2)
+#' @param objectLineagePulse@lsDropModel: (list length 2)
 #'    All objects necessary to compute drop-out parameters for all
 #'    observations, omitting mean parameters (which are stored in lsMeanModel).
 #'    \itemize{
@@ -162,16 +162,11 @@
 #' @export
 
 runDEAnalysis <- function(matCountsProc,
-  vecNormConst,
-  lsMuModelH1,
-  lsDispModelH1,
-  lsMuModelH0,
-  lsDispModelH0,
-  lsDropModel,
-  scaKbyGeneH1,
-  scaKbyGeneH0,
+  objectLineagePulse,
   scaWindowRadius=NULL ){
   
+  scaKbyGeneH1 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH1
+  scaKbyGeneH0 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH0
   # (I) Compute log likelihoods
   lsLL <- bplapply( seq(1,dim(matCountsProc)[1]), function(i){
     vecCounts <- matCountsProc[i,]
@@ -179,31 +174,31 @@ runDEAnalysis <- function(matCountsProc,
     vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
     # Decompress parameters by gene H0
-    vecMuParamH0 <- decompressMeansByGene( vecMuModel=lsMuModelH0$matMuModel[i,],
-      lsMuModelGlobal=lsMuModelH0$lsMuModelGlobal,
+    vecMuParamH0 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH0$matMuModel[i,],
+      lsMuModelGlobal=objectLineagePulse@lsMuModelH0$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH0 <- decompressDispByGene( vecDispModel=lsDispModelH0$matDispModel[i,],
-      lsDispModelGlobal=lsDispModelH0$lsDispModelGlobal,
+    vecDispParamH0 <- decompressDispByGene( vecDispModel=objectLineagePulse@lsDispModelH0$matDispModel[i,],
+      lsDispModelGlobal=objectLineagePulse@lsDispModelH0$lsDispModelGlobal,
       vecInterval=NULL )
-    vecPiParamH0 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH0 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH0,
-      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
     
     # Decompress parameters by gene H1
-    vecMuParamH1 <- decompressMeansByGene( vecMuModel=lsMuModelH1$matMuModel[i,],
-      lsMuModelGlobal=lsMuModelH1$lsMuModelGlobal,
+    vecMuParamH1 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[i,],
+      lsMuModelGlobal=objectLineagePulse@lsMuModelH1$lsMuModelGlobal,
       vecInterval=NULL )
-    vecDispParamH1 <- decompressDispByGene( vecDispModel=lsDispModelH1$matDispModel[i,],
-      lsDispModelGlobal=lsDispModelH1$lsDispModelGlobal,
+    vecDispParamH1 <- decompressDispByGene( vecDispModel=objectLineagePulse@lsDispModelH1$matDispModel[i,],
+      lsDispModelGlobal=objectLineagePulse@lsDispModelH1$lsDispModelGlobal,
       vecInterval=NULL )
-    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
       vecMu=vecMuParamH1,
-      vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+      vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
     
     # Compute loglikelihoods
     scaLogLikFull <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecMuParamH1,
-      vecNormConst=vecNormConst,
+      vecNormConst=objectLineagePulse@vecNormConst,
       vecDisp=vecDispParamH1, 
       vecPi=vecPiParamH1,
       vecboolNotZero=vecboolNotZero, 
@@ -212,7 +207,7 @@ runDEAnalysis <- function(matCountsProc,
     
     scaLogLikRed <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecMuParamH0,
-      vecNormConst=vecNormConst,
+      vecNormConst=objectLineagePulse@vecNormConst,
       vecDisp=vecDispParamH0, 
       vecPi=vecPiParamH0,
       vecboolNotZero=vecboolNotZero, 
@@ -242,8 +237,8 @@ runDEAnalysis <- function(matCountsProc,
     "loglik_full"=vecLogLikFull,
     "loglik_red"=vecLogLikRed,
     "deviance"=vecDeviance,
-    "mean_H0"=array(lsMuModelH0$matMuModel),
-    "dispersion_H0"=array(lsDispModelH0$matDispModel),
+    "mean_H0"=array(objectLineagePulse@lsMuModelH0$matMuModel),
+    "dispersion_H0"=array(objectLineagePulse@lsDispModelH0$matDispModel),
     stringsAsFactors = FALSE))
   rownames(dfModelFreeDEAnalysis) <- dfModelFreeDEAnalysis$Gene
   
@@ -251,5 +246,7 @@ runDEAnalysis <- function(matCountsProc,
   dfModelFreeDEAnalysis$adj.p <- as.numeric(as.character(dfModelFreeDEAnalysis$adj.p))
   dfModelFreeDEAnalysis = dfModelFreeDEAnalysis[order(dfModelFreeDEAnalysis$adj.p),]
   
-  return(dfModelFreeDEAnalysis)
+  objectLineagePulseCaseOnly@dfResults <- dfModelFreeDEAnalysis
+  objectLineagePulseCaseOnly@vecDEGenes <- rownames(dfModelFreeDEAnalysis[dfModelFreeDEAnalysis$adj.p < objectLineagePulseCaseOnly@scaQThres,])
+  return(objectLineagePulseCaseOnly)
 }

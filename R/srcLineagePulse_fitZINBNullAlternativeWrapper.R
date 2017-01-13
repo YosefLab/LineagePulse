@@ -398,31 +398,45 @@ fitNullAlternative <- function(matCountsProc,
   
   if(boolEstimateNoiseBasedOnH0){
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelB,
-      boolConvergenceH0=boolConvergenceModelA,
-      vecEMLogLikH1=vecEMLogLikModelB,
-      vecEMLogLikH0=vecEMLogLikModelA,
-      scaKbyGeneH1=scaKbyGeneH1,
-      scaKbyGeneH0=scaKbyGeneH0 )
-    lsReturn <- list( lsMuModelH1=lsMuModelB,
-      lsDispModelH1=lsDispModelB,
-      lsMuModelH0=lsMuModelA,
-      lsDispModelH0=lsDispModelA,
-      lsDropModel=lsDropModel,
-      lsFitZINBReporters=lsFitZINBReporters )
+                                boolConvergenceH0=boolConvergenceModelA,
+                                vecEMLogLikH1=vecEMLogLikModelB,
+                                vecEMLogLikH0=vecEMLogLikModelA,
+                                scaKbyGeneH1=scaKbyGeneH1,
+                                scaKbyGeneH0=scaKbyGeneH0 )
+    objectLineagePulse <- new('LineagePulseObject',
+                              dfResults           = NULL,
+                              vecDEGenes          = NULL,
+                              lsMuModelH1         = lsMuModelB,
+                              lsDispModelH1       = lsDispModelB,
+                              lsMuModelH0         = lsMuModelA,
+                              lsDispModelH0       = lsDispModelA,
+                              lsFitZINBReporters  = lsFitZINBReporters,
+                              dfAnnotationProc    = NULL,
+                              vecNormConst        = vecNormConst,
+                              scaNProc            = NULL,
+                              scaQThres           = NULL,
+                              strReport           = NULL)
   } else {
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelA,
-      boolConvergenceH0=boolConvergenceModelB,
-      vecEMLogLikH1=vecEMLogLikModelA,
-      vecEMLogLikH0=vecEMLogLikModelB,
-      scaKbyGeneH1=scaKbyGeneH1,
-      scaKbyGeneH0=scaKbyGeneH0 )
-    lsReturn <- list( lsMuModelH1=lsMuModelA,
-      lsDispModelH1=lsDispModelA,
-      lsMuModelH0=lsMuModelB,
-      lsDispModelH0=lsDispModelB,
-      lsDropModel=lsDropModel,
-      lsFitZINBReporters=lsFitZINBReporters )
-  } 
+                                boolConvergenceH0=boolConvergenceModelB,
+                                vecEMLogLikH1=vecEMLogLikModelA,
+                                vecEMLogLikH0=vecEMLogLikModelB,
+                                scaKbyGeneH1=scaKbyGeneH1,
+                                scaKbyGeneH0=scaKbyGeneH0 )
+    objectLineagePulse <- new('LineagePulseObject',
+                              dfResults           = NULL,
+                              vecDEGenes          = NULL,
+                              lsMuModelH1         = lsMuModelA,
+                              lsDispModelH1       = lsDispModelA,
+                              lsMuModelH0         = lsMuModelB,
+                              lsDispModelH0       = lsDispModelB,
+                              lsFitZINBReporters  = lsFitZINBReporters,
+                              dfAnnotationProc    = NULL,
+                              vecNormConst        = vecNormConst,
+                              scaNProc            = NULL,
+                              scaQThres           = NULL,
+                              strReport           = NULL)
+  }
   
-  return(lsReturn)
+  return(objectLineagePulse)
 }

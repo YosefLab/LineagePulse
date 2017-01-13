@@ -277,7 +277,6 @@ runLineagePulse <- function(matCounts,
   boolValidateZINBfit=TRUE,
   boolVerbose=TRUE,
   boolSuperVerbose=FALSE,
-  boolBPlog=FALSE,
   dirOut=NULL ){
   
   print("LineagePulse v1.0")
@@ -301,32 +300,11 @@ runLineagePulse <- function(matCounts,
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
   dirOut <- lsProcessedSCData$dirOut
   
-  save(matCountsProc,file=file.path(dirOut,"LineagePulse_matCountsProc.RData"))
-  save(vecNormConstExternalProc,file=file.path(dirOut,"LineagePulse_vecNormConstExternalProc.RData"))
-  save(matPiConstPredictorsProc,file=file.path(dirOut,"LineagePulse_matPiConstPredictorsProc.RData"))
-  save(vecPseudotimeProc,file=file.path(dirOut,"LineagePulse_vecPseudotimeProc.RData"))
   # Clear memory
   rm(matCounts)
   rm(matPiConstPredictors)
   rm(vecPseudotime)
-  
-  # Save input parameters into list (not data files)
-  lsInputParam <- list( scaKClusters=scaKClusters,
-    scaSmallRun=scaSmallRun,
-    boolClusterInPseudotime=boolClusterInPseudotime,
-    scaWindowRadius=scaWindowRadius,
-    boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
-    boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-    strMuModel=strMuModel,
-    strDispModel=strDispModel,
-    boolValidateZINBfit=boolValidateZINBfit,
-    scaMaxEstimationCycles=scaMaxEstimationCycles,
-    scaNProc=scaNProc,
-    boolVerbose=boolVerbose,
-    boolSuperVerbose=boolSuperVerbose,
-    dirOut=dirOut )
-  save(lsInputParam,file=file.path(dirOut,"LineagePulse_lsInputParam.RData"))
-  rm(lsInputParam)
+  rm(lsProcessedSCData)
   
   # 2. Inialise parallelisation
   # Create log directory for parallelisation output
@@ -341,7 +319,7 @@ runLineagePulse <- function(matCounts,
     # For single machine (FORK) cluster
     register(MulticoreParam(workers=scaNProc)) 
     #timeout=60*60*24*7,
-    #log=boolBPlog, 
+    #log=FALSE, 
     #threshold="INFO", 
     #logdir=dirBPLogs))
     # Use this on windows or if SOCK clusters wanted:
@@ -372,7 +350,6 @@ runLineagePulse <- function(matCounts,
     plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
       lsResultsClustering=lsResultsClustering)
   })
-  save(lsResultsClustering,file=file.path(dirOut,"LineagePulse_lsResultsClustering.RData"))
   print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
     " min",sep=""))
   
@@ -380,12 +357,11 @@ runLineagePulse <- function(matCounts,
   print("4. Compute normalisation constants:")
   vecNormConst <- calcNormConst(matCountsProc,
      vecNormConstExternal=vecNormConstExternalProc)
-  save(vecNormConst,file=file.path(dirOut,"LineagePulse_vecNormConst.RData"))
   
   # 5. Fit ZINB mixture model for both H1 and H0.
   print("5. Fit ZINB mixture model for both H1 and H0.")
   tm_fitmm <- system.time({
-    lsZINBFit <- fitZINB( matCountsProc=matCountsProc,
+    objectLineagePulseCaseOnly <- fitNullAlternative( matCountsProc=matCountsProc,
       matPiConstPredictors=matPiConstPredictorsProc,
       lsResultsClustering=lsResultsClustering,
       vecNormConst=vecNormConst,
@@ -399,38 +375,20 @@ runLineagePulse <- function(matCounts,
       scaMaxEstimationCycles=scaMaxEstimationCycles,
       boolVerbose=boolVerbose,
       boolSuperVerbose=boolSuperVerbose )
-    lsMuModelH1 <- lsZINBFit$lsMuModelH1
-    lsDispModelH1 <- lsZINBFit$lsDispModelH1
-    lsMuModelH0 <- lsZINBFit$lsMuModelH0
-    lsDispModelH0 <- lsZINBFit$lsDispModelH0
-    lsDropModel <- lsZINBFit$lsDropModel
-    lsFitZINBReporters <- lsZINBFit$lsFitZINBReporters
   })
-  save(lsMuModelH1,file=file.path(dirOut,"LineagePulse_lsMuModelH1.RData"))
-  save(lsDispModelH1,file=file.path(dirOut,"LineagePulse_lsDispModelH1.RData"))
-  save(lsMuModelH0,file=file.path(dirOut,"LineagePulse_lsMuModelH0.RData"))
-  save(lsDispModelH0,file=file.path(dirOut,"LineagePulse_lsDispModelH0.RData"))
-  save(lsDropModel,file=file.path(dirOut,"LineagePulse_lsDropModel.RData"))
-  save(lsFitZINBReporters,file=file.path(dirOut,"LineagePulse_lsFitZINBReporters.RData"))
+  objectLineagePulseCaseOnly@scaQThres <- scaQThres
+  objectLineagePulseCaseOnly@scaNProc <- scaNProc
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
   # 6. Differential expression analysis:
   print("6. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
-    dfDEAnalysis <- runDEAnalysis(
+    objectLineagePulseCaseOnly <- runDEAnalysis(
       matCountsProc = matCountsProc,
-      vecNormConst=vecNormConst,
-      lsMuModelH1=lsMuModelH1,
-      lsDispModelH1=lsDispModelH1,
-      lsMuModelH0=lsMuModelH0,
-      lsDispModelH0=lsDispModelH0,
-      lsDropModel=lsDropModel,
-      scaKbyGeneH1=lsFitZINBReporters$scaKbyGeneH1,
-      scaKbyGeneH0=lsFitZINBReporters$scaKbyGeneH0,
+      objectLineagePulse=objectLineagePulseCaseOnly,
       scaWindowRadius=scaWindowRadius )
   })
-  save(dfDEAnalysis,file=file.path(dirOut,"LineagePulse_dfDEAnalysis.RData"))
   print(paste("Time elapsed during differential expression analysis: ",
     round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
@@ -442,5 +400,5 @@ runLineagePulse <- function(matCounts,
   }
   
   print("LineagePulse complete.")
-  return(dfDEAnalysis=dfDEAnalysis)
+  return(objectLineagePulseCaseOnly)
 }
