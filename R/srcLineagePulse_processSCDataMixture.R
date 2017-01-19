@@ -98,6 +98,7 @@
 #' 
 #' @export
 processSCDataMixture <- function(matCounts,
+                                 scaNMixtures,
                                  vecFixedAssignments,
                                  matPiConstPredictors,
                                  vecNormConstExternal,
@@ -167,7 +168,11 @@ processSCDataMixture <- function(matCounts,
   # 5. scaMaxEstimationCyclesDropModel
   checkNumeric(scaMaxEstimationCyclesDropModel, "scaMaxEstimationCyclesDropModel")
   
-  # 6. vecFixedAssignments
+  # 6. scaNMixtures
+  checkNull(scaNMixtures, "scaNMixtures")
+  checkNumeric(scaNMixtures, "scaNMixtures")
+  
+  # 7. vecFixedAssignments
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecFixedAssignments, "vecFixedAssignments")
     if(!all(colnames(matCounts) %in% names(vecFixedAssignments))){
@@ -212,13 +217,8 @@ processSCDataMixture <- function(matCounts,
     vecNormConstExternalProc <- NULL
   }
   if(!is.null(vecFixedAssignments)){
-    vecFixedAssignmentsProc <- vecFixedAssignments[colnames(matCountsProc)]
-    # Change to numbers from 1 to k given clusters
-    vecGivenMixtures <- unique(vecFixedAssignmentsProc[!is.na(vecFixedAssignmentsProc)])
-    vecGivenMixturesProc <- seq(1, length(vecGivenMixtures))
-    vecFixedAssignmentsProc[!is.na(vecFixedAssignmentsProc)] <- vecGivenMixturesProc[
-      match(vecFixedAssignmentsProc[!is.na(vecFixedAssignmentsProc)],
-            vecGivenMixtures)]
+    vecFixedAssignmentsUnique <-  unique(vecFixedAssignments[!is.na(vecFixedAssignments)])
+    vecFixedAssignmentsProc <- match(vecFixedAssignments, vecFixedAssignmentsUnique)
   } else {
     vecFixedAssignmentsProc <- NULL
   }
@@ -231,8 +231,25 @@ processSCDataMixture <- function(matCounts,
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
   
-  return(list(matCountsProc=matCountsProc,
-              vecFixedAssignmentsProc=vecFixedAssignmentsProc,
+  objectLineagePulse <- new('LineagePulseObject',
+                            dfAnnotationProc    = NULL,
+                            dfResults           = NULL,
+                            lsDispModelH0       = NULL,
+                            lsDispModelH1       = NULL,
+                            lsDropModel         = NULL,
+                            lsFitZINBReporters  = NULL,
+                            lsMuModelH1         = NULL,
+                            lsMuModelH0         = NULL,
+                            matCountsProc       = matCountsProc,
+                            matWeights          = NULL,
+                            scaWindowRadius     = NULL,
+                            strReport           = NULL,
+                            vecAllGenes         = rownames(matCounts),
+                            vecFixedAssignments = vecFixedAssignmentsProc,
+                            vecNormConst        = NULL,
+                            vecPseudotimeProc   = NULL )
+  
+  return(list(objectLineagePulse=objectLineagePulses,
               vecNormConstExternalProc=vecNormConstExternalProc,
               matPiConstPredictorsProc=matPiConstPredictorsProc ))
 }

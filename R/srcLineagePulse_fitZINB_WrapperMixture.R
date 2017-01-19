@@ -12,23 +12,21 @@
 #' C: Fit full model based on mixture assignments as MLE to 
 #'    do LRT later.
 
-fitMixtureZINBModel <- function(matCounts,
-                                vecFixedAssignments=NULL,
-                                vecNormConst,
+fitMixtureZINBModel <- function(objectLineagePulse,
                                 scaNMixtures,
                                 strDispModel="const",
                                 scaMaxEstimationCyclesDropModel=20,
                                 scaMaxEstimationCyclesEMlike=20){
   
-  scaNGenes <- dim(matCounts)[1]
-  scaNCells <- dim(matCounts)[2]
+  scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
+  scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
   
   ### (A) Pre-estimate drop-out model to speed up mixture model fitting
   if(boolVerbose) print(paste0("### a) Fit H0 constant ZINB model and set drop-out model."))
   
   tm_cycle <- system.time({
-    lsZINBFitsRed <- fitZINB(matCounts=matCounts,
-                             vecNormConst=vecNormConst,
+    lsZINBFitsRed <- fitZINB(matCounts=objectLineagePulse@matCounts,
+                             vecNormConst=objectLineagePulse@vecNormConst,
                              vecPseudotime=NULL,
                              lsResultsClustering=NULL,
                              matWeights=matWeights,
@@ -59,9 +57,9 @@ fitMixtureZINBModel <- function(matCounts,
   matWeights <- matrix(1/scaNMixtures, 
                        nrow=scaNCells, ncols=scaNMixtures)
   # Correct fixed weights (RSA)
-  if(!is.null(vecFixedAssignments)){
-    matWeights[!is.na(vecFixedAssignments),] <- 0
-    matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
+  if(!is.null(objectLineagePulse@vecFixedAssignments)){
+    matWeights[!is.na(objectLineagePulse@vecFixedAssignments),] <- 0
+    matWeights[!is.na(objectLineagePulse@vecFixedAssignments),objectLineagePulse@vecFixedAssignments[!is.na(objectLineagePulse@vecFixedAssignments)]] <- 1
   }
   
   # (II) Estimation iteration on full model
@@ -73,8 +71,8 @@ fitMixtureZINBModel <- function(matCounts,
   tm_RSAcycle <- system.time({
     while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCyclesEMlike)){
       # E-like step: Estimation of mixture assignments
-      lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=matCounts,
-                                                  vecFixedAssignments=vecFixedAssignments,
+      lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCounts,
+                                                  vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
                                                   lsMuModel=lsMuModelFull,
                                                   lsDispModel=lsDispModelFull,
                                                   lsDropModel=lsDropModelFull,
@@ -82,8 +80,8 @@ fitMixtureZINBModel <- function(matCounts,
       matWeights <- lsWeightFits$matWeights
       
       # M-like step: Estimate mixture model parameters
-      lsZINBFitsFull <- fitZINB(matCounts=matCounts,
-                                vecNormConst=vecNormConst,
+      lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCounts,
+                                vecNormConst=objectLineagePulse@vecNormConst,
                                 vecPseudotime=NULL,
                                 lsResultsClustering=NULL,
                                 matWeights=matWeights,
@@ -123,12 +121,12 @@ fitMixtureZINBModel <- function(matCounts,
   scaKbyGeneH0 <- 1+1
   
   # Name rows and columns of parameter matrices
-  rownames(lsMuModelFull$matMuModel) <- rownames(matCountsProc)
-  rownames(lsDispModelFull$matDispModel) <- rownames(matCountsProc)
-  rownames(lsMuModelRed$matMuModel) <- rownames(matCountsProc)
-  rownames(lsDispModelRed$matDispModel) <- rownames(matCountsProc)
-  rownames(lsDropModel$matDropoutLinModel) <- colnames(matCountsProc)
-  rownames(matWeights) <- colnames(matCountsProc)
+  rownames(lsMuModelFull$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDispModelFull$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsMuModelRed$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDispModelRed$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDropModel$matDropoutLinModel) <- colnames(objectLineagePulse@matCountsProc)
+  rownames(matWeights) <- colnames(objectLineagePulse@matCountsProc)
   
   lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelFull,
                               boolConvergenceH0=boolConvergenceModelRed,
@@ -137,19 +135,14 @@ fitMixtureZINBModel <- function(matCounts,
                               scaKbyGeneH1=scaKbyGeneH1,
                               scaKbyGeneH0=scaKbyGeneH0 )
   
-  return( new('LineagePulseObject',
-              dfResults           = NULL,
-              matCounts           = matCountsProc,
-              vecFixedAssignments = NULL,
-              vecAllGenes         = NULL,
-              lsMuModelH1         = lsMuModelFull,
-              lsDispModelH1       = lsDispModelFull,
-              lsMuModelH0         = lsMuModelRed,
-              lsDispModelH0       = lsDispModelRed,
-              lsDropModel         = lsDropModel,
-              matWeights          = matWeights,
-              lsFitZINBReporters  = lsFitZINBReporters,
-              dfAnnotationProc    = NULL,
-              vecNormConst        = vecNormConst,
-              strReport           = NULL) )
+  objectLineagePulselsMuModelH1         <- lsMuModelFull
+  objectLineagePulselsDispModelH1       <- lsDispModelFull
+  objectLineagePulse@lsMuModelH0        <- lsMuModelRed
+  objectLineagePulse@lsDispModelH0      <- lsDispModelRed
+  objectLineagePulse@lsDropModel        <- lsDropModel
+  objectLineagePulse@matWeights         <- matWeights
+  objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
+  objectLineagePulse@strReport          <- NULL
+  
+  return(objectLineagePulse)
 }

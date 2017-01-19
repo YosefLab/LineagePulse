@@ -21,20 +21,25 @@ setwd("/home/david/gitDevelopment/code/LineagePulse/R")
 source("srcLineagePulse_clusterCellsInPseudotime.R")
 source("srcLineagePulse_calcPostDrop.R")
 source("srcLineagePulse_calcNormConst.R")
+source("srcLineagePulse_classLineagePulseObject.R")
 source("srcLineagePulse_decompressParameters.R")
-source("srcLineagePulse_evalImpulseModel.R")
+source("srcLineagePulse_estimateMMAssignments.R")
 source("srcLineagePulse_evalDropoutModel.R")
+source("srcLineagePulse_evalImpulseModel.R")
 source("srcLineagePulse_evalLogLikZINB.R")
-source("srcLineagePulse_fitZINB.R")
+source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitMean.R")
 source("srcLineagePulse_fitZINB_fitDispersion.R")
-source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
+source("srcLineagePulse_fitZINB.R")
+source("srcLineagePulse_fitZINB_WrapperMixture.R")
+source("srcLineagePulse_fitZINB_WrapperLP.R")
 source("srcLineagePulse_initialiseImpulseParameters.R")
 source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
+source("srcLineagePulse_processSCDataMixture.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
@@ -59,6 +64,7 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #' 
 #' @export
 runMixtureModel <- function(matCounts,
+                            scaNMixtures,
                             vecFixedAssignments=NULL,
                             matPiConstPredictors=NULL,
                             vecNormConstExternal=NULL,
@@ -76,14 +82,14 @@ runMixtureModel <- function(matCounts,
   print("1. Data preprocessing:")
   vecAllGenes <- rownames(matCounts)
   lsProcessedSCData <- processSCDataMixture( matCounts=matCounts,
+                                             scaNMixtures=scaNMixtures,
                                              vecFixedAssignments=vecFixedAssignments,
                                              matPiConstPredictors=matPiConstPredictors,
                                              vecNormConstExternal=vecNormConstExternal,
                                              strDispModel=strDispModel,
                                              scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
                                              scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel )
-  matCountsProc <- lsProcessedSCData$matCountsProc
-  vecFixedAssignmentsProc <- lsProcessedSCData$vecFixedAssignmentsProc
+  objectLineagePulseMM <- lsProcessedSCData$objectLineagePulse
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
   
@@ -119,32 +125,25 @@ runMixtureModel <- function(matCounts,
   
   # 2. Compute normalisation constants
   print("2. Compute normalisation constants:")
-  vecNormConst <- calcNormConst(matCountsProc,
+  objectLineagePulseMM <- calcNormConst(objectLineagePulseMM,
                                 vecNormConstExternal=vecNormConstExternalProc)
   
   # 3. Fit ZINB mixture and null model.
   print("3. Fit ZINB mixture and null model.")
   tm_fitmm <- system.time({
-    objectLineagePulseMM <- fitMixtureZINBModel(matCounts=matCountsProc,
-                                                vecFixedAssignments=vecFixedAssignmentsProc,
-                                                vecNormConst=vecNormConst,
+    objectLineagePulseMM <- fitMixtureZINBModel(objectLineagePulse=objectLineagePulseMM,
                                                 scaNMixtures=scaNMixtures,
                                                 strDispModel=strDispModel,
                                                 scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
                                                 scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike)
   })
-  objectLineagePulseMM@vecAllGenes <- vecAllGenes
-  objectLineagePulseMM@vecFixedAssignments <- vecFixedAssignments
   print(paste("Time elapsed during ZINB mixture and null model fitting: ",round(tm_fitmm["elapsed"]/60,2),
               " min",sep=""))
   
   # 4. Differential expression analysis:
   print("4. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
-    objectLineagePulseMM <- runDEAnalysis(
-      matCountsProc = matCountsProc,
-      objectLineagePulse=objectLineagePulseMM,
-      scaWindowRadius=NULL )
+    objectLineagePulseMM <- runDEAnalysis(objectLineagePulse=objectLineagePulseMM )
   })
   print(paste("Time elapsed during differential expression analysis: ",
               round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))

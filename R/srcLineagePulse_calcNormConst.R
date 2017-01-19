@@ -28,15 +28,15 @@
 #' 
 #' @export
 
-calcNormConst <- function(matCountsProc,
+calcNormConst <- function(objectLineagePulse,
                           vecNormConstExternal){
   
   if(!is.null(vecNormConstExternal)){
     vecNormConst <- vecNormConstExternal
   } else {
     print("All size factors are set to one.")
-    vecNormConst <- array(1, dim(matCountsProc)[2])
-    names(vecNormConst) <- colnames(matCountsProc)
+    vecNormConst <- array(1, dim(objectLineagePulse@matCountsProc)[2])
+    names(vecNormConst) <- colnames(objectLineagePulse@matCountsProc)
   }
   
   if(any(vecNormConst==0)){
@@ -44,5 +44,6 @@ calcNormConst <- function(matCountsProc,
     vecNormConst[vecNormConst==0] <- 1
   }
   
-  return(vecNormConst)
+  objectLineagePulse@vecNormConst <- vecNormConst
+  return(objectLineagePulse)
 }

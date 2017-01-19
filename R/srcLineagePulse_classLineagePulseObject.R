@@ -79,21 +79,20 @@ setClassUnion('data.frameORNULL', members = c('data.frame', 'NULL'))
 setClass(
   'LineagePulseObject',
   slots = c(
-    dfResults           = "data.frameORNULL",
-    matCounts           = "numericORNULL",
-    vecFixedAssignments = "numericORNULL",
-    vecAllGenes         = "characterORNULL",
-    lsMuModelH1         = "listORNULL",
-    lsDispModelH1       = "listORNULL",
-    lsMuModelH0         = "listORNULL",
-    lsDispModelH0       = "listORNULL",
-    lsDropModel         = "listORNULL",
-    matWeights          = "numericORNULL", 
-    lsFitZINBReporters  = "listORNULL",
     dfAnnotationProc    = "data.frameORNULL",
-    vecNormConst        = "numeric",
-    strReport           = "characterORNULL"
-  )
+    dfResults           = "data.frameORNULL",
+    lsDispModelH0       = "listORNULL",
+    lsDispModelH1       = "listORNULL",
+    lsDropModel         = "listORNULL",
+    lsMuModelH0         = "listORNULL",
+    lsMuModelH1         = "listORNULL",
+    lsFitZINBReporters  = "listORNULL",
+    matCountsProc       = "numericORNULL",
+    matWeights          = "numericORNULL",
+    strReport           = "characterORNULL",
+    vecAllGenes         = "characterORNULL",
+    vecFixedAssignments = "numericORNULL",
+    vecNormConst        = "numeric" )
 )
 
 ### 2. Enable accession of private elements via functions

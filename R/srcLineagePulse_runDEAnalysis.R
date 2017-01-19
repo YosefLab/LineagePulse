@@ -11,7 +11,7 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param matCountsProc: (matrix genes x cells)
+#' @param objectLineagePulse@matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
 #' @param objectLineagePulse@vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors for each observation which take
@@ -161,15 +161,13 @@
 #' 
 #' @export
 
-runDEAnalysis <- function(matCountsProc,
-  objectLineagePulse,
-  scaWindowRadius=NULL ){
+runDEAnalysis <- function( objectLineagePulse ){
   
   scaKbyGeneH1 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH1
   scaKbyGeneH0 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH0
   # (I) Compute log likelihoods
-  lsLL <- bplapply( seq(1,dim(matCountsProc)[1]), function(i){
-    vecCounts <- matCountsProc[i,]
+  lsLL <- bplapply( seq(1,dim(objectLineagePulse@matCountsProc)[1]), function(i){
+    vecCounts <- objectLineagePulse@matCountsProc[i,]
     vecboolNotZero <- !is.na(vecCounts) & vecCounts>0
     vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
@@ -203,7 +201,7 @@ runDEAnalysis <- function(matCountsProc,
       vecPi=vecPiParamH1,
       vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
+      scaWindowRadius=objectLineagePulse@scaWindowRadius)
     
     scaLogLikRed <- evalLogLikGene(vecCounts=vecCounts,
       vecMu=vecMuParamH0,
@@ -212,7 +210,7 @@ runDEAnalysis <- function(matCountsProc,
       vecPi=vecPiParamH0,
       vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
+      scaWindowRadius=objectLineagePulse@scaWindowRadius)
     
     return(list( scaLogLikFull=scaLogLikFull,
       scaLogLikRed=scaLogLikRed ))
@@ -231,7 +229,7 @@ runDEAnalysis <- function(matCountsProc,
   vecPvalueBH = p.adjust(vecPvalue, method = "BH")
   
   dfDEAnalysis =   as.data.frame(cbind(
-    "Gene" = row.names(matCountsProc),
+    "Gene" = row.names(objectLineagePulse@matCountsProc),
     "p"=as.numeric(vecPvalue),
     "adj.p"=as.numeric(vecPvalueBH),
     "loglik_full"=vecLogLikFull,

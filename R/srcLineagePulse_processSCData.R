@@ -75,9 +75,6 @@
 #'    one the latest estimates of neighbours. The latter case
 #'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
 #'    and each mean parameter is optimised once only.
-#' @param dirOut: (str directory) [Default NULL]
-#'    Directory to which detailed output is saved to.
-#'    Defaults to current working directory if NULL.
 #'
 #' @return list: (length 4)
 #'    \itemize{
@@ -89,9 +86,6 @@
 #'        \item vecPseudotimeProc: (numerical vector length number of cells)
 #'    Processed pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Names of elements are cell names.
-#'        \item dirOut: (str directory)
-#'    Directory to which detailed output is saved to.
-#'    Defaults to current working directory if NULL.
 #'    }
 #'    
 #' @author David Sebastian Fischer
@@ -99,16 +93,14 @@
 #' @export
 
 processSCData <- function(matCounts,
-  matPiConstPredictors,
-  vecNormConstExternal,
-  vecPseudotime,
-  scaSmallRun,
-  strMuModel,
-  strDispModel,
-  scaWindowRadius,
-  boolCoEstDispMean,
-  boolVecWindowsAsBFGS,
-  dirOut ){
+                          matPiConstPredictors,
+                          vecNormConstExternal,
+                          vecPseudotime,
+                          strMuModel,
+                          strDispModel,
+                          scaWindowRadius,
+                          boolCoEstDispMean,
+                          boolVecWindowsAsBFGS ){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -148,12 +140,12 @@ processSCData <- function(matCounts,
     if(!is.null(rownames(matCounts))){
       if(!rownames(matCounts) %in% rownames(matPiConstPredictors)){
         stop(paste0("ERROR: Some genes named in rows of matCounts do not ",
-          "occur in rows of matPiConstPredictors."))   
+                    "occur in rows of matPiConstPredictors."))   
       }
     } else {
       if(!is.null(rownames(matPiConstPredictors))){
         stop(paste0("ERROR: Named genes in matPiConstPredictors",
-          " but not in matCounts."))
+                    " but not in matCounts."))
       }
     }
   }
@@ -179,7 +171,7 @@ processSCData <- function(matCounts,
     checkCounts(scaSmallRun, "scaSmallRun")
     if(scaSmallRun > dim(matCounts)[1]){
       stop(paste0( "ERROR: scaSmallRun (",scaSmallRun,
-        ") larger then data set (",dim(matCounts)[1]," genes)."))
+                   ") larger then data set (",dim(matCounts)[1]," genes)."))
     }
   }
   
@@ -187,22 +179,22 @@ processSCData <- function(matCounts,
   if(!is.null(scaWindowRadius)){
     if(scaWindowRadius==0){
       stop(paste0("LineagePulse received scaWindowRadius=0.", 
-        " Set to NULL if smoothing is not desired."))
+                  " Set to NULL if smoothing is not desired."))
     }
   }
   if(!is.null(scaWindowRadius) & !(strMuModel %in% c("windows","impulse","constant"))){
     stop(paste0("Smooting via scaWindowRadius can only be applied in strMuModel=",
-      "constant, windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
-      " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
+                "constant, windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
+                " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
   }
   if(boolVecWindowsAsBFGS & !strMuModel=="windows"){
     stop(paste0("boolVecWindowsAsBFGS set to TRUE but strMuModel=",
-      strMuModel, ". boolVecWindowsAsBFGS is only used",
-      " with strMuModel=windows."))
+                strMuModel, ". boolVecWindowsAsBFGS is only used",
+                " with strMuModel=windows."))
   }
   if(strMuModel=="windows" & is.null(scaWindowRadius)){
     stop(paste0("Cannot use strMuModel=windows with scaWindowRadius=NULL.",
-      " Means have to be regularised by smoothing in windows mode."))
+                " Means have to be regularised by smoothing in windows mode."))
   }
   
   # 3. Check single mean-/dispersion estimation models
@@ -210,12 +202,12 @@ processSCData <- function(matCounts,
     # a) Mean models
     if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
       stop(paste0("strMuModel not recognised: ", strMuModel, 
-        " Must be one of: windows, clusters, impulse, constant."))
+                  " Must be one of: windows, clusters, impulse, constant."))
     }
     # b) Dispersion models
     if(!(strDispModel %in% c("constant"))){
       stop(paste0("strDispModel not recognised: ", strDispModel, 
-        " Must be one of: constant."))
+                  " Must be one of: constant."))
     }
   }
   
@@ -225,21 +217,21 @@ processSCData <- function(matCounts,
   if(boolCoEstDispMean){
     if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
       stop(paste0("strMuModel not recognised: ", strMuModel, 
-        " Must be one of: windows, clusters, impulse, constant if co-estimation",
-        " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+                  " Must be one of: windows, clusters, impulse, constant if co-estimation",
+                  " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
     }
     if(strMuModel=="windows" & !boolVecWindowsAsBFGS){
       stop(paste0("The dispersion parameter co-estimation couples all LL",
-        " terms of a gene so that there is no computational",
-        " advantage in not estimating all mean parameters",
-        " simultaneously. Set boolVecWindowsAsBFGS=TRUE",
-        " if (strMuModel==windows and boolCoEstDispMean=TRUE)."))
+                  " terms of a gene so that there is no computational",
+                  " advantage in not estimating all mean parameters",
+                  " simultaneously. Set boolVecWindowsAsBFGS=TRUE",
+                  " if (strMuModel==windows and boolCoEstDispMean=TRUE)."))
     }
     if(strMuModel=="windows")
       if(!(strDispModel %in% c("constant"))){
         stop(paste0("strDispModel not recognised: ", strDispModel, 
-          " Must be one of: constant if co-estimation",
-          " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
+                    " Must be one of: constant if co-estimation",
+                    " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
       }
   }
   
@@ -285,14 +277,25 @@ processSCData <- function(matCounts,
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
   
-  # Process output directory
-  if(is.null(dirOut)){
-    dirOut <- getwd()
-  }
+  objectLineagePulse <- new('LineagePulseObject',
+                            dfAnnotationProc    = NULL,
+                            dfResults           = NULL,
+                            lsDispModelH0       = NULL,
+                            lsDispModelH1       = NULL,
+                            lsDropModel         = NULL,
+                            lsFitZINBReporters  = NULL,
+                            lsMuModelH1         = NULL,
+                            lsMuModelH0         = NULL,
+                            matCountsProc       = matCountsProc,
+                            matWeights          = NULL,
+                            scaWindowRadius     = scaWindowRadius,
+                            strReport           = NULL,
+                            vecAllGenes         = rownames(matCounts),
+                            vecFixedAssignments = NULL,
+                            vecNormConst        = NULL,
+                            vecPseudotimeProc   = vecPseudotimeProc )
   
-  return(list(matCountsProc=matCountsProc,
-    vecNormConstExternalProc=vecNormConstExternalProc,
-    matPiConstPredictorsProc=matPiConstPredictorsProc,
-    vecPseudotimeProc=vecPseudotimeProc,
-    dirOut=dirOut ))
+  return(list(objectLineagePulse=objectLineagePulse,
+              vecNormConstExternalProc=vecNormConstExternalProc,
+              matPiConstPredictorsProc=matPiConstPredictorsProc ))
 }

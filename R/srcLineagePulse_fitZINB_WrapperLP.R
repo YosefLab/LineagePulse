@@ -60,7 +60,7 @@
 #' \code{fitZINBMuDisp}.
 #' Calls \code{evalLogLikMatrix} to follow convergence.
 #' 
-#' @param matCountsProc: (matrix genes x cells)
+#' @param objectLineagePulse@matCountsProc: (matrix genes x cells)
 #'    Count data of all cells, unobserved entries are NA.
 #' @param matPiConstPredictors: (numeric matrix genes x number of constant
 #'    gene-wise drop-out predictors) Predictors for logistic drop-out 
@@ -75,14 +75,6 @@
 #'        one scalar per centroid.
 #'      \item   K: (scalar) Number of clusters selected.
 #'      }
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors, one per cell.
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -269,19 +261,17 @@
 #'    }
 #' @export
 
-fitNullAlternative <- function(matCountsProc,
-  matPiConstPredictors,
-  lsResultsClustering,
-  vecNormConst,
-  scaWindowRadius=NULL,
-  strMuModel="windows",
-  strDispModel = "constant",
-  boolEstimateNoiseBasedOnH0=TRUE,
-  boolVecWindowsAsBFGS=FALSE,
-  vecPseudotime=NULL,
-  scaMaxEstimationCycles=20,
-  boolVerbose=FALSE,
-  boolSuperVerbose=FALSE ){
+fitNullAlternative <- function(objectLineagePulse,
+                               matPiConstPredictors,
+                               lsResultsClustering,
+                               strMuModel="windows",
+                               strDispModel = "constant",
+                               boolEstimateNoiseBasedOnH0=TRUE,
+                               boolVecWindowsAsBFGS=FALSE,
+                               vecPseudotime=NULL,
+                               scaMaxEstimationCycles=20,
+                               boolVerbose=FALSE,
+                               boolSuperVerbose=FALSE ){
   
   ####################################################
   # Compute degrees of freedom of model for each gene
@@ -290,7 +280,7 @@ fitNullAlternative <- function(matCountsProc,
   # Mean model:
   if(strMuModel=="windows"){
     # One mean parameter per cell
-    scaKbyGeneH1 <- dim(matCountsProc)[2]
+    scaKbyGeneH1 <- dim(objectLineagePulse@matCountsProc)[2]
   } else if(strMuModel=="clusters"){
     # One mean parameter per cluster
     scaKbyGeneH1 <- lsResultsClustering$K
@@ -340,19 +330,16 @@ fitNullAlternative <- function(matCountsProc,
   ####################################################
   # Fit model A
   print(paste0("### a) Fit negative binomial model A (",
-    strNameModelA,") with noise model."))
+               strNameModelA,") with noise model."))
   
   tm_cycle <- system.time({
-    lsFitsModelA <- fitZINB(matCounts=matCountsProc,
-            lsMuModel=lsMuModelA,
-            lsDispModel=lsDispModelA,
-            lsDropModel=lsDropModel,
-            boolFitDrop=TRUE,
-            strMuModel=strMuModelA,
-            strDispModel=strDispModelB,
-            scaWindowRadius=scaWindowRadius,
-            boolVerbose=boolVerbose,
-            boolSuperVerbose=boolSuperVerbose)
+    lsFitsModelA <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+                            lsDropModel=NULL,
+                            strMuModel=strMuModelA,
+                            strDispModel=strDispModelB,
+                            scaWindowRadius=objectLineagePulse@scaWindowRadius,
+                            boolVerbose=boolVerbose,
+                            boolSuperVerbose=boolSuperVerbose)
   })
   lsMuModelA <- lsFitsModelA$lsMuModel
   lsDispModelA <- lsFitsModelA$lsDispModel
@@ -369,12 +356,11 @@ fitNullAlternative <- function(matCountsProc,
                strNameModelB,") with noise model."))
   
   tm_cycleB <- system.time({
-    lsFitsModelB <- fitZINB(matCounts=matCountsProc,
+    lsFitsModelB <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
                             lsDropModel=lsDropModel,
-                            boolFitDrop=FALSE,
                             strMuModel=strMuModelB,
                             strDispModel=strDispModelB,
-                            scaWindowRadius=scaWindowRadius,
+                            scaWindowRadius=objectLineagePulse@scaWindowRadius,
                             boolVerbose=boolVerbose,
                             boolSuperVerbose=boolSuperVerbose)
   })
@@ -387,13 +373,13 @@ fitNullAlternative <- function(matCountsProc,
                "model B in ", round(tm_cycleB["elapsed"]/60,2)," min."))
   
   # Name rows and columns of parameter matrices
-  rownames(lsMuModelA$matMuModel) <- rownames(matCountsProc)
-  rownames(lsDispModelA$matDispModel) <- rownames(matCountsProc)
-  rownames(lsMuModelB$matMuModel) <- rownames(matCountsProc)
-  rownames(lsDispModelB$matDispModel) <- rownames(matCountsProc)
-  rownames(lsDropModel$matDropoutLinModel) <- colnames(matCountsProc)
+  rownames(lsMuModelA$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDispModelA$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsMuModelB$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDispModelB$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
+  rownames(lsDropModel$matDropoutLinModel) <- colnames(objectLineagePulse@matCountsProc)
   if(!is.null(lsDropModel$matPiConstPredictors)){
-    rownames(lsDropModel$matPiConstPredictors) <- rownames(matCountsProc)
+    rownames(lsDropModel$matPiConstPredictors) <- rownames(objectLineagePulse@matCountsProc)
   }
   
   if(boolEstimateNoiseBasedOnH0){
@@ -403,21 +389,11 @@ fitNullAlternative <- function(matCountsProc,
                                 vecEMLogLikH0=vecEMLogLikModelA,
                                 scaKbyGeneH1=scaKbyGeneH1,
                                 scaKbyGeneH0=scaKbyGeneH0 )
-    objectLineagePulse <- new('LineagePulseObject',
-                              dfResults           = NULL,
-                              matCounts           = matCountsProc,
-                              vecFixedAssignments = NULL,
-                              vecAllGenes         = NULL,
-                              lsMuModelH1         = lsMuModelB,
-                              lsDispModelH1       = lsDispModelB,
-                              lsMuModelH0         = lsMuModelA,
-                              lsDispModelH0       = lsDispModelA,
-                              lsDropModel         = lsDropModel,
-                              matWeights          = NULL,
-                              lsFitZINBReporters  = lsFitZINBReporters,
-                              dfAnnotationProc    = NULL,
-                              vecNormConst        = vecNormConst,
-                              strReport           = NULL)
+    
+    objectLineagePulselsMuModelH1         <- lsMuModelB
+    objectLineagePulselsDispModelH1       <- lsDispModelB
+    objectLineagePulse@lsMuModelH0        <- lsMuModelA
+    objectLineagePulse@lsDispModelH0      <- lsDispModelA
   } else {
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelA,
                                 boolConvergenceH0=boolConvergenceModelB,
@@ -425,22 +401,14 @@ fitNullAlternative <- function(matCountsProc,
                                 vecEMLogLikH0=vecEMLogLikModelB,
                                 scaKbyGeneH1=scaKbyGeneH1,
                                 scaKbyGeneH0=scaKbyGeneH0 )
-    objectLineagePulse <- new('LineagePulseObject',
-                              dfResults           = NULL,
-                              matCounts           = matCountsProc,
-                              vecFixedAssignments = NULL,
-                              vecAllGenes         = NULL,
-                              lsMuModelH1         = lsMuModelA,
-                              lsDispModelH1       = lsDispModelA,
-                              lsMuModelH0         = lsMuModelB,
-                              lsDispModelH0       = lsDispModelB,
-                              lsDropModel         = lsDropModel,
-                              matWeights          = NULL,
-                              lsFitZINBReporters  = lsFitZINBReporters,
-                              dfAnnotationProc    = NULL,
-                              vecNormConst        = vecNormConst,
-                              strReport           = NULL)
+    objectLineagePulselsMuModelH1         <- lsMuModelA
+    objectLineagePulselsDispModelH1       <- lsDispModelA
+    objectLineagePulse@lsMuModelH0        <- lsMuModelB
+    objectLineagePulse@lsDispModelH0      <- lsDispModelB
   }
+  objectLineagePulse@lsDropModel        <- lsDropModel
+  objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
+  objectLineagePulse@strReport          <- NULL
   
   return(objectLineagePulse)
 }

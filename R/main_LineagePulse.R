@@ -21,20 +21,25 @@ setwd("/home/david/gitDevelopment/code/LineagePulse/R")
 source("srcLineagePulse_clusterCellsInPseudotime.R")
 source("srcLineagePulse_calcPostDrop.R")
 source("srcLineagePulse_calcNormConst.R")
+source("srcLineagePulse_classLineagePulseObject.R")
 source("srcLineagePulse_decompressParameters.R")
-source("srcLineagePulse_evalImpulseModel.R")
+source("srcLineagePulse_estimateMMAssignments.R")
 source("srcLineagePulse_evalDropoutModel.R")
+source("srcLineagePulse_evalImpulseModel.R")
 source("srcLineagePulse_evalLogLikZINB.R")
-source("srcLineagePulse_fitZINB.R")
+source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitMean.R")
 source("srcLineagePulse_fitZINB_fitDispersion.R")
-source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
+source("srcLineagePulse_fitZINB.R")
+source("srcLineagePulse_fitZINB_WrapperMixture.R")
+source("srcLineagePulse_fitZINB_WrapperLP.R")
 source("srcLineagePulse_initialiseImpulseParameters.R")
 source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
+source("srcLineagePulse_processSCDataMixture.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
@@ -95,14 +100,6 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #' 9. Set the level of detail with which you want to follow
 #' progress through text printed on the console during a run
 #' (verbose, boolSuperVerbose).
-#' 10. Chose the directory into which you want to have 
-#' temporary and final output objects to be saved into
-#' (dirOut).
-#' 
-#' LineagePulse returns a data frame with the differential
-#' expression analysis results but also saves all relevant
-#' parameter estimates and temporary data to dirOut for further
-#' inspection.
 #' 
 #' Finally, after running LineagePulse, you may continue to work
 #' on your data set by:
@@ -158,8 +155,6 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Has to be named: Names of elements are cell names.
-#' @param scaSmallRun: (integer) [Default NULL] Number of rows
-#'    on which a test run of LineagePulse is performed.
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -237,13 +232,6 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #'    Note: This increases run-time as the loglikelihood is computed
 #'    more often. This is usually not a major contributor to runtime
 #'    though.
-#' @param dirOut: (str directory) [Default NULL]
-#'    Directory to which detailed output is saved to.
-#'    Defaults to current working directory if NULL.
-#' @param boolBPlog: (bool) [Default FALSE] Save status of each 
-#'    worker into text files in parallelisation. Have to include
-#'    library(BatchJobs) above and set the BiocParallel registration
-#'    to adjust the reporting. Use only for debugging.
 #' 
 #' @return dfDEAnalysis: (data frame genes x reported variables) 
 #'    Summary of differential expression analysis, sorted by adj.p:
@@ -263,7 +251,6 @@ runLineagePulse <- function(matCounts,
   matPiConstPredictors=NULL,
   vecNormConstExternal=NULL,
   vecPseudotime,
-  scaSmallRun=NULL,
   strMuModel="impulse",
   strDispModel="constant",
   boolClusterInPseudotime=TRUE,
@@ -274,10 +261,8 @@ runLineagePulse <- function(matCounts,
   boolCoEstDispMean=TRUE,
   scaMaxEstimationCycles=20,
   scaNProc=1,
-  boolValidateZINBfit=TRUE,
   boolVerbose=TRUE,
-  boolSuperVerbose=FALSE,
-  dirOut=NULL ){
+  boolSuperVerbose=FALSE ){
   
   print("LineagePulse v1.0")
   
@@ -293,13 +278,11 @@ runLineagePulse <- function(matCounts,
     strDispModel=strDispModel,
     scaWindowRadius=scaWindowRadius,
     boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-    boolCoEstDispMean=boolCoEstDispMean,
-    dirOut=dirOut )
-  matCountsProc <- lsProcessedSCData$matCountsProc
+    boolCoEstDispMean=boolCoEstDispMean )
+  objectLineagePulse <- lsProcessedSCData$objectLineagePulse
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
   vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
-  dirOut <- lsProcessedSCData$dirOut
   
   # Clear memory
   rm(matCounts)
@@ -307,12 +290,7 @@ runLineagePulse <- function(matCounts,
   rm(vecPseudotime)
   rm(lsProcessedSCData)
   
-  # 2. Inialise parallelisation
-  # Create log directory for parallelisation output
-  if(boolBPlog){
-    dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
-    dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
-  }
+  # X. Inialise parallelisation
   print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
   # Set the parallelisation environment in BiocParallel:
   if(scaNProc > 1){
@@ -331,7 +309,7 @@ runLineagePulse <- function(matCounts,
     register(SerialParam())
   }
   
-  # 3. Cluster cells in pseudo-time
+  # 2. Cluster cells in pseudo-time
   print("2. Clustering:")
   tm_clustering <- system.time({
     if(boolClusterInPseudotime){
@@ -356,50 +334,35 @@ runLineagePulse <- function(matCounts,
   
   # 4. Compute normalisation constants
   print("4. Compute normalisation constants:")
-  vecNormConst <- calcNormConst(matCountsProc,
+  objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
      vecNormConstExternal=vecNormConstExternalProc)
   
   # 5. Fit ZINB model for both H1 and H0.
   print("5. Fit ZINB model for both H1 and H0.")
   tm_fitmm <- system.time({
-    objectLineagePulseCaseOnly <- fitNullAlternative( matCountsProc=matCountsProc,
+    objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
       matPiConstPredictors=matPiConstPredictorsProc,
       lsResultsClustering=lsResultsClustering,
-      vecNormConst=vecNormConst,
-      scaWindowRadius=scaWindowRadius,
       boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
       boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
       boolCoEstDispMean=boolCoEstDispMean,
       strMuModel=strMuModel,
       strDispModel=strDispModel,
-      vecPseudotime=vecPseudotimeProc,
       scaMaxEstimationCycles=scaMaxEstimationCycles,
       boolVerbose=boolVerbose,
       boolSuperVerbose=boolSuperVerbose )
   })
-  objectLineagePulseCaseOnly@vecAllGenes <- vecAllGenes
-  objectLineagePulseCaseOnly@vecFixedAssignments <- NULL
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
   # 6. Differential expression analysis:
   print("6. Differential expression analysis:")
   tm_deanalysis_mf <- system.time({
-    objectLineagePulseCaseOnly <- runDEAnalysis(
-      matCountsProc = matCountsProc,
-      objectLineagePulse=objectLineagePulseCaseOnly,
-      scaWindowRadius=scaWindowRadius )
+    objectLineagePulse <- runDEAnalysis( objectLineagePulse=objectLineagePulse )
   })
   print(paste("Time elapsed during differential expression analysis: ",
     round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
-  # 7. Generate validation metrics for inferred ZINB fits
-  if(boolValidateZINBfit){
-    print("7. Generate ZINB model fit validation metrics:")
-    suppressWarnings( validateOutput(dirOutLineagePulse=dirOut,
-      dirOutValidation=dirOut) )
-  }
-  
   print("LineagePulse complete.")
-  return(objectLineagePulseCaseOnly)
+  return(objectLineagePulse)
 }
