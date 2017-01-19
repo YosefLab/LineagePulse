@@ -146,7 +146,7 @@
 #'    the observations [gene i, cells in neighbourhood of j],
 #'    the model is locally smoothed in pseudotime.
 #' 
-#' @return dfModelFreeDEAnalysis: (data frame genes x reported variables) 
+#' @return dfDEAnalysis: (data frame genes x reported variables) 
 #'    Summary of differential expression analysis, sorted by adj.p:
 #'    Gene: gene ID,
 #'    p: raw p-value, 
@@ -230,7 +230,7 @@ runDEAnalysis <- function(matCountsProc,
   # Multiple testing correction (Benjamini-Hochberg)
   vecPvalueBH = p.adjust(vecPvalue, method = "BH")
   
-  dfModelFreeDEAnalysis =   as.data.frame(cbind(
+  dfDEAnalysis =   as.data.frame(cbind(
     "Gene" = row.names(matCountsProc),
     "p"=as.numeric(vecPvalue),
     "adj.p"=as.numeric(vecPvalueBH),
@@ -240,13 +240,13 @@ runDEAnalysis <- function(matCountsProc,
     "mean_H0"=array(objectLineagePulse@lsMuModelH0$matMuModel),
     "dispersion_H0"=array(objectLineagePulse@lsDispModelH0$matDispModel),
     stringsAsFactors = FALSE))
-  rownames(dfModelFreeDEAnalysis) <- dfModelFreeDEAnalysis$Gene
+  rownames(dfDEAnalysis) <- dfDEAnalysis$Gene
   
-  # Order data frame by adjusted p-value
-  dfModelFreeDEAnalysis$adj.p <- as.numeric(as.character(dfModelFreeDEAnalysis$adj.p))
-  dfModelFreeDEAnalysis = dfModelFreeDEAnalysis[order(dfModelFreeDEAnalysis$adj.p),]
+  dfDEAnalysis <- dfDEAnalysis[match(objectLineagePulse@vecAllGenes,dfDEAnalysis$Gene),]
+  rownames(dfDEAnalysis) <- objectLineagePulse@vecAllGenes
+  vecboolAllZero <- !(objectLineagePulse@vecAllGenes %in% rownames(matCountDataProc))
+  dfDEAnalysis$allZero <- vecboolAllZero
   
-  objectLineagePulseCaseOnly@dfResults <- dfModelFreeDEAnalysis
-  objectLineagePulseCaseOnly@vecDEGenes <- rownames(dfModelFreeDEAnalysis[dfModelFreeDEAnalysis$adj.p < objectLineagePulseCaseOnly@scaQThres,])
+  objectLineagePulseCaseOnly@dfResults <- dfDEAnalysis
   return(objectLineagePulseCaseOnly)
 }

@@ -114,28 +114,36 @@ fitMMAssignmentsCell <- function(vecCounts,
 }
 
 estimateMMAssignmentsMatrix <- function(matCounts,
+                                        vecFixedAssignments=NULL,
                                         lsMuModel,
                                         lsDispModel,
                                         lsDropModel,
                                         matWeights ){
 
-  scaNumMixtures <- length(vecWeights)
+  scaNumCells <- dim(matCounts)[2]
+  scaNumMixtures <- dim(matWeights)[2]
+  
+  # Select non a-priori fixed cells
+  if(!is.null(vecFixedAssignments)) vecidxToFit <- which(!is.na(vecFixedAssignments))
+  else vecidxToFit <- seq(1, scaNumCells) # Select all cells
+  
   # Parallelise weight estimation over cells
-  lsFitsWeights <- blapply( seq(1,dim(matCounts)[2]), function(j){
+  lsFitsWeights <- blapply( vecidxToFit, function(j){
     # Parameter decompression: Cell-specific
     matPiParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
       decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
                                   vecMu=lsMuModel$matMuModel[,m],
                                   matPiConstPredictors=lsDropModel$matPiConstPredictors )
     }))
-    fitWeightds <- estimateMMAssignmentsCell(vecCounts=matCounts[,j],
+    fitWeights <- estimateMMAssignmentsCell(vecCounts=matCounts[,j],
                               matMu=lsMuModel$matMuModel,
                               matDisp=lsDispModel$matDispModel,
                               matPi=matPiParam,
                               vecWeights=matWeights[j,])
     return(fitWeights)
   })
-  matWeights <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))
+  matWeightsToFit <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))
+  matWeights[vecidxToFit,] <- matWeightsToFit
   
   return(list( matWeights=matWeights ))
 }

@@ -28,10 +28,11 @@ fitZINB <- function(matCounts,
   RELTOL_BFGS_Pi <- 10^(-4)
   ####################################################
   
-  vecEMLogLikModel <- array(NA, scaMaxEstimationCycles)
   scaNumGenes <- dim(matCounts)[1]
   scaNumCells <- dim(matCounts)[2]  
   boolFitDrop <- is.null(lsDropModel)
+  if(!boolFitDrop) scaMaxEstimationCycles <- 1 # Do not need estimation cycle if drop-out model is fixed
+  vecEMLogLikModel <- array(NA, scaMaxEstimationCycles)
   
   # Initialise
   if(boolVerbose) print("Initialise parameter models.")
@@ -123,6 +124,11 @@ fitZINB <- function(matCounts,
   scaLogLikNew <- scaLogLikInitA
   scaLogLikOld <- NA
   while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
+    # If drop-out model was supplied (boolFitDrop==FALSE), drop-out model
+    # estimation is skipped and the mean-dispersion model is estimated 
+    # conditioned on the supplied drpo-out model. No iteration is required
+    # and the while loop is excited via tha scaIter <= scaMaxEstimationCycles
+    # condition (scaMaxEstimationCycles is set to 1 if boolFitDrop==FALSE).
     tm_iter <- system.time({
       if(boolFitDrop){
         #####  1. Cell-wise parameter estimation
@@ -177,25 +183,25 @@ fitZINB <- function(matCounts,
       }
       
       ##### 2. Gene-wise parameter estimation:
-        # Estimate mean and dispersion parameters simultaneously.
-        # a/b) Negative binomial mean AND dispersion parameter.
-        tm_mudisp <- system.time({
-          lsFitMuDisp <- fitZINBMuDisp(matCounts=matCounts,
-                                       vecNormConst=vecNormConst,
-                                       lsMuModel=lsMuModel,
-                                       lsDispModel=lsDispModel,
-                                       lsDropModel=lsDropModel,
-                                       scaWindowRadius=scaWindowRadius,
-                                       matWeights=matWeights)
-        })
-        lsDispModel$matDispModel <- lsFitMuDisp$matDispModel
-        colnames(lsDispModel$matDispModel) <- NULL # Need this so that column names dont grow to par.par.par...
-        lsMuModel$matMuModel <- lsFitMuDisp$matMuModel
-        colnames(lsMuModel$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
-        
-        vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
-        vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
-        
+      # Estimate mean and dispersion parameters simultaneously.
+      # a/b) Negative binomial mean AND dispersion parameter.
+      tm_mudisp <- system.time({
+        lsFitMuDisp <- fitZINBMuDisp(matCounts=matCounts,
+                                     vecNormConst=vecNormConst,
+                                     lsMuModel=lsMuModel,
+                                     lsDispModel=lsDispModel,
+                                     lsDropModel=lsDropModel,
+                                     scaWindowRadius=scaWindowRadius,
+                                     matWeights=matWeights)
+      })
+      lsDispModel$matDispModel <- lsFitMuDisp$matDispModel
+      colnames(lsDispModel$matDispModel) <- NULL # Need this so that column names dont grow to par.par.par...
+      lsMuModel$matMuModel <- lsFitMuDisp$matMuModel
+      colnames(lsMuModel$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
+      
+      vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
+      vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
+      
       # Evaluate Likelihood
       scaLogLikOld <- scaLogLikNew
       scaLogLikNew <- evalLogLikMatrix( matCounts=matCounts,
@@ -214,8 +220,8 @@ fitZINB <- function(matCounts,
                      paste(unique(vecboolDispEstConverged[vecboolDispEstConverged!=0])), "]."))
       }
       print(paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
-                     "loglikelihood of ", scaLogLikNew, " in ",
-                     round(tm_mudisp["elapsed"]/60,2)," min."))
+                   "loglikelihood of ", scaLogLikNew, " in ",
+                   round(tm_mudisp["elapsed"]/60,2)," min."))
     } else {
       if(boolVerbose){print(paste0("# ",scaIter, ".) complete with ",
                                    "log likelihood of   ", scaLogLikNew, " in ",

@@ -65,18 +65,12 @@ setClassUnion('data.frameORNULL', members = c('data.frame', 'NULL'))
 #'      activated or deactivated and differentially expressed. This scenario
 #'      corresponds to a montonous expression level increase or decrease.
 #'    }
-#' @slot vecDEGenes (list number of genes) Genes IDs identified
-#'    as differentially expressed by LineagePulse at threshold \code{scaQThres}.
 #' @slot lsMuModelH1
 #' @slot lsDispModelH1
 #' @slot lsMuModelH0
 #' @slot lsDispModelH0
-#' @slot lsPiModel
+#' @slot lsDropModel
 #' @slot dfAnnotationProc
-#' @slot scaNProc (scalar) Number of processes for 
-#'    parallelisation.
-#' @slot scaQThres (scalar)
-#'    FDR-corrected p-value cutoff for significance.
 #' @slot strReport (str) LineagePulse stdout report.
 #'    
 #' @name LineagePulseObject-class
@@ -86,17 +80,18 @@ setClass(
   'LineagePulseObject',
   slots = c(
     dfResults           = "data.frameORNULL",
-    vecDEGenes          = "characterORNULL",
-    lsMuModelH1           = "listORNULL",
-    lsDispModelH1         = "listORNULL",
-    lsMuModelH0           = "listORNULL",
-    lsDispModelH0         = "listORNULL",
-    lsPiModel           = "listORNULL",
+    matCounts           = "numericORNULL",
+    vecFixedAssignments = "numericORNULL",
+    vecAllGenes         = "characterORNULL",
+    lsMuModelH1         = "listORNULL",
+    lsDispModelH1       = "listORNULL",
+    lsMuModelH0         = "listORNULL",
+    lsDispModelH0       = "listORNULL",
+    lsDropModel         = "listORNULL",
+    matWeights          = "numericORNULL", 
     lsFitZINBReporters  = "listORNULL",
     dfAnnotationProc    = "data.frameORNULL",
     vecNormConst        = "numeric",
-    scaNProc            = "numericORNULL", 
-    scaQThres           = "numericORNULL",
     strReport           = "characterORNULL"
   )
 )
@@ -114,7 +109,7 @@ setClass(
 #'    get_lsDispModelH1
 #'    get_lsMuModelH0
 #'    get_lsDispModelH0
-#'    get_lsPiModel
+#'    get_DropModel
 #'    get_lsFitZINBReporters
 #'    get_dfAnnotationProc 
 #'    get_vecNormConst
@@ -137,7 +132,7 @@ NULL
 #'    get_lsDispModelH1,LineagePulseObject-method
 #'    get_lsMuModelH0,LineagePulseObject-method
 #'    get_lsDispModelH0,LineagePulseObject-method
-#'    get_lsPiModel,LineagePulseObject-method
+#'    get_DropModel,LineagePulseObject-method
 #'    get_lsFitZINBReporters
 #'    get_dfAnnotationProc,LineagePulseObject-method
 #'    get_vecNormConst,LineagePulseObject-method
@@ -185,13 +180,13 @@ setGeneric('get_lsDispModelH0', function(object) standardGeneric('get_lsDispMode
 #' @export
 setMethod('get_lsDispModelH0', 'LineagePulseObject', function(object) object@lsDispModelH0)
 
-#' @return (list) lsPiModel
+#' @return (list) lsDropModel
 #' @name LineagePulseObject_Generics_Accessors
 #' @export
-setGeneric('get_lsPiModel', function(object) standardGeneric('get_lsPiModel'), valueClass = 'listORNULL')
+setGeneric('get_DropModel', function(object) standardGeneric('get_DropModel'), valueClass = 'listORNULL')
 #' @name LineagePulseObject_Accessors
 #' @export
-setMethod('get_lsPiModel', 'LineagePulseObject', function(object) object@lsPiModel)
+setMethod('get_DropModel', 'LineagePulseObject', function(object) object@lsDropModel)
 
 #' @return (list) lsFitZINBReporters
 #' @name LineagePulseObject_Generics_Accessors
@@ -264,7 +259,7 @@ setMethod('get_strReport', 'LineagePulseObject', function(object) object@strRepo
 #' 
 #' @export
 setMethod('names', 'LineagePulseObject', function(x) {
-  return( c("dfLineagePulseResults", "vecDEGenes") )
+  return( c("dfLineagePulseResults") )
 })
 
 # b) Enable object[[ element ]] operator
@@ -291,7 +286,6 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #' @export
 setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, j, ...){
   if(identical(i, "dfLineagePulseResults")){ return(x@dfLineagePulseResults)
-  } else if(identical(i, "vecDEGenes")){ return(x@vecDEGenes)
   } else { return(NULL) }
 })
 

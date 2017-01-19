@@ -1,18 +1,68 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++++++  EM-like iteration for RSA  +++++++++++++++++++++++++++++#
+#+++++++++++++++++  EM-like iteration for mixture model  ++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
+#' Fit ZINB mixture model
+#' 
+#' Structure of code:
+#' A: Fit a constant model to all cells. The resulting drop-out model
+#'    is used for the EM-like iteration. This is also the null model
+#'    for the LRT as the full model is fir based on this drop-out model.
+#' B: EM-like iteration to get mixture assignments.
+#' C: Fit full model based on mixture assignments as MLE to 
+#'    do LRT later.
+
 fitMixtureZINBModel <- function(matCounts,
+                                vecFixedAssignments=NULL,
                                 vecNormConst,
                                 scaNMixtures,
-                                scaMaxEstimationCycles=10){
+                                strDispModel="const",
+                                scaMaxEstimationCyclesDropModel=20,
+                                scaMaxEstimationCyclesEMlike=20){
   
   scaNGenes <- dim(matCounts)[1]
   scaNCells <- dim(matCounts)[2]
+  
+  ### (A) Pre-estimate drop-out model to speed up mixture model fitting
+  if(boolVerbose) print(paste0("### a) Fit H0 constant ZINB model and set drop-out model."))
+  
+  tm_cycle <- system.time({
+    lsZINBFitsRed <- fitZINB(matCounts=matCounts,
+                             vecNormConst=vecNormConst,
+                             vecPseudotime=NULL,
+                             lsResultsClustering=NULL,
+                             matWeights=matWeights,
+                             matPiConstPredictors=NULL,
+                             scaWindowRadius=NULL,
+                             boolVecWindowsAsBFGS=NULL,
+                             lsDropModel=NULL,
+                             strMuModel="MM",
+                             strDispModel="constant",
+                             scaMaxEstimationCycles=scaMaxEstimationCyclesDropModel,
+                             boolVerbose=TRUE,
+                             boolSuperVerbose=TRUE)
+    lsZINBFitsRed <- lsZINBFitsRed$lsMuModel
+    lsZINBFitsRed <- lsZINBFitsRed$lsDispModel
+    lsDropModel <- lsZINBFitsRed$lsDropModel
+    boolConvergenceModelRed <- lsZINBFitsRed$boolConvergenceModel
+    vecEMLogLikModelRed <- lsZINBFitsRed$vecEMLogLikModel
+  })
+  
+  if(boolVerbose) print(paste0("### Finished fitting H0 constant ZINB model ",
+                               "in ", round(tm_cycle["elapsed"]/60,2)," min."))
+  
+  ### (B) EM-like estimation cycle: fit mixture model
+  if(boolVerbose) print(paste0("### b) EM-like iteration: Fit mixture assignments."))
+  
   # (I) Initialise estimation: Weights
   # Set weights to uniform distribution
   matWeights <- matrix(1/scaNMixtures, 
-                       nrow=scaNGenes, ncols=scaNCells)
+                       nrow=scaNCells, ncols=scaNMixtures)
+  # Correct fixed weights (RSA)
+  if(!is.null(vecFixedAssignments)){
+    matWeights[!is.na(vecFixedAssignments),] <- 0
+    matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
+  }
   
   # (II) Estimation iteration on full model
   # Set iteration reporters
@@ -21,60 +71,46 @@ fitMixtureZINBModel <- function(matCounts,
   scaLogLikOld <- NA
   
   tm_RSAcycle <- system.time({
-    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
-      # M-like step: Estimate mixture model parameters
-      lsZINBFitsWeights <- fitZINB(matCounts=matCounts,
-                                   vecNormConst=vecNormConst,
-                                   vecPseudotime=NULL,
-                                   lsResultsClustering=NULL,
-                                   matWeights=matWeights,
-                                   matPiConstPredictors=NULL,
-                                   scaWindowRadius=NULL,
-                                   boolVecWindowsAsBFGS=NULL,
-                                   lsDropModel=NULL,
-                                   strMuModel="MM",
-                                   strDispModel="constant",
-                                   scaMaxEstimationCycles=20,
-                                   boolVerbose=TRUE,
-                                   boolSuperVerbose=TRUE)
-      lsMuModelWeights <- lsZINBFitsWeights$lsMuModel
-      lsDispModelWeights <- lsZINBFitsWeights$lsDispModel
-      lsDropModelWeights <- lsZINBFitsWeights$lsDropModel
-      
+    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCyclesEMlike)){
       # E-like step: Estimation of mixture assignments
       lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=matCounts,
-                                                  lsMuModel=lsMuModelWeights,
-                                                  lsDispModel=lsDispModelWeights,
-                                                  lsDropModel=lsDropModelWeights,
+                                                  vecFixedAssignments=vecFixedAssignments,
+                                                  lsMuModel=lsMuModelFull,
+                                                  lsDispModel=lsDispModelFull,
+                                                  lsDropModel=lsDropModelFull,
                                                   matWeights=matWeights )
       matWeights <- lsWeightFits$matWeights
+      
+      # M-like step: Estimate mixture model parameters
+      lsZINBFitsFull <- fitZINB(matCounts=matCounts,
+                                vecNormConst=vecNormConst,
+                                vecPseudotime=NULL,
+                                lsResultsClustering=NULL,
+                                matWeights=matWeights,
+                                matPiConstPredictors=NULL,
+                                scaWindowRadius=NULL,
+                                boolVecWindowsAsBFGS=NULL,
+                                lsDropModel=lsDropModel,
+                                strMuModel="MM",
+                                strDispModel="constant",
+                                scaMaxEstimationCycles=1,
+                                boolVerbose=TRUE,
+                                boolSuperVerbose=TRUE)
+      lsMuModelFull <- lsZINBFitsFull$lsMuModel
+      lsDispModelFull <- lsZINBFitsFull$lsDispModel
+      lsDropModelFull <- lsZINBFitsFull$lsDropModel
     }
   })
   
-  # Do full and alternative model fits
-  ####################################################
+  if(boolVerbose) print(paste0("### Finished fitting assignments ",
+                               "in ", round(tm_cycle["elapsed"]/60,2)," min."))
+  
+  ### (C) Set degrees of freedom
   # Compute degrees of freedom of model for each gene
   # Drop-out model is ignored, would be counted at each gene.
   # 1. Alternative model  H1:
-  # Mean model:
-  if(strMuModel=="windows"){
-    # One mean parameter per cell
-    scaKbyGeneH1 <- dim(matCountsProc)[2]
-  } else if(strMuModel=="clusters"){
-    # One mean parameter per cluster
-    scaKbyGeneH1 <- lsResultsClustering$K
-  } else if(strMuModel=="MM"){
-    # One mean parameter per mixture component
-    scaKbyGeneH1 <- dim(matWeights)[2]
-  } else if(strMuModel=="impulse"){
-    # Six impulse model parameter to model means
-    scaKbyGeneH1 <- 6
-  } else if(strMuModel=="constant"){
-    # One constant mean
-    scaKbyGeneH1 <- 1
-  } else {
-    stop(paste0("ERROR in fitMixtureZINBModel(): strMuModel not recognised: ", strMuModel))
-  }
+  # One mean parameter per mixture component
+  scaKbyGeneH1 <- dim(matWeights)[2]
   # Dispersion model
   if(strDispModel=="constant"){
     # One dispersion factor per gene.
@@ -86,72 +122,13 @@ fitMixtureZINBModel <- function(matCounts,
   # One mean per gene and one dispersion factor
   scaKbyGeneH0 <- 1+1
   
-  # Fit full model
-  if(boolVerbose) print(paste0("### a) Fit H1 mixture ZINB model."))
-  
-  tm_cycle <- system.time({
-    lsZINBFitsFull <- fitZINB(matCounts=matCounts,
-                              vecNormConst=vecNormConst,
-                              vecPseudotime=NULL,
-                              lsResultsClustering=NULL,
-                              matWeights=matWeights,
-                              matPiConstPredictors=NULL,
-                              scaWindowRadius=NULL,
-                              boolVecWindowsAsBFGS=NULL,
-                              lsDropModel=NULL,
-                              strMuModel="MM",
-                              strDispModel="constant",
-                              scaMaxEstimationCycles=20,
-                              boolVerbose=TRUE,
-                              boolSuperVerbose=TRUE)
-    lsMuModelFull <- lsZINBFitsFull$lsMuModel
-    lsDispModelFull <- lsZINBFitsFull$lsDispModel
-    lsDropModelFull <- lsZINBFitsFull$lsDropModel
-    boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
-    vecEMLogLikModelFull <- lsZINBFitsFull$vecEMLogLikModel
-  })
-  
-  if(boolVerbose) print(paste0("### Finished fitting H1 mixture ZINB model ",
-                               "model in ", round(tm_cycle["elapsed"]/60,2)," min."))
-  
-  ####################################################
-  # Fit model B
-  if(boolVerbose) print(paste0("### b) Fit H0 constant ZINB model."))
-  
-  tm_cycleB <- system.time({
-    lsFitsModelRed <- fitZINB(matCounts=matCounts,
-                              vecNormConst=vecNormConst,
-                              vecPseudotime=NULL,
-                              lsResultsClustering=NULL,
-                              matWeights=matWeights,
-                              matPiConstPredictors=NULL,
-                              scaWindowRadius=NULL,
-                              boolVecWindowsAsBFGS=NULL,
-                              lsDropModel=lsDropModelFull,
-                              strMuModel="constant",
-                              strDispModel="constant",
-                              scaMaxEstimationCycles=20,
-                              boolVerbose=TRUE,
-                              boolSuperVerbose=TRUE)
-    lsMuModelRed <- lsZINBFitsRed$lsMuModel
-    lsDispModelRed <- lsZINBFitsRed$lsDispModel
-    lsDropModelRed <- lsZINBFitsRed$lsDropModel
-    boolConvergenceModelRed <- lsZINBFitsRed$boolConvergenceModel
-    vecEMLogLikModelRed <- lsZINBFitsRed$vecEMLogLikModel
-  })
-  
-  if(boolVerbose) print(paste0("### Finished fitting H0 constant ZINB model ",
-                               "model in ", round(tm_cycle["elapsed"]/60,2)," min."))
-  
   # Name rows and columns of parameter matrices
   rownames(lsMuModelFull$matMuModel) <- rownames(matCountsProc)
   rownames(lsDispModelFull$matDispModel) <- rownames(matCountsProc)
   rownames(lsMuModelRed$matMuModel) <- rownames(matCountsProc)
   rownames(lsDispModelRed$matDispModel) <- rownames(matCountsProc)
   rownames(lsDropModel$matDropoutLinModel) <- colnames(matCountsProc)
-  if(!is.null(lsDropModelFull$matPiConstPredictors)){
-    rownames(lsDropModelFull$matPiConstPredictors) <- rownames(matCountsProc)
-  }
+  rownames(matWeights) <- colnames(matCountsProc)
   
   lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelFull,
                               boolConvergenceH0=boolConvergenceModelRed,
@@ -159,12 +136,20 @@ fitMixtureZINBModel <- function(matCounts,
                               vecEMLogLikH0=vecEMLogLikModelRed,
                               scaKbyGeneH1=scaKbyGeneH1,
                               scaKbyGeneH0=scaKbyGeneH0 )
-  lsReturn <- list( lsMuModelH1=lsMuModelFull,
-                    lsDispModelH1=lsDispModelFull,
-                    lsMuModelH0=lsMuModelRed,
-                    lsDispModelH0=lsDispModelRed,
-                    lsDropModel=lsDropModelFull,
-                    lsFitZINBReporters=lsFitZINBReporters )
   
-  return(lsReturn)
+  return( new('LineagePulseObject',
+              dfResults           = NULL,
+              matCounts           = matCountsProc,
+              vecFixedAssignments = NULL,
+              vecAllGenes         = NULL,
+              lsMuModelH1         = lsMuModelFull,
+              lsDispModelH1       = lsDispModelFull,
+              lsMuModelH0         = lsMuModelRed,
+              lsDispModelH0       = lsDispModelRed,
+              lsDropModel         = lsDropModel,
+              matWeights          = matWeights,
+              lsFitZINBReporters  = lsFitZINBReporters,
+              dfAnnotationProc    = NULL,
+              vecNormConst        = vecNormConst,
+              strReport           = NULL) )
 }

@@ -53,7 +53,8 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 
 #' LineagePulse wrapper: Differential expression analysis in pseudotime
 #' 
-#' This function does everything for you, lean back.
+#' This function performs all steps of longitudinal differential
+#' expression analysis in pseudotime for you.
 #' 
 #' This function is the wrapper function for the LineagePulse algorithm
 #' which performs zero-inflated negative binomial model fitting
@@ -258,7 +259,6 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 runLineagePulse <- function(matCounts,
   matPiConstPredictors=NULL,
   vecNormConstExternal=NULL,
@@ -283,6 +283,7 @@ runLineagePulse <- function(matCounts,
   
   # 1. Data preprocessing
   print("1. Data preprocessing:")
+  vecAllGenes <- rownames(matCounts)
   lsProcessedSCData <- processSCData( matCounts=matCounts,
     matPiConstPredictors=matPiConstPredictors,
     vecPseudotime=vecPseudotime,
@@ -358,8 +359,8 @@ runLineagePulse <- function(matCounts,
   vecNormConst <- calcNormConst(matCountsProc,
      vecNormConstExternal=vecNormConstExternalProc)
   
-  # 5. Fit ZINB mixture model for both H1 and H0.
-  print("5. Fit ZINB mixture model for both H1 and H0.")
+  # 5. Fit ZINB model for both H1 and H0.
+  print("5. Fit ZINB model for both H1 and H0.")
   tm_fitmm <- system.time({
     objectLineagePulseCaseOnly <- fitNullAlternative( matCountsProc=matCountsProc,
       matPiConstPredictors=matPiConstPredictorsProc,
@@ -376,8 +377,8 @@ runLineagePulse <- function(matCounts,
       boolVerbose=boolVerbose,
       boolSuperVerbose=boolSuperVerbose )
   })
-  objectLineagePulseCaseOnly@scaQThres <- scaQThres
-  objectLineagePulseCaseOnly@scaNProc <- scaNProc
+  objectLineagePulseCaseOnly@vecAllGenes <- vecAllGenes
+  objectLineagePulseCaseOnly@vecFixedAssignments <- NULL
   print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
     " min",sep=""))
   
