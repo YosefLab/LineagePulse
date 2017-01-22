@@ -11,12 +11,22 @@
 #' B: EM-like iteration to get mixture assignments.
 #' C: Fit full model based on mixture assignments as MLE to 
 #'    do LRT later.
-
+#'    
+#' @export
 fitMixtureZINBModel <- function(objectLineagePulse,
                                 scaNMixtures,
                                 strDispModel="const",
                                 scaMaxEstimationCyclesDropModel=20,
-                                scaMaxEstimationCyclesEMlike=20){
+                                scaMaxEstimationCyclesEMlike=20,
+                                boolVerbose=TRUE,
+                                boolSuperVerbose=FALSE){
+  
+  ####################################################
+  # Internal Numerical Estimation Parameters:
+  # Minimim fractional liklihood increment necessary to
+  # continue EM-iterations of assignment estimation.
+  scaPrecEMAssignments <- 1-10^(-4)
+  ####################################################
   
   scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
   scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
@@ -25,22 +35,22 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   if(boolVerbose) print(paste0("### a) Fit H0 constant ZINB model and set drop-out model."))
   
   tm_cycle <- system.time({
-    lsZINBFitsRed <- fitZINB(matCounts=objectLineagePulse@matCounts,
+    lsZINBFitsRed <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
                              vecNormConst=objectLineagePulse@vecNormConst,
                              vecPseudotime=NULL,
                              lsResultsClustering=NULL,
-                             matWeights=matWeights,
+                             matWeights=NULL,
                              matPiConstPredictors=NULL,
                              scaWindowRadius=NULL,
-                             boolVecWindowsAsBFGS=NULL,
+                             boolVecWindowsAsBFGS=FALSE,
                              lsDropModel=NULL,
-                             strMuModel="MM",
+                             strMuModel="constant",
                              strDispModel="constant",
                              scaMaxEstimationCycles=scaMaxEstimationCyclesDropModel,
-                             boolVerbose=TRUE,
-                             boolSuperVerbose=TRUE)
-    lsZINBFitsRed <- lsZINBFitsRed$lsMuModel
-    lsZINBFitsRed <- lsZINBFitsRed$lsDispModel
+                             boolVerbose=boolVerbose,
+                             boolSuperVerbose=boolSuperVerbose)
+    lsMuModelRed <- lsZINBFitsRed$lsMuModel
+    lsDispModelRed <- lsZINBFitsRed$lsDispModel
     lsDropModel <- lsZINBFitsRed$lsDropModel
     boolConvergenceModelRed <- lsZINBFitsRed$boolConvergenceModel
     vecEMLogLikModelRed <- lsZINBFitsRed$vecEMLogLikModel
@@ -52,10 +62,14 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   ### (B) EM-like estimation cycle: fit mixture model
   if(boolVerbose) print(paste0("### b) EM-like iteration: Fit mixture assignments."))
   
-  # (I) Initialise estimation: Weights
+  # (I) Initialise estimation
+  if(boolVerbose) print("Initialise mixture assignments.")
+  # Initialise expression models as null model estimate
+  lsMuModelFull <- lsMuModelRed
+  lsDispModelFull <- lsDispModelRed
   # Set weights to uniform distribution
   matWeights <- matrix(1/scaNMixtures, 
-                       nrow=scaNCells, ncols=scaNMixtures)
+                       nrow=scaNCells, ncol=scaNMixtures)
   # Correct fixed weights (RSA)
   if(!is.null(objectLineagePulse@vecFixedAssignments)){
     matWeights[!is.na(objectLineagePulse@vecFixedAssignments),] <- 0
@@ -65,40 +79,83 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   # (II) Estimation iteration on full model
   # Set iteration reporters
   scaIter <- 1
-  scaLogLikNew <- scaLogLikInitA
+  scaLogLikNew <- -Inf
   scaLogLikOld <- NA
   
   tm_RSAcycle <- system.time({
-    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCyclesEMlike)){
-      # E-like step: Estimation of mixture assignments
-      lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCounts,
-                                                  vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
-                                                  lsMuModel=lsMuModelFull,
-                                                  lsDispModel=lsDispModelFull,
-                                                  lsDropModel=lsDropModelFull,
-                                                  matWeights=matWeights )
-      matWeights <- lsWeightFits$matWeights
-      
+    while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEMAssignments & scaIter <= scaMaxEstimationCyclesEMlike)){
       # M-like step: Estimate mixture model parameters
-      lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCounts,
+      lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
                                 vecNormConst=objectLineagePulse@vecNormConst,
                                 vecPseudotime=NULL,
                                 lsResultsClustering=NULL,
                                 matWeights=matWeights,
                                 matPiConstPredictors=NULL,
                                 scaWindowRadius=NULL,
-                                boolVecWindowsAsBFGS=NULL,
+                                boolVecWindowsAsBFGS=FALSE,
                                 lsDropModel=lsDropModel,
                                 strMuModel="MM",
                                 strDispModel="constant",
                                 scaMaxEstimationCycles=1,
-                                boolVerbose=TRUE,
-                                boolSuperVerbose=TRUE)
+                                boolVerbose=boolSuperVerbose,
+                                boolSuperVerbose=boolSuperVerbose)
       lsMuModelFull <- lsZINBFitsFull$lsMuModel
       lsDispModelFull <- lsZINBFitsFull$lsDispModel
-      lsDropModelFull <- lsZINBFitsFull$lsDropModel
+      if(boolSuperVerbose){
+        vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
+        scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
+        print(paste0("# ",scaIter,".   Model estimation complete: ",
+                     "loglikelihood of        ", scaLogLikTemp, " in ",
+                     round(tm_pi["elapsed"]/60,2)," min."))
+        if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
+      }
+      
+      # E-like step: Estimation of mixture assignments
+      lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                                  vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
+                                                  lsMuModel=lsMuModelFull,
+                                                  lsDispModel=lsDispModelFull,
+                                                  lsDropModel=lsDropModel,
+                                                  matWeights=matWeights )
+      matWeights <- lsWeightFits$matWeights
+      scaLogLikTemp <- sum(lsWeightFits$vecLL)
+      if(boolSuperVerbose){
+        print(paste0("# ",scaIter,".   Weights estimation complete: ",
+                     "loglikelihood of      ", scaLogLikTemp, " in ",
+                     round(tm_pi["elapsed"]/60,2)," min."))
+        if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
+                                                               sum(lsWeightFits$vecConvergence !=0), " cases."))
+      }
+      
+      scaIter <- scaIter+1
+      scaLogLikOld <- scaLogLikTemp
     }
   })
+  # Final model estimation to get MLE
+  lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+                            vecNormConst=objectLineagePulse@vecNormConst,
+                            vecPseudotime=NULL,
+                            lsResultsClustering=NULL,
+                            matWeights=matWeights,
+                            matPiConstPredictors=NULL,
+                            scaWindowRadius=NULL,
+                            boolVecWindowsAsBFGS=FALSE,
+                            lsDropModel=lsDropModel,
+                            strMuModel="MM",
+                            strDispModel="constant",
+                            scaMaxEstimationCycles=1,
+                            boolVerbose=boolSuperVerbose,
+                            boolSuperVerbose=FALSE)
+  lsMuModelFull <- lsZINBFitsFull$lsMuModel
+  lsDispModelFull <- lsZINBFitsFull$lsDispModel
+  if(boolSuperVerbose){
+    vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
+    scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
+    print(paste0("# Final Model estimation complete: ",
+                 "loglikelihood of        ", scaLogLikTemp, " in ",
+                 round(tm_pi["elapsed"]/60,2)," min."))
+    if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
+  }
   
   if(boolVerbose) print(paste0("### Finished fitting assignments ",
                                "in ", round(tm_cycle["elapsed"]/60,2)," min."))

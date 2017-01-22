@@ -181,16 +181,7 @@ processSCDataMixture <- function(matCounts,
   }
   
   # (II) Check settings
-  # 1. Check scaSmallRun
-  if(!is.null(scaSmallRun)){
-    checkCounts(scaSmallRun, "scaSmallRun")
-    if(scaSmallRun > dim(matCounts)[1]){
-      stop(paste0( "ERROR: scaSmallRun (",scaSmallRun,
-                   ") larger then data set (",dim(matCounts)[1]," genes)."))
-    }
-  }
-  
-  # 2. Check single dispersion estimation models
+  # Check single dispersion estimation models
   if(!(strDispModel %in% c("constant"))){
     stop(paste0("strDispModel not recognised: ", strDispModel, 
                 " Must be one of: constant."))
@@ -207,8 +198,8 @@ processSCDataMixture <- function(matCounts,
     rownames(matPiConstPredictors) <- rownames(matCounts)
   }
   # Remove all zero or NA genes/cells
-  vecidxGenes <- apply(matCounts, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
-  vecidxCells <- apply(matCounts, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
+  vecidxGenes <- apply(matCounts, 1, function(gene) any(gene>0 & is.finite(gene) & !is.na(gene)) )
+  vecidxCells <- apply(matCounts, 2, function(cell) any(cell>0 & is.finite(cell) & !is.na(cell)) )
   matCountsProc <- matCounts[vecidxGenes,vecidxCells]
   # Keep target normalisation constants
   if(!is.null(vecNormConstExternal)){
@@ -241,15 +232,15 @@ processSCDataMixture <- function(matCounts,
                             lsMuModelH1         = NULL,
                             lsMuModelH0         = NULL,
                             matCountsProc       = matCountsProc,
+                            vecPseudotimeProc   = NULL,
                             matWeights          = NULL,
                             scaWindowRadius     = NULL,
                             strReport           = NULL,
                             vecAllGenes         = rownames(matCounts),
                             vecFixedAssignments = vecFixedAssignmentsProc,
-                            vecNormConst        = NULL,
-                            vecPseudotimeProc   = NULL )
+                            vecNormConst        = NULL )
   
-  return(list(objectLineagePulse=objectLineagePulses,
+  return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,
               matPiConstPredictorsProc=matPiConstPredictorsProc ))
 }

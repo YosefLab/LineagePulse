@@ -16,7 +16,7 @@ library(ggplot2)
 library(MASS)
 #setwd("/Users/davidsebastianfischer/gitDevelopment/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
-setwd("/home/david/gitDevelopment/code/LineagePulse/R")
+setwd("~/gitDevelopment/LineagePulse/R")
 
 source("srcLineagePulse_clusterCellsInPseudotime.R")
 source("srcLineagePulse_calcPostDrop.R")
@@ -99,12 +99,6 @@ runMixtureModel <- function(matCounts,
   rm(lsProcessedSCData)
   
   # X. Inialise parallelisation
-  # Create log directory for parallelisation output
-  if(boolBPlog){
-    dir.create(file.path(dirOut, "BiocParallel_logs"), showWarnings = FALSE)
-    dirBPLogs <- file.path(dirOut, "BiocParallel_logs")
-  }
-  print(paste0("Parallelisation: ", scaNProc, " threads."))
   # Set the parallelisation environment in BiocParallel:
   if(scaNProc > 1){
     # Set worker time out to 60*60*24*7 (7 days)
@@ -135,7 +129,9 @@ runMixtureModel <- function(matCounts,
                                                 scaNMixtures=scaNMixtures,
                                                 strDispModel=strDispModel,
                                                 scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
-                                                scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike)
+                                                scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
+                                                boolVerbose=boolVerbose,
+                                                boolSuperVerbose=boolSuperVerbose )
   })
   print(paste("Time elapsed during ZINB mixture and null model fitting: ",round(tm_fitmm["elapsed"]/60,2),
               " min",sep=""))

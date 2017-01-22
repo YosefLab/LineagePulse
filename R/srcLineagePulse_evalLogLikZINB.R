@@ -149,12 +149,12 @@ evalLikZINB_comp <- cmpfun(evalLikZINB)
 #' 
 #' @export
 evalLogLikZINB <- function(vecCounts,
-  vecMu,
-  vecDisp, 
-  vecPi, 
-  vecboolNotZero, 
-  vecboolZero){  
-
+                           vecMu,
+                           vecDisp, 
+                           vecPi, 
+                           vecboolNotZero, 
+                           vecboolZero){  
+  
   # Note on handling very low probabilities: vecLikZeros
   # typically does not have zero elements as it has the 
   # the summand drop-out rate. Also the log cannot be
@@ -164,21 +164,21 @@ evalLogLikZINB <- function(vecCounts,
   # through substitution of the minimal probability under
   # machine precision.
   scaLogPrecLim <- -323*log(10)
-
+  
   # Likelihood of zero counts:
   vecLogLikZeros <- log((1-vecPi[vecboolZero])*
-    (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
-        vecMu[vecboolZero]))^vecDisp[vecboolZero] +
-    vecPi[vecboolZero])
+                          (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
+                                                   vecMu[vecboolZero]))^vecDisp[vecboolZero] +
+                          vecPi[vecboolZero])
   vecLogLikZeros[vecLogLikZeros < scaLogPrecLim] <- scaLogPrecLim
   scaLogLikZeros <- sum(vecLogLikZeros)
   # Likelihood of non-zero counts:
   vecLogLikNonzerosDropout <- log(1-vecPi[vecboolNotZero])
   vecLogLikNonzerosNB <- dnbinom(
-      vecCounts[vecboolNotZero], 
-      mu=vecMu[vecboolNotZero], 
-      size=vecDisp[vecboolNotZero], 
-      log=TRUE)
+    vecCounts[vecboolNotZero], 
+    mu=vecMu[vecboolNotZero], 
+    size=vecDisp[vecboolNotZero], 
+    log=TRUE)
   vecLogLikNonzerosDropout[vecLogLikNonzerosDropout < scaLogPrecLim] <- scaLogPrecLim
   vecLogLikNonzerosNB[vecLogLikNonzerosNB < scaLogPrecLim] <- scaLogPrecLim
   # Replace zero likelihood observation with machine precision
@@ -258,28 +258,28 @@ evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
 #' 
 #' @export
 evalLogLikSmoothZINB <- function(vecCounts,
-  vecMu,
-  vecNormConst,
-  vecDisp, 
-  vecPi, 
-  vecboolNotZero, 
-  vecboolZero,
-  scaWindowRadius=NULL ){
+                                 vecMu,
+                                 vecNormConst,
+                                 vecDisp, 
+                                 vecPi, 
+                                 vecboolNotZero, 
+                                 vecboolZero,
+                                 scaWindowRadius=NULL ){
   
   scaNumCells <- length(vecCounts)
   scaLogLik <- sum(sapply(seq(1,scaNumCells), 
-    function(j){
-      scaindIntervalStart <- max(1,j-scaWindowRadius)
-      scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-      vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-      scaLogLikCell <- evalLogLikZINB_comp(vecCounts=vecCounts[vecInterval],
-        vecMu=vecMu[j]*vecNormConst[vecInterval],
-        vecDisp=rep(vecDisp[j], length(vecInterval)), 
-        vecPi=vecPi[vecInterval], 
-        vecboolNotZero=vecboolNotZero[vecInterval], 
-        vecboolZero=vecboolZero[vecInterval])
-      return(scaLogLikCell)
-    }))
+                          function(j){
+                            scaindIntervalStart <- max(1,j-scaWindowRadius)
+                            scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
+                            vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
+                            scaLogLikCell <- evalLogLikZINB_comp(vecCounts=vecCounts[vecInterval],
+                                                                 vecMu=vecMu[j]*vecNormConst[vecInterval],
+                                                                 vecDisp=rep(vecDisp[j], length(vecInterval)), 
+                                                                 vecPi=vecPi[vecInterval], 
+                                                                 vecboolNotZero=vecboolNotZero[vecInterval], 
+                                                                 vecboolZero=vecboolZero[vecInterval])
+                            return(scaLogLikCell)
+                          }))
   return(scaLogLik)
 }
 
@@ -362,30 +362,30 @@ evalLogLikSmoothZINB_comp <- cmpfun(evalLogLikSmoothZINB)
 #' 
 #' @export
 evalLogLikGene <- function(vecCounts,
-  vecMu,
-  vecNormConst,
-  vecDisp, 
-  vecPi,
-  vecboolNotZero, 
-  vecboolZero,
-  scaWindowRadius=NULL ){
+                           vecMu,
+                           vecNormConst,
+                           vecDisp, 
+                           vecPi,
+                           vecboolNotZero, 
+                           vecboolZero,
+                           scaWindowRadius=NULL ){
   
   if(!is.null(scaWindowRadius)){
     scaLogLik <- evalLogLikSmoothZINB_comp(vecCounts=vecCounts,
-      vecMu=vecMu,
-      vecNormConst=vecNormConst,
-      vecDisp=vecDisp, 
-      vecPi=vecPi,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
+                                           vecMu=vecMu,
+                                           vecNormConst=vecNormConst,
+                                           vecDisp=vecDisp, 
+                                           vecPi=vecPi,
+                                           vecboolNotZero=vecboolNotZero, 
+                                           vecboolZero=vecboolZero,
+                                           scaWindowRadius=scaWindowRadius)
   } else {
     scaLogLik <- evalLogLikZINB_comp(vecCounts=vecCounts,
-      vecMu=vecMu*vecNormConst,
-      vecDisp=vecDisp, 
-      vecPi=vecPi,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero )
+                                     vecMu=vecMu*vecNormConst,
+                                     vecDisp=vecDisp, 
+                                     vecPi=vecPi,
+                                     vecboolNotZero=vecboolNotZero, 
+                                     vecboolZero=vecboolZero )
   }
   return(scaLogLik)
 }
@@ -478,35 +478,68 @@ evalLogLikGene <- function(vecCounts,
 #' 
 #' @export
 evalLogLikMatrix <- function(matCounts,
-  vecNormConst,
-  lsMuModel,
-  lsDispModel, 
-  lsDropModel,
-  scaWindowRadius=NULL ){
+                             vecNormConst,
+                             lsMuModel,
+                             lsDispModel, 
+                             lsDropModel,
+                             matWeights=NULL,
+                             scaWindowRadius=NULL ){
+  
+  scaNGenes <- dim(matCounts)[1]
+  scaNCells <- dim(matCounts)[2]
   
   scaLogLik <- sum(unlist(
-    bplapply( seq(1,dim(matCounts)[1]), function(i){
-      # Decompress parameters by gene
-      vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
-        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-        vecInterval=NULL )
-      vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-        vecInterval=NULL )
-      vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
-        vecMu=vecMuParam,
-        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-      
-      # Evaluate loglikelihood of gene
-      vecCounts <- matCounts[i,]
-      scaLL <- evalLogLikGene(vecCounts=vecCounts,
-        vecMu=vecMuParam,
-        vecNormConst=vecNormConst,
-        vecDisp=vecDispParam, 
-        vecPi=vecPiParam,
-        vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-        vecboolZero= !is.na(vecCounts) & vecCounts==0,
-        scaWindowRadius=scaWindowRadius)
+    bplapply( seq(1,scaNGenes), function(i){
+      if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
+        # Initialise sum of likelihoods, this is the mixture model sum under the log
+        vecLikSum <- array(0, scaNCells)
+        # Loop over models:
+        for(m in seq(1, dim(matWeights)[2])){
+          # Parameter decompression:
+          vecMuParam <- lsMuModel$matMuModel[,m]
+          vecPiParam <- decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
+                                                    vecMu=vecMuParam,
+                                                    vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+          if(lsDispModel$lsDispModelGlobal$strDispModel=="const"){
+            vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                                 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                                 vecInterval=NULL)
+          }
+          # Evaluate loglikelihood of observations of cell under current model
+          vecLik <- evalLikZINB_comp( vecCounts=matCounts[i,],
+                                      vecMu=vecMuParam*vecNormConst,
+                                      vecDisp=vecDispParam, 
+                                      vecPi=vecPiParam,
+                                      vecboolNotZero=vecboolNotZero, 
+                                      vecboolZero=vecboolZero )
+          
+          vecLikSum <- vecLikSum + vecLik*matWeights[,m]
+        }
+        vecLogLik <- log(vecLikSum)
+        scaLL <- sum(vecLogLik)
+      } else {
+        # Decompress parameters by gene
+        vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+                                             lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+                                             vecInterval=NULL )
+        vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
+                                              lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                              vecInterval=NULL )
+        vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+                                                   vecMu=vecMuParam,
+                                                   vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+        
+        # Evaluate loglikelihood of gene
+        vecCounts <- matCounts[i,]
+        scaLL <- evalLogLikGene(vecCounts=vecCounts,
+                                vecMu=vecMuParam,
+                                vecNormConst=vecNormConst,
+                                vecDisp=vecDispParam, 
+                                vecPi=vecPiParam,
+                                vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+                                vecboolZero= !is.na(vecCounts) & vecCounts==0,
+                                scaWindowRadius=scaWindowRadius)
+      }
       return(scaLL)
     })
   ))

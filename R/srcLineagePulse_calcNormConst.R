@@ -44,6 +44,6 @@ calcNormConst <- function(objectLineagePulse,
     vecNormConst[vecNormConst==0] <- 1
   }
   
-  objectLineagePulse@vecNormConst <- vecNormConst
+  objectLineagePulse@vecNormConst <- as.vector(vecNormConst)
   return(objectLineagePulse)
 }

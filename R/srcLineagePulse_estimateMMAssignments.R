@@ -57,13 +57,13 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
   for(m in seq(1, length(vecWeights))){
     # Evaluate loglikelihood of observations of cell under current model
     vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=matMuParam[,m]*scaNormConst,
+                                vecMu=matMu[,m]*scaNormConst,
                                 vecDisp=matDisp[,m], 
                                 vecPi=matPi[,m],
                                 vecboolNotZero=vecboolNotZero, 
                                 vecboolZero=vecboolZero )
     
-    vecLikSum <- vecLikSum + vecLik*vecWeights[i]
+    vecLikSum <- vecLikSum + vecLik*vecWeights[m]
   }
   vecLogLik <- log(vecLikSum)
   scaLogLik <- sum(vecLogLik)
@@ -128,7 +128,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   else vecidxToFit <- seq(1, scaNumCells) # Select all cells
   
   # Parallelise weight estimation over cells
-  lsFitsWeights <- blapply( vecidxToFit, function(j){
+  lsFitsWeights <- bplapply( vecidxToFit, function(j){
     # Parameter decompression: Cell-specific
     matPiParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
       decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
@@ -144,6 +144,10 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   })
   matWeightsToFit <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))
   matWeights[vecidxToFit,] <- matWeightsToFit
+  vecLLFit <- sapply(lsFitsWeights, function(fit) fit$scaLL )
+  vecConvcergenceFit <- sapply(lsFitsWeights, function(fit) fit$scaConvergence )
   
-  return(list( matWeights=matWeights ))
+  return(list( matWeights=matWeights,
+               vecLL=vecLLFit,
+               vecConvcergence=vecConvcergenceFit ))
 }

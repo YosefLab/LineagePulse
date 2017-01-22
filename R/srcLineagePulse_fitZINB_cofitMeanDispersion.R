@@ -485,15 +485,15 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   scaNCells <- length(vecCounts) 
   # Initialise sum of likelihoods, this is the mixture model sum under the log
   vecLikSum <- array(0, scaNCells)
-  for(i in seq(1, length(vecMuParam))){
+  for(i in seq(1, length(vecMu))){
     # (III) Compute drop-out rates
     vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-                                         vecMu=rep(vecMuParam[i],scaNCells),
+                                         vecMu=rep(vecMu[i],scaNCells),
                                          vecPiConstPredictors=vecPiConstPredictors )
     
     # (IV) Evaluate loglikelihood of estimate
     vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=vecMuParam[i]*vecNormConst,
+                                vecMu=vecMu[i]*vecNormConst,
                                 vecDisp=vecDisp, 
                                 vecPi=vecPi,
                                 vecboolNotZero=vecboolNotZero, 

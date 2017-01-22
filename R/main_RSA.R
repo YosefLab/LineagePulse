@@ -16,7 +16,7 @@ library(ggplot2)
 library(MASS)
 #setwd("/Users/davidsebastianfischer/gitDevelopment/LineagePulse/R")
 #setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
-setwd("/home/david/gitDevelopment/code/LineagePulse/R")
+setwd("~/gitDevelopment/LineagePulse/R")
 
 source("main_MixtureModel.R")
 source("srcLineagePulse_clusterCellsInPseudotime.R")

@@ -5,7 +5,8 @@ fitZINB <- function(matCounts,
                     matWeights=NULL,
                     matPiConstPredictors=NULL,
                     scaWindowRadius=NULL,
-                    lsDropModel,
+                    boolVecWindowsAsBFGS=FALSE,
+                    lsDropModel=NULL,
                     strMuModel,
                     strDispModel,
                     scaMaxEstimationCycles=20,
@@ -113,10 +114,11 @@ fitZINB <- function(matCounts,
                                      lsMuModel=lsMuModel,
                                      lsDispModel=lsDispModel, 
                                      lsDropModel=lsDropModel,
-                                     scaWindowRadius=scaWindowRadius )
+                                     scaWindowRadius=scaWindowRadius,
+                                     matWeights=matWeights )
   if(boolVerbose){
-    print(paste0("Initialisation has  ",
-                 "log likelihood of           ", scaLogLikInitA))
+    print(paste0("#  .    Initialisation has  ",
+                 "log likelihood of             ", scaLogLikInitA))
   }
   
   # Set iteration reporters
@@ -209,7 +211,8 @@ fitZINB <- function(matCounts,
                                         lsMuModel=lsMuModel,
                                         lsDispModel=lsDispModel, 
                                         lsDropModel=lsDropModel,
-                                        scaWindowRadius=scaWindowRadius )
+                                        scaWindowRadius=scaWindowRadius,
+                                        matWeights=matWeights )
     })
     
     # Iteration complete

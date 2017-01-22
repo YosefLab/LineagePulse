@@ -6,6 +6,7 @@
 
 # Define class unions for slots
 setClassUnion('numericORNULL', members = c('numeric', 'NULL'))
+setClassUnion('matrixORNULL', members = c('matrix', 'NULL'))
 setClassUnion('characterORNULL', members = c('character', 'NULL'))
 setClassUnion('listORNULL', members = c('list', 'NULL'))
 setClassUnion('data.frameORNULL', members = c('data.frame', 'NULL'))
@@ -87,12 +88,14 @@ setClass(
     lsMuModelH0         = "listORNULL",
     lsMuModelH1         = "listORNULL",
     lsFitZINBReporters  = "listORNULL",
-    matCountsProc       = "numericORNULL",
-    matWeights          = "numericORNULL",
+    matCountsProc       = "matrixORNULL",
+    vecPseudotimeProc   = "numericORNULL",
+    matWeights          = "matrixORNULL",
+    scaWindowRadius     = "numericORNULL",
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
     vecFixedAssignments = "numericORNULL",
-    vecNormConst        = "numeric" )
+    vecNormConst        = "numericORNULL" )
 )
 
 ### 2. Enable accession of private elements via functions
