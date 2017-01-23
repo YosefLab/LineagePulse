@@ -196,7 +196,7 @@ runDEAnalysis <- function( objectLineagePulse ){
                                    scaWindowRadius=objectLineagePulse@scaWindowRadius)
     
     # Compute LL of full for single or multi-assignment model
-    if(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$strMuModel != "MM"){
+    if(objectLineagePulse@lsMuModelH1$lsMuModelGlobal$strMuModel != "MM"){
       # Decompress parameters by gene H1
       vecMuParamH1 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[i,],
                                              lsMuModelGlobal=objectLineagePulse@lsMuModelH1$lsMuModelGlobal,
@@ -218,34 +218,29 @@ runDEAnalysis <- function( objectLineagePulse ){
                                       vecboolZero=vecboolZero,
                                       scaWindowRadius=objectLineagePulse@scaWindowRadius)
     } else{
-      # Initialise sum of likelihoods, this is the mixture model sum under the log
-      vecLikSum <- array(0, scaNCells)
-      # Loop over models:
-      for(m in seq(1, dim(objectLineagePulse@matWeights)[2])){
-        # Parameter decompression:
-        vecMuParam <- rep(lsMuModel$matMuModel[i,m],scaNCells)
-        vecPiParam <- decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
-                                                  vecMu=vecMuParam,
-                                                  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-        if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-          vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-                                               lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-                                               vecInterval=NULL)
-        } else {
-          stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", strDispModel, " not recognised."))
-        }
-        # Evaluate loglikelihood of observations of cell under current model
-        vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                    vecMu=vecMuParam*vecNormConst,
-                                    vecDisp=vecDispParam, 
-                                    vecPi=vecPiParam,
-                                    vecboolNotZero=vecboolNotZero, 
-                                    vecboolZero=vecboolZero )
-        
-        vecLikSum <- vecLikSum + vecLik*objectLineagePulse@matWeights[,m]
+      if(objectLineagePulse@lsDispModelH1$lsDispModelGlobal$strDispModel=="constant"){
+        vecDispParam <- decompressDispByGene(vecDispModel=objectLineagePulse@lsDispModelH1$matDispModel[i,],
+                                             lsDispModelGlobal=objectLineagePulse@lsDispModelH1$lsDispModelGlobal,
+                                             vecInterval=NULL)
+        matDispParam <- do.call(cbind, lapply(seq(1,dim(objectLineagePulse@matWeights)[2]), function(m) vecDispParam ))
+      } else {
+        stop(paste0("ERROR runDEAnalysis(): strDispModel=",
+                    objectLineagePulse@lsDispModelH1$lsDispModelGlobal$strDispModel, " not recognised."))
       }
-      vecLogLik <- log(vecLikSum)
-      scaLogLikFull <- sum(vecLogLik)
+      matDropParam <- do.call(cbind, lapply(objectLineagePulse@lsMuModelH1$matMuModel[i,], function(mu_m){
+        decompressDropoutRateByGene(matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
+                                    vecMu=rep(mu_m,scaNCells),
+                                    vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
+      }))
+      
+      scaLogLikFull <- evalLogLikGeneMM(vecCounts=vecCounts,
+                                vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[i,],
+                                matDispParam=matDispParam,
+                                matDropParam=matDropParam,
+                                vecNormCons=objectLineagePulse@vecNormConst,
+                                matWeights=objectLineagePulse@matWeights,
+                                vecboolNotZero=vecboolNotZero, 
+                                vecboolZero=vecboolZero )
     }
     
     return(list( scaLogLikFull=scaLogLikFull,
@@ -278,9 +273,9 @@ runDEAnalysis <- function( objectLineagePulse ){
   
   dfDEAnalysis <- dfDEAnalysis[match(objectLineagePulse@vecAllGenes,dfDEAnalysis$Gene),]
   rownames(dfDEAnalysis) <- objectLineagePulse@vecAllGenes
-  vecboolAllZero <- !(objectLineagePulse@vecAllGenes %in% rownames(matCountDataProc))
+  vecboolAllZero <- !(objectLineagePulse@vecAllGenes %in% rownames(objectLineagePulse@matCountsProc))
   dfDEAnalysis$allZero <- vecboolAllZero
   
-  objectLineagePulseCaseOnly@dfResults <- dfDEAnalysis
-  return(objectLineagePulseCaseOnly)
+  objectLineagePulse@dfResults <- dfDEAnalysis
+  return(objectLineagePulse)
 }

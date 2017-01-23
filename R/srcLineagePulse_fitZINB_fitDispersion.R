@@ -211,7 +211,7 @@ fitConstDispZINB <- function( scaDispGuess,
 #'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
 #'        of a gene are simultaneously estiamted as a vector with BFGS
 #'        in windows mode.
-#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'          \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'        for BFGS estimation of impulse model with optim (termination criterium).
 #'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
 #'        change in objective function for BFGS estimation of impulse 

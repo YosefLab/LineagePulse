@@ -725,7 +725,9 @@ fitDispConstMuConstZINB <- function(vecCounts,
                                     vecNormConst,
                                     matDropoutLinModel,
                                     vecPiConstPredictors,
-                                    scaWindowRadius){ 
+                                    scaWindowRadius,
+                                    MAXIT=1000,
+                                    RELTOL=10^(-8) ){ 
   
   # (I) Numerical maximum likelihood estimation
   fitDispMu <- tryCatch({
@@ -740,7 +742,9 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuConstZINB().",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
@@ -838,7 +842,9 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
                                         vecNormConst,
                                         matDropoutLinModel,
                                         vecPiConstPredictors,
-                                        scaWindowRadius=NULL ){
+                                        scaWindowRadius=NULL,
+                                        MAXIT=1000,
+                                        RELTOL=10^(-8) ){
   
   fitDispMu <- tryCatch({
     unlist(optim(
@@ -852,7 +858,9 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
@@ -951,7 +959,9 @@ fitDispConstMuClusterZINB <- function(vecCounts,
                                       vecNormConst,
                                       vecindClusterAssign,
                                       matDropoutLinModel,
-                                      vecPiConstPredictors){ 
+                                      vecPiConstPredictors,
+                                      MAXIT=1000,
+                                      RELTOL=10^(-8) ){ 
   
   # scaWindowRadius is set to NULL because smoothing
   # within clusters does't make sense - the clusters already impose
@@ -968,7 +978,9 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
@@ -1069,7 +1081,9 @@ fitDispConstMuMMZINB <- function(vecCounts,
                                  vecNormConst,
                                  matWeights,
                                  matDropoutLinModel,
-                                 vecPiConstPredictors){ 
+                                 vecPiConstPredictors,
+                                 MAXIT=1000,
+                                 RELTOL=10^(-8) ){ 
   
   # scaWindowRadius is set to NULL because smoothing
   # within clusters does't make sense - the clusters already impose
@@ -1086,7 +1100,9 @@ fitDispConstMuMMZINB <- function(vecCounts,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
@@ -1195,7 +1211,6 @@ fitDispConstMuMMZINB <- function(vecCounts,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
                                              vecImpulseParamGuess,
                                              vecCounts,
@@ -1206,9 +1221,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
                                              vecPiConstPredictors,
                                              scaWindowRadius=NULL,
                                              MAXIT=1000,
-                                             RELTOL=sqrt(10^(-10)),
-                                             trace=0,
-                                             REPORT=10 ){
+                                             RELTOL=10^(-8) ){
   
   boolError <- FALSE
   fitDispImpulse <- tryCatch({
@@ -1225,11 +1238,9 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       scaWindowRadius=scaWindowRadius,
       method="BFGS", 
-      control=list(maxit=MAXIT,
+      control=list(maxit=MAXIT, 
                    reltol=RELTOL,
-                   fnscale=-1, 
-                   trace=trace, 
-                   REPORT=REPORT)
+                   fnscale=-1)
     )[c("par","value","convergence")] )
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
@@ -1319,7 +1330,7 @@ fitDispConstMuImpulseOneInitZINB <- function(scaDispGuess,
 #'      \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
 #'    of a gene are simultaneously estiamted as a vector with BFGS
 #'    in windows mode.
-#'      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'      \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'    for BFGS estimation of impulse model with optim (termination criterium).
 #'      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
 #'    change in objective function for BFGS estimation of impulse 
@@ -1357,11 +1368,10 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
                                       vecNormConst,
                                       matDropoutLinModel,
                                       vecPiConstPredictors,
-                                      scaWindowRadius ){
+                                      scaWindowRadius,
+                                      MAXIT=1000,
+                                      RELTOL=10^(-8) ){
   
-  # Set reporter parameters for optim BFGS optimisation
-  trace <- 0 # Report typ: 0 none, 2 yes
-  REPORT <- 1 # Frequency of reporting in iterations
   # Try new peak and valley initialisations?
   # Increases time complexity of mean estimation by factor 3
   # but seems to make a difference on simulated data.
@@ -1406,9 +1416,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
     vecNormConst=vecNormConst,
     vecindTimepointAssign=vecindTimepointAssign,
     scaWindowRadius=scaWindowRadius,
-    MAXIT=lsMuModelGlobal$MAXIT, 
-    RELTOL=lsMuModelGlobal$RELTOL, 
-    trace=trace, REPORT=REPORT )  
+    MAXIT=MAXIT, 
+    RELTOL=RELTOL)
   if(boolUseNewInits){
     # 2. Initialisation: Peak
     lsFitPeak <- fitDispConstMuImpulseOneInitZINB(
@@ -1421,9 +1430,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=lsMuModelGlobal$MAXIT, 
-      RELTOL=lsMuModelGlobal$RELTOL, 
-      trace=trace, REPORT=REPORT )
+      MAXIT=MAXIT, 
+      RELTOL=RELTOL)
     # 3. Initialisation: Valley
     lsFitValley <- fitDispConstMuImpulseOneInitZINB(
       scaDispGuess=scaDispGuess,
@@ -1435,9 +1443,8 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
       vecNormConst=vecNormConst,
       vecindTimepointAssign=vecindTimepointAssign,
       scaWindowRadius=scaWindowRadius,
-      MAXIT=lsMuModelGlobal$MAXIT, 
-      RELTOL=lsMuModelGlobal$RELTOL, 
-      trace=trace, REPORT=REPORT )
+      MAXIT=MAXIT, 
+      RELTOL=RELTOL)
     
     # (IV) Find best fit
     lsFits <- list(lsFitPeak, lsFitValley, lsFitPrior)
@@ -1581,7 +1588,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
 #'        of a gene are simultaneously estiamted as a vector with BFGS
 #'        in windows mode.
-#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'          \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'        for BFGS estimation of impulse model with optim (termination criterium).
 #'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
 #'        change in objective function for BFGS estimation of impulse 
@@ -1676,7 +1683,9 @@ fitZINBMuDisp <- function( matCountsProc,
           vecNormConst=vecNormConst,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-          scaWindowRadius=scaWindowRadius )
+          scaWindowRadius=scaWindowRadius,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp  )
         return(fitDispMu)
       })
       matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
@@ -1694,7 +1703,9 @@ fitZINBMuDisp <- function( matCountsProc,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           vecNormConst=vecNormConst,
-          vecindClusterAssign=lsMuModel$lsMuModelGlobal$vecindClusterAssign )
+          vecindClusterAssign=lsMuModel$lsMuModelGlobal$vecindClusterAssign,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
         
         return(fitDispMu)
       })
@@ -1713,7 +1724,9 @@ fitZINBMuDisp <- function( matCountsProc,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           vecNormConst=vecNormConst,
-          matWeights=matWeights )
+          matWeights=matWeights,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
         
         return(fitDispMu)
       })
@@ -1737,7 +1750,9 @@ fitZINBMuDisp <- function( matCountsProc,
           matDropoutLinModel=lsDropModel$matDropoutLinModel,
           vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
           vecNormConst=vecNormConst,
-          scaWindowRadius=scaWindowRadius )
+          scaWindowRadius=scaWindowRadius,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
         return(fitDispMu)
       })
       matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
@@ -1757,7 +1772,9 @@ fitZINBMuDisp <- function( matCountsProc,
                                               vecNormConst=vecNormConst,
                                               matDropoutLinModel=lsDropModel$matDropoutLinModel,
                                               vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-                                              scaWindowRadius=scaWindowRadius )
+                                              scaWindowRadius=scaWindowRadius,
+                                              MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+                                              RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
         return(fitDispMu)
       })
       matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))

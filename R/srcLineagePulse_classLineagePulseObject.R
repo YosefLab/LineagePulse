@@ -261,7 +261,7 @@ setMethod('get_strReport', 'LineagePulseObject', function(object) object@strRepo
 #' 
 #' @export
 setMethod('names', 'LineagePulseObject', function(x) {
-  return( c("dfLineagePulseResults") )
+  return( c("dfResults") )
 })
 
 # b) Enable object[[ element ]] operator
@@ -287,7 +287,7 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #' 
 #' @export
 setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, j, ...){
-  if(identical(i, "dfLineagePulseResults")){ return(x@dfLineagePulseResults)
+  if(identical(i, "dfResults")){ return(x@dfResults)
   } else { return(NULL) }
 })
 

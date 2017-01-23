@@ -60,14 +60,14 @@
 #' @export
 
 evalLogLikMuConstZINB <- function(scaTheta,
-  vecCounts,
-  vecNormConst,
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  vecboolNotZero,
-  vecboolZero,
-  scaWindowRadius=NULL ){ 
+                                  vecCounts,
+                                  vecNormConst,
+                                  vecDisp,
+                                  matDropoutLinModel,
+                                  vecPiConstPredictors,
+                                  vecboolNotZero,
+                                  vecboolZero,
+                                  scaWindowRadius=NULL ){ 
   
   # (I) Linker functions
   scaMu <- exp(scaTheta)
@@ -78,18 +78,18 @@ evalLogLikMuConstZINB <- function(scaTheta,
   
   # (II) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-    vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
-    vecPiConstPredictors=vecPiConstPredictors )
+                                       vecMu=rep(scaMu, dim(matDropoutLinModel)[1]),
+                                       vecPiConstPredictors=vecPiConstPredictors )
   
   # (III) Evaluate loglikelihood (this is the cost function)
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
-    vecMu=rep(scaMu, length(vecCounts)),
-    vecNormConst=vecNormConst,
-    vecDisp=vecDisp, 
-    vecPi=vecPi,
-    vecboolNotZero=vecboolNotZero, 
-    vecboolZero=vecboolZero,
-    scaWindowRadius=scaWindowRadius )
+                              vecMu=rep(scaMu, length(vecCounts)),
+                              vecNormConst=vecNormConst,
+                              vecDisp=vecDisp, 
+                              vecPi=vecPi,
+                              vecboolNotZero=vecboolNotZero, 
+                              vecboolZero=vecboolZero,
+                              scaWindowRadius=scaWindowRadius )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
@@ -148,16 +148,16 @@ evalLogLikMuConstZINB <- function(scaTheta,
 #' @export
 
 evalLogLikMuWindowZINB <- function(scaTheta,
-  vecCounts,
-  vecMu,
-  vecNormConst,
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  scaTarget,
-  vecboolNotZero,
-  vecboolZero,
-  scaWindowRadius){ 
+                                   vecCounts,
+                                   vecMu,
+                                   vecNormConst,
+                                   vecDisp,
+                                   matDropoutLinModel,
+                                   vecPiConstPredictors,
+                                   scaTarget,
+                                   vecboolNotZero,
+                                   vecboolZero,
+                                   scaWindowRadius){ 
   
   # (I) Linker functions
   scaMuNew <- exp(scaTheta)
@@ -171,18 +171,18 @@ evalLogLikMuWindowZINB <- function(scaTheta,
   vecMuNeighbourhoodCurrent <- vecMu # Means which are not updated
   vecMuNeighbourhoodCurrent[scaTarget] <- scaMuNew # Mean which is updated
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-    vecMu=vecMuNeighbourhoodCurrent,
-    vecPiConstPredictors=vecPiConstPredictors )
+                                       vecMu=vecMuNeighbourhoodCurrent,
+                                       vecPiConstPredictors=vecPiConstPredictors )
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   # Compute loglikelihood terms with contribution from new mean parameter
   # Cis terms: From neighbourhood around target parameter
   scaLogLikCis <- evalLogLikZINB_comp( vecCounts=vecCounts,
-    vecMu=scaMuNew*vecNormConst,
-    vecDisp=rep(vecDisp[scaTarget],scaN), 
-    vecPi=vecPi,
-    vecboolNotZero=vecboolNotZero, 
-    vecboolZero=vecboolZero )
+                                       vecMu=scaMuNew*vecNormConst,
+                                       vecDisp=rep(vecDisp[scaTarget],scaN), 
+                                       vecPi=vecPi,
+                                       vecboolNotZero=vecboolNotZero, 
+                                       vecboolZero=vecboolZero )
   # Trans terms: From other neighbourhoods via drop-out rate as function
   # of target mean parameter.
   if(scaN>1){
@@ -190,11 +190,11 @@ evalLogLikMuWindowZINB <- function(scaTheta,
     } else if(scaTarget==scaN){ vecindTransTerms <- seq(1,scaN-1)
     } else { vecindTransTerms <- c(seq(1,scaTarget-1),seq(scaTarget+1,scaN)) }
     scaLogLikTrans <- evalLogLikZINB_comp( vecCounts=rep(vecCounts[scaTarget],length(vecindTransTerms)),
-      vecMu=vecMu[vecindTransTerms]*vecNormConst[scaTarget],
-      vecDisp=vecDisp[vecindTransTerms], 
-      vecPi=rep(vecPi[scaTarget],length(vecindTransTerms)),
-      vecboolNotZero=rep(vecboolNotZero[scaTarget],length(vecindTransTerms)), 
-      vecboolZero=rep(vecboolZero[scaTarget],length(vecindTransTerms)) )
+                                           vecMu=vecMu[vecindTransTerms]*vecNormConst[scaTarget],
+                                           vecDisp=vecDisp[vecindTransTerms], 
+                                           vecPi=rep(vecPi[scaTarget],length(vecindTransTerms)),
+                                           vecboolNotZero=rep(vecboolNotZero[scaTarget],length(vecindTransTerms)), 
+                                           vecboolZero=rep(vecboolZero[scaTarget],length(vecindTransTerms)) )
   } else {
     scaLogLikTrans<- 0
   }
@@ -254,14 +254,14 @@ evalLogLikMuWindowZINB <- function(scaTheta,
 #' @export
 
 evalLogLikMuVecWindowsZINB <- function(vecTheta,
-  vecCounts,
-  vecNormConst,
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  vecboolNotZero,
-  vecboolZero,
-  scaWindowRadius){ 
+                                       vecCounts,
+                                       vecNormConst,
+                                       vecDisp,
+                                       matDropoutLinModel,
+                                       vecPiConstPredictors,
+                                       vecboolNotZero,
+                                       vecboolZero,
+                                       scaWindowRadius){ 
   
   # (I) Linker functions
   vecMu <- exp(vecTheta)
@@ -272,8 +272,8 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
   
   # (II) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-    vecMu=vecMu,
-    vecPiConstPredictors=vecPiConstPredictors )
+                                       vecMu=vecMu,
+                                       vecPiConstPredictors=vecPiConstPredictors )
   
   # (III) Evaluate loglikelihood (this is the cost function) 
   scaLogLik <- evalLogLikSmoothZINB_comp(
@@ -344,16 +344,16 @@ evalLogLikMuVecWindowsZINB <- function(vecTheta,
 #' @export
 
 evalLogLikMuImpulseZINB <- function(vecTheta,
-  vecCounts,
-  vecNormConst,
-  vecTimepoints,
-  vecindTimepointAssign, 
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  vecboolNotZero, 
-  vecboolZero,
-  scaWindowRadius=NULL){  
+                                    vecCounts,
+                                    vecNormConst,
+                                    vecTimepoints,
+                                    vecindTimepointAssign, 
+                                    vecDisp,
+                                    matDropoutLinModel,
+                                    vecPiConstPredictors,
+                                    vecboolNotZero, 
+                                    vecboolZero,
+                                    scaWindowRadius=NULL){  
   
   # (I) Linker functions
   # Log linker for amplitudes
@@ -365,18 +365,18 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
   
   # (II) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-    vecMu=vecImpulseValue,
-    vecPiConstPredictors=vecPiConstPredictors )
+                                       vecMu=vecImpulseValue,
+                                       vecPiConstPredictors=vecPiConstPredictors )
   
   # (III) Evaluate loglikelihood of estimate
   scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
-    vecMu=vecImpulseValue,
-    vecNormConst=vecNormConst,
-    vecDisp=vecDisp, 
-    vecPi=vecPi,
-    vecboolNotZero=vecboolNotZero, 
-    vecboolZero=vecboolZero,
-    scaWindowRadius=scaWindowRadius )
+                              vecMu=vecImpulseValue,
+                              vecNormConst=vecNormConst,
+                              vecDisp=vecDisp, 
+                              vecPi=vecPi,
+                              vecboolNotZero=vecboolNotZero, 
+                              vecboolZero=vecboolZero,
+                              scaWindowRadius=scaWindowRadius )
   
   return(scaLogLik)
 }
@@ -427,13 +427,13 @@ evalLogLikMuImpulseZINB <- function(vecTheta,
 #' @export
 
 fitMuConstZINB <- function(vecCounts,
-  scaMuGuess,
-  vecDisp,
-  vecNormConst,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  scaWindowRadius){ 
-
+                           scaMuGuess,
+                           vecDisp,
+                           vecNormConst,
+                           matDropoutLinModel,
+                           vecPiConstPredictors,
+                           scaWindowRadius){ 
+  
   # Numerical maximum likelihood estimator
   fitMu <- tryCatch({
     unlist(optim(
@@ -451,7 +451,7 @@ fitMuConstZINB <- function(vecCounts,
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuConstZINB().",
-      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(paste0("scaMeanGuess ",scaMeanGuess))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
@@ -460,7 +460,7 @@ fitMuConstZINB <- function(vecCounts,
     print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
     lsErrorCausingGene <- list(vecCounts, vecDisp, matDropoutLinModel, vecNormConst)
     names(lsErrorCausingGene) <- c("vecCounts", "vecDisp",
-      "matDropoutLinModel", "vecNormConst")
+                                   "matDropoutLinModel", "vecNormConst")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -473,7 +473,7 @@ fitMuConstZINB <- function(vecCounts,
   scaConvergence <- fitMu[2]
   
   return(list(scaMu=scaMu,
-    scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for sliding window mean model (single window)
@@ -526,13 +526,13 @@ fitMuConstZINB <- function(vecCounts,
 #' @export
 
 fitMuWindowZINB <- function(vecCounts,
-  vecMu,
-  vecDisp,
-  vecNormConst,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  scaTarget,
-  scaWindowRadius=NULL ){ 
+                            vecMu,
+                            vecDisp,
+                            vecNormConst,
+                            matDropoutLinModel,
+                            vecPiConstPredictors,
+                            scaTarget,
+                            scaWindowRadius=NULL ){ 
   
   fitMu <- tryCatch({
     unlist(optim(
@@ -552,7 +552,7 @@ fitMuWindowZINB <- function(vecCounts,
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuWindowZINB().",
-      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(paste0("log(vecMu[scaTarget]) ",log(vecMu[scaTarget])))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecMu", paste(vecMu,collapse=" ")))
@@ -563,7 +563,7 @@ fitMuWindowZINB <- function(vecCounts,
     print(paste0("scaTarget ", paste(scaTarget,collapse=" ")))
     lsErrorCausingGene <- list(vecCounts, vecDisp, matDropoutLinModel, vecNormConst)
     names(lsErrorCausingGene) <- c("vecCounts", "vecDisp",
-      "matDropoutLinModel", "vecNormConst")
+                                   "matDropoutLinModel", "vecNormConst")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -576,7 +576,7 @@ fitMuWindowZINB <- function(vecCounts,
   scaConvergence <- fitMu[2]
   
   return(list(scaMu=scaMu,
-    scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for sliding window mean model (all windows)
@@ -627,12 +627,12 @@ fitMuWindowZINB <- function(vecCounts,
 #' @export
 
 fitMuVecWindowsZINB<- function(vecCounts,
-  vecMuGuess,
-  vecDisp,
-  vecNormConst,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  scaWindowRadius=NULL ){
+                               vecMuGuess,
+                               vecDisp,
+                               vecNormConst,
+                               matDropoutLinModel,
+                               vecPiConstPredictors,
+                               scaWindowRadius=NULL ){
   
   fitMu <- tryCatch({
     unlist(optim(
@@ -650,7 +650,7 @@ fitMuVecWindowsZINB<- function(vecCounts,
       control=list(maxit=1000,fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitMuWindowZINB().",
-      " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(paste0("log(vecMuGuess) ",log(vecMuGuess)))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecDisp ", paste(vecDisp,collapse=" ")))
@@ -658,9 +658,9 @@ fitMuVecWindowsZINB<- function(vecCounts,
     print(matDropoutLinModel)
     print(paste0("vecNormConst ", paste(vecNormConst,collapse=" ")))
     lsErrorCausingGene <- list(vecCounts, vecMuGuess, vecDisp, 
-      matDropoutLinModel, vecNormConst)
+                               matDropoutLinModel, vecNormConst)
     names(lsErrorCausingGene) <- c("vecCounts", "vecMuGuess","vecDisp",
-      "matDropoutLinModel", "vecNormConst")
+                                   "matDropoutLinModel", "vecNormConst")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -673,7 +673,7 @@ fitMuVecWindowsZINB<- function(vecCounts,
   scaConvergence <- fitMu[length(vecMu)+1]
   
   return(list(vecMu=vecMu,
-    scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for
@@ -736,18 +736,18 @@ fitMuVecWindowsZINB<- function(vecCounts,
 #' @export
 
 fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
-  vecCounts,
-  vecTimepoints,
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  vecNormConst,
-  vecindTimepointAssign,
-  scaWindowRadius=NULL,
-  MAXIT=1000,
-  RELTOL=sqrt(.Machine$double.eps),
-  trace=0,
-  REPORT=10 ){
+                                    vecCounts,
+                                    vecTimepoints,
+                                    vecDisp,
+                                    matDropoutLinModel,
+                                    vecPiConstPredictors,
+                                    vecNormConst,
+                                    vecindTimepointAssign,
+                                    scaWindowRadius=NULL,
+                                    MAXIT=1000,
+                                    RELTOL=sqrt(.Machine$double.eps),
+                                    trace=0,
+                                    REPORT=10 ){
   
   fitDispImpulse <- tryCatch({
     unlist( optim(
@@ -764,14 +764,14 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
       scaWindowRadius=scaWindowRadius,
       method="BFGS", 
       control=list(maxit=MAXIT,
-        reltol=RELTOL,
-        fnscale=-1, 
-        trace=trace, 
-        REPORT=REPORT)
+                   reltol=RELTOL,
+                   fnscale=-1, 
+                   trace=trace, 
+                   REPORT=REPORT)
     )[c("par","value","convergence")] )
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
-      " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
+                 " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
     print(paste0("vecImpulseParamGuess ", paste(vecImpulseParamGuess,collapse=" ")))
     print(paste0("vecCounts ", paste(vecCounts,collapse=" ")))
     print(paste0("vecTimepoints ", paste(vecTimepoints,collapse=" ")))
@@ -782,9 +782,9 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
     print(paste0("scaWindowRadius", paste(scaWindowRadius,collapse=" ")))
     print(paste0("MAXIT ", MAXIT))
     lsErrorCausingGene <- list(, vecImpulseParamGuess, vecCounts, vecTimepoints, 
-      vecDisp, vecNormConst, vecindTimepointAssign, scaWindowRadius, MAXIT)
+                               vecDisp, vecNormConst, vecindTimepointAssign, scaWindowRadius, MAXIT)
     names(lsErrorCausingGene) <- c("vecImpulseParamGuess", "vecCounts", "vecTimepoints",
-      "vecDisp", "vecNormConst", "vecindTimepointAssign", "scaWindowRadius", "MAXIT")
+                                   "vecDisp", "vecNormConst", "vecindTimepointAssign", "scaWindowRadius", "MAXIT")
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
@@ -795,8 +795,8 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
   scaConvergence <- fitDispImpulse[8]
   
   return( list(vecImpulseParam=vecImpulseParam,
-    scaLL=scaLL,
-    scaConvergence=scaConvergence) )
+               scaLL=scaLL,
+               scaConvergence=scaConvergence) )
 }
 
 #' Numerical fitting wrapper for
@@ -831,7 +831,7 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #'      \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
 #'    of a gene are simultaneously estiamted as a vector with BFGS
 #'    in windows mode.
-#'      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'      \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'    for BFGS estimation of impulse model with optim (termination criterium).
 #'      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
 #'    change in objective function for BFGS estimation of impulse 
@@ -865,15 +865,15 @@ fitMuImpulseOneInitZINB <- function(vecImpulseParamGuess,
 #' @export
 
 fitMuImpulseZINB <- function(vecCounts,
-  vecImpulseParamGuess,
-  lsMuModelGlobal,
-  vecDisp,
-  matDropoutLinModel,
-  vecPiConstPredictors,
-  vecNormConst,
-  scaWindowRadius=NULL,
-  MAXIT=1000,
-  RELTOL=sqrt(.Machine$double.eps) ){
+                             vecImpulseParamGuess,
+                             lsMuModelGlobal,
+                             vecDisp,
+                             matDropoutLinModel,
+                             vecPiConstPredictors,
+                             vecNormConst,
+                             scaWindowRadius=NULL,
+                             MAXIT=1000,
+                             RELTOL=sqrt(.Machine$double.eps) ){
   
   # Set reporter parameters for optim BFGS optimisation
   trace <- 0 # Report typ: 0 none, 2 yes
@@ -892,21 +892,21 @@ fitMuImpulseZINB <- function(vecCounts,
   # (II) Initialise impulse model
   # Decompress parameters for initialisation
   vecMuParam <- decompressMeansByGene( vecMuModel=vecImpulseParamGuess,
-    lsMuModelGlobal=lsMuModelGlobal,
-    vecInterval=NULL )
+                                       lsMuModelGlobal=lsMuModelGlobal,
+                                       vecInterval=NULL )
   vecPiParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
-    vecMu=vecMuParam,
-    vecPiConstPredictors=vecPiConstPredictors )
+                                             vecMu=vecMuParam,
+                                             vecPiConstPredictors=vecPiConstPredictors )
   # The previous parameter estiamte is kept as a reference and
   # used as an initialisation
   # Compute initialisations for peak and valley
   lsParamGuesses <- initialiseImpulseParametes(vecCounts=vecCounts,
-    lsMuModelGlobal=lsMuModelGlobal,
-    vecMu=vecMuParam,
-    vecDisp=vecDisp,
-    vecDrop=vecPiParam,
-    vecNormConst=vecNormConst,
-    scaWindowRadius=scaWindowRadius)
+                                               lsMuModelGlobal=lsMuModelGlobal,
+                                               vecMu=vecMuParam,
+                                               vecDisp=vecDisp,
+                                               vecDrop=vecPiParam,
+                                               vecNormConst=vecNormConst,
+                                               scaWindowRadius=scaWindowRadius)
   vecParamGuessPeak <- lsParamGuesses$peak
   vecParamGuessValley <- lsParamGuesses$valley
   
@@ -982,12 +982,12 @@ fitMuImpulseZINB <- function(vecCounts,
     })
     vecPiOld <- 1/(1+exp(-vecLinModelOutOld))
     scaLLOld <- evalLogLikGene(vecCounts=vecCounts,
-      vecMu=vecImpulseValueOld*vecNormConst,
-      vecDispEst=vecDisp, 
-      vecPi=vecPiOld,
-      vecboolNotZero=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero= !is.na(vecCounts) & vecCounts==0,
-      scaWindowRadius=scaWindowRadius)
+                               vecMu=vecImpulseValueOld*vecNormConst,
+                               vecDispEst=vecDisp, 
+                               vecPi=vecPiOld,
+                               vecboolNotZero=!is.na(vecCounts) & vecCounts>0, 
+                               vecboolZero= !is.na(vecCounts) & vecCounts==0,
+                               scaWindowRadius=scaWindowRadius)
     
     # report all new parame
     vecLinModelOut <- sapply(seq(1, length(vecCounts)), function(cell){
@@ -995,18 +995,18 @@ fitMuImpulseZINB <- function(vecCounts,
     })
     vecDropout <- 1/(1+exp(-vecLinModelOut))
     scaLLRef <- evalLogLikGene(vecCounts=vecCounts,
-      vecMu=vecImpulseValue*vecNormConst,
-      vecDispEst=vecDisp, 
-      vecPi=vecDropout,
-      vecboolNotZero=!is.na(vecCounts) & vecCounts>0, 
-      vecboolZero= !is.na(vecCounts) & vecCounts==0,
-      scaWindowRadius=scaWindowRadius)
+                               vecMu=vecImpulseValue*vecNormConst,
+                               vecDispEst=vecDisp, 
+                               vecPi=vecDropout,
+                               vecboolNotZero=!is.na(vecCounts) & vecCounts>0, 
+                               vecboolZero= !is.na(vecCounts) & vecCounts==0,
+                               scaWindowRadius=scaWindowRadius)
     print(paste0("Old:", scaLLOld, " ,New recomputed: ", 
-      scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
+                 scaLLRef, " ,New from optim: ", lsFitBest$scaLL))
   }
   
   return(list(vecImpulseParam=vecImpulseParam,
-    scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence))
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
@@ -1052,7 +1052,7 @@ fitMuImpulseZINB <- function(vecCounts,
 #'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
 #'        of a gene are simultaneously estiamted as a vector with BFGS
 #'        in windows mode.
-#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
+#'          \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'        for BFGS estimation of impulse model with optim (termination criterium).
 #'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
 #'        change in objective function for BFGS estimation of impulse 
@@ -1114,15 +1114,67 @@ fitMuImpulseZINB <- function(vecCounts,
 #' @export
 
 fitZINBMu <- function( matCountsProc,
-  vecNormConst,
-  lsMuModel,
-  lsDispModel,
-  lsDropModel,
-  scaWindowRadius ){
-
+                       vecNormConst,
+                       lsMuModel,
+                       lsDispModel,
+                       lsDropModel,
+                       scaWindowRadius ){
+  
   scaNumGenes <- dim(matCountsProc)[1]
   scaNumCells <- dim(matCountsProc)[2]
-  if(lsMuModel$lsMuModelGlobal$strMuModel=="windows"){
+  
+  if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
+    lsFitMu <- bplapply( seq(1,scaNumGenes), function(i){
+      
+      # Decompress parameters
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                           lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                           vecInterval=NULL)
+      
+      # Estimate constant mean parameter
+      fitMu <- fitMuConstZINB( vecCounts=matCountsProc[i,],
+                               scaMuGuess=lsMuModel$matMuModel[i,],
+                               vecDisp=vecDispParam,
+                               vecNormConst=vecNormConst,
+                               matDropoutLinModel=lsDropModel$matDropoutLinModel,
+                               vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+                               scaWindowRadius=scaWindowRadius )
+      return(fitMu)
+    })
+    matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$scaMu ))
+    vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
+  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
+    # Estimate mean parameter by cluster. No smoothing is used.
+    lsFitMu <- bplapply(seq(1,scaNumGenes), function(i){
+      
+      # Decompress parameters
+      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                           lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                           vecInterval=NULL)
+      
+      # Estimate mean parameters
+      fitMu <- lapply(unique(lsMuModel$lsMuModelGlobal$vecindClusterAssign), function(k){
+        vecInterval <- lsMuModel$lsMuModelGlobal$vecindClusterAssign==k
+        fitMuCluster <- fitMuConstZINB(
+          vecCounts=matCountsProc[i,vecInterval],
+          scaMuGuess=lsMuModel$matMuModel[i,k],
+          vecDisp=vecDispParam[vecInterval],
+          matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          vecNormConst=vecNormConst[vecInterval],
+          scaWindowRadius=NULL )
+        return(fitMuCluster)
+      })
+      vecMu <- sapply(fitMu, function(k) k$scaMu )
+      scaConvergence <- max(sapply(fitMu, function(k) k$scaConvergence ))
+      
+      return(list(vecMu=vecMu,
+                  scaConvergence=scaConvergence))
+    })
+    matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$vecMu ))
+    vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
+    
+  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="windows"){
     # Estimate mean parameter for each cell as ZINB model for cells within pseudotime
     # interval with cell density centred at target cell.
     # Note that this corresponds to maximising smoothed log likelihood but instead
@@ -1137,11 +1189,11 @@ fitZINBMu <- function( matCountsProc,
       
       # Decompress parameters
       vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
-        lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-        vecInterval=NULL )
+                                           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+                                           vecInterval=NULL )
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-        vecInterval=NULL)
+                                           lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                           vecInterval=NULL)
       
       if(lsMuModel$lsMuModelGlobal$boolVecWindowsAsBFGS){
         fitMu <- fitMuVecWindowsZINB(
@@ -1160,65 +1212,34 @@ fitZINBMu <- function( matCountsProc,
           scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
           vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
           fitMu <- fitMuWindowZINB(vecCounts=matCountsProc[i,vecInterval],
-            vecMu=vecMu[vecInterval],
-            vecDisp=vecDispParam[vecInterval],
-            vecNormConst=vecNormConst[vecInterval],
-            matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
-            vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-            scaTarget=match(j,vecInterval),
-            scaWindowRadius=scaWindowRadius )
+                                   vecMu=vecMu[vecInterval],
+                                   vecDisp=vecDispParam[vecInterval],
+                                   vecNormConst=vecNormConst[vecInterval],
+                                   matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
+                                   vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+                                   scaTarget=match(j,vecInterval),
+                                   scaWindowRadius=scaWindowRadius )
           # Update parameter vector for next step of coordinate ascent
           # within this mu vector estimation.
           vecMu[j] <- fitMu$scaMu
           if(fitMu$scaConvergence){ scaConvergence <- fitMu$scaConvergence }
         }
         fitMu <- list(vecMu=vecMu,
-          scaConvergence=scaConvergence)
+                      scaConvergence=scaConvergence)
       }
       return(fitMu)
     })
     matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$vecMu ))
     vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
     
-  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
-    # Estimate mean parameter by cluster. No smoothing is used.
-    lsFitMu <- bplapply(seq(1,scaNumGenes), function(i){
-      
-      # Decompress parameters
-      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-        vecInterval=NULL)
-      
-      # Estimate mean parameters
-      fitMu <- lapply(unique(lsMuModel$lsMuModelGlobal$vecindClusterAssign), function(k){
-        vecInterval <- lsMuModel$lsMuModelGlobal$vecindClusterAssign==k
-        fitMuCluster <- fitMuConstZINB(
-          vecCounts=matCountsProc[i,vecInterval],
-          scaMuGuess=lsMuModel$matMuModel[i,k],
-          vecDisp=vecDispParam[vecInterval],
-          matDropoutLinModel=lsDropModel$matDropoutLinModel[vecInterval,],
-          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-          vecNormConst=vecNormConst[vecInterval],
-          scaWindowRadius=NULL )
-        return(fitMuCluster)
-      })
-      vecMu <- sapply(fitMu, function(k) k$scaMu )
-      scaConvergence <- max(sapply(fitMu, function(k) k$scaConvergence ))
-
-      return(list(vecMu=vecMu,
-          scaConvergence=scaConvergence))
-    })
-    matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$vecMu ))
-    vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
-
   } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){
     
     lsFitMu <- bplapply(seq(1,scaNumGenes), function(i){
       
       # Decompress parameters
       vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-        vecInterval=NULL)
+                                           lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                           vecInterval=NULL)
       
       # Estimate mean parameters
       fitMu <- fitMuImpulseZINB(
@@ -1234,29 +1255,8 @@ fitZINBMu <- function( matCountsProc,
     })
     matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$vecImpulseParam ))
     vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
-    
-  } else if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
-    lsFitMu <- bplapply( seq(1,scaNumGenes), function(i){
-      
-      # Decompress parameters
-      vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-        vecInterval=NULL)
-      
-      # Estimate constant mean parameter
-      fitMu <- fitMuConstZINB( vecCounts=matCountsProc[i,],
-        scaMuGuess=lsMuModel$matMuModel[i,],
-        vecDisp=vecDispParam,
-        vecNormConst=vecNormConst,
-        matDropoutLinModel=lsDropModel$matDropoutLinModel,
-        vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-        scaWindowRadius=scaWindowRadius )
-      return(fitMu)
-    })
-    matMuModel <- do.call(rbind, lapply(lsFitMu, function(i) i$scaMu ))
-    vecConvergence <- sapply(lsFitMu,  function(i) i$scaConvergence)
   }
   
   return( list(matMuModel=matMuModel,
-    vecConvergence=vecConvergence) )
+               vecConvergence=vecConvergence) )
 }

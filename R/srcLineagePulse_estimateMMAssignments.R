@@ -49,6 +49,8 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
   # (I) Linker functions
   # Logistic linker for probability
   vecWeights <- 1/(1+exp(-vecTheta))
+  # Enforce normalisation
+  vecWeights <- vecWeights/sum(vecWeights)
   
   # Loop over models:
   scaNCells <- length(vecCounts)
@@ -73,7 +75,9 @@ fitMMAssignmentsCell <- function(vecCounts,
                                  matDispParam,
                                  matDropParam,
                                  scaNormConst,
-                                 vecWeights){
+                                 vecWeights,
+                                 MAXIT=1000,
+                                 RELTOL=10^(-8) ){
   
   # Project weights into logit space (linker) for fitting
   vecWeightInit <- -log(1/vecWeights-1)
@@ -90,7 +94,9 @@ fitMMAssignmentsCell <- function(vecCounts,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
-      control=list(maxit=1000,fnscale=-1) )[c("par","value","convergence")]
+      control=list(maxit=MAXIT,
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","value","convergence")]
   }, error=function(strErrorMsg){
     print(paste0("ERROR: Fitting zero-inflated negative binomial ",
                  "mixture model weights: fitMMAssignmentsCell(). ",
@@ -102,6 +108,8 @@ fitMMAssignmentsCell <- function(vecCounts,
   
   # Extract weights from linker space values
   vecWeights <- 1/(1+exp(-fitWeights$par))
+  # Enforce normalisation
+  vecWeights <- vecWeights/sum(vecWeights)
   
   return(list( vecWeights=vecWeights,
                scaLL=fitWeights$value,
@@ -114,7 +122,9 @@ estimateMMAssignmentsMatrix <- function(matCounts,
                                         lsDispModel,
                                         lsDropModel,
                                         vecNormConst,
-                                        matWeights ){
+                                        matWeights,
+                                        MAXIT_BFGS_MM=1000,
+                                        RELTOL_BFGS_MM=10^(-8 ) ){
   
   scaNumCells <- dim(matCounts)[2]
   scaNumMixtures <- dim(matWeights)[2]
@@ -142,7 +152,9 @@ estimateMMAssignmentsMatrix <- function(matCounts,
                                        matDispParam=matDispParam,
                                        matDropParam=matDropParam,
                                        scaNormConst=vecNormConst[j],
-                                       vecWeights=matWeights[j,])
+                                       vecWeights=matWeights[j,],
+                                       MAXIT=MAXIT_BFGS_MM,
+                                       RELTOL=RELTOL_BFGS_MM )
     return(fitWeights)
   })
   matWeightsToFit <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))

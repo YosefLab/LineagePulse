@@ -26,6 +26,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   # Minimim fractional liklihood increment necessary to
   # continue EM-iterations of assignment estimation.
   scaPrecEMAssignments <- 1-10^(-4)
+  # Numerical optmisation of impulse model hyperparameters
+  MAXIT_BFGS_MM <- 1000 # optim default is 1000
+  RELTOL_BFGS_MM <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
+  # Lowering RELTOL_BFGS_IMPULSE gives drastic run time improvements.
+  # Set to 10^(-4) to maintain sensible fits without running far into saturation
+  # in the objective (loglikelihood).
   ####################################################
   
   scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
@@ -60,10 +66,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                "in ", round(tm_cycle["elapsed"]/60,2)," min."))
   
   ### (B) EM-like estimation cycle: fit mixture model
-  if(boolVerbose) print(paste0("### b) EM-like iteration: Fit mixture assignments."))
+  if(boolVerbose) print(paste0("### b) EM-like iteration: Fit mixture model"))
   
   # (I) Initialise estimation
-  if(boolVerbose) print("Initialise mixture assignments.")
   # Initialise expression models as null model estimate
   lsMuModelFull <- lsMuModelRed
   lsDispModelFull <- lsDispModelRed
@@ -75,6 +80,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
     matWeights[!is.na(objectLineagePulse@vecFixedAssignments),] <- 0
     matWeights[!is.na(objectLineagePulse@vecFixedAssignments),objectLineagePulse@vecFixedAssignments[!is.na(objectLineagePulse@vecFixedAssignments)]] <- 1
   }
+  # Set expression models to NULL
+  lsMuModelFull <- NULL
+  lsDispModelFull <- NULL
   
   # (II) Estimation iteration on full model
   # Set iteration reporters
@@ -96,11 +104,13 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                   scaWindowRadius=NULL,
                                   boolVecWindowsAsBFGS=FALSE,
                                   lsDropModel=lsDropModel,
+                                  matMuModelInit=lsMuModelFull$matMuModel,
+                                  matDispModelInit=lsDispModelFull$matDispModel,
                                   strMuModel="MM",
                                   strDispModel="constant",
                                   scaMaxEstimationCycles=1,
-                                  boolVerbose=boolSuperVerbose,
-                                  boolSuperVerbose=boolSuperVerbose)
+                                  boolVerbose=FALSE,
+                                  boolSuperVerbose=FALSE)
         lsMuModelFull <- lsZINBFitsFull$lsMuModel
         lsDispModelFull <- lsZINBFitsFull$lsDispModel
       })
@@ -121,8 +131,11 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                                     lsDispModel=lsDispModelFull,
                                                     lsDropModel=lsDropModel,
                                                     vecNormConst=objectLineagePulse@vecNormConst,
-                                                    matWeights=matWeights )
+                                                    matWeights=matWeights,
+                                                    MAXIT_BFGS_MM=MAXIT_BFGS_MM,
+                                                    RELTOL_BFGS_MM=RELTOL_BFGS_MM )
         matWeights <- lsWeightFits$matWeights
+        scaLogLikOld <- scaLogLikNew
         scaLogLikNew <- sum(lsWeightFits$vecLL, na.rm=TRUE)
       })
       if(boolSuperVerbose){
@@ -131,11 +144,14 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                      round(tm_estep["elapsed"]/60,2)," min."))
         if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
                                                                sum(lsWeightFits$vecConvergence !=0), " cases."))
+      } else if(boolVerbose){
+        print(paste0("# ",scaIter,". iteration complete: ",
+                     "loglikelihood of ", scaLogLikNew, " in ",
+                     round(tm_estep["elapsed"]/60,2)," min."))
       }
       
       vecEMLogLikModelFull[scaIter] <- scaLogLikNew
       scaIter <- scaIter+1
-      scaLogLikOld <- scaLogLikNew
     }
   })
   # Final model estimation to get MLE
@@ -149,11 +165,13 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                               scaWindowRadius=NULL,
                               boolVecWindowsAsBFGS=FALSE,
                               lsDropModel=lsDropModel,
+                              matMuModelInit=lsMuModelFull$matMuModel,
+                              matDispModelInit=lsDispModelFull$matDispModel,
                               strMuModel="MM",
                               strDispModel="constant",
                               scaMaxEstimationCycles=1,
-                              boolVerbose=boolSuperVerbose,
-                              boolSuperVerbose=boolSuperVerbose)
+                              boolVerbose=FALSE,
+                              boolSuperVerbose=FALSE)
     lsMuModelFull <- lsZINBFitsFull$lsMuModel
     lsDispModelFull <- lsZINBFitsFull$lsDispModel
     boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
@@ -161,13 +179,13 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   if(boolSuperVerbose){
     vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
     scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
-    print(paste0("# Final Model estimation complete: ",
-                 "loglikelihood of        ", scaLogLikTemp, " in ",
+    print(paste0("# Final M-step complete: ",
+                 "loglikelihood of ", scaLogLikTemp, " in ",
                  round(tm_finalmstep["elapsed"]/60,2)," min."))
     if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
   }
   
-  if(boolVerbose) print(paste0("### Finished fitting assignments ",
+  if(boolVerbose) print(paste0("### Finished fitting H1 mixture ZINB model ",
                                "in ", round(tm_cycle["elapsed"]/60,2)," min."))
   
   ### (C) Set degrees of freedom

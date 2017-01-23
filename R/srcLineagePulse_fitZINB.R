@@ -7,6 +7,8 @@ fitZINB <- function(matCounts,
                     scaWindowRadius=NULL,
                     boolVecWindowsAsBFGS=FALSE,
                     lsDropModel=NULL,
+                    matMuModelInit=NULL,
+                    matDispModelInit=NULL,
                     strMuModel,
                     strDispModel,
                     scaMaxEstimationCycles=20,
@@ -19,9 +21,9 @@ fitZINB <- function(matCounts,
   # continue EM-iterations:
   scaPrecEM <- 1-10^(-4)
   # Numerical optmisation of impulse model hyperparameters
-  MAXIT_BFGS_Impulse <- 1000 # optim default is 1000
-  RELTOL_BFGS_Impulse <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
-  # Lowering RELTOL_BFGS_IMPULSE gives drastic run time improvements.
+  MAXIT_BFGS_MuDisp <- 1000 # optim default is 1000
+  RELTOL_BFGS_MuDisp <- 10^(-4) # optim default is sqrt(.Machine$double.eps)=1e-8
+  # Lowering RELTOL_BFGS_MuDisp gives drastic run time improvements.
   # Set to 10^(-4) to maintain sensible fits without running far into saturation
   # in the objective (loglikelihood).
   # Numerical optmisation of dropout model hyperparameters
@@ -47,23 +49,27 @@ fitZINB <- function(matCounts,
                                            vecPseudotime=vecPseudotime,
                                            vecindClusterAssign=lsResultsClustering$Assignments,
                                            boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-                                           MAXIT_BFGS_Impulse=MAXIT_BFGS_Impulse,
-                                           RELTOL_BFGS_Impulse=RELTOL_BFGS_Impulse) )
-  vecMuModelInit <- apply(matCounts, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
-  vecMuModelInit[vecMuModelInit < .Machine$double.eps] <- .Machine$double.eps
-  if(strMuModel=="constant"){
-    lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
-  } else if(strMuModel=="impulse"){
-    lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
-    lsMuModel$matMuModel[,2:4] <- log(matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
-  } else if(strMuModel=="clusters"){
-    lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
-  } else if(strMuModel=="MM"){
-    lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=dim(matWeights)[2], byrow=FALSE)
-  } else  if(strMuModel=="windows"){
-    lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+                                           MAXIT_BFGS_MuDisp=MAXIT_BFGS_MuDisp,
+                                           RELTOL_BFGS_MuDisp=RELTOL_BFGS_MuDisp) )
+  if(is.null(matMuModelInit)){
+    vecMuModelInit <- apply(matCounts, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
+    vecMuModelInit[vecMuModelInit < .Machine$double.eps] <- .Machine$double.eps
+    if(strMuModel=="constant"){
+      lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+    } else if(strMuModel=="impulse"){
+      lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
+      lsMuModel$matMuModel[,2:4] <- log(matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+    } else if(strMuModel=="clusters"){
+      lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
+    } else if(strMuModel=="MM"){
+      lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=dim(matWeights)[2], byrow=FALSE)
+    } else  if(strMuModel=="windows"){
+      lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
+    } else {
+      stop(paste0("ERROR fitZINB(): strMuModel=", strMuModel, " not recognised."))
+    }
   } else {
-    stop(paste0("ERROR fitZINB(): strMuModel=", strMuModel, " not recognised."))
+    lsMuModel$matMuModel <- matMuModelInit
   }
   
   # b) Dispersion model
@@ -74,10 +80,14 @@ fitZINB <- function(matCounts,
                                                scaNumCells=scaNumCells,
                                                vecPseudotime=vecPseudotime,
                                                vecindClusterAssign=lsResultsClustering$Assignments) )
-  if(strDispModel=="constant"){
-    lsDispModel$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+  if(is.null(matDispModelInit)){
+    if(strDispModel=="constant"){
+      lsDispModel$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=1, byrow=FALSE)
+    } else {
+      stop(paste0("ERROR fitZINB(): strDispModel=", strDispModel, " not recognised."))
+    } 
   } else {
-    stop(paste0("ERROR fitZINB(): strDispModel=", strDispModel, " not recognised."))
+    lsDispModel$matDispModel <- matDispModelInit
   }
   
   # c) Drop-out model: Only if this is ot given.
@@ -117,8 +127,8 @@ fitZINB <- function(matCounts,
                                      scaWindowRadius=scaWindowRadius,
                                      matWeights=matWeights )
   if(boolVerbose){
-    print(paste0("#  .    Initialisation has  ",
-                 "log likelihood of             ", scaLogLikInitA))
+    print(paste0("#  .   Initialisation complete: ",
+                 "log likelihood of         ", scaLogLikInitA))
   }
   
   # Set iteration reporters
