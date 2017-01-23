@@ -70,7 +70,9 @@ evalLikZINB <- function(vecCounts,
     size=vecDisp[vecboolNotZero], 
     log=FALSE)
   # Compute likelihood of all data:
-  vecLik <- vecLikZeros + vecLikNonzeros
+  vecLik <- array(NA, length(vecCounts))
+  vecLik[vecboolZero] <- vecLikZeros 
+  vecLik[vecboolNotZero] <- vecLikNonzeros
   # Catch low likehood observations
   vecLik[vecLik < scaPrecLim] <- scaPrecLim
   
@@ -390,6 +392,70 @@ evalLogLikGene <- function(vecCounts,
   return(scaLogLik)
 }
 
+evalLogLikGeneMM <- function(vecCounts,
+                             vecMuModel,
+                             matDispParam,
+                             matDropParam,
+                             vecNormConst,
+                             matWeights,
+                             vecboolNotZero, 
+                             vecboolZero ){
+  
+  scaNCells <- length(vecCounts)
+  # Initialise sum of likelihoods, this is the mixture model sum under the log
+  vecLikSum <- array(0, scaNCells)
+  # Loop over models:
+  for(m in seq(1, dim(matWeights)[2])){
+    # Evaluate loglikelihood of observations of cell under current model
+    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
+                                vecMu=vecMuModel[m]*vecNormConst,
+                                vecDisp=matDispParam[,m], 
+                                vecPi=matDropParam[,m],
+                                vecboolNotZero=vecboolNotZero, 
+                                vecboolZero=vecboolZero )
+    vecLik[is.na(vecLik)] <- 0
+    vecLikSum <- vecLikSum + vecLik*matWeights[,m]
+  }
+  vecLogLik <- log(vecLikSum)
+  scaLogLik <- sum(vecLogLik, na.rm=TRUE)
+  
+  return(scaLogLik)
+}
+
+evalLogLikGeneMM_comp <- cmpfun(evalLogLikGeneMM)
+
+evalLogLikCellMM <- function(vecCounts,
+                             matMuModel,
+                             matDispParam,
+                             matDropParam,
+                             scaNormConst,
+                             vecWeights,
+                             vecboolNotZero, 
+                             vecboolZero ){
+  
+  scaNGenes <- length(vecCounts)
+  # Initialise sum of likelihoods, this is the mixture model sum under the log
+  vecLikSum <- array(0, scaNGenes)
+  # Loop over models:
+  for(m in seq(1, length(vecWeights))){
+    # Evaluate loglikelihood of observations of cell under current model
+    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
+                                vecMu=matMuModel[,m]*scaNormConst,
+                                vecDisp=matDispParam[,m], 
+                                vecPi=matDropParam[,m],
+                                vecboolNotZero=vecboolNotZero, 
+                                vecboolZero=vecboolZero )
+    vecLik[is.na(vecLik)] <- 0
+    vecLikSum <- vecLikSum + vecLik*vecWeights[m]
+  }
+  vecLogLik <- log(vecLikSum)
+  scaLogLik <- sum(vecLogLik, na.rm=TRUE)
+  
+  return(scaLogLik)
+}
+
+evalLogLikCellMM_comp <- cmpfun(evalLogLikCellMM)
+
 #' Wrapper for log likelihood of zero-inflated negative binomial model
 #' for a matrix of counts (parallelised).
 #' 
@@ -491,32 +557,29 @@ evalLogLikMatrix <- function(matCounts,
   scaLogLik <- sum(unlist(
     bplapply( seq(1,scaNGenes), function(i){
       if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
-        # Initialise sum of likelihoods, this is the mixture model sum under the log
-        vecLikSum <- array(0, scaNCells)
-        # Loop over models:
-        for(m in seq(1, dim(matWeights)[2])){
-          # Parameter decompression:
-          vecMuParam <- lsMuModel$matMuModel[,m]
-          vecPiParam <- decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
-                                                    vecMu=vecMuParam,
-                                                    vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-          if(lsDispModel$lsDispModelGlobal$strDispModel=="const"){
-            vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-                                                 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-                                                 vecInterval=NULL)
-          }
-          # Evaluate loglikelihood of observations of cell under current model
-          vecLik <- evalLikZINB_comp( vecCounts=matCounts[i,],
-                                      vecMu=vecMuParam*vecNormConst,
-                                      vecDisp=vecDispParam, 
-                                      vecPi=vecPiParam,
-                                      vecboolNotZero=vecboolNotZero, 
-                                      vecboolZero=vecboolZero )
-          
-          vecLikSum <- vecLikSum + vecLik*matWeights[,m]
+        
+        if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
+          vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                               lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                               vecInterval=NULL)
+          matDispParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecDispParam ))
+        } else {
+          stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", strDispModel, " not recognised."))
         }
-        vecLogLik <- log(vecLikSum)
-        scaLL <- sum(vecLogLik)
+        matDropParam <- do.call(cbind, lapply(lsMuModel$matMuModel[i,], function(mu_m){
+          decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
+                                                    vecMu=rep(mu_m,scaNCells),
+                                                    vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+        }))
+        
+        scaLL <- evalLogLikGeneMM(vecCounts=matCounts[i,],
+                                  vecMuModel=lsMuModel$matMuModel[i,],
+                                  matDispParam=matDispParam,
+                                  matDropParam=matDropParam,
+                                  vecNormCons=vecNormConst,
+                                  matWeights=matWeights,
+                                  vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                  vecboolZero= !is.na(vecCounts) & vecCounts==0 )
       } else {
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],

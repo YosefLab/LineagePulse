@@ -40,8 +40,8 @@
 evalLogLikWeightsMMZINB <- function(vecTheta,
                                     vecCounts,
                                     matMu,
-                                    matDisp,
-                                    matPi,
+                                    matDispParam,
+                                    matDropParam,
                                     scaNormConst,
                                     vecboolNotZero,
                                     vecboolZero){ 
@@ -51,22 +51,16 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
   vecWeights <- 1/(1+exp(-vecTheta))
   
   # Loop over models:
-  scaNCells <- length(vecCounts) 
-  # Initialise sum of likelihoods, this is the mixture model sum under the log
-  vecLikSum <- array(0, scaNCells)
-  for(m in seq(1, length(vecWeights))){
-    # Evaluate loglikelihood of observations of cell under current model
-    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=matMu[,m]*scaNormConst,
-                                vecDisp=matDisp[,m], 
-                                vecPi=matPi[,m],
-                                vecboolNotZero=vecboolNotZero, 
-                                vecboolZero=vecboolZero )
-    
-    vecLikSum <- vecLikSum + vecLik*vecWeights[m]
-  }
-  vecLogLik <- log(vecLikSum)
-  scaLogLik <- sum(vecLogLik)
+  scaNCells <- length(vecCounts)
+  
+  scaLogLik <- evalLogLikCellMM_comp(vecCounts=vecCounts,
+                                     matMuModel=matMu,
+                                     matDispParam=matDispParam,
+                                     matDropParam=matDropParam,
+                                     scaNormConst=scaNormConst,
+                                     vecWeights=vecWeights,
+                                     vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                     vecboolZero= !is.na(vecCounts) & vecCounts==0 )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
@@ -76,8 +70,9 @@ evalLogLikWeightsMMZINB_comp <- cmpfun(evalLogLikWeightsMMZINB)
 
 fitMMAssignmentsCell <- function(vecCounts,
                                  matMu,
-                                 matDisp,
-                                 matPi,
+                                 matDispParam,
+                                 matDropParam,
+                                 scaNormConst,
                                  vecWeights){
   
   # Project weights into logit space (linker) for fitting
@@ -86,12 +81,12 @@ fitMMAssignmentsCell <- function(vecCounts,
   fitWeights <- tryCatch({
     optim(    
       par=vecWeightInit,
-      fn=evalLogLikWeightsMMZINB,
+      fn=evalLogLikWeightsMMZINB_comp,
       vecCounts=vecCounts,
       matMu=matMu,
-      matDisp=matDisp,
-      matPi=matPi,
-      scaNormConst,
+      matDispParam=matDispParam,
+      matDropParam=matDropParam,
+      scaNormConst=scaNormConst,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) &vecCounts==0,
       method="BFGS",
@@ -118,8 +113,9 @@ estimateMMAssignmentsMatrix <- function(matCounts,
                                         lsMuModel,
                                         lsDispModel,
                                         lsDropModel,
+                                        vecNormConst,
                                         matWeights ){
-
+  
   scaNumCells <- dim(matCounts)[2]
   scaNumMixtures <- dim(matWeights)[2]
   
@@ -130,16 +126,23 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   # Parallelise weight estimation over cells
   lsFitsWeights <- bplapply( vecidxToFit, function(j){
     # Parameter decompression: Cell-specific
-    matPiParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
+    matDropParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
       decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
                                   vecMu=lsMuModel$matMuModel[,m],
                                   matPiConstPredictors=lsDropModel$matPiConstPredictors )
     }))
-    fitWeights <- estimateMMAssignmentsCell(vecCounts=matCounts[,j],
-                              matMu=lsMuModel$matMuModel,
-                              matDisp=lsDispModel$matDispModel,
-                              matPi=matPiParam,
-                              vecWeights=matWeights[j,])
+    if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
+      vecDispParam <- as.vector(lsDispModel$matDispModel)
+      matDispParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m) vecDispParam ))
+    } else {
+      stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
+    }
+    fitWeights <- fitMMAssignmentsCell(vecCounts=matCounts[,j],
+                                       matMu=lsMuModel$matMuModel,
+                                       matDispParam=matDispParam,
+                                       matDropParam=matDropParam,
+                                       scaNormConst=vecNormConst[j],
+                                       vecWeights=matWeights[j,])
     return(fitWeights)
   })
   matWeightsToFit <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))

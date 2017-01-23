@@ -81,79 +81,89 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   scaIter <- 1
   scaLogLikNew <- -Inf
   scaLogLikOld <- NA
+  vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
   
   tm_RSAcycle <- system.time({
     while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEMAssignments & scaIter <= scaMaxEstimationCyclesEMlike)){
       # M-like step: Estimate mixture model parameters
-      lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-                                vecNormConst=objectLineagePulse@vecNormConst,
-                                vecPseudotime=NULL,
-                                lsResultsClustering=NULL,
-                                matWeights=matWeights,
-                                matPiConstPredictors=NULL,
-                                scaWindowRadius=NULL,
-                                boolVecWindowsAsBFGS=FALSE,
-                                lsDropModel=lsDropModel,
-                                strMuModel="MM",
-                                strDispModel="constant",
-                                scaMaxEstimationCycles=1,
-                                boolVerbose=boolSuperVerbose,
-                                boolSuperVerbose=boolSuperVerbose)
-      lsMuModelFull <- lsZINBFitsFull$lsMuModel
-      lsDispModelFull <- lsZINBFitsFull$lsDispModel
+      tm_mstep <- system.time({
+        lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+                                  vecNormConst=objectLineagePulse@vecNormConst,
+                                  vecPseudotime=NULL,
+                                  lsResultsClustering=NULL,
+                                  matWeights=matWeights,
+                                  matPiConstPredictors=NULL,
+                                  scaWindowRadius=NULL,
+                                  boolVecWindowsAsBFGS=FALSE,
+                                  lsDropModel=lsDropModel,
+                                  strMuModel="MM",
+                                  strDispModel="constant",
+                                  scaMaxEstimationCycles=1,
+                                  boolVerbose=boolSuperVerbose,
+                                  boolSuperVerbose=boolSuperVerbose)
+        lsMuModelFull <- lsZINBFitsFull$lsMuModel
+        lsDispModelFull <- lsZINBFitsFull$lsDispModel
+      })
       if(boolSuperVerbose){
         vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
         scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
-        print(paste0("# ",scaIter,".   Model estimation complete: ",
-                     "loglikelihood of        ", scaLogLikTemp, " in ",
-                     round(tm_pi["elapsed"]/60,2)," min."))
+        print(paste0("# ",scaIter,".   M-step complete: ",
+                     "loglikelihood of ", scaLogLikTemp, " in ",
+                     round(tm_mstep["elapsed"]/60,2)," min."))
         if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
       }
       
       # E-like step: Estimation of mixture assignments
-      lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                                  vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
-                                                  lsMuModel=lsMuModelFull,
-                                                  lsDispModel=lsDispModelFull,
-                                                  lsDropModel=lsDropModel,
-                                                  matWeights=matWeights )
-      matWeights <- lsWeightFits$matWeights
-      scaLogLikTemp <- sum(lsWeightFits$vecLL)
+      tm_estep <- system.time({
+        lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                                    vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
+                                                    lsMuModel=lsMuModelFull,
+                                                    lsDispModel=lsDispModelFull,
+                                                    lsDropModel=lsDropModel,
+                                                    vecNormConst=objectLineagePulse@vecNormConst,
+                                                    matWeights=matWeights )
+        matWeights <- lsWeightFits$matWeights
+        scaLogLikTemp <- sum(lsWeightFits$vecLL, na.rm=TRUE)
+      })
       if(boolSuperVerbose){
-        print(paste0("# ",scaIter,".   Weights estimation complete: ",
-                     "loglikelihood of      ", scaLogLikTemp, " in ",
-                     round(tm_pi["elapsed"]/60,2)," min."))
+        print(paste0("# ",scaIter,".   E-step complete: ",
+                     "loglikelihood of ", scaLogLikTemp, " in ",
+                     round(tm_estep["elapsed"]/60,2)," min."))
         if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
                                                                sum(lsWeightFits$vecConvergence !=0), " cases."))
       }
       
+      vecEMLogLikModelFull[scaIter] <- scaLogLikTemp
       scaIter <- scaIter+1
       scaLogLikOld <- scaLogLikTemp
     }
   })
   # Final model estimation to get MLE
-  lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-                            vecNormConst=objectLineagePulse@vecNormConst,
-                            vecPseudotime=NULL,
-                            lsResultsClustering=NULL,
-                            matWeights=matWeights,
-                            matPiConstPredictors=NULL,
-                            scaWindowRadius=NULL,
-                            boolVecWindowsAsBFGS=FALSE,
-                            lsDropModel=lsDropModel,
-                            strMuModel="MM",
-                            strDispModel="constant",
-                            scaMaxEstimationCycles=1,
-                            boolVerbose=boolSuperVerbose,
-                            boolSuperVerbose=FALSE)
-  lsMuModelFull <- lsZINBFitsFull$lsMuModel
-  lsDispModelFull <- lsZINBFitsFull$lsDispModel
+  tm_finalmstep <- system.time({
+    lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+                              vecNormConst=objectLineagePulse@vecNormConst,
+                              vecPseudotime=NULL,
+                              lsResultsClustering=NULL,
+                              matWeights=matWeights,
+                              matPiConstPredictors=NULL,
+                              scaWindowRadius=NULL,
+                              boolVecWindowsAsBFGS=FALSE,
+                              lsDropModel=lsDropModel,
+                              strMuModel="MM",
+                              strDispModel="constant",
+                              scaMaxEstimationCycles=1,
+                              boolVerbose=boolSuperVerbose,
+                              boolSuperVerbose=FALSE)
+    lsMuModelFull <- lsZINBFitsFull$lsMuModel
+    lsDispModelFull <- lsZINBFitsFull$lsDispModel
+    boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
+  })
   if(boolSuperVerbose){
     vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
     scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
     print(paste0("# Final Model estimation complete: ",
                  "loglikelihood of        ", scaLogLikTemp, " in ",
-                 round(tm_pi["elapsed"]/60,2)," min."))
+                 round(tm_finalmstep["elapsed"]/60,2)," min."))
     if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
   }
   
@@ -192,8 +202,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                               scaKbyGeneH1=scaKbyGeneH1,
                               scaKbyGeneH0=scaKbyGeneH0 )
   
-  objectLineagePulselsMuModelH1         <- lsMuModelFull
-  objectLineagePulselsDispModelH1       <- lsDispModelFull
+  objectLineagePulse@lsMuModelH1        <- lsMuModelFull
+  objectLineagePulse@lsDispModelH1      <- lsDispModelFull
   objectLineagePulse@lsMuModelH0        <- lsMuModelRed
   objectLineagePulse@lsDispModelH0      <- lsDispModelRed
   objectLineagePulse@lsDropModel        <- lsDropModel

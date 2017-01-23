@@ -481,28 +481,21 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   # to avoid numerical errors:
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
   
-  # Loop over models:
-  scaNCells <- length(vecCounts) 
-  # Initialise sum of likelihoods, this is the mixture model sum under the log
-  vecLikSum <- array(0, scaNCells)
-  for(i in seq(1, length(vecMu))){
-    # (III) Compute drop-out rates
-    vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-                                         vecMu=rep(vecMu[i],scaNCells),
-                                         vecPiConstPredictors=vecPiConstPredictors )
-    
-    # (IV) Evaluate loglikelihood of estimate
-    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=vecMu[i]*vecNormConst,
-                                vecDisp=vecDisp, 
-                                vecPi=vecPi,
-                                vecboolNotZero=vecboolNotZero, 
-                                vecboolZero=vecboolZero )
-    
-    vecLikSum <- vecLikSum + vecLik*matWeights[i,]
-  }
-  vecLogLik <- log(vecLikSum)
-  scaLogLik <- sum(vecLogLik)
+  scaNCells <- length(vecCounts)
+  # Decompress parameters
+  matDropParam <- do.call(cbind, lapply(vecMu, function(mu_m){
+    decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                vecMu=rep(mu_m,scaNCells),
+                                vecPiConstPredictors=vecPiConstPredictors )
+  }))
+  scaLogLik <- evalLogLikGeneMM(vecCounts=vecCounts,
+                                vecMuModel=vecMu,
+                                matDispParam=matrix(scaDisp, scaNCells, length(vecMu)),
+                                matDropParam=matDropParam,
+                                vecNormCons=vecNormConst,
+                                matWeights=matWeights,
+                                vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                vecboolZero= !is.na(vecCounts) & vecCounts==0 )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
   return(scaLogLik)
@@ -539,7 +532,7 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-evalLogLikDispConstMuMMZINB_cmp <- cmpfun(evalLogLikDispConstMuMMZINB)
+evalLogLikDispConstMuMMZINB_comp <- cmpfun(evalLogLikDispConstMuMMZINB)
 
 #' Cost function zero-inflated negative binomial model for dispersion
 #' and mean co-estimation under constant dispersion and constant mean model

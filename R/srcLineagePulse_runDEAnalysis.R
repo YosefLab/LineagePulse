@@ -165,55 +165,91 @@ runDEAnalysis <- function( objectLineagePulse ){
   
   scaKbyGeneH1 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH1
   scaKbyGeneH0 <- objectLineagePulse@lsFitZINBReporters$scaKbyGeneH0
+  
+  scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
+  scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
   # (I) Compute log likelihoods
-  lsLL <- bplapply( seq(1,dim(objectLineagePulse@matCountsProc)[1]), function(i){
+  lsLL <- bplapply( seq(1,scaNGenes), function(i){
     vecCounts <- objectLineagePulse@matCountsProc[i,]
     vecboolNotZero <- !is.na(vecCounts) & vecCounts>0
     vecboolZero <- !is.na(vecCounts) & vecCounts==0
     
     # Decompress parameters by gene H0
     vecMuParamH0 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH0$matMuModel[i,],
-      lsMuModelGlobal=objectLineagePulse@lsMuModelH0$lsMuModelGlobal,
-      vecInterval=NULL )
+                                           lsMuModelGlobal=objectLineagePulse@lsMuModelH0$lsMuModelGlobal,
+                                           vecInterval=NULL )
     vecDispParamH0 <- decompressDispByGene( vecDispModel=objectLineagePulse@lsDispModelH0$matDispModel[i,],
-      lsDispModelGlobal=objectLineagePulse@lsDispModelH0$lsDispModelGlobal,
-      vecInterval=NULL )
+                                            lsDispModelGlobal=objectLineagePulse@lsDispModelH0$lsDispModelGlobal,
+                                            vecInterval=NULL )
     vecPiParamH0 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
-      vecMu=vecMuParamH0,
-      vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
-    
-    # Decompress parameters by gene H1
-    vecMuParamH1 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[i,],
-      lsMuModelGlobal=objectLineagePulse@lsMuModelH1$lsMuModelGlobal,
-      vecInterval=NULL )
-    vecDispParamH1 <- decompressDispByGene( vecDispModel=objectLineagePulse@lsDispModelH1$matDispModel[i,],
-      lsDispModelGlobal=objectLineagePulse@lsDispModelH1$lsDispModelGlobal,
-      vecInterval=NULL )
-    vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
-      vecMu=vecMuParamH1,
-      vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
+                                                 vecMu=vecMuParamH0,
+                                                 vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
     
     # Compute loglikelihoods
-    scaLogLikFull <- evalLogLikGene(vecCounts=vecCounts,
-      vecMu=vecMuParamH1,
-      vecNormConst=objectLineagePulse@vecNormConst,
-      vecDisp=vecDispParamH1, 
-      vecPi=vecPiParamH1,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=objectLineagePulse@scaWindowRadius)
-    
     scaLogLikRed <- evalLogLikGene(vecCounts=vecCounts,
-      vecMu=vecMuParamH0,
-      vecNormConst=objectLineagePulse@vecNormConst,
-      vecDisp=vecDispParamH0, 
-      vecPi=vecPiParamH0,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=objectLineagePulse@scaWindowRadius)
+                                   vecMu=vecMuParamH0,
+                                   vecNormConst=objectLineagePulse@vecNormConst,
+                                   vecDisp=vecDispParamH0, 
+                                   vecPi=vecPiParamH0,
+                                   vecboolNotZero=vecboolNotZero, 
+                                   vecboolZero=vecboolZero,
+                                   scaWindowRadius=objectLineagePulse@scaWindowRadius)
+    
+    # Compute LL of full for single or multi-assignment model
+    if(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$strMuModel != "MM"){
+      # Decompress parameters by gene H1
+      vecMuParamH1 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[i,],
+                                             lsMuModelGlobal=objectLineagePulse@lsMuModelH1$lsMuModelGlobal,
+                                             vecInterval=NULL )
+      vecDispParamH1 <- decompressDispByGene( vecDispModel=objectLineagePulse@lsDispModelH1$matDispModel[i,],
+                                              lsDispModelGlobal=objectLineagePulse@lsDispModelH1$lsDispModelGlobal,
+                                              vecInterval=NULL )
+      vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
+                                                   vecMu=vecMuParamH1,
+                                                   vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[i,] )
+      
+      # Compute loglikelihoods
+      scaLogLikFull <- evalLogLikGene(vecCounts=vecCounts,
+                                      vecMu=vecMuParamH1,
+                                      vecNormConst=objectLineagePulse@vecNormConst,
+                                      vecDisp=vecDispParamH1, 
+                                      vecPi=vecPiParamH1,
+                                      vecboolNotZero=vecboolNotZero, 
+                                      vecboolZero=vecboolZero,
+                                      scaWindowRadius=objectLineagePulse@scaWindowRadius)
+    } else{
+      # Initialise sum of likelihoods, this is the mixture model sum under the log
+      vecLikSum <- array(0, scaNCells)
+      # Loop over models:
+      for(m in seq(1, dim(objectLineagePulse@matWeights)[2])){
+        # Parameter decompression:
+        vecMuParam <- rep(lsMuModel$matMuModel[i,m],scaNCells)
+        vecPiParam <- decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
+                                                  vecMu=vecMuParam,
+                                                  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+        if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
+          vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                               lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                               vecInterval=NULL)
+        } else {
+          stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", strDispModel, " not recognised."))
+        }
+        # Evaluate loglikelihood of observations of cell under current model
+        vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
+                                    vecMu=vecMuParam*vecNormConst,
+                                    vecDisp=vecDispParam, 
+                                    vecPi=vecPiParam,
+                                    vecboolNotZero=vecboolNotZero, 
+                                    vecboolZero=vecboolZero )
+        
+        vecLikSum <- vecLikSum + vecLik*objectLineagePulse@matWeights[,m]
+      }
+      vecLogLik <- log(vecLikSum)
+      scaLogLikFull <- sum(vecLogLik)
+    }
     
     return(list( scaLogLikFull=scaLogLikFull,
-      scaLogLikRed=scaLogLikRed ))
+                 scaLogLikRed=scaLogLikRed ))
   })
   vecLogLikFull <- sapply(lsLL, function(LL_i) LL_i[["scaLogLikFull"]])
   vecLogLikRed <- sapply(lsLL, function(LL_i) LL_i[["scaLogLikRed"]])
