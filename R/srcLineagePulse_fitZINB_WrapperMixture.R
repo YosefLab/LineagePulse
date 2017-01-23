@@ -106,7 +106,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       })
       if(boolSuperVerbose){
         vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
-        scaLogLikTemp <- vecLogLikIter[length(vecLogLikIter)]
+        scaLogLikTemp <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
         print(paste0("# ",scaIter,".   M-step complete: ",
                      "loglikelihood of ", scaLogLikTemp, " in ",
                      round(tm_mstep["elapsed"]/60,2)," min."))
@@ -123,19 +123,19 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                                     vecNormConst=objectLineagePulse@vecNormConst,
                                                     matWeights=matWeights )
         matWeights <- lsWeightFits$matWeights
-        scaLogLikTemp <- sum(lsWeightFits$vecLL, na.rm=TRUE)
+        scaLogLikNew <- sum(lsWeightFits$vecLL, na.rm=TRUE)
       })
       if(boolSuperVerbose){
         print(paste0("# ",scaIter,".   E-step complete: ",
-                     "loglikelihood of ", scaLogLikTemp, " in ",
+                     "loglikelihood of ", scaLogLikNew, " in ",
                      round(tm_estep["elapsed"]/60,2)," min."))
         if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
                                                                sum(lsWeightFits$vecConvergence !=0), " cases."))
       }
       
-      vecEMLogLikModelFull[scaIter] <- scaLogLikTemp
+      vecEMLogLikModelFull[scaIter] <- scaLogLikNew
       scaIter <- scaIter+1
-      scaLogLikOld <- scaLogLikTemp
+      scaLogLikOld <- scaLogLikNew
     }
   })
   # Final model estimation to get MLE
@@ -153,7 +153,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                               strDispModel="constant",
                               scaMaxEstimationCycles=1,
                               boolVerbose=boolSuperVerbose,
-                              boolSuperVerbose=FALSE)
+                              boolSuperVerbose=boolSuperVerbose)
     lsMuModelFull <- lsZINBFitsFull$lsMuModel
     lsDispModelFull <- lsZINBFitsFull$lsDispModel
     boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel

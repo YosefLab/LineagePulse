@@ -74,7 +74,7 @@ evalLikZINB <- function(vecCounts,
   vecLik[vecboolZero] <- vecLikZeros 
   vecLik[vecboolNotZero] <- vecLikNonzeros
   # Catch low likehood observations
-  vecLik[vecLik < scaPrecLim] <- scaPrecLim
+  vecLik[vecLik < scaPrecLim] <- scaPrecLim #?
   
   # Return vector of likelihoods for weighting.
   return(vecLik)
@@ -572,7 +572,8 @@ evalLogLikMatrix <- function(matCounts,
                                                     vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
         }))
         
-        scaLL <- evalLogLikGeneMM(vecCounts=matCounts[i,],
+        vecCounts <- matCounts[i,]
+        scaLL <- evalLogLikGeneMM(vecCounts=vecCounts,
                                   vecMuModel=lsMuModel$matMuModel[i,],
                                   matDispParam=matDispParam,
                                   matDropParam=matDropParam,
