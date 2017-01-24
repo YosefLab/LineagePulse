@@ -77,7 +77,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   vecidxCellsForCentroids <- initialiseCentroidsFromCells(matCounts=objectLineagePulse@matCountsProc, 
                                                           scaN=scaNMixtures)
   # Add pseudo count to not generate error in optim in log space
-  lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]+0.01
+  lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]
+  lsMuModelFull$matMuModel[lsMuModelFull$matMuModel==0] <- 10^(-5)
   lsDispModelFull <- lsDispModelRed
   # Set weights to uniform distribution
   matWeights <- matrix(1/scaNMixtures, 
@@ -120,7 +121,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       })
       if(boolSuperVerbose){
         print(paste0("# ", scaIter,".   E-step complete: ",
-                     "loglikelihood of ", scaTemp, " in ",
+                     "loglikelihood of  ", scaTemp, " in ",
                      round(tm_estep["elapsed"]/60,2)," min."))
         if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
                                                                sum(lsWeightFits$vecConvergence !=0), " cases."))
@@ -134,11 +135,15 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         # Reinitialise one mixture component
         boolResetDropout <- TRUE
         # Get badly described cell:
-        # Don't chose minimum to not catch outlier cells
+        # Don't chose minimum to not catch outlier cells.
         vecidxMaxWeightsSort <- sort(apply(matWeights, 1, max), index.return=TRUE, decreasing=FALSE)$ix
         idxCellForCentroidsReset <- vecidxMaxWeightsSort[round(length(vecidxMaxWeightsSort)/5)]
+        vecCentroid <- objectLineagePulse@matCountsProc[,idxCellForCentroidsReset]
         # Add pseudo count to not generate error in optim in log space
-        lsMuModelFull$matMuModel[,which(vecboolMixtureDropped)[1]] <- objectLineagePulse@matCountsProc[,idxCellForCentroidsReset]+0.01
+        # Do not generate disadvantage through pseudocount for modeling
+        # of zeros for new centroid: Pseudocount in minimum modelled value.
+        vecCentroid[vecCentroid==0] <- min(lsMuModelFull$matMuModel)
+        lsMuModelFull$matMuModel[,which(vecboolMixtureDropped)[1]] <- vecCentroid
         # Compute new likelihood
         scaLogLikOld <- scaLogLikNew
         scaLogLikNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
@@ -149,8 +154,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                          matWeights=matWeights,
                                          scaWindowRadius=NULL )
         if(boolSuperVerbose){
-          print(paste0("# ", scaIter,".   Reset complete: ",
-                       "loglikelihood of  ", scaTemp, 
+          print(paste0("# ", scaIter,".   E-Reset complete: ",
+                       "loglikelihood of ", scaTemp, 
                        " (Mixture ", which(vecboolMixtureDropped)[1],")."))
         }
       }
@@ -183,7 +188,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
         if(boolSuperVerbose){
           print(paste0("# ",scaIter,".   M-step complete: ",
-                       "loglikelihood of ", scaLogLikNew, " in ",
+                       "loglikelihood of  ", scaLogLikNew, " in ",
                        round(tm_mstep["elapsed"]/60,2)," min."))
           if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
         } else if(boolVerbose){

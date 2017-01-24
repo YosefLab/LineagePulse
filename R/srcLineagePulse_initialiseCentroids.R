@@ -4,7 +4,8 @@ initialiseCentroidsFromCells <- function(matCounts,
   # Work on correlation-based distance
   matDist <- 1-cor(matCounts)
   
-  # Greedy: Iteratively select cell with maximal cumulative distance
+  # Greedy: Iteratively select cell with high cumulative distance
+  # Not maximal to avoid outlier cells as centroids.
   # to all other previously selected cells.
   # Scales linear in scaN.
   vecidxCells <- array(NA, scaN)
