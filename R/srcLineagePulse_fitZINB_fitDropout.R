@@ -53,8 +53,8 @@ evalLogLikPiZINB <- function(vecTheta,
   vecTheta[2] <- -exp(vecTheta[2])
   
   # (II) Prevent parameter shrinkage/explosion
-  vecTheta[vecTheta < -1/.Machine$double.eps] <- -1/.Machine$double.eps
-  vecTheta[vecTheta > 1/.Machine$double.eps] <- 1/.Machine$double.eps
+  vecTheta[vecTheta < -10^(10)] <- -10^(10)
+  vecTheta[vecTheta > 10^(10)] <- 10^(10)
   if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
 
   vecPiEst <- sapply(seq(1,dim(matPiPredictors)[1]), function(i){
@@ -279,8 +279,8 @@ fitPiZINB <- function( vecDropoutLinModel,
   vecLinModel <- unlist(lsLinModelFit["par"])
   vecLinModel[2] <- -exp(vecLinModel[2])
   # # Catch boundary of likelihood domain on parameter space
-  vecLinModel[vecLinModel < -1/.Machine$double.eps] <- -1/.Machine$double.eps
-  vecLinModel[vecLinModel > 1/.Machine$double.eps] <- 1/.Machine$double.eps
+  vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
+  vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
   if(vecLinModel[2] > -.Machine$double.eps){ vecLinModel[2] <- -.Machine$double.eps }
   
   if(boolError){

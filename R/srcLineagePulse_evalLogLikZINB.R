@@ -401,23 +401,16 @@ evalLogLikGeneMM <- function(vecCounts,
                              vecboolNotZero, 
                              vecboolZero ){
   
-  scaNCells <- length(vecCounts)
-  # Initialise sum of likelihoods, this is the mixture model sum under the log
-  vecLikSum <- array(0, scaNCells)
   # Loop over models:
-  for(m in seq(1, dim(matWeights)[2])){
-    # Evaluate loglikelihood of observations of cell under current model
-    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=vecMuModel[m]*vecNormConst,
-                                vecDisp=matDispParam[,m], 
-                                vecPi=matDropParam[,m],
-                                vecboolNotZero=vecboolNotZero, 
-                                vecboolZero=vecboolZero )
-    vecLik[is.na(vecLik)] <- 0
-    vecLikSum <- vecLikSum + vecLik*matWeights[,m]
-  }
-  vecLogLik <- log(vecLikSum)
-  scaLogLik <- sum(vecLogLik, na.rm=TRUE)
+  matLikSum <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
+    evalLikZINB_comp(vecCounts=vecCounts,
+                     vecMu=vecMuModel[m]*vecNormConst,
+                     vecDisp=matDispParam[,m], 
+                     vecPi=matDropParam[,m],
+                     vecboolNotZero=vecboolNotZero, 
+                     vecboolZero=vecboolZero ) *matWeights[,m]
+  }))
+  scaLogLik <- sum(log(apply(matLikSum,1,sum)), na.rm=TRUE)
   
   return(scaLogLik)
 }
@@ -437,19 +430,16 @@ evalLogLikCellMM <- function(vecCounts,
   # Initialise sum of likelihoods, this is the mixture model sum under the log
   vecLikSum <- array(0, scaNGenes)
   # Loop over models:
-  for(m in seq(1, length(vecWeights))){
+  matLikSum <- do.call(cbind, lapply(seq(1, length(vecWeights)), function(m){
     # Evaluate loglikelihood of observations of cell under current model
-    vecLik <- evalLikZINB_comp( vecCounts=vecCounts,
-                                vecMu=matMuModel[,m]*scaNormConst,
-                                vecDisp=matDispParam[,m], 
-                                vecPi=matDropParam[,m],
-                                vecboolNotZero=vecboolNotZero, 
-                                vecboolZero=vecboolZero )
-    vecLik[is.na(vecLik)] <- 0
-    vecLikSum <- vecLikSum + vecLik*vecWeights[m]
-  }
-  vecLogLik <- log(vecLikSum)
-  scaLogLik <- sum(vecLogLik, na.rm=TRUE)
+    evalLikZINB_comp(vecCounts=vecCounts,
+                     vecMu=matMuModel[,m]*scaNormConst,
+                     vecDisp=matDispParam[,m], 
+                     vecPi=matDropParam[,m],
+                     vecboolNotZero=vecboolNotZero, 
+                     vecboolZero=vecboolZero )*vecWeights[m]
+  }))
+  scaLogLik <- sum(log(apply(matLikSum,1,sum)), na.rm=TRUE)
   
   return(scaLogLik)
 }

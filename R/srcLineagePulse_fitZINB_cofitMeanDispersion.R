@@ -1028,10 +1028,10 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 }
 
 #' Numerical fitting wrapper for constant dispersion
-#' cluster-wise mean model
+#' mixture-model mean model
 #' 
 #' Fits single negative binomial mean and dispersion parameter numerically as 
-#' maximum likelihood estimators to a gene: Constant dispersion and cluster-wise
+#' maximum likelihood estimators to a gene: Constant dispersion and mixture-model
 #' mean model.
 #' Note that this cannot be performed with
 #' fitDispConstMuConstZINB for each cluster as the dispersion
@@ -1104,7 +1104,7 @@ fitDispConstMuMMZINB <- function(vecCounts,
                    reltol=RELTOL,
                    fnscale=-1) )[c("par","convergence")])
   }, error=function(strErrorMsg){
-    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuMMZINB().",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
     scaLLInit <- evalLogLikDispConstMuMMZINB_comp(
@@ -1663,7 +1663,28 @@ fitZINBMuDisp <- function( matCountsProc,
   
   # Nest mean models within dispersion models
   if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-    if(lsMuModel$lsMuModelGlobal$strMuModel=="windows" & 
+    if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
+      lsFitDispMu <- bplapply( seq(1,scaNumGenes), function(i){
+        
+        # Decompress parameters
+        # Don't need to decompress any
+        
+        # Estimate constant mean parameter
+        fitDispMu <- fitDispConstMuConstZINB( vecCounts=matCountsProc[i,],
+                                              scaDispGuess=lsDispModel$matDispModel[i,],
+                                              scaMuGuess=lsMuModel$matMuModel[i,],
+                                              vecNormConst=vecNormConst,
+                                              matDropoutLinModel=lsDropModel$matDropoutLinModel,
+                                              vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+                                              scaWindowRadius=scaWindowRadius,
+                                              MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+                                              RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
+        return(fitDispMu)
+      })
+      matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
+      matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaMu))
+      vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
+      } else if(lsMuModel$lsMuModelGlobal$strMuModel=="windows" & 
        lsMuModel$lsMuModelGlobal$boolVecWindowsAsBFGS){
       # The dispersion parameter co-estimation couples all LL
       # terms of a gene so that there is no computational 
@@ -1759,28 +1780,7 @@ fitZINBMuDisp <- function( matCountsProc,
       matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecImpulseParam))
       vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
       
-    } else if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
-      lsFitDispMu <- bplapply( seq(1,scaNumGenes), function(i){
-        
-        # Decompress parameters
-        # Don't need to decompress any
-        
-        # Estimate constant mean parameter
-        fitDispMu <- fitDispConstMuConstZINB( vecCounts=matCountsProc[i,],
-                                              scaDispGuess=lsDispModel$matDispModel[i,],
-                                              scaMuGuess=lsMuModel$matMuModel[i,],
-                                              vecNormConst=vecNormConst,
-                                              matDropoutLinModel=lsDropModel$matDropoutLinModel,
-                                              vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-                                              scaWindowRadius=scaWindowRadius,
-                                              MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-                                              RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
-        return(fitDispMu)
-      })
-      matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
-      matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaMu))
-      vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
-    }else {
+    } else {
       #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
       print(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
                    lsMuModel$lsMuModelGlobal$strMuModel, 

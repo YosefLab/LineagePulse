@@ -44,9 +44,13 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
                                     matDropParam,
                                     scaNormConst,
                                     vecboolNotZero,
-                                    vecboolZero){ 
+                                    vecboolZero){
   
-  # (I) Linker functions
+  # (I) Prevent parameter shrinkage/explosion
+  vecTheta[vecTheta < -log(10)*10] <- -log(10)*10
+  vecTheta[vecTheta > log(10)*10] <- log(10)*10
+  
+  # (II) Linker functions
   # Logistic linker for probability
   vecWeights <- 1/(1+exp(-vecTheta))
   # Enforce normalisation
@@ -92,7 +96,7 @@ fitMMAssignmentsCell <- function(vecCounts,
       matDropParam=matDropParam,
       scaNormConst=scaNormConst,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-      vecboolZero= !is.na(vecCounts) &vecCounts==0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
       method="BFGS",
       control=list(maxit=MAXIT,
                    reltol=RELTOL,
@@ -102,12 +106,22 @@ fitMMAssignmentsCell <- function(vecCounts,
                  "mixture model weights: fitMMAssignmentsCell(). ",
                  " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
     print(strErrorMsg)
+    print(paste0("vecWeightInit ", paste(vecWeightInit,collapse=" ")))
+    lsErrorCausingGene <- list(vecCounts=vecCounts,
+                               vecWeightInit=vecWeightInit,
+                               matMu=matMu, 
+                               matDispParam=matDispParam,
+                               scaNormConst=scaNormConst)
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
     stop(strErrorMsg)
   })
   
+  # Impose sensitivity bounds
+  vecWeightsInLogitSpace <- fitWeights$par
+  vecWeightsInLogitSpace[vecWeightsInLogitSpace < -log(10)*10] <- -log(10)*10
+  vecWeightsInLogitSpace[vecWeightsInLogitSpace > log(10)*10] <- log(10)*10
   # Extract weights from linker space values
-  vecWeights <- 1/(1+exp(-fitWeights$par))
+  vecWeights <- 1/(1+exp(-vecWeightsInLogitSpace))
   # Enforce normalisation
   vecWeights <- vecWeights/sum(vecWeights)
   
