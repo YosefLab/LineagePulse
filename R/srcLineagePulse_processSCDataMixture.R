@@ -98,6 +98,8 @@
 #' 
 #' @export
 processSCDataMixture <- function(matCounts,
+																 dfAnnotation,
+																 vecConfounders,
                                  scaNMixtures,
                                  vecFixedAssignments,
                                  matPiConstPredictors,
@@ -138,7 +140,31 @@ processSCDataMixture <- function(matCounts,
   checkNull(matCounts,"matCounts")
   checkCounts(matCounts,"matCounts")
   
-  # 2. matPiConstPredictors
+  # 2. dfAnnotation, vecConfounders
+  if(!is.null(dfAnnotation)){
+  	# Check that all cells are mentioned in dfAnnotation
+  	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
+  		stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+  	}
+  	# Check structure
+  	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
+  		stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+  	}
+  	if(!is.null(vecConfounders)){
+  		if(!all(vecConfounders %in% colnames(dfAnnotation))){
+  			stop(paste0("Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
+  		}
+  		if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
+  			stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfounders"))
+  		}
+  	}
+  } else {
+  	if(!is.null(vecConfounders)){
+  		stop(paste0("vecConfounders supplied but not dfAnnotation which carries batch structure."))
+  	}
+  }
+  
+  # 3. matPiConstPredictors
   if(!is.null(matPiConstPredictors)){
     checkNumeric(matPiConstPredictors,"matPiConstPredictors")
     if(!is.null(rownames(matCounts))){
@@ -154,7 +180,7 @@ processSCDataMixture <- function(matCounts,
     }
   }
   
-  # 3. vecNormConstExternal
+  # 4. vecNormConstExternal
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecNormConstExternal,"vecNormConstExternal")
     if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
@@ -162,17 +188,17 @@ processSCDataMixture <- function(matCounts,
     }
   }
   
-  # 4. scaMaxEstimationCyclesEMlike
+  # 5. scaMaxEstimationCyclesEMlike
   checkNumeric(scaMaxEstimationCyclesEMlike, "scaMaxEstimationCyclesEMlike")
   
-  # 5. scaMaxEstimationCyclesDropModel
+  # 6. scaMaxEstimationCyclesDropModel
   checkNumeric(scaMaxEstimationCyclesDropModel, "scaMaxEstimationCyclesDropModel")
   
-  # 6. scaNMixtures
+  # 7. scaNMixtures
   checkNull(scaNMixtures, "scaNMixtures")
   checkNumeric(scaNMixtures, "scaNMixtures")
   
-  # 7. vecFixedAssignments
+  # 8. vecFixedAssignments
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecFixedAssignments, "vecFixedAssignments")
     if(!all(colnames(matCounts) %in% names(vecFixedAssignments))){
@@ -197,10 +223,12 @@ processSCDataMixture <- function(matCounts,
     rownames(matCounts) <- paste0("Gene_", seq(1,nrow(matCounts)))
     rownames(matPiConstPredictors) <- rownames(matCounts)
   }
+  matCountsProc <- matCounts[,dfAnnotation$cell]
   # Remove all zero or NA genes/cells
-  vecidxGenes <- apply(matCounts, 1, function(gene) any(gene>0 & is.finite(gene) & !is.na(gene)) )
-  vecidxCells <- apply(matCounts, 2, function(cell) any(cell>0 & is.finite(cell) & !is.na(cell)) )
-  matCountsProc <- matCounts[vecidxGenes,vecidxCells]
+  vecidxGenes <- apply(matCountsProc, 1, function(gene) any(gene>0 & is.finite(gene) & !is.na(gene)) )
+  vecidxCells <- apply(matCountsProc, 2, function(cell) any(cell>0 & is.finite(cell) & !is.na(cell)) )
+  dfAnnotationProc <- dfAnnotation[vecidxCells,]
+  matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Keep target normalisation constants
   if(!is.null(vecNormConstExternal)){
     vecNormConstExternalProc <- vecNormConstExternal[colnames(matCountsProc)]
@@ -214,7 +242,6 @@ processSCDataMixture <- function(matCounts,
     vecFixedAssignmentsProc <- NULL
   }
   
-  
   # Print summary of processing
   print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
   print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
@@ -223,7 +250,7 @@ processSCDataMixture <- function(matCounts,
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
   
   objectLineagePulse <- new('LineagePulseObject',
-                            dfAnnotationProc    = NULL,
+                            dfAnnotationProc    = dfAnnotationProc,
                             dfResults           = NULL,
                             lsDispModelH0       = NULL,
                             lsDispModelH1       = NULL,
@@ -232,11 +259,11 @@ processSCDataMixture <- function(matCounts,
                             lsMuModelH1         = NULL,
                             lsMuModelH0         = NULL,
                             matCountsProc       = matCountsProc,
-                            vecPseudotimeProc   = NULL,
                             matWeights          = NULL,
                             scaWindowRadius     = NULL,
                             strReport           = NULL,
                             vecAllGenes         = rownames(matCounts),
+  													vecConfounders      = vecConfounders,
                             vecFixedAssignments = vecFixedAssignmentsProc,
                             vecNormConst        = NULL )
   

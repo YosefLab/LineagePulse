@@ -93,9 +93,10 @@
 #' @export
 
 processSCData <- function(matCounts,
-                          matPiConstPredictors,
+                          dfAnnotation,
+													vecConfounders,
+													matPiConstPredictors,
                           vecNormConstExternal,
-                          vecPseudotime,
                           strMuModel,
                           strDispModel,
                           scaWindowRadius,
@@ -134,7 +135,31 @@ processSCData <- function(matCounts,
   checkNull(matCounts,"matCounts")
   checkCounts(matCounts,"matCounts")
   
-  # 2. matPiConstPredictors
+  # 2. dfAnnotation, vecConfounders
+  if(!is.null(dfAnnotation)){
+  	# Check that all cells are mentioned in dfAnnotation
+  	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
+  		stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+  	}
+  	# Check structure
+  	checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+  	checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+  	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
+  		stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+  	}
+  	if(!is.null(vecConfounders)){
+  		if(!all(vecConfounders %in% colnames(dfAnnotation))){
+  			stop(paste0("Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
+  		}
+  		if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
+  			stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfounders"))
+  		}
+  	}
+  } else {
+  	stop(paste0("Supply dfAnnotation."))
+  }
+  
+  # 3. matPiConstPredictors
   if(!is.null(matPiConstPredictors)){
     checkNumeric(matPiConstPredictors,"matPiConstPredictors")
     if(!is.null(rownames(matCounts))){
@@ -150,19 +175,12 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 3. vecNormConstExternal
+  # 4. vecNormConstExternal
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecNormConstExternal,"vecNormConstExternal")
     if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
       stop("ERROR: Not all cells in matCounts are given in vecNormConstExternal")
     }
-  }
-  
-  # 4. vecPseudotime
-  checkNull(vecPseudotime,"vecPseudotime")
-  checkNumeric(vecPseudotime,"vecPseudotime")
-  if(!all(names(vecPseudotime) %in% colnames(matCounts))){
-    stop("ERROR: Not all cells in vecPseudotime are given matCounts.")
   }
   
   # (II) Check settings
@@ -246,13 +264,15 @@ processSCData <- function(matCounts,
     rownames(matPiConstPredictors) <- rownames(matCounts)
   }
   # Take out cells with NA pseudotime coordinate
-  vecidxPT <- !is.na(vecPseudotime)
-  vecPseudotimeProc <- sort(vecPseudotime[vecidxPT])
-  matCountsProc <- matCounts[,names(vecPseudotimeProc)]
+  dfAnnotationProc <- dfAnnotation[!is.na(dfAnnotation$pseudotime),]
+  vecidxPTsort <- sort(dfAnnotationProc$pseudotime[vecidxPTnotNA],
+  								 decreasing=FALSE, index.return=TRUE)$ix
+  dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
+  matCountsProc <- matCounts[,dfAnnotationProc$cell]
   # Remove all zero or NA genes/cells
   vecidxGenes <- apply(matCountsProc, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
   vecidxCells <- apply(matCountsProc, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
-  vecPseudotimeProc <- vecPseudotimeProc[vecidxCells]
+  dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Reduce data set to small run size if required.
   if(!is.null(scaSmallRun)){
@@ -278,7 +298,7 @@ processSCData <- function(matCounts,
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
   
   objectLineagePulse <- new('LineagePulseObject',
-                            dfAnnotationProc    = NULL,
+                            dfAnnotationProc    = dfAnnotationProc,
                             dfResults           = NULL,
                             lsDispModelH0       = NULL,
                             lsDispModelH1       = NULL,
@@ -291,9 +311,9 @@ processSCData <- function(matCounts,
                             scaWindowRadius     = scaWindowRadius,
                             strReport           = NULL,
                             vecAllGenes         = rownames(matCounts),
+  													vecConfounders      = vecConfounders,
                             vecFixedAssignments = NULL,
-                            vecNormConst        = NULL,
-                            vecPseudotimeProc   = vecPseudotimeProc )
+                            vecNormConst        = NULL )
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

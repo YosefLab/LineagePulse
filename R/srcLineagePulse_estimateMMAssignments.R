@@ -39,7 +39,7 @@
 #' @export
 evalLogLikWeightsMMZINB <- function(vecTheta,
                                     vecCounts,
-                                    matMu,
+																		matMuParam,
                                     matDispParam,
                                     matDropParam,
                                     scaNormConst,
@@ -60,7 +60,7 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
   scaNCells <- length(vecCounts)
   
   scaLogLik <- evalLogLikCellMM_comp(vecCounts=vecCounts,
-                                     matMuModel=matMu,
+  																	 matMuParam=matMuParam,
                                      matDispParam=matDispParam,
                                      matDropParam=matDropParam,
                                      scaNormConst=scaNormConst,
@@ -75,7 +75,7 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
 evalLogLikWeightsMMZINB_comp <- cmpfun(evalLogLikWeightsMMZINB)
 
 fitMMAssignmentsCell <- function(vecCounts,
-                                 matMu,
+																 matMuParam,
                                  matDispParam,
                                  matDropParam,
                                  scaNormConst,
@@ -91,7 +91,7 @@ fitMMAssignmentsCell <- function(vecCounts,
       par=vecWeightInit,
       fn=evalLogLikWeightsMMZINB_comp,
       vecCounts=vecCounts,
-      matMu=matMu,
+      matMuParam=matMuParam,
       matDispParam=matDispParam,
       matDropParam=matDropParam,
       scaNormConst=scaNormConst,
@@ -109,7 +109,7 @@ fitMMAssignmentsCell <- function(vecCounts,
     print(paste0("vecWeightInit ", paste(vecWeightInit,collapse=" ")))
     lsErrorCausingGene <- list(vecCounts=vecCounts,
                                vecWeightInit=vecWeightInit,
-                               matMu=matMu, 
+    													 matMuParam=matMuParam, 
                                matDispParam=matDispParam,
                                scaNormConst=scaNormConst)
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
@@ -149,10 +149,20 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   
   # Parallelise weight estimation over cells
   lsFitsWeights <- bplapply( vecidxToFit, function(j){
+  	
+  	matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
+  		do.call(c, lapply(seq(1,scaNumGenes), function(i){
+  			decompressMeansByGene(matMuModel=lsMuModel$matMuModel[i,m],
+  														lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+  														lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+  														vecInterval=j)
+  		}))
+  	}))
+  	
     # Parameter decompression: Cell-specific
     matDropParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
       decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
-                                  vecMu=lsMuModel$matMuModel[,m],
+                                  vecMu=matMuParam[,m],
                                   matPiConstPredictors=lsDropModel$matPiConstPredictors )
     }))
     if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
@@ -162,7 +172,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
       stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
     }
     fitWeights <- fitMMAssignmentsCell(vecCounts=matCounts[,j],
-                                       matMu=lsMuModel$matMuModel,
+    																	 matMuParam=matMuParam,
                                        matDispParam=matDispParam,
                                        matDropParam=matDropParam,
                                        scaNormConst=vecNormConst[j],

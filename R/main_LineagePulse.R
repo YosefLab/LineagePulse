@@ -250,121 +250,123 @@ evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 #' 
 #' @export
 runLineagePulse <- function(matCounts,
-  matPiConstPredictors=NULL,
-  vecNormConstExternal=NULL,
-  vecPseudotime,
-  strMuModel="impulse",
-  strDispModel="constant",
-  boolClusterInPseudotime=TRUE,
-  scaKClusters=NULL,
-  scaWindowRadius=NULL,
-  boolEstimateNoiseBasedOnH0=FALSE,
-  boolVecWindowsAsBFGS=FALSE,
-  boolCoEstDispMean=TRUE,
-  scaMaxEstimationCycles=20,
-  scaNProc=1,
-  boolVerbose=TRUE,
-  boolSuperVerbose=FALSE ){
-  
-  print("LineagePulse v1.0")
-  
-  # 1. Data preprocessing
-  print("1. Data preprocessing:")
-  vecAllGenes <- rownames(matCounts)
-  lsProcessedSCData <- processSCData( matCounts=matCounts,
-    matPiConstPredictors=matPiConstPredictors,
-    vecPseudotime=vecPseudotime,
-    vecNormConstExternal=vecNormConstExternal,
-    scaSmallRun=scaSmallRun,
-    strMuModel=strMuModel,
-    strDispModel=strDispModel,
-    scaWindowRadius=scaWindowRadius,
-    boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-    boolCoEstDispMean=boolCoEstDispMean )
-  objectLineagePulse <- lsProcessedSCData$objectLineagePulse
-  vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
-  matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
-  vecPseudotimeProc <- lsProcessedSCData$vecPseudotimeProc
-  
-  # Clear memory
-  rm(matCounts)
-  rm(matPiConstPredictors)
-  rm(vecPseudotime)
-  rm(lsProcessedSCData)
-  
-  # X. Inialise parallelisation
-  print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
-  # Set the parallelisation environment in BiocParallel:
-  if(scaNProc > 1){
-    # Set worker time out to 60*60*24*7 (7 days)
-    # For single machine (FORK) cluster
-    register(MulticoreParam(workers=scaNProc)) 
-    #timeout=60*60*24*7,
-    #log=FALSE, 
-    #threshold="INFO", 
-    #logdir=dirBPLogs))
-    # Use this on windows or if SOCK clusters wanted:
-    # For multiple machine (SOCK) cluster
-    #register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
-  } else {
-    # For debugging in serial mode
-    register(SerialParam())
-  }
-  
-  # 2. Cluster cells in pseudo-time
-  print("2. Clustering:")
-  tm_clustering <- system.time({
-    if(boolClusterInPseudotime){
-      # Cluster in pseudotime
-      lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
-        scaKexternal=scaKClusters)
-    } else {
-      # Take observation time points as clusters
-      print("Chose given grouping (time points, cell types, conditions...).")
-      lsResultsClustering <- list()
-      lsResultsClustering[[1]] <- match(vecPseudotimeProc, sort(unique(vecPseudotimeProc)))
-      lsResultsClustering[[2]] <- sort( unique(vecPseudotimeProc) )
-      lsResultsClustering[[3]] <- length(unique(vecPseudotimeProc))
-      names(lsResultsClustering) <- c("Assignments","Centroids","K")
-    }
-    # Plot clustering
-    plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
-      lsResultsClustering=lsResultsClustering)
-  })
-  print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
-    " min",sep=""))
-  
-  # 4. Compute normalisation constants
-  print("4. Compute normalisation constants:")
-  objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
-     vecNormConstExternal=vecNormConstExternalProc)
-  
-  # 5. Fit ZINB model for both H1 and H0.
-  print("5. Fit ZINB model for both H1 and H0.")
-  tm_fitmm <- system.time({
-    objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
-      matPiConstPredictors=matPiConstPredictorsProc,
-      lsResultsClustering=lsResultsClustering,
-      boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
-      boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-      boolCoEstDispMean=boolCoEstDispMean,
-      strMuModel=strMuModel,
-      strDispModel=strDispModel,
-      scaMaxEstimationCycles=scaMaxEstimationCycles,
-      boolVerbose=boolVerbose,
-      boolSuperVerbose=boolSuperVerbose )
-  })
-  print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
-    " min",sep=""))
-  
-  # 6. Differential expression analysis:
-  print("6. Differential expression analysis:")
-  tm_deanalysis_mf <- system.time({
-    objectLineagePulse <- runDEAnalysis( objectLineagePulse=objectLineagePulse )
-  })
-  print(paste("Time elapsed during differential expression analysis: ",
-    round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
-  
-  print("LineagePulse complete.")
-  return(objectLineagePulse)
+														dfAnnotation,
+														vecConfounders=NULL,
+														matPiConstPredictors=NULL,
+														vecNormConstExternal=NULL,
+														strMuModel="impulse",
+														strDispModel="constant",
+														boolClusterInPseudotime=TRUE,
+														scaKClusters=NULL,
+														scaWindowRadius=NULL,
+														boolEstimateNoiseBasedOnH0=FALSE,
+														boolVecWindowsAsBFGS=FALSE,
+														boolCoEstDispMean=TRUE,
+														scaMaxEstimationCycles=20,
+														scaNProc=1,
+														boolVerbose=TRUE,
+														boolSuperVerbose=FALSE ){
+	
+	print("LineagePulse v1.0")
+	
+	# 1. Data preprocessing
+	print("1. Data preprocessing:")
+	vecAllGenes <- rownames(matCounts)
+	lsProcessedSCData <- processSCData( matCounts=matCounts,
+																			dfAnnotation=dfAnnotation,
+																			vecConfounders=vecConfounders,
+																			matPiConstPredictors=matPiConstPredictors,
+																			vecPseudotime=vecPseudotime,
+																			vecNormConstExternal=vecNormConstExternal,
+																			scaSmallRun=scaSmallRun,
+																			strMuModel=strMuModel,
+																			strDispModel=strDispModel,
+																			scaWindowRadius=scaWindowRadius,
+																			boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
+																			boolCoEstDispMean=boolCoEstDispMean )
+	objectLineagePulse <- lsProcessedSCData$objectLineagePulse
+	vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
+	matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
+	
+	# Clear memory
+	rm(matCounts)
+	rm(matPiConstPredictors)
+	rm(dfAnnotation)
+	rm(lsProcessedSCData)
+	
+	# X. Inialise parallelisation
+	print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
+	# Set the parallelisation environment in BiocParallel:
+	if(scaNProc > 1){
+		# Set worker time out to 60*60*24*7 (7 days)
+		# For single machine (FORK) cluster
+		register(MulticoreParam(workers=scaNProc)) 
+		#timeout=60*60*24*7,
+		#log=FALSE, 
+		#threshold="INFO", 
+		#logdir=dirBPLogs))
+		# Use this on windows or if SOCK clusters wanted:
+		# For multiple machine (SOCK) cluster
+		#register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
+	} else {
+		# For debugging in serial mode
+		register(SerialParam())
+	}
+	
+	# 2. Cluster cells in pseudo-time
+	print("2. Clustering:")
+	tm_clustering <- system.time({
+		if(boolClusterInPseudotime){
+			# Cluster in pseudotime
+			lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
+																											scaKexternal=scaKClusters)
+		} else {
+			# Take observation time points as clusters
+			print("Chose given grouping (time points, cell types, conditions...).")
+			lsResultsClustering <- list()
+			lsResultsClustering[[1]] <- match(vecPseudotimeProc, sort(unique(vecPseudotimeProc)))
+			lsResultsClustering[[2]] <- sort( unique(vecPseudotimeProc) )
+			lsResultsClustering[[3]] <- length(unique(vecPseudotimeProc))
+			names(lsResultsClustering) <- c("Assignments","Centroids","K")
+		}
+		# Plot clustering
+		plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
+														 lsResultsClustering=lsResultsClustering)
+	})
+	print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
+							" min",sep=""))
+	
+	# 4. Compute normalisation constants
+	print("4. Compute normalisation constants:")
+	objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
+																			vecNormConstExternal=vecNormConstExternalProc)
+	
+	# 5. Fit ZINB model for both H1 and H0.
+	print("5. Fit ZINB model for both H1 and H0.")
+	tm_fitmm <- system.time({
+		objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
+																							matPiConstPredictors=matPiConstPredictorsProc,
+																							lsResultsClustering=lsResultsClustering,
+																							boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
+																							boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
+																							boolCoEstDispMean=boolCoEstDispMean,
+																							strMuModel=strMuModel,
+																							strDispModel=strDispModel,
+																							scaMaxEstimationCycles=scaMaxEstimationCycles,
+																							boolVerbose=boolVerbose,
+																							boolSuperVerbose=boolSuperVerbose )
+	})
+	print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
+							" min",sep=""))
+	
+	# 6. Differential expression analysis:
+	print("6. Differential expression analysis:")
+	tm_deanalysis_mf <- system.time({
+		objectLineagePulse <- runDEAnalysis( objectLineagePulse=objectLineagePulse )
+	})
+	print(paste("Time elapsed during differential expression analysis: ",
+							round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
+	
+	print("LineagePulse complete.")
+	return(objectLineagePulse)
 }

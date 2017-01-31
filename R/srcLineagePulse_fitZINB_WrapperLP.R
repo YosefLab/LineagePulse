@@ -268,7 +268,6 @@ fitNullAlternative <- function(objectLineagePulse,
                                strDispModel = "constant",
                                boolEstimateNoiseBasedOnH0=TRUE,
                                boolVecWindowsAsBFGS=FALSE,
-                               vecPseudotime=NULL,
                                scaMaxEstimationCycles=20,
                                boolVerbose=FALSE,
                                boolSuperVerbose=FALSE ){
@@ -334,6 +333,9 @@ fitNullAlternative <- function(objectLineagePulse,
   
   tm_cycle <- system.time({
     lsFitsModelA <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+    												dfAnnotation=objectLineagePulse@dfAnnotationProc,
+    												vecConfounders=objectLineagePulse@vecConfounders,
+    												vecNormConst=objectLineagePulse@vecNormConst,
                             lsDropModel=NULL,
                             strMuModel=strMuModelA,
                             strDispModel=strDispModelB,
@@ -346,6 +348,7 @@ fitNullAlternative <- function(objectLineagePulse,
   lsDropModel <- lsFitsModelA$lsDropModel
   boolConvergenceModelA <- lsFisModelA$boolConvergenceModel
   vecEMLogLikModelA <- lsFisModelA$vecEMLogLikModel
+  rm(lsFisModelA)
   
   print(paste0("Finished fitting zero-inflated negative binomial ",
                "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min."))
@@ -357,6 +360,9 @@ fitNullAlternative <- function(objectLineagePulse,
   
   tm_cycleB <- system.time({
     lsFitsModelB <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+    												dfAnnotation=objectLineagePulse@dfAnnotationProc,
+    												vecConfounders=objectLineagePulse@vecConfounders,
+    												vecNormConst=objectLineagePulse@vecNormConst,
                             lsDropModel=lsDropModel,
                             strMuModel=strMuModelB,
                             strDispModel=strDispModelB,
@@ -368,6 +374,7 @@ fitNullAlternative <- function(objectLineagePulse,
   lsDispModelB <- lsFitsModelB$lsDispModel
   boolConvergenceModelB <- lsFisModelB$boolConvergenceModel
   vecEMLogLikModelB <- lsFisModelB$vecEMLogLikModel
+  rm(lsFisModelB)
   
   print(paste0("Finished fitting zero-inflated negative binomial ",
                "model B in ", round(tm_cycleB["elapsed"]/60,2)," min."))
@@ -389,9 +396,8 @@ fitNullAlternative <- function(objectLineagePulse,
                                 vecEMLogLikH0=vecEMLogLikModelA,
                                 scaKbyGeneH1=scaKbyGeneH1,
                                 scaKbyGeneH0=scaKbyGeneH0 )
-    
-    objectLineagePulselsMuModelH1         <- lsMuModelB
-    objectLineagePulselsDispModelH1       <- lsDispModelB
+    objectLineagePulse@lsMuModelH1         <- lsMuModelB
+    objectLineagePulse@lsDispModelH1       <- lsDispModelB
     objectLineagePulse@lsMuModelH0        <- lsMuModelA
     objectLineagePulse@lsDispModelH0      <- lsDispModelA
   } else {
@@ -401,8 +407,8 @@ fitNullAlternative <- function(objectLineagePulse,
                                 vecEMLogLikH0=vecEMLogLikModelB,
                                 scaKbyGeneH1=scaKbyGeneH1,
                                 scaKbyGeneH0=scaKbyGeneH0 )
-    objectLineagePulselsMuModelH1         <- lsMuModelA
-    objectLineagePulselsDispModelH1       <- lsDispModelA
+    objectLineagePulse@lsMuModelH1         <- lsMuModelA
+    objectLineagePulse@lsDispModelH1       <- lsDispModelA
     objectLineagePulse@lsMuModelH0        <- lsMuModelB
     objectLineagePulse@lsDispModelH0      <- lsDispModelB
   }

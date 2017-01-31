@@ -393,18 +393,18 @@ evalLogLikGene <- function(vecCounts,
 }
 
 evalLogLikGeneMM <- function(vecCounts,
-                             vecMuModel,
-                             matDispParam,
-                             matDropParam,
-                             vecNormConst,
-                             matWeights,
+                             matMuParam,
+														 vecNormConst,
+														 matDispParam,
+														 matDropParam,
+														 matWeights,
                              vecboolNotZero, 
                              vecboolZero ){
   
   # Loop over models:
   matLikSum <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
-    evalLikZINB_comp(vecCounts=vecCounts,
-                     vecMu=vecMuModel[m]*vecNormConst,
+  	evalLikZINB_comp(vecCounts=vecCounts,
+                     vecMu=matMuModel[,m]*vecNormConst,
                      vecDisp=matDispParam[,m], 
                      vecPi=matDropParam[,m],
                      vecboolNotZero=vecboolNotZero, 
@@ -418,7 +418,7 @@ evalLogLikGeneMM <- function(vecCounts,
 evalLogLikGeneMM_comp <- cmpfun(evalLogLikGeneMM)
 
 evalLogLikCellMM <- function(vecCounts,
-                             matMuModel,
+                             matMuParam,
                              matDispParam,
                              matDropParam,
                              scaNormConst,
@@ -433,7 +433,7 @@ evalLogLikCellMM <- function(vecCounts,
   matLikSum <- do.call(cbind, lapply(seq(1, length(vecWeights)), function(m){
     # Evaluate loglikelihood of observations of cell under current model
     evalLikZINB_comp(vecCounts=vecCounts,
-                     vecMu=matMuModel[,m]*scaNormConst,
+                     vecMu=matMuParam[,m]*scaNormConst,
                      vecDisp=matDispParam[,m], 
                      vecPi=matDropParam[,m],
                      vecboolNotZero=vecboolNotZero, 
@@ -534,7 +534,6 @@ evalLogLikCellMM_comp <- cmpfun(evalLogLikCellMM)
 #' 
 #' @export
 evalLogLikMatrix <- function(matCounts,
-                             vecNormConst,
                              lsMuModel,
                              lsDispModel, 
                              lsDropModel,
@@ -548,6 +547,13 @@ evalLogLikMatrix <- function(matCounts,
     bplapply( seq(1,scaNGenes), function(i){
       if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
         
+      	matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
+      		decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,m],
+      													lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+      													lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+      													vecInterval=NULL)
+      	}))
+      	
         if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
           vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
                                                lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
@@ -556,24 +562,26 @@ evalLogLikMatrix <- function(matCounts,
         } else {
           stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", strDispModel, " not recognised."))
         }
-        matDropParam <- do.call(cbind, lapply(lsMuModel$matMuModel[i,], function(mu_m){
-          decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
-                                                    vecMu=rep(mu_m,scaNCells),
-                                                    vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-        }))
-        
+      	
+      	matDropParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
+      		decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
+      																							vecMu=matMuParam[,m],
+      																							vecPiConstPredictors=lsDropModel$matPiConstPredictors[idxGene,] )
+      	}))
+      	
         vecCounts <- matCounts[i,]
         scaLL <- evalLogLikGeneMM(vecCounts=vecCounts,
-                                  vecMuModel=lsMuModel$matMuModel[i,],
-                                  matDispParam=matDispParam,
-                                  matDropParam=matDropParam,
-                                  vecNormCons=vecNormConst,
-                                  matWeights=matWeights,
+                                  matMuParam=matMuParam,
+        													vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
+        													matDispParam=matDispParam,
+        													matDropParam=matDropParam,
+        													matWeights=matWeights,
                                   vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
                                   vecboolZero= !is.na(vecCounts) & vecCounts==0 )
       } else {
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+        																		 lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
                                              lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
                                              vecInterval=NULL )
         vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
@@ -587,7 +595,7 @@ evalLogLikMatrix <- function(matCounts,
         vecCounts <- matCounts[i,]
         scaLL <- evalLogLikGene(vecCounts=vecCounts,
                                 vecMu=vecMuParam,
-                                vecNormConst=vecNormConst,
+                                vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
                                 vecDisp=vecDispParam, 
                                 vecPi=vecPiParam,
                                 vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 

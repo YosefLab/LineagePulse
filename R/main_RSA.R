@@ -33,6 +33,8 @@ source("main_MixtureModel.R")
 #' 
 #' @export
 runRSA <- function(matCounts,
+									 dfAnnotation,
+									 vecConfounders,
                    scaNMixtures,
                    vecPopulationID,
                    matPiConstPredictors=NULL,
@@ -52,6 +54,8 @@ runRSA <- function(matCounts,
   if(length(vecPopulationAssignmentsUnique) < scaNMixtures) vecPopulationIDs[(length(vecPopulationAssignmentsUnique)+1):scaNMixtures] <- paste0("Population", (length(vecPopulationAssignmentsUnique)+1):scaNMixtures)
   # Wrap call to runMixtureModel
   objectLineagePulseMM <- runMixtureModel(matCounts=matCounts,
+  																				dfAnnotation=dfAnnotation,
+  																				vecConfounders=vecConfounders,
                                           scaNMixtures=scaNMixtures,
                                           vecFixedAssignments=vecFixedAssignments,
                                           matPiConstPredictors=matPiConstPredictors,

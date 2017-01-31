@@ -72,6 +72,7 @@
 #' @export
 
 decompressMeansByGene <- function(vecMuModel,
+																	lsvecBatchModel,
                                   lsMuModelGlobal,
                                   vecInterval=NULL ){
   
@@ -106,11 +107,28 @@ decompressMeansByGene <- function(vecMuModel,
     } else { 
       vecMu <- vecMuModel
     }
+  } else if(lsMuModelGlobal$strMuModel=="MM"){
+  	# Expect mean of ONE MIXTURE component! vecMuModel is scalar
+  	if(!is.null(vecInterval)){ 
+  		vecMu <- rep(vecMuModel, length(vecInterval))
+  	} else { 
+  		vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells)
+  	}
   } else {
     stop(paste0("ERROR decompressMeans(): lsMuModelGlobal$strMuModel=", 
                 lsMuModelGlobal$strMuModel, " not recognised."))
   }
-  
+	# Scale by batch factors
+	if(!is.null(lsvecBatchModel)){
+		for(confounder in seq(1,length(lsvecBatchModel))){
+			if(!is.null(vecInterval)){ 
+				vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])[vecInterval]
+			} else { 
+				vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+			}
+		}
+	}
+	
   return(vecMu)
 }
 

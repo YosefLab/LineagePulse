@@ -89,11 +89,11 @@ setClass(
     lsMuModelH1         = "listORNULL",
     lsFitZINBReporters  = "listORNULL",
     matCountsProc       = "matrixORNULL",
-    vecPseudotimeProc   = "numericORNULL",
     matWeights          = "matrixORNULL",
     scaWindowRadius     = "numericORNULL",
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
+    vecConfounders      = "characterORNULL",
     vecFixedAssignments = "numericORNULL",
     vecNormConst        = "numericORNULL" )
 )

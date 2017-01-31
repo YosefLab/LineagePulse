@@ -32,6 +32,8 @@ source("main_LineagePulse.R")
 #' 
 #' @export
 runMixtureModel <- function(matCounts,
+														dfAnnotation,
+														vecConfounders,
                             scaNMixtures,
                             vecFixedAssignments=NULL,
                             matPiConstPredictors=NULL,
@@ -50,6 +52,8 @@ runMixtureModel <- function(matCounts,
   print("1. Data preprocessing:")
   vecAllGenes <- rownames(matCounts)
   lsProcessedSCData <- processSCDataMixture( matCounts=matCounts,
+  																					 dfAnnotation=dfAnnotation,
+  																					 vecConfounders=vecConfounders,
                                              scaNMixtures=scaNMixtures,
                                              vecFixedAssignments=vecFixedAssignments,
                                              matPiConstPredictors=matPiConstPredictors,
