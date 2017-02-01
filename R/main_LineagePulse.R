@@ -276,9 +276,7 @@ runLineagePulse <- function(matCounts,
 																			dfAnnotation=dfAnnotation,
 																			vecConfounders=vecConfounders,
 																			matPiConstPredictors=matPiConstPredictors,
-																			vecPseudotime=vecPseudotime,
 																			vecNormConstExternal=vecNormConstExternal,
-																			scaSmallRun=scaSmallRun,
 																			strMuModel=strMuModel,
 																			strDispModel=strDispModel,
 																			scaWindowRadius=scaWindowRadius,
@@ -318,19 +316,19 @@ runLineagePulse <- function(matCounts,
 	tm_clustering <- system.time({
 		if(boolClusterInPseudotime){
 			# Cluster in pseudotime
-			lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=vecPseudotimeProc,
+			lsResultsClustering <- clusterCellsInPseudotime(vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime,
 																											scaKexternal=scaKClusters)
 		} else {
 			# Take observation time points as clusters
 			print("Chose given grouping (time points, cell types, conditions...).")
 			lsResultsClustering <- list()
-			lsResultsClustering[[1]] <- match(vecPseudotimeProc, sort(unique(vecPseudotimeProc)))
-			lsResultsClustering[[2]] <- sort( unique(vecPseudotimeProc) )
-			lsResultsClustering[[3]] <- length(unique(vecPseudotimeProc))
+			lsResultsClustering[[1]] <- match(objectLineagePulse@dfAnnotationProc$pseudotime, sort(unique(objectLineagePulse@dfAnnotationProc$pseudotime)))
+			lsResultsClustering[[2]] <- sort( unique(objectLineagePulse@dfAnnotationProc$pseudotime) )
+			lsResultsClustering[[3]] <- length(unique(objectLineagePulse@dfAnnotationProc$pseudotime))
 			names(lsResultsClustering) <- c("Assignments","Centroids","K")
 		}
 		# Plot clustering
-		plotPseudotimeClustering(vecPseudotime=vecPseudotimeProc, 
+		plotPseudotimeClustering(vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime, 
 														 lsResultsClustering=lsResultsClustering)
 	})
 	print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
@@ -349,7 +347,6 @@ runLineagePulse <- function(matCounts,
 																							lsResultsClustering=lsResultsClustering,
 																							boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
 																							boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-																							boolCoEstDispMean=boolCoEstDispMean,
 																							strMuModel=strMuModel,
 																							strDispModel=strDispModel,
 																							scaMaxEstimationCycles=scaMaxEstimationCycles,

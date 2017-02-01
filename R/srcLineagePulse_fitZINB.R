@@ -27,7 +27,7 @@ fitZINB <- function(matCounts,
 	# Set to 10^(-4) to maintain sensible fits without running far into saturation
 	# in the objective (loglikelihood).
 	# Numerical optmisation of dropout model hyperparameters
-	MAXIT_BFGS_Pi <- 1000 
+	MAXIT_BFGS_Pi <- 10000
 	RELTOL_BFGS_Pi <- 10^(-4)
 	####################################################
 	
@@ -46,6 +46,7 @@ fitZINB <- function(matCounts,
 	lsMuModel <- list(matMuModel=NA,
 										lsmatBatchModel=NA,
 										lsMuModelGlobal=list(strMuModel=strMuModel,
+																				 vecNormConst=vecNormConst,
 																				 scaNumCells=scaNumCells,
 																				 vecPseudotime=dfAnnotation$pseudotime,
 																				 vecClusterAssign=dfAnnotation$clusters,
@@ -59,12 +60,12 @@ fitZINB <- function(matCounts,
 	# Initialise mean model parameters
 	if(is.null(matMuModelInit)){
 		vecMuModelInit <- apply(matCounts, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
-		vecMuModelInit[vecMuModelInit < .Machine$double.eps] <- .Machine$double.eps
+		vecMuModelInit[vecMuModelInit < 10^(-10)] <- 10^(-10)
 		if(strMuModel=="constant"){
 			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
 		} else if(strMuModel=="impulse"){
 			lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
-			lsMuModel$matMuModel[,2:4] <- log(matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE))
+			lsMuModel$matMuModel[,c(2:4)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
 		} else if(strMuModel=="clusters"){
 			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
 		} else if(strMuModel=="MM"){
@@ -80,9 +81,9 @@ fitZINB <- function(matCounts,
 	# Initialise batch model parameters
 	if(!is.null(vecConfounders)){
 		lsvecBatchAssign <- lapply(vecConfounders, function(confounder) dfAnnotation[[confounder]] )
-		lsMuModel$lsMuModelGlobal$lsvecBatchUnique <-lapply(lsvecBatchAssign, function(vecBatchAssign) unqiue(vecBatchAssign) )
-		lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unqiue(vecBatchAssign)) )
-		lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unqiue(vecBatchAssign))) )
+		lsMuModel$lsMuModelGlobal$lsvecBatchUnique <-lapply(lsvecBatchAssign, function(vecBatchAssign) unique(vecBatchAssign) )
+		lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
+		lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
 		
 		lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
 			matrix(1, nrow=scaNumGenes,
@@ -242,8 +243,8 @@ fitZINB <- function(matCounts,
 		if(boolSuperVerbose){
 			if(any(vecboolDispEstConverged != 0)){
 				print(paste0("(Mean-) Dispersion estimation did not converge in ", 
-										 sum(vecboolDispEstConverged), " cases [codes: ",
-										 paste(unique(vecboolDispEstConverged[vecboolDispEstConverged!=0])), "]."))
+										 sum(vecboolDispEstConverged[vecboolDispEstConverged>0]), " cases [codes: ",
+										 paste(unique(vecboolDispEstConverged[vecboolDispEstConverged!=0]), collapse=","), "]."))
 			}
 			print(paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
 									 "loglikelihood of ", scaLogLikNew, " in ",

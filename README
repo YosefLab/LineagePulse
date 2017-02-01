@@ -1,0 +1,24 @@
+LineagePulse data objects and communication
+
+Class LineagePulseObject:
+Output object which contains all relevant objects necessary to repeat top-level steps and to investigate top-level steps.
+
+lsMuModel, lsDispModel, lsDropModel
+Lists which are sufficient to generate a matrix of mu/disp/phi parameters. These objects represent compressed data matrices based on the used models. They are decompressed by gene or by cell by decompress… functions. Entries in LineagePulseObject.These objects are created in fitZINB and returned to be used in a fitting wrapper which finally adds them into a LineagePulseObject.
+
+Function hierarchy:
+
+===main_*
+1. 	a) Obligatory top level wrapper: runLineagePulse, runRSA. Called by user to carry out entire analysis.
+	b) Fakultative top-level wrapper: runMixtureModel. Can be used by user but can be called by obligatory top level wrapper.	
+===srcLineagePulse_fitZINB_Wrapper*
+2. Fitting wrapper (multiple models): fitNullAlternative, fitMM. Carry out all model fitting required by top-wrapper.
+===srcLineagePulse_fitZINB
+3. 	a) Fitting wrapper (one ZINB model): fitZINB. Fits one ZINB model (ie mu, disp and drop matrix)
+	b) Fittting wrapper (cell assignments in MM): estimateMMAssignments. Fits assignments given a ZINB model.
+===srcLineagePulse_fitZINB_*
+4. Fitting wrapper (parameter subset): fitZINBMu, fitZINBDisp, fitZINBMuDisp, fitZINBDrop. Fit the indicated parameter subset conditioned on remaining parameters. It uses the model specifications to chose an estimation function, parallelises across genes/cells and dissolves the ls*Model objects into the parts necesaary for each estimation instance.
+5. Numerical optimisation wrapper. Uses linkers and parameter bounding.
+6. Cost functions for parameter esimtation. Called by numerical fitting wrapper to evaluate fit.
+=== srcLineagePulse_evalLogLikZINB
+7. Raw cost functions. Called by parameter wise cost functions. These actually contain the ZINB evaluationt

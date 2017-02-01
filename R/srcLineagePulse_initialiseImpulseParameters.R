@@ -35,8 +35,6 @@
 #'      }
 #' @param vecMu: (vector number of cells) Negative binomial
 #'    mean parameter estimates.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors, one per cell.
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    mean parameter estimated.
 #' @param vecDrop: (vector number of cells) Dropout estimates of cells. 
@@ -58,21 +56,20 @@
 #' @export
 
 initialiseImpulseParametes <- function(vecCounts,
-  lsMuModelGlobal,
-  vecMu,
-  vecNormConst,
-  vecDisp,
-  vecDrop,
-  scaWindowRadius){
+                                       lsMuModelGlobal,
+                                       vecMu,
+                                       vecDisp,
+                                       vecDrop,
+                                       scaWindowRadius){
   
   # Compute posterior of drop-out
   vecPostNB <- 1-calcPostDrop_Vector( vecMu=vecMu,
-    vecDisp=vecDisp,
-    vecDrop=vecDrop,
-    vecboolZero= !is.na(vecCounts) & vecCounts==0,
-    vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-    scaWindowRadius=scaWindowRadius )
-
+                                      vecDisp=vecDisp,
+                                      vecDrop=vecDrop,
+                                      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+                                      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+                                      scaWindowRadius=scaWindowRadius )
+  
   # Observations are pooled to give rough estimates of expression
   # levels in local environment. The pooling are either the clusters
   # of cells (if the mean model is clusters) or cells grouped
@@ -100,8 +97,8 @@ initialiseImpulseParametes <- function(vecCounts,
   vecGroupTimeCoord <- array(NA, scaGroups)
   for(k in unique(vecidxGroups)){
     vecidxK <- match(k, vecidxGroups) 
-    vecGroupExprMean[k] <- sum(vecCounts[vecidxK]/vecNormConst[vecidxK]*
-        vecPostNB[vecidxK], na.rm=TRUE)/
+    vecGroupExprMean[k] <- sum(vecCounts[vecidxK]/lsMuModelGlobal$vecNormConst[vecidxK]*
+                                 vecPostNB[vecidxK], na.rm=TRUE)/
       sum(vecPostNB[vecidxK], na.rm=TRUE)
     vecGroupTimeCoord[k] <- mean(lsMuModelGlobal$vecPseudotime[vecidxK], na.rm=TRUE)  
   }
@@ -129,10 +126,12 @@ initialiseImpulseParametes <- function(vecCounts,
   indUpperInflexionPoint <- indMaxMiddleMean - 1 + match(
     min(vecGradients[indMaxMiddleMean:length(vecGradients)], na.rm=TRUE), 
     vecGradients[indMaxMiddleMean:length(vecGradients)])
-  vecParamGuessPeak <- c(1,log(vecGroupExprMean[1]+1),
-    log(scaMaxMiddleMean+1),log(vecGroupExprMean[nTimepts]+1),
-    (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
-    (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2)
+  vecParamGuessPeak <- c(1,
+                         log(vecGroupExprMean[1]+1),
+                         log(scaMaxMiddleMean+1),
+                         log(vecGroupExprMean[nTimepts]+1),
+                         (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
+                         (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2)
   
   # Compute valley initialisation
   # Beta: Has to be negative, Theta1: High, Theta2: Low, Theta3: High
@@ -143,11 +142,13 @@ initialiseImpulseParametes <- function(vecCounts,
   indUpperInflexionPoint <- indMinMiddleMean - 1 + match(
     max(vecGradients[indMinMiddleMean:(nTimepts-1)], na.rm=TRUE), 
     vecGradients[indMinMiddleMean:(nTimepts-1)])
-  vecParamGuessValley <- c(1,log(vecGroupExprMean[1]+1),
-    log(scaMinMiddleMean+1),log(vecGroupExprMean[nTimepts]+1),
-    (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
-    (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2 )
+  vecParamGuessValley <- c(1,
+                           log(vecGroupExprMean[1]+1),
+                           log(scaMinMiddleMean+1),
+                           log(vecGroupExprMean[nTimepts]+1),
+                           (vecGroupTimeCoord[indLowerInflexionPoint]+vecGroupTimeCoord[indLowerInflexionPoint+1])/2,
+                           (vecGroupTimeCoord[indUpperInflexionPoint]+vecGroupTimeCoord[indUpperInflexionPoint+1])/2 )
   
   return( list(peak=vecParamGuessPeak,
-    valley=vecParamGuessValley) )
+               valley=vecParamGuessValley) )
 }

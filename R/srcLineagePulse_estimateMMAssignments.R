@@ -131,7 +131,8 @@ fitMMAssignmentsCell <- function(vecCounts,
 }
 
 estimateMMAssignmentsMatrix <- function(matCounts,
-                                        vecFixedAssignments=NULL,
+																				dfAnnotation,
+																				boolFixedPopulations,
                                         lsMuModel,
                                         lsDispModel,
                                         lsDropModel,
@@ -140,11 +141,13 @@ estimateMMAssignmentsMatrix <- function(matCounts,
                                         MAXIT_BFGS_MM=1000,
                                         RELTOL_BFGS_MM=10^(-8 ) ){
   
-  scaNumCells <- dim(matCounts)[2]
+  
+	scaNumGenes <- dim(matCounts)[1]
+	scaNumCells <- dim(matCounts)[2]
   scaNumMixtures <- dim(matWeights)[2]
   
   # Select non a-priori fixed cells
-  if(!is.null(vecFixedAssignments)) vecidxToFit <- which(!is.na(vecFixedAssignments))
+  if(boolFixedPopulations) vecidxToFit <- which(is.na(dfAnnotation$populations))
   else vecidxToFit <- seq(1, scaNumCells) # Select all cells
   
   # Parallelise weight estimation over cells
@@ -152,7 +155,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   	
   	matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
   		do.call(c, lapply(seq(1,scaNumGenes), function(i){
-  			decompressMeansByGene(matMuModel=lsMuModel$matMuModel[i,m],
+  			decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,m],
   														lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
   														lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
   														vecInterval=j)

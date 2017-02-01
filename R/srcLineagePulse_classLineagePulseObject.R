@@ -94,7 +94,7 @@ setClass(
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
     vecConfounders      = "characterORNULL",
-    vecFixedAssignments = "numericORNULL",
+    boolFixedPopulations= "logical",
     vecNormConst        = "numericORNULL" )
 )
 

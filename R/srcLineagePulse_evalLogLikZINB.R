@@ -393,7 +393,7 @@ evalLogLikGene <- function(vecCounts,
 }
 
 evalLogLikGeneMM <- function(vecCounts,
-                             matMuParam,
+                             matMuParam, # every column is rep of one scalar (one model, evaluated at each cell!)
 														 vecNormConst,
 														 matDispParam,
 														 matDropParam,
@@ -404,7 +404,7 @@ evalLogLikGeneMM <- function(vecCounts,
   # Loop over models:
   matLikSum <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
   	evalLikZINB_comp(vecCounts=vecCounts,
-                     vecMu=matMuModel[,m]*vecNormConst,
+                     vecMu=matMuParam[,m]*vecNormConst,
                      vecDisp=matDispParam[,m], 
                      vecPi=matDropParam[,m],
                      vecboolNotZero=vecboolNotZero, 
@@ -566,7 +566,7 @@ evalLogLikMatrix <- function(matCounts,
       	matDropParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
       		decompressDropoutRateByGene(matDropModel=lsDropModel$matDropoutLinModel,
       																							vecMu=matMuParam[,m],
-      																							vecPiConstPredictors=lsDropModel$matPiConstPredictors[idxGene,] )
+      																							vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
       	}))
       	
         vecCounts <- matCounts[i,]

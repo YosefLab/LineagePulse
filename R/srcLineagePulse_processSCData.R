@@ -84,7 +84,6 @@
 #'        \item matCountsProcFull: (matrix genes x samples)
 #'    Processed count data of all cells, unobserved entries are NA.
 #'        \item vecPseudotimeProc: (numerical vector length number of cells)
-#'    Processed pseudotime coordinates (1D) of cells: One scalar per cell.
 #'    Names of elements are cell names.
 #'    }
 #'    
@@ -184,16 +183,7 @@ processSCData <- function(matCounts,
   }
   
   # (II) Check settings
-  # 1. Check scaSmallRun
-  if(!is.null(scaSmallRun)){
-    checkCounts(scaSmallRun, "scaSmallRun")
-    if(scaSmallRun > dim(matCounts)[1]){
-      stop(paste0( "ERROR: scaSmallRun (",scaSmallRun,
-                   ") larger then data set (",dim(matCounts)[1]," genes)."))
-    }
-  }
-  
-  # 2. Check general mean estimation settings
+  # 1. Check general mean estimation settings
   if(!is.null(scaWindowRadius)){
     if(scaWindowRadius==0){
       stop(paste0("LineagePulse received scaWindowRadius=0.", 
@@ -215,7 +205,7 @@ processSCData <- function(matCounts,
                 " Means have to be regularised by smoothing in windows mode."))
   }
   
-  # 3. Check single mean-/dispersion estimation models
+  # 2. Check single mean-/dispersion estimation models
   if(!boolCoEstDispMean){
     # a) Mean models
     if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
@@ -229,7 +219,7 @@ processSCData <- function(matCounts,
     }
   }
   
-  # 4. Check co-estimation models
+  # 3. Check co-estimation models
   # Note: These functions are implemented separately from
   # single mean and dispersion estimation.
   if(boolCoEstDispMean){
@@ -264,8 +254,9 @@ processSCData <- function(matCounts,
     rownames(matPiConstPredictors) <- rownames(matCounts)
   }
   # Take out cells with NA pseudotime coordinate
-  dfAnnotationProc <- dfAnnotation[!is.na(dfAnnotation$pseudotime),]
-  vecidxPTsort <- sort(dfAnnotationProc$pseudotime[vecidxPTnotNA],
+  vecidxPTnotNA <- !is.na(dfAnnotation$pseudotime)
+  dfAnnotationProc <- dfAnnotation[vecidxPTnotNA,]
+  vecidxPTsort <- sort(dfAnnotationProc$pseudotime,
   								 decreasing=FALSE, index.return=TRUE)$ix
   dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
   matCountsProc <- matCounts[,dfAnnotationProc$cell]
@@ -274,11 +265,6 @@ processSCData <- function(matCounts,
   vecidxCells <- apply(matCountsProc, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
   dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
-  # Reduce data set to small run size if required.
-  if(!is.null(scaSmallRun)){
-    scaNRows <- min(scaSmallRun,dim(matCountsProc)[1])
-    matCountsProc <- matCountsProc[1:scaNRows,]
-  }
   # Keep target normalisation constants
   if(!is.null(vecNormConstExternal)){
     vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
@@ -287,12 +273,9 @@ processSCData <- function(matCounts,
   }
   
   # Print summary of processing
-  print(paste0(sum(!vecidxPT), " out of ", length(vecidxPT), " cells did not have a pseudotime coordinate and were excluded."))
+  print(paste0(sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), " cells did not have a pseudotime coordinate and were excluded."))
   print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
   print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
-  if(!is.null(scaSmallRun)){
-    print(paste0("Operating on subset of data, set by scaSmallRun: ",scaSmallRun," out of ",dim(matCountsProcFull)[1]," genes."))
-  }
   
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
@@ -312,7 +295,7 @@ processSCData <- function(matCounts,
                             strReport           = NULL,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
-                            vecFixedAssignments = NULL,
+  													boolFixedPopulations= FALSE,
                             vecNormConst        = NULL )
   
   return(list(objectLineagePulse=objectLineagePulse,

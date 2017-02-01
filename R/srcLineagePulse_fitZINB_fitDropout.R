@@ -220,19 +220,19 @@ fitPiZINB <- function(vecCounts,
 												 vecInterval=vecidxInterval)
 	}))
 	matPiPredictors <- cbind(1, log(matMuParam[,match(idxTarget,vecidxInterval)]), 
-													 matPiConstPredictors)
+													 lsDropModel$matPiConstPredictors)
 	
 	# (I) Numerical maximum likelihood estimation of linear model
 	# Initialise optimisation of linear model:
 	#vecParamGuess <- rep(1, dim(matPiPredictors)[2])
-	vecParamGuess <- vecDropoutLinModel
+	vecParamGuess <- lsDropModel$matDropoutLinModel[idxTarget,]
 	vecParamGuess[2] <- log(-vecParamGuess[2])
 	boolError <- FALSE
 	lsLinModelFit <- tryCatch({
 		optim(
 			par=vecParamGuess,
 			evalLogLikPiZINB_comp,
-			matPiPredictors=lsDropModel$lsDropModelGlobal$matPiPredictors,
+			matPiPredictors=matPiPredictors,
 			vecCounts=vecCounts,
 			matMu=matMuParam,
 			matDisp=matDispParam,
@@ -240,17 +240,17 @@ fitPiZINB <- function(vecCounts,
 			vecboolNotZero=!is.na(vecCounts) & vecCounts>0,
 			vecboolZero= !is.na(vecCounts) & vecCounts==0,
 			method="BFGS",
-			control=list(maxit=lsPiOptimHyperparam$MAXIT_BFGS_Pi,
-									 reltol=lsPiOptimHyperparam$RELTOL_BFGS_Pi,
+			control=list(maxit=lsDropModel$lsPiOptimHyperparam$MAXIT_BFGS_Pi,
+									 reltol=lsDropModel$lsPiOptimHyperparam$RELTOL_BFGS_Pi,
 									 fnscale=-1)
-		)[c("par","convergence")]
+		)[c("par","value","convergence")]
 	}, error=function(strErrorMsg){
 		print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB().",
 								 " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
 		print(strErrorMsg)
 		scaLLInit <- evalLogLikPiZINB_comp(
 			vecTheta=vecParamGuess,
-			matPiPredictors=lsDropModel$lsDropModelGlobal$matPiPredictors,
+			matPiPredictors=matPiPredictors,
 			vecCounts=vecCounts,
 			matMu=matMuParam,
 			matDisp=matDispParam,
@@ -261,7 +261,7 @@ fitPiZINB <- function(vecCounts,
 		print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
 		lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,
 																vecCounts=vecCounts, 
-																matPiPredictors=lsDropModel$lsDropModelGlobal$matPiPredictors,
+																matPiPredictors=lsDropModel$matPiPredictors,
 																matMuParam=matMuParam, 
 																matDispParam=matDispParam,
 																scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[idxTarget],
@@ -273,7 +273,7 @@ fitPiZINB <- function(vecCounts,
 	})
 	
 	# (II) Extract results and correct for sensitivity boundaries
-	vecLinModel <- unlist(lsLinModelFit["par"])
+	vecLinModel <- unlist(lsLinModelFit[["par"]])
 	vecLinModel[2] <- -exp(vecLinModel[2])
 	# # Catch boundary of likelihood domain on parameter space
 	vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
@@ -283,9 +283,12 @@ fitPiZINB <- function(vecCounts,
 	if(boolError){
 		scaConvergence <- 1001
 	} else {
-		scaConvergence <- unlist(lsLinModelFit["convergence"])    
+		scaConvergence <- unlist(lsLinModelFit[["convergence"]])    
 	}
 	
+	scaLL <- lsLinModelFit[["value"]]
+	
 	return( list(vecLinModel=vecLinModel,
-							 scaConvergence=scaConvergence) )
+							 scaConvergence=scaConvergence,
+							 scaLL=scaLL) )
 }

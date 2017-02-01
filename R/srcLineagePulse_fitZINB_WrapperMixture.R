@@ -84,9 +84,10 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   matWeights <- matrix(1/scaNMixtures, 
                        nrow=scaNCells, ncol=scaNMixtures)
   # Correct fixed weights (RSA)
-  if(!is.null(objectLineagePulse@vecFixedAssignments)){
-    matWeights[!is.na(objectLineagePulse@vecFixedAssignments),] <- 0
-    matWeights[!is.na(objectLineagePulse@vecFixedAssignments),objectLineagePulse@vecFixedAssignments[!is.na(objectLineagePulse@vecFixedAssignments)]] <- 1
+  if(objectLineagePulse@boolFixedPopulations){
+  	vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
+    matWeights[!is.na(vecFixedAssignments),] <- 0
+    matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
   }
   # Set expression models to NULL
   #lsMuModelFull <- NULL
@@ -109,10 +110,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       tm_estep <- system.time({
         lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
         																						dfAnnotation=objectLineagePulse@dfAnnotationProc,
-        																						vecConfounders=objectLineagePulse@vecConfounders,
+        																						boolFixedPopulations=objectLineagePulse@boolFixedPopulations,
         																						vecNormConst=objectLineagePulse@vecNormConst,
-        																						vecFixedAssignments=objectLineagePulse@vecFixedAssignments,
-                                                    lsMuModel=lsMuModelFull,
+        																						lsMuModel=lsMuModelFull,
                                                     lsDispModel=lsDispModelFull,
                                                     lsDropModel=lsDropModel,
                                                     matWeights=matWeights,
@@ -163,7 +163,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       }
       
       if(!boolResetDropout){
-        # M-like step: Estimate mixture model parameters
+      	# M-like step: Estimate mixture model parameters
         tm_mstep <- system.time({
           lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
           													dfAnnotation=objectLineagePulse@dfAnnotationProc,
@@ -179,8 +179,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                     strMuModel="MM",
                                     strDispModel="constant",
                                     scaMaxEstimationCycles=1,
-                                    boolVerbose=FALSE,
-                                    boolSuperVerbose=FALSE)
+                                    boolVerbose=TRUE,
+                                    boolSuperVerbose=TRUE)
           lsMuModelFull <- lsZINBFitsFull$lsMuModel
           lsDispModelFull <- lsZINBFitsFull$lsDispModel
           boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel

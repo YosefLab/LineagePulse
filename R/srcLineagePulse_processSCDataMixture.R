@@ -100,8 +100,8 @@
 processSCDataMixture <- function(matCounts,
 																 dfAnnotation,
 																 vecConfounders,
+																 boolFixedPopulations,
                                  scaNMixtures,
-                                 vecFixedAssignments,
                                  matPiConstPredictors,
                                  vecNormConstExternal,
                                  strDispModel,
@@ -111,13 +111,13 @@ processSCDataMixture <- function(matCounts,
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
     if(is.null(objectInput)){
-      stop(paste0( "ERROR: ", strObjectInput," was not given as input." ))
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strObjectInput," was not given as input." ))
     }
   }
   # Checks whether elements are numeric
   checkNumeric <- function(matInput, strMatInput){
     if(any(!is.numeric(matInput))){
-      stop(paste0( "ERROR: ", strMatInput, " contains non-numeric elements. Requires count data." ))
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strMatInput, " contains non-numeric elements. Requires count data." ))
     }
   }
   # Checks whether elements are count data: non-negative integer finite numeric elements.
@@ -125,13 +125,13 @@ processSCDataMixture <- function(matCounts,
   checkCounts <- function(matInput, strMatInput){
     checkNumeric(matInput, strMatInput)
     if(any(matInput[!is.na(matInput)] %% 1 != 0)){
-      stop(paste0( "ERROR: ", strMatInput, " contains non-integer elements. Requires count data." ))
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strMatInput, " contains non-integer elements. Requires count data." ))
     }
     if(any(!is.finite(matInput[!is.na(matInput)]))){
-      stop(paste0( "ERROR: ", strMatInput, " contains infinite elements. Requires count data." ))
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strMatInput, " contains infinite elements. Requires count data." ))
     }
     if(any(matInput[!is.na(matInput)]<0)){
-      stop(paste0( "ERROR: ", strMatInput, " contains negative elements. Requires count data." ))
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strMatInput, " contains negative elements. Requires count data." ))
     }
   }
   
@@ -140,27 +140,50 @@ processSCDataMixture <- function(matCounts,
   checkNull(matCounts,"matCounts")
   checkCounts(matCounts,"matCounts")
   
-  # 2. dfAnnotation, vecConfounders
+  # 2. dfAnnotation, vecConfounders, boolFixedPopulations
   if(!is.null(dfAnnotation)){
   	# Check that all cells are mentioned in dfAnnotation
   	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
-  		stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+  		stop(paste0("ERROR IN INPUT DATA CHECK: Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
   	}
   	# Check structure
   	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
-  		stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  								"Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
   	}
   	if(!is.null(vecConfounders)){
   		if(!all(vecConfounders %in% colnames(dfAnnotation))){
-  			stop(paste0("Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
+  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  									"Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
   		}
   		if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
-  			stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfounders"))
+  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  									"Supply batch assignments for all cells and all confounders given in vecConfounders"))
+  		}
+  	}
+  	if(!boolFixedPopulations){
+  		if(!"population" %in% colnames(dfAnnotation)){
+  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  									"population does not occur in dfAnnotation (columns)."))
+  		} else {
+  			if(!is.null(scaNMixtures)){
+  				if(scaNMixtures < length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]))){
+  					stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  											"Number of populations in dfAnnotation$populations (",
+  											length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])),
+  											"):", unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]),
+  											" must not exceed maximum number of populations given by scaNMixtures=",
+  											scaNMixtures))
+  				}
+  			}
   		}
   	}
   } else {
   	if(!is.null(vecConfounders)){
-  		stop(paste0("vecConfounders supplied but not dfAnnotation which carries batch structure."))
+  		stop(paste0("vecConfounders supplied but no dfAnnotation which carries batch structure."))
+  	}
+  	if(boolFixedPopulations){
+  		stop(paste0("boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
   	}
   }
   
@@ -169,12 +192,12 @@ processSCDataMixture <- function(matCounts,
     checkNumeric(matPiConstPredictors,"matPiConstPredictors")
     if(!is.null(rownames(matCounts))){
       if(!rownames(matCounts) %in% rownames(matPiConstPredictors)){
-        stop(paste0("ERROR: Some genes named in rows of matCounts do not ",
+        stop(paste0("ERROR IN INPUT DATA CHECK: Some genes named in rows of matCounts do not ",
                     "occur in rows of matPiConstPredictors."))   
       }
     } else {
       if(!is.null(rownames(matPiConstPredictors))){
-        stop(paste0("ERROR: Named genes in matPiConstPredictors",
+        stop(paste0("ERROR IN INPUT DATA CHECK: Named genes in matPiConstPredictors",
                     " but not in matCounts."))
       }
     }
@@ -184,7 +207,8 @@ processSCDataMixture <- function(matCounts,
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecNormConstExternal,"vecNormConstExternal")
     if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
-      stop("ERROR: Not all cells in matCounts are given in vecNormConstExternal")
+      stop("ERROR IN INPUT DATA CHECK: ",
+      		 "Not all cells in matCounts are given in vecNormConstExternal")
     }
   }
   
@@ -198,18 +222,11 @@ processSCDataMixture <- function(matCounts,
   checkNull(scaNMixtures, "scaNMixtures")
   checkNumeric(scaNMixtures, "scaNMixtures")
   
-  # 8. vecFixedAssignments
-  if(!is.null(vecNormConstExternal)){
-    checkNumeric(vecFixedAssignments, "vecFixedAssignments")
-    if(!all(colnames(matCounts) %in% names(vecFixedAssignments))){
-      stop("ERROR: Not all cells in matCounts are given in vecFixedAssignments")
-    }
-  }
-  
   # (II) Check settings
   # Check single dispersion estimation models
   if(!(strDispModel %in% c("constant"))){
-    stop(paste0("strDispModel not recognised: ", strDispModel, 
+    stop(paste0("ERROR IN INPUT DATA CHECK: ",
+    						"strDispModel not recognised: ", strDispModel, 
                 " Must be one of: constant."))
   }
   
@@ -235,11 +252,9 @@ processSCDataMixture <- function(matCounts,
   } else {
     vecNormConstExternalProc <- NULL
   }
-  if(!is.null(vecFixedAssignments)){
-    vecFixedAssignmentsUnique <-  unique(vecFixedAssignments[!is.na(vecFixedAssignments)])
-    vecFixedAssignmentsProc <- match(vecFixedAssignments, vecFixedAssignmentsUnique)
-  } else {
-    vecFixedAssignmentsProc <- NULL
+  if(boolFixedPopulations){
+    vecFixedAssignmentsUnique <-  unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
+    dfAnnotation$populations <- match(dfAnnotation$populations, vecFixedAssignmentsUnique)
   }
   
   # Print summary of processing
@@ -264,7 +279,7 @@ processSCDataMixture <- function(matCounts,
                             strReport           = NULL,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
-                            vecFixedAssignments = vecFixedAssignmentsProc,
+  													boolFixedPopulations= boolFixedPopulations,
                             vecNormConst        = NULL )
   
   return(list(objectLineagePulse=objectLineagePulse,
