@@ -149,7 +149,6 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         # Compute new likelihood
         scaLogLikOld <- scaLogLikNew
         scaLogLikNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                         vecNormConst=objectLineagePulse@vecNormConst,
                                          lsMuModel=lsMuModelFull,
                                          lsDispModel=lsDispModelFull, 
                                          lsDropModel=lsDropModel,
