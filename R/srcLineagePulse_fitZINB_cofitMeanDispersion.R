@@ -819,9 +819,12 @@ fitDispConstMuConstZINB <- function(vecCounts,
 																		RELTOL=10^(-8) ){ 
 	
 	# (I) Numerical maximum likelihood estimation
-	fitDispMu <- tryCatch({
+  if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(scaMuGuess), log(unlist(lsvecBatchParamGuess)))
+  else vecTheta <- c(log(scaDispGuess), log(scaMuGuess))
+	
+  fitDispMu <- tryCatch({
 		unlist(optim(
-			par=c(log(scaDispGuess), log(scaMuGuess), log(unlist(lsvecBatchParamGuess))),
+			par=vecTheta,
 			evalLogLikDispConstMuConstZINB_comp,
 			vecCounts=vecCounts,
 			lsMuModelGlobal=lsMuModelGlobal,
@@ -954,9 +957,12 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
 																				MAXIT=1000,
 																				RELTOL=10^(-8) ){
 	
+  if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
+  else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
+  
 	fitDispMu <- tryCatch({
 		unlist(optim(
-			par=c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess))),
+			par=vecTheta,
 			evalLogLikDispConstMuVecWindowsZINB_comp,
 			vecCounts=vecCounts,
 			lsMuModelGlobal=lsMuModelGlobal,
@@ -1091,9 +1097,12 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 	# scaWindowRadius is set to NULL because smoothing
 	# within clusters does't make sense - the clusters already impose
 	# a constraint on the means.
-	fitDispMu <- tryCatch({
-		unlist(optim(    
-			par=c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess))),
+  if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
+  else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
+  
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=vecTheta,
 			evalLogLikDispConstMuClustersZINB_comp,
 			vecCounts=vecCounts,
 			lsMuModelGlobal=lsMuModelGlobal,
@@ -1230,9 +1239,12 @@ fitDispConstMuMMZINB <- function(vecCounts,
 	# scaWindowRadius is set to NULL because smoothing
 	# within clusters does't make sense - the clusters already impose
 	# a constraint on the means.
-	fitDispMu <- tryCatch({
-		unlist(optim(    
-			par=c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess))),
+  if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
+  else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
+  
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=vecTheta,
 			evalLogLikDispConstMuMMZINB_comp,
 			vecCounts=vecCounts,
 			lsMuModelGlobal=lsMuModelGlobal,
@@ -1384,10 +1396,12 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
 																						 RELTOL=10^(-8) ){
 	
 	boolError <- FALSE
+	if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess, log(unlist(lsvecBatchParamGuess)))
+	else vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess)
+	
 	fitDispMu <- tryCatch({
-		unlist( optim(
-			par=c(log(scaDispGuess), vecImpulseParamGuess, log(unlist(lsvecBatchParamGuess))), 
-			fn=evalLogLikDispConstMuImpulseZINB_comp, 
+	  unlist(optim(
+	    par=vecTheta,			fn=evalLogLikDispConstMuImpulseZINB_comp, 
 			vecCounts=vecCounts,
 			lsMuModelGlobal=lsMuModelGlobal,
 			vecTimepoints=vecTimepoints,
@@ -1537,7 +1551,6 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 fitDispConstMuImpulseZINB <- function(vecCounts, 
 																			vecImpulseParamGuess,
 																			lsvecBatchParamGuess,
@@ -1807,6 +1820,9 @@ fitZINBMuDisp <- function( matCountsProc,
 	scaNumGenes <- dim(matCountsProc)[1]
 	scaNumCells <- dim(matCountsProc)[2]
 	
+	if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)) lsvecBatchParamGuess <- lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] )
+	else lsvecBatchParamGuess <- NULL
+	
 	# Nest mean models within dispersion models
 	if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
 		if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
@@ -1819,7 +1835,7 @@ fitZINBMuDisp <- function( matCountsProc,
 				fitDispMu <- fitDispConstMuConstZINB(
 					vecCounts=matCountsProc[i,],
 					scaMuGuess=lsMuModel$matMuModel[i,],
-					lsvecBatchParamGuess=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] ),
+					lsvecBatchParamGuess=lsvecBatchParamGuess,
 					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 					scaDispGuess=lsDispModel$matDispModel[i,],
 					matDropoutLinModel=lsDropModel$matDropoutLinModel,
@@ -1845,7 +1861,7 @@ fitZINBMuDisp <- function( matCountsProc,
 				fitDispMu <- fitDispConstMuVecWindowsZINB(
 					vecCounts=matCountsProc[i,],
 					vecMu=vecMuParam, # Mu model
-					lsvecBatchParamGuess=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] ),
+					lsvecBatchParamGuess=lsvecBatchParamGuess,
 					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 					scaDispGuess=scaDispParam, # Disp model
 					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
@@ -1862,7 +1878,7 @@ fitZINBMuDisp <- function( matCountsProc,
 				fitDispMu <-fitDispConstMuClusterZINB(
 					vecCounts=matCountsProc[i,],
 					vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] ),
+					lsvecBatchParamGuess=lsvecBatchParamGuess,
 					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
 					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
@@ -1879,7 +1895,7 @@ fitZINBMuDisp <- function( matCountsProc,
 				fitDispMu <-fitDispConstMuMMZINB(
 					vecCounts=matCountsProc[i,],
 					vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] ),
+					lsvecBatchParamGuess=lsvecBatchParamGuess,
 					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
 					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
@@ -1901,7 +1917,7 @@ fitZINBMuDisp <- function( matCountsProc,
 				fitDispMu <- fitDispConstMuImpulseZINB(
 					vecCounts=matCountsProc[i,],
 					vecImpulseParamGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] ),
+					lsvecBatchParamGuess=lsvecBatchParamGuess,
 					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
 					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
 					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model

@@ -55,7 +55,7 @@ evalLogLikPiZINB <- function(vecTheta,
 	# (II) Prevent parameter shrinkage/explosion
 	vecTheta[vecTheta < -10^(10)] <- -10^(10)
 	vecTheta[vecTheta > 10^(10)] <- 10^(10)
-	if(vecTheta[2] > -.Machine$double.eps){ vecTheta[2] <- -.Machine$double.eps }
+	if(vecTheta[2] > -10^(-10)) vecTheta[2] <- -10^(-10)
 	
 	vecPiEst <- sapply(seq(1,dim(matPiPredictors)[1]), function(i){
 		evalDropoutModel_comp(vecPiModel=vecTheta, 
@@ -278,7 +278,7 @@ fitPiZINB <- function(vecCounts,
 	# # Catch boundary of likelihood domain on parameter space
 	vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
 	vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
-	if(vecLinModel[2] > -.Machine$double.eps){ vecLinModel[2] <- -.Machine$double.eps }
+	if(vecLinModel[2] > -10^(-10)){ vecLinModel[2] <- -10^(-10) }
 	
 	if(boolError){
 		scaConvergence <- 1001
