@@ -8,6 +8,7 @@ fitZINB <- function(matCounts,
 										boolVecWindowsAsBFGS=FALSE,
 										lsDropModel=NULL,
 										matMuModelInit=NULL,
+										lsmatBatchModelInit=NULL,
 										matDispModelInit=NULL,
 										strMuModel,
 										strDispModel,
@@ -75,29 +76,37 @@ fitZINB <- function(matCounts,
 		} else {
 			stop(paste0("ERROR fitZINB(): strMuModel=", strMuModel, " not recognised."))
 		}
-		# Initialise batch model parameters
-		if(!is.null(vecConfounders)){
-		  lsvecBatchAssign <- lapply(vecConfounders, function(confounder) dfAnnotation[[confounder]] )
-		  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <-lapply(lsvecBatchAssign, function(vecBatchAssign) unique(vecBatchAssign) )
-		  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
-		  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
-		  
-		  lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
-		    matrix(1, nrow=scaNumGenes,
-		           ncol=length(unique(vecBatchAssign)) ) # Initialise batch correction factors to 1
-		  })
-		} else {
-		  lsvecBatchAssign <- list(rep(1,scaNumCells))
-		  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <- NA
-		  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
-		  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
-		  
-		  lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
-		    matrix(NA, nrow=scaNumGenes, ncol=1 )
-		  })
-		}
 	} else {
 		lsMuModel$matMuModel <- matMuModelInit
+	}
+	if(is.null(lsmatBatchModelInit)){
+	  # Initialise batch model parameters
+	  if(!is.null(vecConfounders)){
+	    lsvecBatchAssign <- lapply(vecConfounders, function(confounder) dfAnnotation[[confounder]] )
+	    lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
+	      matrix(1, nrow=scaNumGenes,
+	             ncol=length(unique(vecBatchAssign)) ) # Initialise batch correction factors to 1
+	    })
+	  } else {
+	    lsvecBatchAssign <- list(rep(1,scaNumCells))
+	    lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
+	      matrix(NA, nrow=scaNumGenes, ncol=1 )
+	    })
+	  }
+	} else {
+	  lsMuModel$lsmatBatchModel <- lsmatBatchModelInit
+	}
+	# Add global batch parameters
+	if(!is.null(vecConfounders)){
+	  lsvecBatchAssign <- lapply(vecConfounders, function(confounder) dfAnnotation[[confounder]] )
+	  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <-lapply(lsvecBatchAssign, function(vecBatchAssign) unique(vecBatchAssign) )
+	  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
+	  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
+	} else {
+	  lsvecBatchAssign <- list(rep(1,scaNumCells))
+	  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <- NA
+	  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
+	  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
 	}
 	
 	# b) Dispersion model

@@ -65,69 +65,69 @@
 #' 
 #' @export
 evalLogLikDispConstMuConstZINB <- function(vecTheta,
-																					 vecCounts,
-																					 lsMuModelGlobal,
-																					 matDropoutLinModel,
-																					 vecPiConstPredictors,
-																					 vecboolNotZero,
-																					 vecboolZero,
-																					 scaWindowRadius=NULL ){ 
-	
-	# (I) Linker functions
-	# Log linker function to fit positive dispersion factor
-	scaDisp <- exp(vecTheta[1])
-	# Log linker function to fit positive mean
-	scaMu <- exp(vecTheta[2])
-	vecMuParam <- rep(scaMu, length(scaMu))
-	
-	# Extract batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		scaNParamUsed <- 2
-		for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Prevent batch factor shrinkage and explosion:
-			vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-			vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-			
-			vecMuParam <- vecMuParam*vecBatchParam
-		}
-	}
-	
-	# (II) Prevent parameter shrinkage/explosion
-	# Prevent dispersion estimate from shrinking to zero
-	# to avoid numerical errors:
-	# Could also write as if statement, this accomodates for vectors later.
-	if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-	vecDisp <- rep(scaDisp, length(vecCounts))
-	
-	# Prevent means estimate from shrinking to zero
-	# to avoid numerical errors:
-	vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
-	
-	# (III) Compute drop-out rates
-	vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-																			 vecMu=vecMuParam,
-																			 vecPiConstPredictors=vecPiConstPredictors )
-	
-	# (IV) Evaluate loglikelihood of estimate
-	scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
-															vecMu=vecMuParam,
-															vecNormConst=lsMuModelGlobal$vecNormConst,
-															vecDisp=vecDisp, 
-															vecPi=vecPi,
-															vecboolNotZero=vecboolNotZero, 
-															vecboolZero=vecboolZero,
-															scaWindowRadius=scaWindowRadius )
-	
-	# Maximise log likelihood: Return likelihood as value to optimisation routine
-	return(scaLogLik)
+                                           vecCounts,
+                                           lsMuModelGlobal,
+                                           matDropoutLinModel,
+                                           vecPiConstPredictors,
+                                           vecboolNotZero,
+                                           vecboolZero,
+                                           scaWindowRadius=NULL ){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  scaMu <- exp(vecTheta[2])
+  vecMuParam <- rep(scaMu, length(scaMu))
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    scaNParamUsed <- 2
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  
+  # (III) Compute drop-out rates
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                       vecMu=vecMuParam,
+                                       vecPiConstPredictors=vecPiConstPredictors )
+  
+  # (IV) Evaluate loglikelihood of estimate
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+                              vecMu=vecMuParam,
+                              vecNormConst=lsMuModelGlobal$vecNormConst,
+                              vecDisp=vecDisp, 
+                              vecPi=vecPi,
+                              vecboolNotZero=vecboolNotZero, 
+                              vecboolZero=vecboolZero,
+                              scaWindowRadius=scaWindowRadius )
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
 }
 
 #' Compiled function: evalLogLikDispConstMuConstZINB
@@ -211,69 +211,69 @@ evalLogLikDispConstMuConstZINB_comp <- cmpfun(evalLogLikDispConstMuConstZINB)
 #' 
 #' @export
 evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
-																								vecCounts,
-																								lsMuModelGlobal,
-																								matDropoutLinModel,
-																								vecPiConstPredictors,
-																								vecboolNotZero,
-																								vecboolZero,
-																								scaWindowRadius){ 
-	
-	# (I) Linker functions
-	# Log linker function to fit positive dispersion factor
-	scaDisp <- exp(vecTheta[1])
-	# Log linker function to fit positive mean
-	vecMuParam <- exp(vecTheta[2:(1+length(vecCounts))])
-	
-	# Extract batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		scaNParamUsed <- 1+length(vecCounts)
-		for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Prevent batch factor shrinkage and explosion:
-			vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-			vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-			
-			vecMuParam <- vecMuParam*vecBatchParam
-		}
-	}
-	
-	# (II) Prevent parameter shrinkage/explosion
-	# Prevent dispersion estimate from shrinking to zero
-	# to avoid numerical errors:
-	# Could also write as if statement, this accomodates for vectors later.
-	if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-	vecDisp <- rep(scaDisp, length(vecCounts))
-	
-	# Prevent means estimate from shrinking to zero
-	# to avoid numerical errors:
-	vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
-	
-	# (III) Compute drop-out rates
-	vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-																			 vecMu=vecMuParam,
-																			 vecPiConstPredictors=vecPiConstPredictors )
-	
-	# (IV) Evaluate loglikelihood (this is the cost function) 
-	scaLogLik <- evalLogLikSmoothZINB_comp(
-		vecCounts=vecCounts,
-		vecMu=vecMuParam,
-		vecNormConst=lsMuModelGlobal$vecNormConst,
-		vecDisp=vecDisp, 
-		vecPi=vecPi,
-		vecboolNotZero=vecboolNotZero, 
-		vecboolZero=vecboolZero,
-		scaWindowRadius=scaWindowRadius)
-	
-	# Maximise log likelihood: Return likelihood as value to optimisation routine
-	return(scaLogLik)
+                                                vecCounts,
+                                                lsMuModelGlobal,
+                                                matDropoutLinModel,
+                                                vecPiConstPredictors,
+                                                vecboolNotZero,
+                                                vecboolZero,
+                                                scaWindowRadius){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  vecMuParam <- exp(vecTheta[2:(1+length(vecCounts))])
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    scaNParamUsed <- 1+length(vecCounts)
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  
+  # (III) Compute drop-out rates
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                       vecMu=vecMuParam,
+                                       vecPiConstPredictors=vecPiConstPredictors )
+  
+  # (IV) Evaluate loglikelihood (this is the cost function) 
+  scaLogLik <- evalLogLikSmoothZINB_comp(
+    vecCounts=vecCounts,
+    vecMu=vecMuParam,
+    vecNormConst=lsMuModelGlobal$vecNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero,
+    scaWindowRadius=scaWindowRadius)
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
 }
 
 #' Compiled function: evalLogLikDispConstMuVecWindowsZINB
@@ -360,67 +360,67 @@ evalLogLikDispConstMuVecWindowsZINB_comp <- cmpfun(evalLogLikDispConstMuVecWindo
 #' 
 #' @export
 evalLogLikDispConstMuClustersZINB <- function(vecTheta,
-																							vecCounts,
-																							lsMuModelGlobal,
-																							matDropoutLinModel,
-																							vecPiConstPredictors,
-																							vecboolNotZero,
-																							vecboolZero ){ 
-	
-	# (I) Linker functions
-	# Log linker function to fit positive dispersion factor
-	scaDisp <- exp(vecTheta[1])
-	# Log linker function to fit positive mean
-	vecMu <- exp(vecTheta[2:(max(lsMuModelGlobal$vecClusterAssign)+1)])
-	vecMuParam <- vecMu[lsMuModelGlobal$vecClusterAssign]
-	
-	# Extract batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		scaNParamUsed <- 1+max(lsMuModelGlobal$vecClusterAssign)
-		for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Prevent batch factor shrinkage and explosion:
-			vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-			vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-			
-			vecMuParam <- vecMuParam*vecBatchParam
-		}
-	}
-	
-	# (II) Prevent parameter shrinkage/explosion
-	# Prevent dispersion estimate from shrinking to zero
-	# to avoid numerical errors:
-	# Could also write as if statement, this accomodates for vectors later.
-	if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-	vecDisp <- rep(scaDisp, length(vecCounts))
-	
-	# Prevent means estimate from shrinking to zero
-	# to avoid numerical errors:
-	vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
-	
-	# (III) Compute drop-out rates
-	vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-																			 vecMu=vecMuParam,
-																			 vecPiConstPredictors=vecPiConstPredictors )
-	
-	# (IV) Evaluate loglikelihood of estimate
-	scaLogLik <- evalLogLikGene( vecCounts=vecCounts,
-															 vecMu=vecMuParam,
-															 vecNormConst=lsMuModelGlobal$vecNormConst,
-															 vecDisp=vecDisp, 
-															 vecPi=vecPi,
-															 vecboolNotZero=vecboolNotZero, 
-															 vecboolZero=vecboolZero )
-	
-	# Maximise log likelihood: Return likelihood as value to optimisation routine
-	return(scaLogLik)
+                                              vecCounts,
+                                              lsMuModelGlobal,
+                                              matDropoutLinModel,
+                                              vecPiConstPredictors,
+                                              vecboolNotZero,
+                                              vecboolZero ){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  vecMu <- exp(vecTheta[2:(max(lsMuModelGlobal$vecClusterAssign)+1)])
+  vecMuParam <- vecMu[lsMuModelGlobal$vecClusterAssign]
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    scaNParamUsed <- 1+max(lsMuModelGlobal$vecClusterAssign)
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  
+  # (III) Compute drop-out rates
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                       vecMu=vecMuParam,
+                                       vecPiConstPredictors=vecPiConstPredictors )
+  
+  # (IV) Evaluate loglikelihood of estimate
+  scaLogLik <- evalLogLikGene( vecCounts=vecCounts,
+                               vecMu=vecMuParam,
+                               vecNormConst=lsMuModelGlobal$vecNormConst,
+                               vecDisp=vecDisp, 
+                               vecPi=vecPi,
+                               vecboolNotZero=vecboolNotZero, 
+                               vecboolZero=vecboolZero )
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
 }
 
 #' Compiled function: evalLogLikDispConstMuClustersZINB
@@ -505,72 +505,72 @@ evalLogLikDispConstMuClustersZINB_comp <- cmpfun(evalLogLikDispConstMuClustersZI
 #' 
 #' @export
 evalLogLikDispConstMuMMZINB <- function(vecTheta,
-																				vecCounts,
-																				lsMuModelGlobal,
-																				matDropoutLinModel,
-																				vecPiConstPredictors,
-																				vecboolNotZero,
-																				vecboolZero,
-																				matWeights){ 
-	
-	# (I) Linker functions
-	# Log linker function to fit positive dispersion factor
-	scaDisp <- exp(vecTheta[1])
-	# Log linker function to fit positive mean
-	vecMu <- exp(vecTheta[2:dim(matWeights)[1]])
-	
-	scaNCells <- length(vecCounts)
-	scaNMixtures <- length(vecMu)
-	matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)
-	
-	# Extract batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		scaNParamUsed <- 1+dim(matWeights)[1]
-		for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Prevent batch factor shrinkage and explosion:
-			vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-			vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-			
-			matMuParam <- matMuParam*matrix(vecBatchParam, nrow=scaNCells, ncol=scaNMixtures, byrow=FALSE)
-		}
-	}
-	
-	# (II) Prevent parameter shrinkage/explosion
-	# Prevent dispersion estimate from shrinking to zero
-	# to avoid numerical errors:
-	# Could also write as if statement, this accomodates for vectors later.
-	if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-	vecDisp <- rep(scaDisp, length(vecCounts))
-	
-	# Prevent means estimate from shrinking to zero
-	# to avoid numerical errors:
-	matMuParam[matMuParam < 10^(-10)] <- 10^(-10)
-	
-	# Decompress parameters
-	matDropParam <- do.call(cbind, lapply(seq(1,scaNMixtures), function(m){
-		decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-																vecMu=matMuParam[,m],
-																vecPiConstPredictors=vecPiConstPredictors )
-	}))
-	scaLogLik <- evalLogLikGeneMM(vecCounts=vecCounts,
-																matMuParam=matMuParam,
-																matDispParam=matrix(scaDisp, nrow=scaNCells, ncol=scaNMixtures),
-																matDropParam=matDropParam,
-																vecNormCons=lsMuModelGlobal$vecNormConst,
-																matWeights=matWeights,
-																vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
-																vecboolZero= !is.na(vecCounts) & vecCounts==0 )
-	
-	# Maximise log likelihood: Return likelihood as value to optimisation routine
-	return(scaLogLik)
+                                        vecCounts,
+                                        lsMuModelGlobal,
+                                        matDropoutLinModel,
+                                        vecPiConstPredictors,
+                                        vecboolNotZero,
+                                        vecboolZero,
+                                        matWeights){ 
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker function to fit positive mean
+  vecMu <- exp(vecTheta[2:dim(matWeights)[1]])
+  
+  scaNCells <- length(vecCounts)
+  scaNMixtures <- length(vecMu)
+  matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    scaNParamUsed <- 1+dim(matWeights)[1]
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      matMuParam <- matMuParam*matrix(vecBatchParam, nrow=scaNCells, ncol=scaNMixtures, byrow=FALSE)
+    }
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  matMuParam[matMuParam < 10^(-10)] <- 10^(-10)
+  
+  # Decompress parameters
+  matDropParam <- do.call(cbind, lapply(seq(1,scaNMixtures), function(m){
+    decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                vecMu=matMuParam[,m],
+                                vecPiConstPredictors=vecPiConstPredictors )
+  }))
+  scaLogLik <- evalLogLikGeneMM(vecCounts=vecCounts,
+                                matMuParam=matMuParam,
+                                matDispParam=matrix(scaDisp, nrow=scaNCells, ncol=scaNMixtures),
+                                matDropParam=matDropParam,
+                                vecNormCons=lsMuModelGlobal$vecNormConst,
+                                matWeights=matWeights,
+                                vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
 }
 
 #' Compiled function: evalLogLikDispConstMuMMZINB
@@ -660,67 +660,67 @@ evalLogLikDispConstMuMMZINB_comp <- cmpfun(evalLogLikDispConstMuMMZINB)
 #' 
 #' @export
 evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
-																						 vecCounts,
-																						 lsMuModelGlobal,
-																						 vecTimepoints,
-																						 vecindTimepointAssign,
-																						 matDropoutLinModel,
-																						 vecPiConstPredictors,
-																						 vecboolNotZero, 
-																						 vecboolZero,
-																						 scaWindowRadius=NULL){  
-	
-	# (I) Linker functions
-	# Log linker function to fit positive dispersion factor
-	scaDisp <- exp(vecTheta[1])
-	# Log linker for amplitudes
-	vecImpulseParam <- vecTheta[2:7]
-	vecImpulseParam[2:4] <- exp(vecImpulseParam[2:4])
-	vecMuParam <- evalImpulseModel_comp(vecImpulseParam=vecImpulseParam,
-																			vecTimepoints=vecTimepoints)[vecindTimepointAssign]
-	# Extract batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		scaNParamUsed <- 4
-		for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Prevent batch factor shrinkage and explosion:
-			vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-			vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-			
-			vecMuParam <- vecMuParam*vecBatchParam
-		}
-	}
-	
-	# (II) Prevent parameter shrinkage/explosion
-	# Prevent dispersion estimate from shrinking to zero
-	# to avoid numerical errors:
-	# Could also write as if statement, this accomodates for vectors later.
-	if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-	vecDisp <- rep(scaDisp, length(vecCounts))
-	
-	# (III) Compute drop-out rates
-	vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
-																			 vecMu=vecMuParam,
-																			 vecPiConstPredictors=vecPiConstPredictors )
-	
-	# (IV) Evaluate loglikelihood of estimate
-	scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
-															vecMu=vecMuParam,
-															vecNormConst=lsMuModelGlobal$vecNormConst,
-															vecDisp=vecDisp, 
-															vecPi=vecPi,
-															vecboolNotZero=vecboolNotZero, 
-															vecboolZero=vecboolZero,
-															scaWindowRadius=scaWindowRadius )
-	
-	return(scaLogLik)
+                                             vecCounts,
+                                             lsMuModelGlobal,
+                                             vecTimepoints,
+                                             vecindTimepointAssign,
+                                             matDropoutLinModel,
+                                             vecPiConstPredictors,
+                                             vecboolNotZero, 
+                                             vecboolZero,
+                                             scaWindowRadius=NULL){  
+  
+  # (I) Linker functions
+  # Log linker function to fit positive dispersion factor
+  scaDisp <- exp(vecTheta[1])
+  # Log linker for amplitudes
+  vecImpulseParam <- vecTheta[2:7]
+  vecImpulseParam[2:4] <- exp(vecImpulseParam[2:4])
+  vecMuParam <- evalImpulseModel_comp(vecImpulseParam=vecImpulseParam,
+                                      vecTimepoints=vecTimepoints)[vecindTimepointAssign]
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    scaNParamUsed <- 4
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # (III) Compute drop-out rates
+  vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
+                                       vecMu=vecMuParam,
+                                       vecPiConstPredictors=vecPiConstPredictors )
+  
+  # (IV) Evaluate loglikelihood of estimate
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+                              vecMu=vecMuParam,
+                              vecNormConst=lsMuModelGlobal$vecNormConst,
+                              vecDisp=vecDisp, 
+                              vecPi=vecPi,
+                              vecboolNotZero=vecboolNotZero, 
+                              vecboolZero=vecboolZero,
+                              scaWindowRadius=scaWindowRadius )
+  
+  return(scaLogLik)
 }
 
 #' Compiled function: evalLogLikDispConstMuImpulseZINB
@@ -808,97 +808,97 @@ evalLogLikDispConstMuImpulseZINB_comp <- cmpfun(evalLogLikDispConstMuImpulseZINB
 #' @export
 
 fitDispConstMuConstZINB <- function(vecCounts,
-																		scaMuGuess,
-																		lsvecBatchParamGuess,
-																		lsMuModelGlobal,
-																		scaDispGuess,
-																		matDropoutLinModel,
-																		vecPiConstPredictors,
-																		scaWindowRadius,
-																		MAXIT=1000,
-																		RELTOL=10^(-8) ){ 
-	
-	# (I) Numerical maximum likelihood estimation
+                                    scaMuGuess,
+                                    lsvecBatchParamGuess,
+                                    lsMuModelGlobal,
+                                    scaDispGuess,
+                                    matDropoutLinModel,
+                                    vecPiConstPredictors,
+                                    scaWindowRadius,
+                                    MAXIT=1000,
+                                    RELTOL=10^(-8) ){ 
+  
+  # (I) Numerical maximum likelihood estimation
   if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(scaMuGuess), log(unlist(lsvecBatchParamGuess)))
   else vecTheta <- c(log(scaDispGuess), log(scaMuGuess))
-	
+  
   fitDispMu <- tryCatch({
-		unlist(optim(
-			par=vecTheta,
-			evalLogLikDispConstMuConstZINB_comp,
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0,
-			scaWindowRadius=scaWindowRadius,
-			method="BFGS",
-			control=list(maxit=MAXIT, 
-									 reltol=RELTOL,
-									 fnscale=-1) )[c("par","value","convergence")])
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuConstZINB().",
-								 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikDispConstMuConstZINB_comp(
-			vecTheta=c(log(scaDispGuess), log(scaMuGuess)),
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0,
-			scaWindowRadius=scaWindowRadius)
-		print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", 
-								 paste(c(log(scaDispGuess), log(scaMuGuess)),collapse=" ")))
-		print(paste0("scaLLInit ", scaLLInit))
-		lsErrorCausingGene <- list(
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			vecParamGuess=c(log(scaDispGuess), log(scaMuGuess)),
-			matDropoutLinModel=matDropoutLinModel, 
-			vecPiConstPredictors=vecPiConstPredictors,
-			scaWindowRadius=scaWindowRadius,
-			scaLLInit=scaLLInit)
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		stop(strErrorMsg)
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	scaDisp <- exp(fitDispMu[1])
-	# Catch boundary of likelihood domain on dispersion space
-	if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-	
-	vecMuModel <- exp(fitDispMu[2])
-	# Catch boundary of likelihood domain on mu space
-	vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
-	
-	scaNParamUsed <- 2
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Catch boundary of likelihood domain on batch factor space:
-			vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
-			vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
-			return(vecBatchFactors)
-		})
-	} else { lsvecBatchFactors <- NULL }
-	
-	scaLL <- fitDispMu["value"]
-	scaConvergence <- fitDispMu["convergence"]
-	
-	return(list(scaDisp=scaDisp,
-	            vecMuModel=vecMuModel,
-							lsvecBatchFactors=lsvecBatchFactors,
-							scaConvergence=scaConvergence))
+    unlist(optim(
+      par=vecTheta,
+      evalLogLikDispConstMuConstZINB_comp,
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius,
+      method="BFGS",
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","value","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuConstZINB().",
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    scaLLInit <- evalLogLikDispConstMuConstZINB_comp(
+      vecTheta=c(log(scaDispGuess), log(scaMuGuess)),
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius)
+    print(paste0("c(log(scaDispGuess), log(scaMuGuess)) ", 
+                 paste(c(log(scaDispGuess), log(scaMuGuess)),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
+    lsErrorCausingGene <- list(
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      vecParamGuess=c(log(scaDispGuess), log(scaMuGuess)),
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      scaWindowRadius=scaWindowRadius,
+      scaLLInit=scaLLInit)
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  
+  vecMuModel <- exp(fitDispMu[2])
+  # Catch boundary of likelihood domain on mu space
+  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  
+  scaNParamUsed <- 2
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Catch boundary of likelihood domain on batch factor space:
+      vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
+      vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
+      return(vecBatchFactors)
+    })
+  } else { lsvecBatchFactors <- NULL }
+  
+  scaLL <- fitDispMu["value"]
+  scaConvergence <- fitDispMu["convergence"]
+  
+  return(list(scaDisp=scaDisp,
+              vecMuModel=vecMuModel,
+              lsvecBatchFactors=lsvecBatchFactors,
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for constant dispersion and sliding window 
@@ -947,93 +947,93 @@ fitDispConstMuConstZINB <- function(vecCounts,
 #' @export
 
 fitDispConstMuVecWindowsZINB<- function(vecCounts,
-																				vecMuGuess,
-																				lsvecBatchParamGuess,
-																				lsMuModelGlobal,
-																				scaDispGuess,
-																				matDropoutLinModel,
-																				vecPiConstPredictors,
-																				scaWindowRadius=NULL,
-																				MAXIT=1000,
-																				RELTOL=10^(-8) ){
-	
+                                        vecMuGuess,
+                                        lsvecBatchParamGuess,
+                                        lsMuModelGlobal,
+                                        scaDispGuess,
+                                        matDropoutLinModel,
+                                        vecPiConstPredictors,
+                                        scaWindowRadius=NULL,
+                                        MAXIT=1000,
+                                        RELTOL=10^(-8) ){
+  
   if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
   else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
   
-	fitDispMu <- tryCatch({
-		unlist(optim(
-			par=vecTheta,
-			evalLogLikDispConstMuVecWindowsZINB_comp,
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) &vecCounts==0,
-			scaWindowRadius=scaWindowRadius,
-			method="BFGS",
-			control=list(maxit=MAXIT, 
-									 reltol=RELTOL,
-									 fnscale=-1) )[c("par","value","convergence")])
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
-								 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikDispConstMuVecWindowsZINB_comp(
-			vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0)
-		print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
-		print(paste0("scaLLInit ", scaLLInit))
-		lsErrorCausingGene <- list(
-			vecParamGuess=c(scaDispGuess, vecMuGuess), 
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel, 
-			vecPiConstPredictors=vecPiConstPredictors,
-			scaLLInit=scaLLInit )
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		stop(strErrorMsg)
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	scaDisp <- exp(fitDispMu[1])
-	# Catch boundary of likelihood domain on dispersion space
-	if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-	
-	vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
-	# Catch boundary of likelihood domain on mu space
-	vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
-	
-	scaNParamUsed <- length(vecMuGuess)+1
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Catch boundary of likelihood domain on batch factor space:
-			vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
-			vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
-			return(vecBatchFactors)
-		})
-	} else { lsvecBatchFactors <- NULL }
-	
-	scaLL <- fitDispMu["value"]
-	scaConvergence <- fitDispMu["convergence"]
-	
-	return(list(scaDisp=scaDisp,
-	            vecMuModel=vecMuModel,
-							lsvecBatchFactors=lsvecBatchFactors,
-							scaConvergence=scaConvergence))
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=vecTheta,
+      evalLogLikDispConstMuVecWindowsZINB_comp,
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
+      scaWindowRadius=scaWindowRadius,
+      method="BFGS",
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","value","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuVecWindowsZINB().",
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    scaLLInit <- evalLogLikDispConstMuVecWindowsZINB_comp(
+      vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
+    print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(scaDispGuess, vecMuGuess),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecMuGuess), 
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      scaLLInit=scaLLInit )
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  
+  vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
+  # Catch boundary of likelihood domain on mu space
+  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  
+  scaNParamUsed <- length(vecMuGuess)+1
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Catch boundary of likelihood domain on batch factor space:
+      vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
+      vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
+      return(vecBatchFactors)
+    })
+  } else { lsvecBatchFactors <- NULL }
+  
+  scaLL <- fitDispMu["value"]
+  scaConvergence <- fitDispMu["convergence"]
+  
+  return(list(scaDisp=scaDisp,
+              vecMuModel=vecMuModel,
+              lsvecBatchFactors=lsvecBatchFactors,
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1085,96 +1085,96 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
 #' @export
 
 fitDispConstMuClusterZINB <- function(vecCounts,
-																			vecMuGuess,
-																			lsvecBatchParamGuess,
-																			lsMuModelGlobal,
-																			scaDispGuess,
-																			matDropoutLinModel,
-																			vecPiConstPredictors,
-																			MAXIT=1000,
-																			RELTOL=10^(-8) ){ 
-	
-	# scaWindowRadius is set to NULL because smoothing
-	# within clusters does't make sense - the clusters already impose
-	# a constraint on the means.
+                                      vecMuGuess,
+                                      lsvecBatchParamGuess,
+                                      lsMuModelGlobal,
+                                      scaDispGuess,
+                                      matDropoutLinModel,
+                                      vecPiConstPredictors,
+                                      MAXIT=1000,
+                                      RELTOL=10^(-8) ){ 
+  
+  # scaWindowRadius is set to NULL because smoothing
+  # within clusters does't make sense - the clusters already impose
+  # a constraint on the means.
   if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
   else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
   
   fitDispMu <- tryCatch({
     unlist(optim(
       par=vecTheta,
-			evalLogLikDispConstMuClustersZINB_comp,
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) &vecCounts==0,
-			method="BFGS",
-			control=list(maxit=MAXIT, 
-									 reltol=RELTOL,
-									 fnscale=-1) )[c("par","value","convergence")])
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
-								 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikDispConstMuClustersZINB_comp(
-			vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecClusterAssign=vecClusterAssign,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0)
-		print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
-		print(paste0("scaLLInit ", scaLLInit))
-		lsErrorCausingGene <- list(
-			vecParamGuess=c(scaDispGuess, vecMuGuess), 
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel, 
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecClusterAssign=vecClusterAssign, 
-			scaLLInit=scaLLInit )
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		stop(strErrorMsg)
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	scaDisp <- exp(fitDispMu[1])
-	# Catch boundary of likelihood domain on dispersion space
-	if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-	
-	vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
-	# Catch boundary of likelihood domain on mu space
-	vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
-	
-	scaNParamUsed <- length(vecMuGuess)+1
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Catch boundary of likelihood domain on batch factor space:
-			vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
-			vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
-			return(vecBatchFactors)
-		})
-	} else { lsvecBatchFactors <- NULL }
-	
-	scaLL <- fitDispMu["value"]
-	scaConvergence <- fitDispMu["convergence"]
-	
-	return(list(scaDisp=scaDisp,
-	            vecMuModel=vecMuModel,
-							lsvecBatchFactors=lsvecBatchFactors,
-							scaConvergence=scaConvergence))
+      evalLogLikDispConstMuClustersZINB_comp,
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
+      method="BFGS",
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","value","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuClusterZINB().",
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    scaLLInit <- evalLogLikDispConstMuClustersZINB_comp(
+      vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecClusterAssign=vecClusterAssign,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
+    print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecMuGuess), 
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecClusterAssign=vecClusterAssign, 
+      scaLLInit=scaLLInit )
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  
+  vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
+  # Catch boundary of likelihood domain on mu space
+  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  
+  scaNParamUsed <- length(vecMuGuess)+1
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Catch boundary of likelihood domain on batch factor space:
+      vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
+      vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
+      return(vecBatchFactors)
+    })
+  } else { lsvecBatchFactors <- NULL }
+  
+  scaLL <- fitDispMu["value"]
+  scaConvergence <- fitDispMu["convergence"]
+  
+  return(list(scaDisp=scaDisp,
+              vecMuModel=vecMuModel,
+              lsvecBatchFactors=lsvecBatchFactors,
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1226,98 +1226,98 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 #' @export
 
 fitDispConstMuMMZINB <- function(vecCounts,
-																 vecMuGuess,
-																 lsvecBatchParamGuess,
-																 lsMuModelGlobal,
-																 scaDispGuess,
-																 matDropoutLinModel,
-																 vecPiConstPredictors,
-																 matWeights,
-																 MAXIT=1000,
-																 RELTOL=10^(-8) ){ 
-	
-	# scaWindowRadius is set to NULL because smoothing
-	# within clusters does't make sense - the clusters already impose
-	# a constraint on the means.
+                                 vecMuGuess,
+                                 lsvecBatchParamGuess,
+                                 lsMuModelGlobal,
+                                 scaDispGuess,
+                                 matDropoutLinModel,
+                                 vecPiConstPredictors,
+                                 matWeights,
+                                 MAXIT=1000,
+                                 RELTOL=10^(-8) ){ 
+  
+  # scaWindowRadius is set to NULL because smoothing
+  # within clusters does't make sense - the clusters already impose
+  # a constraint on the means.
   if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), log(vecMuGuess), log(unlist(lsvecBatchParamGuess)))
   else vecTheta <- c(log(scaDispGuess), log(vecMuGuess))
   
   fitDispMu <- tryCatch({
     unlist(optim(
       par=vecTheta,
-			evalLogLikDispConstMuMMZINB_comp,
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			matWeights=matWeights,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) &vecCounts==0,
-			method="BFGS",
-			control=list(maxit=MAXIT, 
-									 reltol=RELTOL,
-									 fnscale=-1) )[c("par","value","convergence")])
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuMMZINB().",
-								 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikDispConstMuMMZINB_comp(
-			vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			matWeights=matWeights,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0)
-		print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
-		print(paste0("scaLLInit ", scaLLInit))
-		lsErrorCausingGene <- list(
-			vecParamGuess=c(scaDispGuess, vecMuGuess), 
-			vecCounts=vecCounts, 
-			lsMuModelGlobal=lsMuModelGlobal,
-			matDropoutLinModel=matDropoutLinModel, 
-			vecPiConstPredictors=vecPiConstPredictors,
-			matWeights=matWeights, 
-			scaLLInit=scaLLInit )
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		stop(strErrorMsg)
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	scaDisp <- exp(fitDispMu[1])
-	# Catch boundary of likelihood domain on dispersion space
-	if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-	# Prevent dispersion estimate from growing to infinity
-	# to avoid numerical errors:
-	if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-	
-	vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
-	# Catch boundary of likelihood domain on mu space
-	vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
-	
-	scaNParamUsed <- length(vecMuGuess)+1
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Catch boundary of likelihood domain on batch factor space:
-			vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
-			vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
-			return(vecBatchFactors)
-		})
-	} else { lsvecBatchFactors <- NULL }
-	
-	scaLL <- fitDispMu["value"]
-	scaConvergence <- fitDispMu["convergence"]
-	
-	return(list(scaDisp=scaDisp,
-	            vecMuModel=vecMuModel,
-							lsvecBatchFactors=lsvecBatchFactors,
-							scaConvergence=scaConvergence))
+      evalLogLikDispConstMuMMZINB_comp,
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      matWeights=matWeights,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) &vecCounts==0,
+      method="BFGS",
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1) )[c("par","value","convergence")])
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting zero-inflated negative binomial mean parameter: fitDispConstMuMMZINB().",
+                 " Wrote report into LinagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    scaLLInit <- evalLogLikDispConstMuMMZINB_comp(
+      vecTheta=c(log(scaDispGuess), log(vecMuGuess)),
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      matWeights=matWeights,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0)
+    print(paste0("c(log(scaDispGuess), log(vecMuGuess)) ", paste(c(log(scaDispGuess), log(vecMuGuess)),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecMuGuess), 
+      vecCounts=vecCounts, 
+      lsMuModelGlobal=lsMuModelGlobal,
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      matWeights=matWeights, 
+      scaLLInit=scaLLInit )
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    stop(strErrorMsg)
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  
+  vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
+  # Catch boundary of likelihood domain on mu space
+  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  
+  scaNParamUsed <- length(vecMuGuess)+1
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Catch boundary of likelihood domain on batch factor space:
+      vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
+      vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
+      return(vecBatchFactors)
+    })
+  } else { lsvecBatchFactors <- NULL }
+  
+  scaLL <- fitDispMu["value"]
+  scaConvergence <- fitDispMu["convergence"]
+  
+  return(list(scaDisp=scaDisp,
+              vecMuModel=vecMuModel,
+              lsvecBatchFactors=lsvecBatchFactors,
+              scaConvergence=scaConvergence))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1383,107 +1383,107 @@ fitDispConstMuMMZINB <- function(vecCounts,
 #' 
 #' @export
 fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
-																						 vecImpulseParamGuess,
-																						 lsvecBatchParamGuess,
-																						 lsMuModelGlobal,
-																						 scaDispGuess,
-																						 vecTimepoints,
-																						 vecindTimepointAssign, 
-																						 matDropoutLinModel,
-																						 vecPiConstPredictors,
-																						 scaWindowRadius=NULL,
-																						 MAXIT=1000,
-																						 RELTOL=10^(-8) ){
-	
-	boolError <- FALSE
-	if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess, log(unlist(lsvecBatchParamGuess)))
-	else vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess)
-	
-	fitDispMu <- tryCatch({
-	  unlist(optim(
-	    par=vecTheta,			fn=evalLogLikDispConstMuImpulseZINB_comp, 
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			vecTimepoints=vecTimepoints,
-			vecindTimepointAssign=vecindTimepointAssign,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0,
-			scaWindowRadius=scaWindowRadius,
-			method="BFGS", 
-			control=list(maxit=MAXIT, 
-									 reltol=RELTOL,
-									 fnscale=-1)
-		)[c("par","value","convergence")] )
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
-								 " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikDispConstMuImpulseZINB_comp(
-			vecTheta=c(log(scaDispGuess), vecImpulseParamGuess),
-			vecCounts=vecCounts,
-			lsMuModelGlobal=lsMuModelGlobal,
-			vecTimepoints=vecTimepoints,
-			vecindTimepointAssign=vecindTimepointAssign,
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0,
-			scaWindowRadius=scaWindowRadius)
-		print(paste0("c(log(scaDispGuess), vecImpulseParamGuess) ", paste(c(log(scaDispGuess), vecImpulseParamGuess),collapse=" ")))
-		print(paste0("scaLLInit ", scaLLInit))
-		lsErrorCausingGene <- list(
-			vecParamGuess=c(scaDispGuess, vecImpulseParamGuess), 
-			vecCounts=vecCounts, 
-			vecTimepoints=vecTimepoints, 
-			vecindTimepointAssign=vecindTimepointAssign, 
-			matDropoutLinModel=matDropoutLinModel, 
-			vecPiConstPredictors=vecPiConstPredictors,
-			scaWindowRadius=scaWindowRadius, 
-			scaLLInit=scaLLInit )
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		#stop(strErrorMsg)
-		boolError <- TRUE
-		return(array(NA, 9))    
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	scaDisp <- exp(fitDispMu[1])
-	if(!boolError){
-		# Catch boundary of likelihood domain on dispersion space
-		if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-		# Prevent dispersion estimate from growing to infinity
-		# to avoid numerical errors:
-		if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-	}
-	
-	vecMuModel <- fitDispMu[2:7]
-	vecMuModel[2:4] <- exp(vecMuModel[2:4])
-	
-	scaNParamUsed <- 1+6
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
-			scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-			# Factor of first batch is one (constant), the remaining
-			# factors scale based on the first batch.
-			vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
-			scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-			# Catch boundary of likelihood domain on batch factor space:
-			vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
-			vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
-			return(vecBatchFactors)
-		})
-	} else { lsvecBatchFactors <- NULL }
-	
-	scaLL <- fitDispMu["value"]
-	scaConvergence <- fitDispMu["convergence"]
-	
-	return( list(scaDisp=scaDisp,
-	             vecMuModel=vecMuModel,
-							 lsvecBatchFactors=lsvecBatchFactors,
-							 scaLL=scaLL,
-							 scaConvergence=scaConvergence) )
+                                             vecImpulseParamGuess,
+                                             lsvecBatchParamGuess,
+                                             lsMuModelGlobal,
+                                             scaDispGuess,
+                                             vecTimepoints,
+                                             vecindTimepointAssign, 
+                                             matDropoutLinModel,
+                                             vecPiConstPredictors,
+                                             scaWindowRadius=NULL,
+                                             MAXIT=1000,
+                                             RELTOL=10^(-8) ){
+  
+  boolError <- FALSE
+  if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess, log(unlist(lsvecBatchParamGuess)))
+  else vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess)
+  
+  fitDispMu <- tryCatch({
+    unlist(optim(
+      par=vecTheta,			fn=evalLogLikDispConstMuImpulseZINB_comp, 
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      vecTimepoints=vecTimepoints,
+      vecindTimepointAssign=vecindTimepointAssign,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius,
+      method="BFGS", 
+      control=list(maxit=MAXIT, 
+                   reltol=RELTOL,
+                   fnscale=-1)
+    )[c("par","value","convergence")] )
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting impulse model: fitDispConstMuImpulseZINB().",
+                 " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
+    print(strErrorMsg)
+    scaLLInit <- evalLogLikDispConstMuImpulseZINB_comp(
+      vecTheta=c(log(scaDispGuess), vecImpulseParamGuess),
+      vecCounts=vecCounts,
+      lsMuModelGlobal=lsMuModelGlobal,
+      vecTimepoints=vecTimepoints,
+      vecindTimepointAssign=vecindTimepointAssign,
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      scaWindowRadius=scaWindowRadius)
+    print(paste0("c(log(scaDispGuess), vecImpulseParamGuess) ", paste(c(log(scaDispGuess), vecImpulseParamGuess),collapse=" ")))
+    print(paste0("scaLLInit ", scaLLInit))
+    lsErrorCausingGene <- list(
+      vecParamGuess=c(scaDispGuess, vecImpulseParamGuess), 
+      vecCounts=vecCounts, 
+      vecTimepoints=vecTimepoints, 
+      vecindTimepointAssign=vecindTimepointAssign, 
+      matDropoutLinModel=matDropoutLinModel, 
+      vecPiConstPredictors=vecPiConstPredictors,
+      scaWindowRadius=scaWindowRadius, 
+      scaLLInit=scaLLInit )
+    save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
+    #stop(strErrorMsg)
+    boolError <- TRUE
+    return(array(NA, 9))    
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  scaDisp <- exp(fitDispMu[1])
+  if(!boolError){
+    # Catch boundary of likelihood domain on dispersion space
+    if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+    # Prevent dispersion estimate from growing to infinity
+    # to avoid numerical errors:
+    if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  }
+  
+  vecMuModel <- fitDispMu[2:7]
+  vecMuModel[2:4] <- exp(vecMuModel[2:4])
+  
+  scaNParamUsed <- 1+6
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchFactors <- c(1, exp(fitDispMu[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Catch boundary of likelihood domain on batch factor space:
+      vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
+      vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
+      return(vecBatchFactors)
+    })
+  } else { lsvecBatchFactors <- NULL }
+  
+  scaLL <- fitDispMu["value"]
+  scaConvergence <- fitDispMu["convergence"]
+  
+  return( list(scaDisp=scaDisp,
+               vecMuModel=vecMuModel,
+               lsvecBatchFactors=lsvecBatchFactors,
+               scaLL=scaLL,
+               scaConvergence=scaConvergence) )
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1552,156 +1552,156 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
 #' 
 #' @export
 fitDispConstMuImpulseZINB <- function(vecCounts, 
-																			vecImpulseParamGuess,
-																			lsvecBatchParamGuess,
-																			lsMuModelGlobal,
-																			scaDispGuess,
-																			matDropoutLinModel,
-																			vecPiConstPredictors,
-																			scaWindowRadius,
-																			MAXIT=1000,
-																			RELTOL=10^(-8) ){
-	
-	# Try new peak and valley initialisations?
-	# Increases time complexity of mean estimation by factor 3
-	# but seems to make a difference on simulated data.
-	boolUseNewInits <- TRUE
-	
-	# (I) Process data
-	# Compute time point specifc parameters
-	vecTimepoints <- sort(unique( lsMuModelGlobal$vecPseudotime ))
-	# Get vector of numeric time point assignment indices:
-	vecindTimepointAssign <- match(lsMuModelGlobal$vecPseudotime, vecTimepoints)
-	
-	# (II) Initialise impulse model
-	# Decompress parameters for initialisation
-	vecMuParam <- decompressMeansByGene( vecMuModel=vecImpulseParamGuess,
-																			 lsvecBatchModel=lsvecBatchParamGuess,
-																			 lsMuModelGlobal=lsMuModelGlobal,
-																			 vecInterval=NULL )
-	vecPiParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
-																						 vecMu=vecMuParam,
-																						 vecPiConstPredictors=vecPiConstPredictors )
-	# The previous parameter estiamte is kept as a reference and
-	# used as an initialisation
-	# Compute initialisations for peak and valley
-	lsParamGuesses <- initialiseImpulseParametes(vecCounts=vecCounts,
-																							 lsMuModelGlobal=lsMuModelGlobal,
-																							 vecMu=vecMuParam,
-																							 vecDisp=rep(scaDispGuess, length(vecCounts)),
-																							 vecDrop=vecPiParam,
-																							 scaWindowRadius=scaWindowRadius)
-	vecParamGuessPeak <- lsParamGuesses$peak
-	vecParamGuessValley <- lsParamGuesses$valley
-	
-	# (II) Compute new parameters
-	# 1. Initialisation: Prior best fit
-	vecParamGuessPrior <- vecImpulseParamGuess
-	vecParamGuessPrior[2:4] <- log(vecParamGuessPrior[2:4])
-	lsFitPrior <- fitDispConstMuImpulseOneInitZINB(
-		vecCounts=vecCounts,
-		vecImpulseParamGuess=vecParamGuessPrior,
-		lsvecBatchParamGuess=lsvecBatchParamGuess,
-		lsMuModelGlobal=lsMuModelGlobal,
-		scaDispGuess=scaDispGuess,
-		vecTimepoints=vecTimepoints, 
-		matDropoutLinModel=matDropoutLinModel,
-		vecPiConstPredictors=vecPiConstPredictors,
-		vecindTimepointAssign=vecindTimepointAssign,
-		scaWindowRadius=scaWindowRadius,
-		MAXIT=MAXIT, 
-		RELTOL=RELTOL)
-	if(boolUseNewInits){
-		# 2. Initialisation: Peak
-		lsFitPeak <- fitDispConstMuImpulseOneInitZINB(
-			vecCounts=vecCounts,
-			vecImpulseParamGuess=vecParamGuessPeak,
-			lsvecBatchParamGuess=lsvecBatchParamGuess,
-			lsMuModelGlobal=lsMuModelGlobal,
-			scaDispGuess=scaDispGuess,
-			vecTimepoints=vecTimepoints, 
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecindTimepointAssign=vecindTimepointAssign,
-			scaWindowRadius=scaWindowRadius,
-			MAXIT=MAXIT, 
-			RELTOL=RELTOL)
-		# 3. Initialisation: Valley
-		lsFitValley <- fitDispConstMuImpulseOneInitZINB(
-			vecCounts=vecCounts,
-			vecImpulseParamGuess=vecParamGuessValley,
-			lsvecBatchParamGuess=lsvecBatchParamGuess,
-			lsMuModelGlobal=lsMuModelGlobal,
-			scaDispGuess=scaDispGuess,
-			vecTimepoints=vecTimepoints, 
-			matDropoutLinModel=matDropoutLinModel,
-			vecPiConstPredictors=vecPiConstPredictors,
-			vecindTimepointAssign=vecindTimepointAssign,
-			scaWindowRadius=scaWindowRadius,
-			MAXIT=MAXIT, 
-			RELTOL=RELTOL)
-		
-		# (IV) Find best fit
-		lsFits <- list(lsFitPeak, lsFitValley, lsFitPrior)
-		vecLL <- sapply(lsFits , function(fit) fit$scaLL)
-		if(all(!is.na(vecLL))){
-			# If any impulse fitting (of the three initialisations)
-			# was successful.
-			# Chose best value
-			indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
-			lsFitBest <- lsFits[[indMaxLL]]
-		} else if(is.na(vecLL[3])){
-			# If optimisation of previous fit was not successfull:
-			# Make sure new value is better than previous
-			scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
-																	 vecMu=vecMuParam*vecNormConst,
-																	 vecDisp=rep(scaDispGuess, length(vecCounts)), 
-																	 vecPi=vecPiParam,
-																	 vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-																	 vecboolZero= !is.na(vecCounts) &vecCounts==0,
-																	 scaWindowRadius=scaWindowRadius)
-			indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
-			if(vecLL[indMaxLL] < scaLLGuess){
-				lsFitBest <- list(scaDisp=scaDispGuess,
-													vecImpulseParam=vecImpulseParamGuess,
-													scaConvergence=1002)
-			} else {
-				lsFitBest <- lsFits[[indMaxLL]]
-			}
-		} else {
-			# If none of the three initilisations was successful:
-			# Use prior paramter values
-			lsFitBest <- list(scaDisp=scaDispGuess,
-												vecImpulseParam=vecImpulseParamGuess,
-												scaConvergence=1001)
-		}
-	} else {
-		# Make sure new value is better than previous
-		scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
-																 vecMu=vecMuParam*lsMuModelGlobal$vecNormConst,
-																 vecDisp=rep(scaDispGuess, length(vecCounts)), 
-																 vecPi=vecPiParam,
-																 vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-																 vecboolZero= !is.na(vecCounts) &vecCounts==0,
-																 scaWindowRadius=scaWindowRadius)
-		if(lsFitPrior$scaLL < scaLLGuess){
-			lsFitBest <- list(scaDisp=scaDispGuess,
-												vecImpulseParam=vecImpulseParamGuess,
-												scaConvergence=1002)
-		} else {
-			lsFitBest <- lsFitPrior
-		}
-	}
-	
-	scaDisp <- lsFitBest$scaDisp
-	vecMuModel <- lsFitBest$vecMuModel
-	lsvecBatchFactors <- lsFitBest$lsvecBatchFactors
-	scaConvergence <- lsFitBest$scaConvergence
-	
-	return(list(scaDisp=scaDisp,
-	            vecMuModel=vecMuModel,
-							lsvecBatchFactors=lsvecBatchFactors,
-							scaConvergence=scaConvergence))
+                                      vecImpulseParamGuess,
+                                      lsvecBatchParamGuess,
+                                      lsMuModelGlobal,
+                                      scaDispGuess,
+                                      matDropoutLinModel,
+                                      vecPiConstPredictors,
+                                      scaWindowRadius,
+                                      MAXIT=1000,
+                                      RELTOL=10^(-8) ){
+  
+  # Try new peak and valley initialisations?
+  # Increases time complexity of mean estimation by factor 3
+  # but seems to make a difference on simulated data.
+  boolUseNewInits <- TRUE
+  
+  # (I) Process data
+  # Compute time point specifc parameters
+  vecTimepoints <- sort(unique( lsMuModelGlobal$vecPseudotime ))
+  # Get vector of numeric time point assignment indices:
+  vecindTimepointAssign <- match(lsMuModelGlobal$vecPseudotime, vecTimepoints)
+  
+  # (II) Initialise impulse model
+  # Decompress parameters for initialisation
+  vecMuParam <- decompressMeansByGene( vecMuModel=vecImpulseParamGuess,
+                                       lsvecBatchModel=lsvecBatchParamGuess,
+                                       lsMuModelGlobal=lsMuModelGlobal,
+                                       vecInterval=NULL )
+  vecPiParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
+                                             vecMu=vecMuParam,
+                                             vecPiConstPredictors=vecPiConstPredictors )
+  # The previous parameter estiamte is kept as a reference and
+  # used as an initialisation
+  # Compute initialisations for peak and valley
+  lsParamGuesses <- initialiseImpulseParametes(vecCounts=vecCounts,
+                                               lsMuModelGlobal=lsMuModelGlobal,
+                                               vecMu=vecMuParam,
+                                               vecDisp=rep(scaDispGuess, length(vecCounts)),
+                                               vecDrop=vecPiParam,
+                                               scaWindowRadius=scaWindowRadius)
+  vecParamGuessPeak <- lsParamGuesses$peak
+  vecParamGuessValley <- lsParamGuesses$valley
+  
+  # (II) Compute new parameters
+  # 1. Initialisation: Prior best fit
+  vecParamGuessPrior <- vecImpulseParamGuess
+  vecParamGuessPrior[2:4] <- log(vecParamGuessPrior[2:4])
+  lsFitPrior <- fitDispConstMuImpulseOneInitZINB(
+    vecCounts=vecCounts,
+    vecImpulseParamGuess=vecParamGuessPrior,
+    lsvecBatchParamGuess=lsvecBatchParamGuess,
+    lsMuModelGlobal=lsMuModelGlobal,
+    scaDispGuess=scaDispGuess,
+    vecTimepoints=vecTimepoints, 
+    matDropoutLinModel=matDropoutLinModel,
+    vecPiConstPredictors=vecPiConstPredictors,
+    vecindTimepointAssign=vecindTimepointAssign,
+    scaWindowRadius=scaWindowRadius,
+    MAXIT=MAXIT, 
+    RELTOL=RELTOL)
+  if(boolUseNewInits){
+    # 2. Initialisation: Peak
+    lsFitPeak <- fitDispConstMuImpulseOneInitZINB(
+      vecCounts=vecCounts,
+      vecImpulseParamGuess=vecParamGuessPeak,
+      lsvecBatchParamGuess=lsvecBatchParamGuess,
+      lsMuModelGlobal=lsMuModelGlobal,
+      scaDispGuess=scaDispGuess,
+      vecTimepoints=vecTimepoints, 
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecindTimepointAssign=vecindTimepointAssign,
+      scaWindowRadius=scaWindowRadius,
+      MAXIT=MAXIT, 
+      RELTOL=RELTOL)
+    # 3. Initialisation: Valley
+    lsFitValley <- fitDispConstMuImpulseOneInitZINB(
+      vecCounts=vecCounts,
+      vecImpulseParamGuess=vecParamGuessValley,
+      lsvecBatchParamGuess=lsvecBatchParamGuess,
+      lsMuModelGlobal=lsMuModelGlobal,
+      scaDispGuess=scaDispGuess,
+      vecTimepoints=vecTimepoints, 
+      matDropoutLinModel=matDropoutLinModel,
+      vecPiConstPredictors=vecPiConstPredictors,
+      vecindTimepointAssign=vecindTimepointAssign,
+      scaWindowRadius=scaWindowRadius,
+      MAXIT=MAXIT, 
+      RELTOL=RELTOL)
+    
+    # (IV) Find best fit
+    lsFits <- list(lsFitPeak, lsFitValley, lsFitPrior)
+    vecLL <- sapply(lsFits , function(fit) fit$scaLL)
+    if(all(!is.na(vecLL))){
+      # If any impulse fitting (of the three initialisations)
+      # was successful.
+      # Chose best value
+      indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
+      lsFitBest <- lsFits[[indMaxLL]]
+    } else if(is.na(vecLL[3])){
+      # If optimisation of previous fit was not successfull:
+      # Make sure new value is better than previous
+      scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
+                                   vecMu=vecMuParam*vecNormConst,
+                                   vecDisp=rep(scaDispGuess, length(vecCounts)), 
+                                   vecPi=vecPiParam,
+                                   vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+                                   vecboolZero= !is.na(vecCounts) &vecCounts==0,
+                                   scaWindowRadius=scaWindowRadius)
+      indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
+      if(vecLL[indMaxLL] < scaLLGuess){
+        lsFitBest <- list(scaDisp=scaDispGuess,
+                          vecImpulseParam=vecImpulseParamGuess,
+                          scaConvergence=1002)
+      } else {
+        lsFitBest <- lsFits[[indMaxLL]]
+      }
+    } else {
+      # If none of the three initilisations was successful:
+      # Use prior paramter values
+      lsFitBest <- list(scaDisp=scaDispGuess,
+                        vecImpulseParam=vecImpulseParamGuess,
+                        scaConvergence=1001)
+    }
+  } else {
+    # Make sure new value is better than previous
+    scaLLGuess <- evalLogLikGene(vecCounts=vecCounts,
+                                 vecMu=vecMuParam*lsMuModelGlobal$vecNormConst,
+                                 vecDisp=rep(scaDispGuess, length(vecCounts)), 
+                                 vecPi=vecPiParam,
+                                 vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+                                 vecboolZero= !is.na(vecCounts) &vecCounts==0,
+                                 scaWindowRadius=scaWindowRadius)
+    if(lsFitPrior$scaLL < scaLLGuess){
+      lsFitBest <- list(scaDisp=scaDispGuess,
+                        vecImpulseParam=vecImpulseParamGuess,
+                        scaConvergence=1002)
+    } else {
+      lsFitBest <- lsFitPrior
+    }
+  }
+  
+  scaDisp <- lsFitBest$scaDisp
+  vecMuModel <- lsFitBest$vecMuModel
+  lsvecBatchFactors <- lsFitBest$lsvecBatchFactors
+  scaConvergence <- lsFitBest$scaConvergence
+  
+  return(list(scaDisp=scaDisp,
+              vecMuModel=vecMuModel,
+              lsvecBatchFactors=lsvecBatchFactors,
+              scaConvergence=scaConvergence))
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
@@ -1810,153 +1810,144 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #' 
 #' @export
 fitZINBMuDisp <- function( matCountsProc,
-													 vecNormConst,
-													 lsMuModel,
-													 lsDispModel,
-													 lsDropModel,
-													 scaWindowRadius,
-													 matWeights){
-	
-	scaNumGenes <- dim(matCountsProc)[1]
-	scaNumCells <- dim(matCountsProc)[2]
-	
-	if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)) lsvecBatchParamGuess <- lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] )
-	else lsvecBatchParamGuess <- NULL
-	
-	# Nest mean models within dispersion models
-	if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-		if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
-			lsFitDispMu <- bplapply( seq(1,scaNumGenes), function(i){
-				
-				# Decompress parameters
-				# Don't need to decompress any
-				
-				# Estimate constant mean parameter
-				fitDispMu <- fitDispConstMuConstZINB(
-					vecCounts=matCountsProc[i,],
-					scaMuGuess=lsMuModel$matMuModel[i,],
-					lsvecBatchParamGuess=lsvecBatchParamGuess,
-					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-					scaDispGuess=lsDispModel$matDispModel[i,],
-					matDropoutLinModel=lsDropModel$matDropoutLinModel,
-					vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-					scaWindowRadius=scaWindowRadius,
-					MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-					RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
-				return(fitDispMu)
-			})
-		} else if(lsMuModel$lsMuModelGlobal$strMuModel=="windows" & 
-							lsMuModel$lsMuModelGlobal$boolVecWindowsAsBFGS){
-			# The dispersion parameter co-estimation couples all LL
-			# terms of a gene so that there is no computational 
-			# advantage in not estimating all mean parameters
-			# simultaneously (boolVecWindowsAsBFGS=TRUE).
-			lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
-				# Decompress parameters
-				vecMuParam <- decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
-																						lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-																						vecInterval=NULL )
-				scaDispParam <- lsDispModel$matDispModel[i,]
-				
-				fitDispMu <- fitDispConstMuVecWindowsZINB(
-					vecCounts=matCountsProc[i,],
-					vecMu=vecMuParam, # Mu model
-					lsvecBatchParamGuess=lsvecBatchParamGuess,
-					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-					scaDispGuess=scaDispParam, # Disp model
-					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
-					vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-					scaWindowRadius=scaWindowRadius,
-					MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-					RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp  )
-				return(fitDispMu)
-			})
-		} else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
-			# Estimate mean parameter by cluster. No smoothing is used.
-			lsFitsDispMu <- bplapply(seq(1,scaNumGenes), function(i){        
-				# Estimate mean parameters
-				fitDispMu <-fitDispConstMuClusterZINB(
-					vecCounts=matCountsProc[i,],
-					vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lsvecBatchParamGuess,
-					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
-					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
-					vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-					MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-					RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
-				
-				return(fitDispMu)
-			})
-		} else if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
-			# Estimate mean parameter by cluster. No smoothing is used.
-			lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
-				# Estimate mean parameters
-				fitDispMu <-fitDispConstMuMMZINB(
-					vecCounts=matCountsProc[i,],
-					vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lsvecBatchParamGuess,
-					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
-					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
-					vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-					matWeights=matWeights,
-					MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-					RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
-				
-				return(fitDispMu)
-			})
-		} else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){      
-			lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){ 
-				# Decompress parameters
-				vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-																						 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-																						 vecInterval=NULL)
-				
-				# Estimate mean parameters
-				fitDispMu <- fitDispConstMuImpulseZINB(
-					vecCounts=matCountsProc[i,],
-					vecImpulseParamGuess=lsMuModel$matMuModel[i,], # Mu model
-					lsvecBatchParamGuess=lsvecBatchParamGuess,
-					lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-					scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
-					matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
-					vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
-					scaWindowRadius=scaWindowRadius,
-					MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
-					RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
-				return(fitDispMu)
-			})
-		} else {
-			#  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-			print(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
-									 lsMuModel$lsMuModelGlobal$strMuModel, 
-									 ". Only constant and impulse model implemented. ",
-									 "Use sequential estimation."))
-			stop(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
-									lsMuModel$lsMuModelGlobal$strMuModel, 
-									". Only constant and impulse model implemented. ",
-									"Use sequential estimation."))
-		}  
-	} else {
-		#  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-		print(paste0("Dispersion parameter model not recognised: ", 
-								 lsDispModel$lsDispModelGlobal$strDispModel, 
-								 ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
-		stop(paste0("Dispersion parameter model not recognised: ", 
-								lsDispModel$lsDispModelGlobal$strDispModel, 
-								". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
-	}
-	
-	matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
-	matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecMuModel))
-	lsmatBatchFactors <- lapply(seq(1,length(lsMuModel$lsmatBatchModel)), function(confounder){
-		do.call(rbind, lapply(lsFitDispMu,  function(i) i$lsvecBatchFactors[[confounder]] ))
-	})
-	vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
-	
-	return( list(matMuModel=matMuModel,
-							 lsmatBatchFactors=lsmatBatchFactors,
-							 matDispModel=matDispModel,
-							 vecConvergence=vecConvergence) )
+                           vecNormConst,
+                           lsMuModel,
+                           lsDispModel,
+                           lsDropModel,
+                           scaWindowRadius,
+                           matWeights){
+  
+  scaNumGenes <- dim(matCountsProc)[1]
+  scaNumCells <- dim(matCountsProc)[2]
+  
+  lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
+    if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)) lsvecBatchParamGuess <- lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2]] )
+    else lsvecBatchParamGuess <- NULL
+    
+    # Nest mean models within dispersion models
+    if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
+      if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
+        # Decompress parameters
+        # Don't need to decompress any
+        
+        fitDispMu <- fitDispConstMuConstZINB(
+          vecCounts=matCountsProc[i,],
+          scaMuGuess=lsMuModel$matMuModel[i,],
+          lsvecBatchParamGuess=lsvecBatchParamGuess,
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          scaDispGuess=lsDispModel$matDispModel[i,],
+          matDropoutLinModel=lsDropModel$matDropoutLinModel,
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          scaWindowRadius=scaWindowRadius,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
+        return(fitDispMu)
+      } else if(lsMuModel$lsMuModelGlobal$strMuModel=="windows" & 
+                lsMuModel$lsMuModelGlobal$boolVecWindowsAsBFGS){
+        # The dispersion parameter co-estimation couples all LL
+        # terms of a gene so that there is no computational 
+        # advantage in not estimating all mean parameters
+        # simultaneously (boolVecWindowsAsBFGS=TRUE).
+        # Decompress parameters
+        vecMuParam <- decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
+                                            lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+                                            vecInterval=NULL )
+        scaDispParam <- lsDispModel$matDispModel[i,]
+        
+        fitDispMu <- fitDispConstMuVecWindowsZINB(
+          vecCounts=matCountsProc[i,],
+          vecMu=vecMuParam, # Mu model
+          lsvecBatchParamGuess=lsvecBatchParamGuess,
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          scaDispGuess=scaDispParam, # Disp model
+          matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          scaWindowRadius=scaWindowRadius,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp  )
+        return(fitDispMu)
+      } else if(lsMuModel$lsMuModelGlobal$strMuModel=="clusters"){
+        # Estimate mean parameter by cluster. No smoothing is used.
+        # Estimate mean parameters
+        fitDispMu <-fitDispConstMuClusterZINB(
+          vecCounts=matCountsProc[i,],
+          vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
+          lsvecBatchParamGuess=lsvecBatchParamGuess,
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
+          matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
+        
+        return(fitDispMu)
+      } else if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
+        # Estimate mean parameter by cluster. No smoothing is used.
+        
+        # Estimate mean parameters
+        fitDispMu <-fitDispConstMuMMZINB(
+          vecCounts=matCountsProc[i,],
+          vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
+          lsvecBatchParamGuess=lsvecBatchParamGuess,
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
+          matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          matWeights=matWeights,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
+        
+        return(fitDispMu)
+      } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){      
+        # Decompress parameters
+        vecDispParam <- decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                                             lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                             vecInterval=NULL)
+        
+        # Estimate mean parameters
+        fitDispMu <- fitDispConstMuImpulseZINB(
+          vecCounts=matCountsProc[i,],
+          vecImpulseParamGuess=lsMuModel$matMuModel[i,], # Mu model
+          lsvecBatchParamGuess=lsvecBatchParamGuess,
+          lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+          scaDispGuess=lsDispModel$matDispModel[i,], # Disp model
+          matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          scaWindowRadius=scaWindowRadius,
+          MAXIT=lsMuModel$lsMuModelGlobal$MAXIT_BFGS_MuDisp,
+          RELTOL=lsMuModel$lsMuModelGlobal$RELTOL_BFGS_MuDisp )
+        return(fitDispMu)
+      } else {
+        #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
+        print(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
+                     lsMuModel$lsMuModelGlobal$strMuModel, 
+                     ". Only constant and impulse model implemented. ",
+                     "Use sequential estimation."))
+        stop(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
+                    lsMuModel$lsMuModelGlobal$strMuModel, 
+                    ". Only constant and impulse model implemented. ",
+                    "Use sequential estimation."))
+      }  
+    } else {
+      #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
+      print(paste0("Dispersion parameter model not recognised: ", 
+                   lsDispModel$lsDispModelGlobal$strDispModel, 
+                   ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
+      stop(paste0("Dispersion parameter model not recognised: ", 
+                  lsDispModel$lsDispModelGlobal$strDispModel, 
+                  ". Only constant model implemented. Contact david.seb.fischer@gmail.com for alternatives."))
+    }
+  })
+  
+  matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
+  matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecMuModel))
+  lsmatBatchFactors <- lapply(seq(1,length(lsMuModel$lsmatBatchModel)), function(confounder){
+    do.call(rbind, lapply(lsFitDispMu,  function(i) i$lsvecBatchFactors[[confounder]] ))
+  })
+  vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
+  
+  return( list(matMuModel=matMuModel,
+               lsmatBatchFactors=lsmatBatchFactors,
+               matDispModel=matDispModel,
+               vecConvergence=vecConvergence) )
 }

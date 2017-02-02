@@ -547,7 +547,7 @@ evalLogLikMatrix <- function(matCounts,
     bplapply( seq(1,scaNGenes), function(i){
       if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
         
-      	matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
+        matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
       		decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,m],
       													lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
       													lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
@@ -578,6 +578,7 @@ evalLogLikMatrix <- function(matCounts,
         													matWeights=matWeights,
                                   vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
                                   vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+        
       } else {
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],

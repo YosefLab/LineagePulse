@@ -42,8 +42,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   
   tm_cycle <- system.time({
     lsZINBFitsRed <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-    												 dfAnnotation=objectLineagePulse@dfAnnotationProc,
-    												 vecConfounders=objectLineagePulse@vecConfounders,
+                             dfAnnotation=objectLineagePulse@dfAnnotationProc,
+                             vecConfounders=objectLineagePulse@vecConfounders,
                              vecNormConst=objectLineagePulse@vecNormConst,
                              matWeights=NULL,
                              matPiConstPredictors=NULL,
@@ -74,7 +74,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   # the overall distance is maximised.
   lsMuModelFull <- lsMuModelRed
   lsMuModelFull$lsMuModelGlobal$strMuModel <- "MM"
-  vecidxCellsForCentroids <- initialiseCentroidsFromCells(matCounts=objectLineagePulse@matCountsProc, 
+  vecidxCellsForCentroids <- initialiseCentroidsFromCells(matCounts=objectLineagePulse@matCountsProc,
+                                                          vecFixedCells=objectLineagePulse@dfAnnotationProc$populations,
                                                           scaN=scaNMixtures)
   # Add pseudo count to not generate error in optim in log space
   lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]
@@ -85,7 +86,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                        nrow=scaNCells, ncol=scaNMixtures)
   # Correct fixed weights (RSA)
   if(objectLineagePulse@boolFixedPopulations){
-  	vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
+    vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
     matWeights[!is.na(vecFixedAssignments),] <- 0
     matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
   }
@@ -96,9 +97,19 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   # (II) Estimation iteration on full model
   # Set iteration reporters
   scaIter <- 1
-  scaLogLikNew <- -Inf
+  scaLogLikNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                      lsMuModel=lsMuModelFull,
+                                      lsDispModel=lsDispModelFull, 
+                                      lsDropModel=lsDropModel,
+                                      matWeights=matWeights,
+                                      scaWindowRadius=NULL )
   scaLogLikOld <- NA
   vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
+  
+  if(boolSuperVerbose){
+    print(paste0("#  .   Initialised MM: ",
+                 "loglikelihood of   ", scaLogLikNew))
+  }
   
   boolResetDropout <- FALSE
   tm_RSAcycle <- system.time({
@@ -109,21 +120,26 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       # E-like step: Estimation of mixture assignments
       tm_estep <- system.time({
         lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
-        																						dfAnnotation=objectLineagePulse@dfAnnotationProc,
-        																						boolFixedPopulations=objectLineagePulse@boolFixedPopulations,
-        																						vecNormConst=objectLineagePulse@vecNormConst,
-        																						lsMuModel=lsMuModelFull,
+                                                    dfAnnotation=objectLineagePulse@dfAnnotationProc,
+                                                    boolFixedPopulations=objectLineagePulse@boolFixedPopulations,
+                                                    vecNormConst=objectLineagePulse@vecNormConst,
+                                                    lsMuModel=lsMuModelFull,
                                                     lsDispModel=lsDispModelFull,
                                                     lsDropModel=lsDropModel,
                                                     matWeights=matWeights,
                                                     MAXIT_BFGS_MM=MAXIT_BFGS_MM,
                                                     RELTOL_BFGS_MM=RELTOL_BFGS_MM )
         matWeights <- lsWeightFits$matWeights
-        scaTemp <- sum(lsWeightFits$vecLL, na.rm=TRUE)
       })
       if(boolSuperVerbose){
+        scaLogLikTemp <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                         lsMuModel=lsMuModelFull,
+                                         lsDispModel=lsDispModelFull, 
+                                         lsDropModel=lsDropModel,
+                                         matWeights=matWeights,
+                                         scaWindowRadius=NULL )
         print(paste0("# ", scaIter,".   E-step complete: ",
-                     "loglikelihood of  ", scaTemp, " in ",
+                     "loglikelihood of  ", scaLogLikTemp, " in ",
                      round(tm_estep["elapsed"]/60,2)," min."))
         if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
                                                                sum(lsWeightFits$vecConvergence !=0), " cases."))
@@ -133,9 +149,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       vecboolMixtureDropped <- sapply(seq(1,scaNMixtures), function(mixture){
         sum(vecidxAssignedMixture==mixture) <= 1
       })
-      if(any(vecboolMixtureDropped)){
+      if(scaIter >1 & any(vecboolMixtureDropped)){
         # Reinitialise one mixture component
-        boolResetDropout <- TRUE
         # Get badly described cell:
         # Don't chose minimum to not catch outlier cells.
         vecidxMaxWeightsSort <- sort(apply(matWeights, 1, max), index.return=TRUE, decreasing=FALSE)$ix
@@ -156,47 +171,46 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                          scaWindowRadius=NULL )
         if(boolSuperVerbose){
           print(paste0("# ", scaIter,".   E-Reset complete: ",
-                       "loglikelihood of ", scaTemp, 
+                       "loglikelihood of ", scaLogLikNew, 
                        " (Mixture ", which(vecboolMixtureDropped)[1],")."))
         }
       }
       
-      if(!boolResetDropout){
-      	# M-like step: Estimate mixture model parameters
-        tm_mstep <- system.time({
-          lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-          													dfAnnotation=objectLineagePulse@dfAnnotationProc,
-          													vecConfounders=objectLineagePulse@vecConfounders,
-          													vecNormConst=objectLineagePulse@vecNormConst,
-          													matWeights=matWeights,
-                                    matPiConstPredictors=NULL,
-                                    scaWindowRadius=NULL,
-                                    boolVecWindowsAsBFGS=FALSE,
-                                    lsDropModel=lsDropModel,
-                                    matMuModelInit=lsMuModelFull$matMuModel,
-                                    matDispModelInit=lsDispModelFull$matDispModel,
-                                    strMuModel="MM",
-                                    strDispModel="constant",
-                                    scaMaxEstimationCycles=1,
-                                    boolVerbose=TRUE,
-                                    boolSuperVerbose=TRUE)
-          lsMuModelFull <- lsZINBFitsFull$lsMuModel
-          lsDispModelFull <- lsZINBFitsFull$lsDispModel
-          boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
-        })
-        scaLogLikOld <- scaLogLikNew
-        vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
-        scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
-        if(boolSuperVerbose){
-          print(paste0("# ",scaIter,".   M-step complete: ",
-                       "loglikelihood of  ", scaLogLikNew, " in ",
-                       round(tm_mstep["elapsed"]/60,2)," min."))
-          if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
-        } else if(boolVerbose){
-          print(paste0("# ",scaIter,". iteration complete: ",
-                       "loglikelihood of ", scaLogLikNew, " in ",
-                       round(tm_estep["elapsed"]/60,2)," min."))
-        }
+      # M-like step: Estimate mixture model parameters
+      tm_mstep <- system.time({
+        lsZINBFitsFull <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
+                                  dfAnnotation=objectLineagePulse@dfAnnotationProc,
+                                  vecConfounders=objectLineagePulse@vecConfounders,
+                                  vecNormConst=objectLineagePulse@vecNormConst,
+                                  matWeights=matWeights,
+                                  matPiConstPredictors=NULL,
+                                  scaWindowRadius=NULL,
+                                  boolVecWindowsAsBFGS=FALSE,
+                                  lsDropModel=lsDropModel,
+                                  matMuModelInit=lsMuModelFull$matMuModel,
+                                  lsmatBatchModelInit=lsMuModelFull$lsmatBatchModel,
+                                  matDispModelInit=lsDispModelFull$matDispModel,
+                                  strMuModel="MM",
+                                  strDispModel="constant",
+                                  scaMaxEstimationCycles=1,
+                                  boolVerbose=TRUE,
+                                  boolSuperVerbose=TRUE)
+        lsMuModelFull <- lsZINBFitsFull$lsMuModel
+        lsDispModelFull <- lsZINBFitsFull$lsDispModel
+        boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
+      })
+      scaLogLikOld <- scaLogLikNew
+      vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
+      scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
+      if(boolSuperVerbose){
+        print(paste0("# ",scaIter,".   M-step complete: ",
+                     "loglikelihood of  ", scaLogLikNew, " in ",
+                     round(tm_mstep["elapsed"]/60,2)," min."))
+        if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
+      } else if(boolVerbose){
+        print(paste0("# ",scaIter,". iteration complete: ",
+                     "loglikelihood of ", scaLogLikNew, " in ",
+                     round(tm_estep["elapsed"]/60,2)," min."))
       }
       
       vecEMLogLikModelFull[scaIter] <- scaLogLikNew
