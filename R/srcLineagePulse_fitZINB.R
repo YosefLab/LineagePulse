@@ -202,8 +202,11 @@ fitZINB <- function(matCounts,
 						return(lsFitPi)
 					})
 					lsDropModel$matDropoutLinModel <-  do.call(rbind, lapply(lsFitsPi, function(cell) cell$vecLinModel))
-					vecboolPiEstConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)  
+					vecboolPiEstConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)
+					vecLL <- sapply(lsFitsPi, function(cell) cell$scaLL)  
 				})
+				print(paste0("# ",scaIter,".   Dropout internal value is     ",
+				             "loglikelihood of     ", sum(vecLL)))
 				colnames(lsDropModel$matDropoutLinModel) <- NULL # Want this so that column names dont grow to par.par.par...
 				if(boolSuperVerbose){
 					scaLogLikTemp <- evalLogLikMatrix( matCounts=matCounts,
@@ -241,12 +244,14 @@ fitZINB <- function(matCounts,
 			colnames(lsDispModel$matDispModel) <- NULL # Need this so that column names dont grow to par.par.par...
 			lsMuModel$matMuModel <- lsFitMuDisp$matMuModel
 			colnames(lsMuModel$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
-			lsMuModel$lsmatBatchFactors <- lsFitMuDisp$lsmatBatchFactors
-			for(mat in lsMuModel$lsmatBatchFactors) colnames(mat) <- NULL # Need this so that column names dont grow to par.par.par...
+			lsMuModel$lsmatBatchModel <- lsFitMuDisp$lsmatBatchModel
+			for(mat in lsMuModel$lsmatBatchModel) colnames(mat) <- NULL # Need this so that column names dont grow to par.par.par...
 			
 			vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
 			vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
 			
+			print(paste0("# ",scaIter, ".   Mean+Disp internal values is   ",
+			              "log likelihood of   ", sum(lsFitMuDisp$vecLL)))
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew
 			scaLogLikNew <- evalLogLikMatrix( matCounts=matCounts,

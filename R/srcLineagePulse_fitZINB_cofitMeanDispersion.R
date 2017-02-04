@@ -77,12 +77,28 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
   # Log linker function to fit positive mean
-  scaMu <- exp(vecTheta[2])
-  vecMuParam <- rep(scaMu, length(scaMu))
+  vecMu <- exp(vecTheta[2])
+  scaNParamUsed <- 1+length(vecMu)
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10) 
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent means estimate from shrinking to zero
+  # to avoid numerical errors:
+  vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu > 10^(10)] <- 10^(10)
+  
+  vecMuParam <- rep(vecMu, length(vecCounts))
   
   # Extract batch factors
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    scaNParamUsed <- 2
     for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
       scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
       # Factor of first batch is one (constant), the remaining
@@ -95,21 +111,8 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
       
       vecMuParam <- vecMuParam*vecBatchParam
     }
+    #vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
   }
-  
-  # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
-  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-  vecDisp <- rep(scaDisp, length(vecCounts))
-  
-  # Prevent means estimate from shrinking to zero
-  # to avoid numerical errors:
-  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
   
   # (III) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
@@ -223,24 +226,8 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
   # Log linker function to fit positive mean
-  vecMuParam <- exp(vecTheta[2:(1+length(vecCounts))])
-  
-  # Extract batch factors
-  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    scaNParamUsed <- 1+length(vecCounts)
-    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-      # Factor of first batch is one (constant), the remaining
-      # factors scale based on the first batch.
-      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-      # Prevent batch factor shrinkage and explosion:
-      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-      
-      vecMuParam <- vecMuParam*vecBatchParam
-    }
-  }
+  vecMu <- exp(vecTheta[2:(1+length(vecCounts))])
+  scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
   # Prevent dispersion estimate from shrinking to zero
@@ -254,7 +241,26 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   
   # Prevent means estimate from shrinking to zero
   # to avoid numerical errors:
-  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  
+  vecMuParam <- vecMu
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+    #vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  }
   
   # (III) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
@@ -372,24 +378,7 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   scaDisp <- exp(vecTheta[1])
   # Log linker function to fit positive mean
   vecMu <- exp(vecTheta[2:(max(lsMuModelGlobal$vecClusterAssign)+1)])
-  vecMuParam <- vecMu[lsMuModelGlobal$vecClusterAssign]
-  
-  # Extract batch factors
-  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    scaNParamUsed <- 1+max(lsMuModelGlobal$vecClusterAssign)
-    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-      # Factor of first batch is one (constant), the remaining
-      # factors scale based on the first batch.
-      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-      # Prevent batch factor shrinkage and explosion:
-      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-      
-      vecMuParam <- vecMuParam*vecBatchParam
-    }
-  }
+  scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
   # Prevent dispersion estimate from shrinking to zero
@@ -403,7 +392,26 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   
   # Prevent means estimate from shrinking to zero
   # to avoid numerical errors:
-  vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  
+  vecMuParam <- vecMu[lsMuModelGlobal$vecClusterAssign]
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      vecMuParam <- vecMuParam*vecBatchParam
+    }
+    #vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
+  }
   
   # (III) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
@@ -513,32 +521,14 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
                                         vecboolZero,
                                         matWeights){ 
   
+  scaNCells <- length(vecCounts)
+  scaNMixtures <- dim(matWeights)[1]
   # (I) Linker functions
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
   # Log linker function to fit positive mean
-  vecMu <- exp(vecTheta[2:dim(matWeights)[1]])
-  
-  scaNCells <- length(vecCounts)
-  scaNMixtures <- length(vecMu)
-  matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)
-  
-  # Extract batch factors
-  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    scaNParamUsed <- 1+dim(matWeights)[1]
-    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
-      # Factor of first batch is one (constant), the remaining
-      # factors scale based on the first batch.
-      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
-      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
-      # Prevent batch factor shrinkage and explosion:
-      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
-      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
-      
-      matMuParam <- matMuParam*matrix(vecBatchParam, nrow=scaNCells, ncol=scaNMixtures, byrow=FALSE)
-    }
-  }
+  vecMu <- exp(vecTheta[2:(scaNMixtures+1)])
+  scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
   # Prevent dispersion estimate from shrinking to zero
@@ -552,7 +542,26 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   
   # Prevent means estimate from shrinking to zero
   # to avoid numerical errors:
-  matMuParam[matMuParam < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  
+  matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)
+  
+  # Extract batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
+      scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+      # Factor of first batch is one (constant), the remaining
+      # factors scale based on the first batch.
+      vecBatchParam <- c(1, exp(vecTheta[(scaNParamUsed+1):(scaNParamUsed+scaNBatchFactors)]))[vecidxBatchAssign]
+      scaNParamUsed <- scaNParamUsed+scaNBatchFactors
+      # Prevent batch factor shrinkage and explosion:
+      vecBatchParam[vecBatchParam < 10^(-10)] <- 10^(-10)
+      vecBatchParam[vecBatchParam > 10^(10)] <- 10^(10)
+      
+      matMuParam <- matMuParam*matrix(vecBatchParam, nrow=scaNCells, ncol=scaNMixtures, byrow=FALSE)
+    }
+    #matMuParam[matMuParam < 10^(-10)] <- 10^(-10)
+  }
   
   # Decompress parameters
   matDropParam <- do.call(cbind, lapply(seq(1,scaNMixtures), function(m){
@@ -676,11 +685,27 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   # Log linker for amplitudes
   vecImpulseParam <- vecTheta[2:7]
   vecImpulseParam[2:4] <- exp(vecImpulseParam[2:4])
+  scaNParamUsed <- 1+6
+  
+  # (II) Prevent parameter shrinkage/explosion
+  # Prevent dispersion estimate from shrinking to zero
+  # to avoid numerical errors:
+  # Could also write as if statement, this accomodates for vectors later.
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
+  vecDisp <- rep(scaDisp, length(vecCounts))
+  
+  # Prevent amplitude shrinkage/explosion
+  vecImpulseParam[2:4][vecImpulseParam[2:4] < 10^(-10)] <- 10^-10
+  vecImpulseParam[2:4][vecImpulseParam[2:4] > 10^(10)] <- 10^10
+  
   vecMuParam <- evalImpulseModel_comp(vecImpulseParam=vecImpulseParam,
                                       vecTimepoints=vecTimepoints)[vecindTimepointAssign]
+  
   # Extract batch factors
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    scaNParamUsed <- 4
     for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
       scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
       # Factor of first batch is one (constant), the remaining
@@ -693,17 +718,8 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
       
       vecMuParam <- vecMuParam*vecBatchParam
     }
+    #vecMuParam[vecMuParam < 10^(-10)] <- 10^(-10)
   }
-  
-  # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
-  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-  vecDisp <- rep(scaDisp, length(vecCounts))
   
   # (III) Compute drop-out rates
   vecPi <- decompressDropoutRateByGene(matDropModel=matDropoutLinModel,
@@ -868,14 +884,15 @@ fitDispConstMuConstZINB <- function(vecCounts,
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
   # Catch boundary of likelihood domain on dispersion space
-  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
   # Prevent dispersion estimate from growing to infinity
   # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  if(scaDisp > 10^(10)) scaDisp <- 10^(10)
   
   vecMuModel <- exp(fitDispMu[2])
   # Catch boundary of likelihood domain on mu space
   vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- 2
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -895,10 +912,30 @@ fitDispConstMuConstZINB <- function(vecCounts,
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]
   
+  #Test
+  vecMuParam <- decompressMeansByGene( vecMuModel=vecMuModel,
+                                       lsvecBatchModel=lsvecBatchFactors,
+                                       lsMuModelGlobal=lsMuModelGlobal,
+                                       vecInterval=NULL )
+  vecDispParam <- rep(scaDisp, length(vecCounts))
+  vecPiParam <- decompressDropoutRateByGene( matDropModel=matDropoutLinModel,
+                                             vecMu=vecMuParam,
+                                             vecPiConstPredictors=vecPiConstPredictors )
+  
+  scaLogLik <- evalLogLikGene(vecCounts=vecCounts,
+                              vecMu=vecMuParam,
+                              vecNormConst=lsMuModelGlobal$vecNormConst,
+                              vecDisp=vecDispParam, 
+                              vecPi=vecPiParam,
+                              vecboolNotZero=vecCounts>0, 
+                              vecboolZero=vecCounts==0,
+                              scaWindowRadius=scaWindowRadius )
+  
   return(list(scaDisp=scaDisp,
               vecMuModel=vecMuModel,
               lsvecBatchFactors=lsvecBatchFactors,
-              scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence,
+              scaLL=scaLL))
 }
 
 #' Numerical fitting wrapper for constant dispersion and sliding window 
@@ -1033,7 +1070,8 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
   return(list(scaDisp=scaDisp,
               vecMuModel=vecMuModel,
               lsvecBatchFactors=lsvecBatchFactors,
-              scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence,
+              scaLL=scaLL))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1174,7 +1212,8 @@ fitDispConstMuClusterZINB <- function(vecCounts,
   return(list(scaDisp=scaDisp,
               vecMuModel=vecMuModel,
               lsvecBatchFactors=lsvecBatchFactors,
-              scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence,
+              scaLL=scaLL))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1317,7 +1356,8 @@ fitDispConstMuMMZINB <- function(vecCounts,
   return(list(scaDisp=scaDisp,
               vecMuModel=vecMuModel,
               lsvecBatchFactors=lsvecBatchFactors,
-              scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence,
+              scaLL=scaLL))
 }
 
 #' Numerical fitting wrapper for constant dispersion
@@ -1450,16 +1490,16 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  if(!boolError){
-    # Catch boundary of likelihood domain on dispersion space
-    if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-    # Prevent dispersion estimate from growing to infinity
-    # to avoid numerical errors:
-    if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
-  }
+  # Catch boundary of likelihood domain on dispersion space
+  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  # Prevent dispersion estimate from growing to infinity
+  # to avoid numerical errors:
+  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
   
   vecMuModel <- fitDispMu[2:7]
   vecMuModel[2:4] <- exp(vecMuModel[2:4])
+  vecMuModel[2:4][vecMuModel[2:4] < 10^(-10)] <- 10^(-10)
+  vecMuModel[2:4][vecMuModel[2:4] > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- 1+6
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -1697,11 +1737,13 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   vecMuModel <- lsFitBest$vecMuModel
   lsvecBatchFactors <- lsFitBest$lsvecBatchFactors
   scaConvergence <- lsFitBest$scaConvergence
+  scaLL <- lsFitBest$scaLL
   
   return(list(scaDisp=scaDisp,
               vecMuModel=vecMuModel,
               lsvecBatchFactors=lsvecBatchFactors,
-              scaConvergence=scaConvergence))
+              scaConvergence=scaConvergence,
+              scaLL=scaLL))
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
@@ -1941,13 +1983,15 @@ fitZINBMuDisp <- function( matCountsProc,
   
   matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$scaDisp))
   matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecMuModel))
-  lsmatBatchFactors <- lapply(seq(1,length(lsMuModel$lsmatBatchModel)), function(confounder){
+  lsmatBatchModel <- lapply(seq(1,length(lsMuModel$lsmatBatchModel)), function(confounder){
     do.call(rbind, lapply(lsFitDispMu,  function(i) i$lsvecBatchFactors[[confounder]] ))
   })
   vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
+  vecLL <- sapply(lsFitDispMu,  function(i) i$scaLL)
   
   return( list(matMuModel=matMuModel,
-               lsmatBatchFactors=lsmatBatchFactors,
+               lsmatBatchModel=lsmatBatchModel,
                matDispModel=matDispModel,
-               vecConvergence=vecConvergence) )
+               vecConvergence=vecConvergence,
+               vecLL=vecLL) )
 }

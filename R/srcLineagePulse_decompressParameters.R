@@ -127,6 +127,8 @@ decompressMeansByGene <- function(vecMuModel,
 			  vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
 			}
 		}
+	  # Means can shrink because of batch factors
+	  #vecMu[vecMu < 10^(-10)] <- 10^(-10)
 	}
 	
   return(vecMu)
