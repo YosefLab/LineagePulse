@@ -5,10 +5,10 @@
 #' Plot counts and model for one gene
 #' 
 #' Plot counts and model for one gene as a scatter plot with model trajectories:
-#' Both as count vs pseudotime.
+#' Both as counts or log10 counts vs pseudotime.
 #' Dropout rates can be given and are visualised as the colour of the observation
-#' points. 
-#' Inferred and underlying reference models can be added.
+#' points.
+#' A reference model trajectory can be added.
 #' 
 #' @param objectLineagePulse: (LineagePulseObject) LineagePulseObject
 #'    base plot on.
@@ -76,12 +76,14 @@ plotGene <- function(objectLineagePulse,
   gGenePlot <- gGenePlot + 
     labs(title=paste0(strGeneID, "\nlog10 q-value=", round(objectLineagePulse@dfResults[strGeneID,]$adj.p,2) )) +
     xlab(paste0("pseudotime")) +
-    ylab(paste0("counts")) +
     scale_colour_gradient(high="red",low="green",limits=c(0, 1)) +
     theme(axis.text=element_text(size=14),
           axis.title=element_text(size=14,face="bold"),
           title=element_text(size=14,face="bold"),
-          legend.text=element_text(size=14)) 
+          legend.text=element_text(size=14))
+  if(boolLogPlot) gGenePlot <- gGenePlot + ylab(paste0("log10 counts"))
+  else gGenePlot <- gGenePlot + ylab(paste0("counts"))
+  
   # Set plotting threshold based on observed data
   scaMaxPlot <- 2 * max(vecCounts)
   
