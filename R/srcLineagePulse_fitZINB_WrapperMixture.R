@@ -97,12 +97,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   # (II) Estimation iteration on full model
   # Set iteration reporters
   scaIter <- 1
-  scaLogLikNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                      lsMuModel=lsMuModelFull,
-                                      lsDispModel=lsDispModelFull, 
-                                      lsDropModel=lsDropModel,
-                                      matWeights=matWeights,
-                                      scaWindowRadius=NULL )
+  scaLogLikNew <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                       lsMuModel=lsMuModelFull,
+                                       lsDispModel=lsDispModelFull, 
+                                       lsDropModel=lsDropModel,
+                                       matWeights=matWeights,
+                                       scaWindowRadius=NULL ))
   scaLogLikOld <- NA
   vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
   
@@ -132,12 +132,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         matWeights <- lsWeightFits$matWeights
       })
       if(boolSuperVerbose){
-        scaLogLikTemp <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                         lsMuModel=lsMuModelFull,
-                                         lsDispModel=lsDispModelFull, 
-                                         lsDropModel=lsDropModel,
-                                         matWeights=matWeights,
-                                         scaWindowRadius=NULL )
+        scaLogLikTemp <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                              lsMuModel=lsMuModelFull,
+                                              lsDispModel=lsDispModelFull, 
+                                              lsDropModel=lsDropModel,
+                                              matWeights=matWeights,
+                                              scaWindowRadius=NULL ))
         print(paste0("# ", scaIter,".   E-step complete: ",
                      "loglikelihood of  ", scaLogLikTemp, " in ",
                      round(tm_estep["elapsed"]/60,2)," min."))
@@ -163,12 +163,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         lsMuModelFull$matMuModel[,which(vecboolMixtureDropped)[1]] <- vecCentroid
         # Compute new likelihood
         scaLogLikOld <- scaLogLikNew
-        scaLogLikNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                         lsMuModel=lsMuModelFull,
-                                         lsDispModel=lsDispModelFull, 
-                                         lsDropModel=lsDropModel,
-                                         matWeights=matWeights,
-                                         scaWindowRadius=NULL )
+        scaLogLikNew <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                             lsMuModel=lsMuModelFull,
+                                             lsDispModel=lsDispModelFull, 
+                                             lsDropModel=lsDropModel,
+                                             matWeights=matWeights,
+                                             scaWindowRadius=NULL ))
         if(boolSuperVerbose){
           print(paste0("# ", scaIter,".   E-Reset complete: ",
                        "loglikelihood of ", scaLogLikNew, 

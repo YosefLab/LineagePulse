@@ -1,11 +1,6 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 #+++++++++++++++++++++++++     Fit ZINB model    ++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-# HOWTO debug this: 
-# Set bplapply of estimation that throws error to lapply for proper error
-# reporting. Or - give nProc=1 and BiocParallel operates in SerialMode with
-# proper error reporting -> all estiamtions are sequential though.
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Fit zero-inflated negative binomial model to data
 #' 
@@ -60,8 +55,8 @@
 #' \code{fitZINBMuDisp}.
 #' Calls \code{evalLogLikMatrix} to follow convergence.
 #' 
-#' @param objectLineagePulse@matCountsProc: (matrix genes x cells)
-#'    Count data of all cells, unobserved entries are NA.
+#' @param objectLineagePulse: (LineagePulseObject)
+#' LineagePulseObject for which null and alternative model are to be fitted.
 #' @param matPiConstPredictors: (numeric matrix genes x number of constant
 #'    gene-wise drop-out predictors) Predictors for logistic drop-out 
 #'    fit other than offset and mean parameter (i.e. parameters which
@@ -100,10 +95,6 @@
 #'    one the latest estimates of neighbours. The latter case
 #'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
 #'    and each mean parameter is optimised once only.
-#' @param vecPseudotime: (numerical vector number of cells)
-#'    Pseudotime coordinates of cells. Only required if mean model
-#'    or dispersion model are fit as a function of pseudotime, 
-#'    e.g. impulse model for means.
 #' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
@@ -114,153 +105,12 @@
 #'    iterative parameter estimation in high detail with local 
 #'    convergence flags and step-by-step loglikelihood computation.
 #' 
-#' @return (list length 6)
-#'    \itemize{
-#'      \item lsMuModelH1: (list length 2)
-#'    All objects necessary to compute H1 mean parameters for all
-#'    observations.
-#'      \itemize{
-#'        \item matMuModel: (numerical matrix genes x number of model parameters)
-#'      Parameters of mean model for each gene.
-#'        \item lsMuModelGlobal: (list) Global variables for mean model,
-#'      common to all genes.
-#'      \itemize{
-#'        \item strMuModel: (str) {"constant", "impulse", "clusters", 
-#'      "windows"} Name of the mean model.
-#'        \item scaNumCells: (scalar) [Default NA] Number of cells
-#'      for which model is evaluated. Used for constant model.
-#'        \item vecPseudotime: (numerical vector number of cells)
-#'      [Default NA] Pseudotime coordinates of cells. Used for
-#'      impulse model.
-#'        \item vecindClusterAssign: (integer vector length number of
-#'      cells) [Default NA] Index of cluster assigned to each cell.
-#'      Used for clusters model.
-#'        \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
-#'      of a gene are simultaneously estiamted as a vector with BFGS
-#'      in windows mode.
-#'        \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-#'      for BFGS estimation of impulse model with optim (termination criterium).
-#'        \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-#'      change in objective function for BFGS estimation of impulse 
-#'      model with optim (termination criterium).
-#'      }
-#'    }
-#'    \item lsDispModelH1: (list length 2)
-#'    All objects necessary to compute H1 dispersion parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matDispModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of dispersion model for each gene.
-#'      \item lsDispModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'      \itemize{
-#'        \item strDispModel: (str) {"constant"} 
-#'      Name of the dispersion model.
-#'        \item scaNumCells: (scalar) [Default NA] Number of cells
-#'      for which model is evaluated. Used for constant model.
-#'        \item vecPseudotime: (numerical vector number of cells)
-#'      [Default NA] Pseudotime coordinates of cells. Used for
-#'      impulse model.
-#'        \item vecindClusterAssign: (integer vector length number of
-#'      cells) [Default NA] Index of cluster assigned to each cell.
-#'      Used for clusters model.
-#'      }
-#'    }
-#'      \item lsMuModelH0: (list length 2)
-#'    All objects necessary to compute H0 mean parameters for all
-#'    observations.
-#'      \itemize{
-#'        \item matMuModel: (numerical matrix genes x number of model parameters)
-#'      Parameters of mean model for each gene.
-#'        \item lsMuModelGlobal: (list) Global variables for mean model,
-#'      common to all genes.
-#'      \itemize{
-#'        \item strMuModel: (str) {"constant", "impulse", "clusters", 
-#'      "windows"} Name of the mean model.
-#'        \item scaNumCells: (scalar) [Default NA] Number of cells
-#'      for which model is evaluated. Used for constant model.
-#'        \item vecPseudotime: (numerical vector number of cells)
-#'      [Default NA] Pseudotime coordinates of cells. Used for
-#'      impulse model.
-#'        \item vecindClusterAssign: (integer vector length number of
-#'      cells) [Default NA] Index of cluster assigned to each cell.
-#'      Used for clusters model.
-#'        \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
-#'      of a gene are simultaneously estiamted as a vector with BFGS
-#'      in windows mode.
-#'        \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-#'      for BFGS estimation of impulse model with optim (termination criterium).
-#'        \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-#'      change in objective function for BFGS estimation of impulse 
-#'      model with optim (termination criterium).
-#'      }
-#'    }
-#'    \item lsDispModelH0: (list length 2)
-#'    All objects necessary to compute H0 dispersion parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matDispModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of dispersion model for each gene.
-#'      \item lsDispModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'      \itemize{
-#'        \item strDispModel: (str) {"constant"} 
-#'      Name of the dispersion model.
-#'        \item scaNumCells: (scalar) [Default NA] Number of cells
-#'      for which model is evaluated. Used for constant model.
-#'        \item vecPseudotime: (numerical vector number of cells)
-#'      [Default NA] Pseudotime coordinates of cells. Used for
-#'      impulse model.
-#'        \item vecindClusterAssign: (integer vector length number of
-#'      cells) [Default NA] Index of cluster assigned to each cell.
-#'      Used for clusters model.
-#'      }
-#'    }
-#'    \item lsDropModel: (list length 2)
-#'    All objects necessary to compute drop-out parameters for all
-#'    observations, omitting mean parameters (which are stored in lsMeanModel).
-#'      \itemize{
-#'        \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
-#'      {offset parameter, log(mu) parameter, parameters belonging to
-#'      constant predictors}
-#'      Parameters of drop-out model for each cell
-#'        \item matPiConstPredictors: (numeric matrix genes x number of constant
-#'      gene-wise drop-out predictors) Predictors for logistic drop-out 
-#'      fit other than offset and mean parameter (i.e. parameters which
-#'      are constant for all observations in a gene and externally supplied.)
-#'      Is null if no constant predictors are supplied.
-#'      }
-#'    \item lsFitZINBReporters: (list length 6)
-#'    Reporters of behaviour of overall fitting procedure.
-#'      \itemize{
-#'        \item boolConvergenceH1: (bool) Convergence of
-#'      estimation for alternative model H1. Convergence
-#'      is evaluated based on the convergence of the 
-#'      loglikelihood of the entire data set.
-#'        \item boolConvergenceH0: (bool) Convergence of
-#'      estimation for null model H0. Convergence
-#'      is evaluated based on the convergence of the 
-#'      loglikelihood of the entire data set.
-#'        \item vecEMLogLikH1: (numeric vector number of 
-#'      estimation cycles) Loglikelihood of entire 
-#'      data set after each estimation cycle of alternative
-#'      model H1.
-#'        \item vecEMLogLikH0: (numeric vector number of 
-#'      estimation cycles) Loglikelihood of entire 
-#'      data set after each estimation cycle of null
-#'      model H0.
-#'        \item scaKbyGeneH1: (scalar) Degrees of freedom
-#'      by gene used in alternative model H1. The logistic
-#'      dropout model is ignored as it is shared between
-#'      alternative and null model.
-#'        \item scaKbyGeneH0: (scalar) Degrees of freedom
-#'      by gene used in null model H0. The logistic
-#'      dropout model is ignored as it is shared between
-#'      alternative and null model.
-#'      }
-#'    }
+#' @return objectLineagePulse: (LineagePulseObject)
+#' LineagePulseObject with models with and fitting reporters added.
+#' 
+#' @author David Sebastian Fischer
+#' 
 #' @export
-
 fitNullAlternative <- function(objectLineagePulse,
                                matPiConstPredictors,
                                lsResultsClustering,
@@ -271,40 +121,6 @@ fitNullAlternative <- function(objectLineagePulse,
                                scaMaxEstimationCycles=20,
                                boolVerbose=FALSE,
                                boolSuperVerbose=FALSE ){
-  
-  ####################################################
-  # Compute degrees of freedom of model for each gene
-  # Drop-out model is ignored, would be counted at each gene.
-  # 1. Alternative model  H1:
-  # Mean model:
-  if(strMuModel=="windows"){
-    # One mean parameter per cell
-    scaKbyGeneH1 <- dim(objectLineagePulse@matCountsProc)[2]
-  } else if(strMuModel=="clusters"){
-    # One mean parameter per cluster
-    scaKbyGeneH1 <- lsResultsClustering$K
-  } else if(strMuModel=="MM"){
-    # One mean parameter per mixture component
-    scaKbyGeneH1 <- dim(matWeights)[2]
-  } else if(strMuModel=="impulse"){
-    # Six impulse model parameter to model means
-    scaKbyGeneH1 <- 6
-  } else if(strMuModel=="constant"){
-    # One constant mean
-    scaKbyGeneH1 <- 1
-  } else {
-    stop(paste0("ERROR in fitZINB(): strMuModel not recognised: ", strMuModel))
-  }
-  # Dispersion model
-  if(strDispModel=="constant"){
-    # One dispersion factor per gene.
-    scaKbyGeneH1 <- scaKbyGeneH1 + 1
-  } else {
-    stop(paste0("ERROR in fitZINB(): strMuModel not recognised: ", strDispModel))
-  }
-  # 2. Null model H0:
-  # One mean per gene and one dispersion factor
-  scaKbyGeneH0 <- 1+1
   
   ####################################################
   # Set sequence of model estimation: Which mean model
@@ -393,9 +209,7 @@ fitNullAlternative <- function(objectLineagePulse,
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelB,
                                 boolConvergenceH0=boolConvergenceModelA,
                                 vecEMLogLikH1=vecEMLogLikModelB,
-                                vecEMLogLikH0=vecEMLogLikModelA,
-                                scaKbyGeneH1=scaKbyGeneH1,
-                                scaKbyGeneH0=scaKbyGeneH0 )
+                                vecEMLogLikH0=vecEMLogLikModelA)
     objectLineagePulse@lsMuModelH1         <- lsMuModelB
     objectLineagePulse@lsDispModelH1       <- lsDispModelB
     objectLineagePulse@lsMuModelH0        <- lsMuModelA
@@ -404,9 +218,7 @@ fitNullAlternative <- function(objectLineagePulse,
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelA,
                                 boolConvergenceH0=boolConvergenceModelB,
                                 vecEMLogLikH1=vecEMLogLikModelA,
-                                vecEMLogLikH0=vecEMLogLikModelB,
-                                scaKbyGeneH1=scaKbyGeneH1,
-                                scaKbyGeneH0=scaKbyGeneH0 )
+                                vecEMLogLikH0=vecEMLogLikModelB)
     objectLineagePulse@lsMuModelH1         <- lsMuModelA
     objectLineagePulse@lsDispModelH1       <- lsDispModelA
     objectLineagePulse@lsMuModelH0        <- lsMuModelB

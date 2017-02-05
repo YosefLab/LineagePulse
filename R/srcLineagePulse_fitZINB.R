@@ -46,7 +46,8 @@ fitZINB <- function(matCounts,
 	# Impulse model: Initialised to constant (mean).
 	lsMuModel <- list(matMuModel=NA,
 										lsmatBatchModel=NA,
-										lsMuModelGlobal=list(strMuModel=strMuModel,
+										lsMuModelGlobal=list(scaDegFreedom=NA,
+										                     strMuModel=strMuModel,
 																				 vecNormConst=vecNormConst,
 																				 scaNumCells=scaNumCells,
 																				 vecPseudotime=dfAnnotation$pseudotime,
@@ -65,8 +66,8 @@ fitZINB <- function(matCounts,
 		if(strMuModel=="constant"){
 			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
 		} else if(strMuModel=="impulse"){
-			lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=6)
-			lsMuModel$matMuModel[,c(2:4)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
+			lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=7)
+			lsMuModel$matMuModel[,c(3:5)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
 		} else if(strMuModel=="clusters"){
 			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
 		} else if(strMuModel=="MM"){
@@ -108,12 +109,15 @@ fitZINB <- function(matCounts,
 	  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
 	  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
 	}
+	lsMuModel$lsMuModelGlobal$scaDegFreedom <- dim(lsMuModel$matMuModel)[2] + # Mu model
+	  sum(sapply(lsMuModel$lsmatBatchModel, function(mat) dim(mat)[2]-1 )) # Batch correction model
 	
 	# b) Dispersion model
 	# Dispersions: Low dispersion factor yielding high variance which makes
 	# cost function screening easy in the first iteration.
 	lsDispModel <- list(matDispModel=NA,
-											lsDispModelGlobal=list(strDispModel=strDispModel,
+											lsDispModelGlobal=list(scaDegFreedom=NA,
+											                       strDispModel=strDispModel,
 																						 scaNumCells=scaNumCells,
 																						 vecPseudotime=dfAnnotation$pseudotime,
 																						 vecClusterAssign=dfAnnotation$clusters) )
@@ -126,6 +130,8 @@ fitZINB <- function(matCounts,
 	} else {
 		lsDispModel$matDispModel <- matDispModelInit
 	}
+	lsDispModel$lsDispModelGlobal$scaDegFreedom <- dim(lsDispModel$matDispModel)[2] # Disp model
+	
 	
 	# c) Drop-out model: Only if this is ot given.
 	# Dropout model: Initialise as offset=0 and log(mu)  parameter which
@@ -156,20 +162,19 @@ fitZINB <- function(matCounts,
 	}
 	
 	# Evaluate initialisation loglikelihood
-	scaLogLikInitA <- evalLogLikMatrix(matCounts=matCounts,
-																		 lsMuModel=lsMuModel,
-																		 lsDispModel=lsDispModel, 
-																		 lsDropModel=lsDropModel,
-																		 scaWindowRadius=scaWindowRadius,
-																		 matWeights=matWeights )
+	scaLogLikNew <- sum(evalLogLikMatrix(matCounts=matCounts,
+	                                       lsMuModel=lsMuModel,
+	                                       lsDispModel=lsDispModel, 
+	                                       lsDropModel=lsDropModel,
+	                                       scaWindowRadius=scaWindowRadius,
+	                                       matWeights=matWeights ))
 	if(boolVerbose){
 		print(paste0("#  .   Initialisation complete: ",
-								 "log likelihood of         ", scaLogLikInitA))
+								 "log likelihood of         ", scaLogLikNew))
 	}
 	
 	# Set iteration reporters
 	scaIter <- 1
-	scaLogLikNew <- scaLogLikInitA
 	scaLogLikOld <- NA
 	while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
 		# If drop-out model was supplied (boolFitDrop==FALSE), drop-out model
@@ -205,15 +210,13 @@ fitZINB <- function(matCounts,
 					vecboolPiEstConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)
 					vecLL <- sapply(lsFitsPi, function(cell) cell$scaLL)  
 				})
-				print(paste0("# ",scaIter,".   Dropout internal value is     ",
-				             "loglikelihood of     ", sum(vecLL)))
 				colnames(lsDropModel$matDropoutLinModel) <- NULL # Want this so that column names dont grow to par.par.par...
 				if(boolSuperVerbose){
-					scaLogLikTemp <- evalLogLikMatrix( matCounts=matCounts,
-																						 lsMuModel=lsMuModel,
-																						 lsDispModel=lsDispModel, 
-																						 lsDropModel=lsDropModel,
-																						 scaWindowRadius=scaWindowRadius )
+					#scaLogLikTemp <- evalLogLikMatrix( matCounts=matCounts,
+					#																	 lsMuModel=lsMuModel,
+				  #																		 lsDispModel=lsDispModel, 
+					#																	 lsDropModel=lsDropModel,
+					#																	 scaWindowRadius=scaWindowRadius )
 					if(any(vecboolPiEstConverged != 0)){
 						print(paste0("Dropout estimation did not converge in ", 
 												 sum(vecboolPiEstConverged), " cases [codes: ",
@@ -224,7 +227,7 @@ fitZINB <- function(matCounts,
 												 sum(vecboolPiEstConverged==1001), " cases."))
 					}
 					print(paste0("# ",scaIter,".   Drop-out estimation complete: ",
-											 "loglikelihood of     ", scaLogLikTemp, " in ",
+											 "loglikelihood of     ", sum(vecLL), " in ",
 											 round(tm_pi["elapsed"]/60,2)," min."))
 				}  
 			}
@@ -250,16 +253,15 @@ fitZINB <- function(matCounts,
 			vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
 			vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
 			
-			print(paste0("# ",scaIter, ".   Mean+Disp internal values is   ",
-			              "log likelihood of   ", sum(lsFitMuDisp$vecLL)))
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew
-			scaLogLikNew <- evalLogLikMatrix( matCounts=matCounts,
-																				lsMuModel=lsMuModel,
-																				lsDispModel=lsDispModel, 
-																				lsDropModel=lsDropModel,
-																				scaWindowRadius=scaWindowRadius,
-																				matWeights=matWeights )
+			scaLogLikNew <- sum(lsFitMuDisp$vecLL)
+			#scaLogLikNew <- evalLogLikMatrix( matCounts=matCounts,
+			#																	lsMuModel=lsMuModel,
+			#																	lsDispModel=lsDispModel, 
+			#																	lsDropModel=lsDropModel,
+			#																	scaWindowRadius=scaWindowRadius,
+			#																	matWeights=matWeights )
 		})
 		
 		# Iteration complete

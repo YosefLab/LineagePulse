@@ -683,9 +683,9 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
   # Log linker for amplitudes
-  vecImpulseParam <- vecTheta[2:7]
-  vecImpulseParam[2:4] <- exp(vecImpulseParam[2:4])
-  scaNParamUsed <- 1+6
+  vecImpulseParam <- vecTheta[2:8]
+  vecImpulseParam[3:5] <- exp(vecImpulseParam[3:5])
+  scaNParamUsed <- 1+length(vecImpulseParam)
   
   # (II) Prevent parameter shrinkage/explosion
   # Prevent dispersion estimate from shrinking to zero
@@ -698,8 +698,8 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   # Prevent amplitude shrinkage/explosion
-  vecImpulseParam[2:4][vecImpulseParam[2:4] < 10^(-10)] <- 10^-10
-  vecImpulseParam[2:4][vecImpulseParam[2:4] > 10^(10)] <- 10^10
+  vecImpulseParam[vecImpulseParam < 10^(-10)] <- 10^-10
+  vecImpulseParam[vecImpulseParam > 10^(10)] <- 10^10
   
   vecMuParam <- evalImpulseModel_comp(vecImpulseParam=vecImpulseParam,
                                       vecTimepoints=vecTimepoints)[vecindTimepointAssign]
@@ -1491,17 +1491,17 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
   # Catch boundary of likelihood domain on dispersion space
-  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
   # Prevent dispersion estimate from growing to infinity
   # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   
-  vecMuModel <- fitDispMu[2:7]
-  vecMuModel[2:4] <- exp(vecMuModel[2:4])
-  vecMuModel[2:4][vecMuModel[2:4] < 10^(-10)] <- 10^(-10)
-  vecMuModel[2:4][vecMuModel[2:4] > 10^(10)] <- 10^(10)
+  vecMuModel <- fitDispMu[2:8]
+  vecMuModel[3:5] <- exp(vecMuModel[3:5])
+  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
   
-  scaNParamUsed <- 1+6
+  scaNParamUsed <- 1+length(vecMuModel)
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
     lsvecBatchFactors <- lapply(lsMuModelGlobal$lsvecidxBatchAssign, function(vecidxBatchAssign){
       scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
@@ -1637,7 +1637,7 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
   # (II) Compute new parameters
   # 1. Initialisation: Prior best fit
   vecParamGuessPrior <- vecImpulseParamGuess
-  vecParamGuessPrior[2:4] <- log(vecParamGuessPrior[2:4])
+  vecParamGuessPrior[3:5] <- log(vecParamGuessPrior[3:5])
   lsFitPrior <- fitDispConstMuImpulseOneInitZINB(
     vecCounts=vecCounts,
     vecImpulseParamGuess=vecParamGuessPrior,
