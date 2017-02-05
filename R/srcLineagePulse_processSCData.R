@@ -76,11 +76,10 @@
 #'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
 #'    and each mean parameter is optimised once only.
 #'
-#' @return list: (length 4)
+#' @return list: (length 3)
 #'    \itemize{
-#'        \item matCountsProc: (matrix genes x samples)
-#'    Processed count data of all cells, unobserved entries are NA,
-#'    trimmed by scaSmallRun.
+#'        \item objectLineagePulse: (LineagePulseObject)
+#'        Initialisation of LineagePulseObject.
 #'        \item matCountsProcFull: (matrix genes x samples)
 #'    Processed count data of all cells, unobserved entries are NA.
 #'        \item vecPseudotimeProc: (numerical vector length number of cells)
@@ -100,7 +99,11 @@ processSCData <- function(matCounts,
                           strDispModel,
                           scaWindowRadius,
                           boolCoEstDispMean,
-                          boolVecWindowsAsBFGS ){
+                          boolVecWindowsAsBFGS,
+													scaMaxEstimationCycles,
+													boolVerbose,
+													boolSuperVerbose,
+													STR_VERSION){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -126,6 +129,12 @@ processSCData <- function(matCounts,
     }
     if(any(matInput[!is.na(matInput)]<0)){
       stop(paste0( "ERROR: ", strMatInput, " contains negative elements. Requires count data." ))
+    }
+  }
+  # Checks whether elements are logical
+  checkLogical <- function(boolElement, strBoolElement){
+    if(!is.logical(boolElement)){
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strBoolElement, " must be logical (TRUE or FALSE)." ))
     }
   }
   
@@ -178,9 +187,19 @@ processSCData <- function(matCounts,
   if(!is.null(vecNormConstExternal)){
     checkNumeric(vecNormConstExternal,"vecNormConstExternal")
     if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
-      stop("ERROR: Not all cells in matCounts are given in vecNormConstExternal")
+      stop("ERROR IN INPUT DATA CHECK: ",
+           "Not all cells in matCounts are given in vecNormConstExternal")
     }
   }
+  
+  # 5. scaMaxEstimationCycles
+  checkNumeric(scaMaxEstimationCycles, "scaMaxEstimationCycles")
+  
+  # 6. booleans
+  checkLogical(boolCoEstDispMean, "boolCoEstDispMean")
+  checkLogical(boolVecWindowsAsBFGS, "boolVecWindowsAsBFGS")
+  checkLogical(boolVerbose, "boolVerbose")
+  checkLogical(boolSuperVerbose, "boolSuperVerbose")
   
   # (II) Check settings
   # 1. Check general mean estimation settings
@@ -241,9 +260,12 @@ processSCData <- function(matCounts,
                     " Must be one of: constant if co-estimation",
                     " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
       }
+  } else {
+    stop(paste0("Seperate mean and dispersion estimation currently not implemented."))
   }
   
   # (III) Process data
+  strReport <- ""
   # Convert from data frame to matrix
   if(is.list(matCounts)){
     matCounts <- data.matrix(matCounts)
@@ -273,9 +295,28 @@ processSCData <- function(matCounts,
   }
   
   # Print summary of processing
-  print(paste0(sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), " cells did not have a pseudotime coordinate and were excluded."))
-  print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
-  print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
+  strMessage <- paste0("LineagePulse ",STR_VERSION)
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("1. Data preprocessing")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), 
+                       " cells did not have a pseudotime coordinate and were excluded.")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", length(vecidxGenes), 
+                       " genes did not contain non-zero observations and are excluded from analysis.")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("# ", sum(!vecidxCells), " out of ", length(vecidxCells), 
+                       " cells did not contain non-zero observations and are excluded from analysis.")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
@@ -292,11 +333,12 @@ processSCData <- function(matCounts,
                             matCountsProc       = matCountsProc,
                             matWeights          = NULL,
                             scaWindowRadius     = scaWindowRadius,
-                            strReport           = NULL,
+                            strReport           = strReport,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= FALSE,
-                            vecNormConst        = NULL )
+                            vecNormConst        = NULL,
+  													strVersion          = STR_VERSION)
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

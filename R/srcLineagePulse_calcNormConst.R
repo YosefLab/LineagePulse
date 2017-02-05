@@ -34,7 +34,7 @@ calcNormConst <- function(objectLineagePulse,
   if(!is.null(vecNormConstExternal)){
     vecNormConst <- vecNormConstExternal
   } else {
-    print("All size factors are set to one.")
+    print("# All size factors are set to one.")
     vecNormConst <- array(1, dim(objectLineagePulse@matCountsProc)[2])
     names(vecNormConst) <- colnames(objectLineagePulse@matCountsProc)
   }

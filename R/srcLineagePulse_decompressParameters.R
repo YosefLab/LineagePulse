@@ -72,7 +72,7 @@
 #' @export
 
 decompressMeansByGene <- function(vecMuModel,
-																	lsvecBatchModel,
+																	lsvecBatchModel=NULL,
                                   lsMuModelGlobal,
                                   vecInterval=NULL ){
   
@@ -119,7 +119,7 @@ decompressMeansByGene <- function(vecMuModel,
                 lsMuModelGlobal$strMuModel, " not recognised."))
   }
 	# Scale by batch factors
-	if(!is.null(lsMuModelGlobal$vecConfounders)){
+	if(!is.null(lsvecBatchModel)){
 		for(confounder in seq(1,length(lsvecBatchModel))){
 			if(!is.null(vecInterval)){
 			  vecMu <- vecMu*(lsvecBatchModel[[confounder]][(lsMuModelGlobal$lsvecidxBatchAssign[[confounder]])[vecInterval]])

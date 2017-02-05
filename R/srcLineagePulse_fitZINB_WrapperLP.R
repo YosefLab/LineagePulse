@@ -115,7 +115,7 @@ fitNullAlternative <- function(objectLineagePulse,
                                matPiConstPredictors,
                                lsResultsClustering,
                                strMuModel="windows",
-                               strDispModel = "constant",
+                               strDispModel="constant",
                                boolEstimateNoiseBasedOnH0=TRUE,
                                boolVecWindowsAsBFGS=FALSE,
                                scaMaxEstimationCycles=20,
@@ -130,13 +130,13 @@ fitNullAlternative <- function(objectLineagePulse,
     strMuModelA <- "constant"
     strMuModelB <- strMuModel
     strDispModelA <- "constant"
-    strDispModelB <- "constant"
+    strDispModelB <- strDispModel
     strNameModelA <- paste0("H0: ",strMuModelA)
     strNameModelB <- paste0("H1: ",strMuModelB)
   } else {
     strMuModelA <- strMuModel
     strMuModelB <- "constant"
-    strDispModelA <- "constant"
+    strDispModelA <- strDispModel
     strDispModelB <- "constant"
     strNameModelA <- paste0("H1: ",strMuModelA)
     strNameModelB <- paste0("H0: ",strMuModelB)
@@ -144,8 +144,10 @@ fitNullAlternative <- function(objectLineagePulse,
   
   ####################################################
   # Fit model A
-  print(paste0("### a) Fit negative binomial model A (",
-               strNameModelA,") with noise model."))
+  strMessage <- paste0("### a) Fit negative binomial model A (",
+               strNameModelA,") with noise model.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   tm_cycle <- system.time({
     lsFitsModelA <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
@@ -164,15 +166,21 @@ fitNullAlternative <- function(objectLineagePulse,
   lsDropModel <- lsFitsModelA$lsDropModel
   boolConvergenceModelA <- lsFitsModelA$boolConvergenceModel
   vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
+                                         lsFitsModelA$strReport)
   rm(lsFitsModelA)
   
-  print(paste0("Finished fitting zero-inflated negative binomial ",
-               "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min."))
+  strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
+               "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   ####################################################
   # Fit model B
-  print(paste0("### a) Fit negative binomial model B (",
-               strNameModelB,") with noise model."))
+  strMessage <- paste0("### a) Fit negative binomial model B (",
+               strNameModelB,") with noise model.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   tm_cycleB <- system.time({
     lsFitsModelB <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
@@ -190,20 +198,14 @@ fitNullAlternative <- function(objectLineagePulse,
   lsDispModelB <- lsFitsModelB$lsDispModel
   boolConvergenceModelB <- lsFitsModelB$boolConvergenceModel
   vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
+                                         lsFitsModelB$strReport)
   rm(lsFitsModelB)
   
-  print(paste0("Finished fitting zero-inflated negative binomial ",
-               "model B in ", round(tm_cycleB["elapsed"]/60,2)," min."))
-  
-  # Name rows and columns of parameter matrices
-  rownames(lsMuModelA$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDispModelA$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsMuModelB$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDispModelB$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDropModel$matDropoutLinModel) <- colnames(objectLineagePulse@matCountsProc)
-  if(!is.null(lsDropModel$matPiConstPredictors)){
-    rownames(lsDropModel$matPiConstPredictors) <- rownames(objectLineagePulse@matCountsProc)
-  }
+  strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
+               "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   if(boolEstimateNoiseBasedOnH0){
     lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelB,
@@ -226,7 +228,6 @@ fitNullAlternative <- function(objectLineagePulse,
   }
   objectLineagePulse@lsDropModel        <- lsDropModel
   objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
-  objectLineagePulse@strReport          <- NULL
   
   return(objectLineagePulse)
 }

@@ -37,9 +37,9 @@ fitZINB <- function(matCounts,
 	boolFitDrop <- is.null(lsDropModel)
 	if(!boolFitDrop) scaMaxEstimationCycles <- 1 # Do not need estimation cycle if drop-out model is fixed
 	vecEMLogLikModel <- array(NA, scaMaxEstimationCycles)
+	strReport <- ""
 	
-	# Initialise
-	if(boolVerbose) print("Initialise parameter models.")
+	### Initialise
 	
 	# a) Mu model
 	# Mean parameters (mu): Gene-wise mean of non-zero observations.
@@ -139,7 +139,9 @@ fitZINB <- function(matCounts,
 	# to log(mu) may not be initialised too close to zero, as the cost function 
 	# cannot always pick up the signal in such cases, leading to an MLE with this 
 	# parameter untouched.
+	boolExternalDropModel <- TRUE
 	if(is.null(lsDropModel)){
+	  boolExternalDropModel <- FALSE
 		lsDropModel <- list(matDropoutLinModel=NA,
 												matPiConstPredictors=matPiConstPredictors,
 												lsPiOptimHyperparam=list(
@@ -168,12 +170,12 @@ fitZINB <- function(matCounts,
 	                                       lsDropModel=lsDropModel,
 	                                       scaWindowRadius=scaWindowRadius,
 	                                       matWeights=matWeights ))
-	if(boolVerbose){
-		print(paste0("#  .   Initialisation complete: ",
-								 "log likelihood of         ", scaLogLikNew))
-	}
+	strMessage <- paste0("#  .   Initialisation complete: ",
+	                     "log likelihood of         ", scaLogLikNew)
+	strReport <- paste0(strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
 	
-	# Set iteration reporters
+	### Iteration
 	scaIter <- 1
 	scaLogLikOld <- NA
 	while(scaIter == 1 | (scaLogLikNew > scaLogLikOld*scaPrecEM & scaIter <= scaMaxEstimationCycles)){
@@ -211,25 +213,25 @@ fitZINB <- function(matCounts,
 					vecLL <- sapply(lsFitsPi, function(cell) cell$scaLL)  
 				})
 				colnames(lsDropModel$matDropoutLinModel) <- NULL # Want this so that column names dont grow to par.par.par...
-				if(boolSuperVerbose){
-					#scaLogLikTemp <- evalLogLikMatrix( matCounts=matCounts,
-					#																	 lsMuModel=lsMuModel,
-				  #																		 lsDispModel=lsDispModel, 
-					#																	 lsDropModel=lsDropModel,
-					#																	 scaWindowRadius=scaWindowRadius )
-					if(any(vecboolPiEstConverged != 0)){
-						print(paste0("Dropout estimation did not converge in ", 
-												 sum(vecboolPiEstConverged), " cases [codes: ",
-												 paste(unique(vecboolPiEstConverged[vecboolPiEstConverged!=0])), "]."))
-					}
-					if(any(vecboolPiEstConverged==1001)){
-						print(paste0("Fatal dropout estimation error in ", 
-												 sum(vecboolPiEstConverged==1001), " cases."))
-					}
-					print(paste0("# ",scaIter,".   Drop-out estimation complete: ",
-											 "loglikelihood of     ", sum(vecLL), " in ",
-											 round(tm_pi["elapsed"]/60,2)," min."))
-				}  
+				
+				if(any(vecboolPiEstConverged != 0)){
+				  strMessage <- paste0("Dropout estimation did not converge in ", 
+				                       sum(vecboolPiEstConverged), " cases [codes: ",
+				                       paste(unique(vecboolPiEstConverged[vecboolPiEstConverged!=0])), "].")
+				  strReport <- paste0(strReport, strMessage, "\n")
+				  if(boolSuperVerbose) print(strMessage)
+				}
+				if(any(vecboolPiEstConverged==1001)){
+				  strMessage <- paste0("Fatal dropout estimation error in ", 
+				                       sum(vecboolPiEstConverged==1001), " cases.")
+				  strReport <- paste0(strReport, strMessage, "\n")
+				  if(boolSuperVerbose) print(strMessage)
+				}
+				strMessage <- paste0("# ",scaIter,".   Drop-out estimation complete: ",
+				                     "loglikelihood of     ", sum(vecLL), " in ",
+				                     round(tm_pi["elapsed"]/60,2)," min.")
+				strReport <- paste0(strReport, strMessage, "\n")
+				if(boolSuperVerbose) print(strMessage)
 			}
 			
 			##### 2. Gene-wise parameter estimation:
@@ -248,7 +250,7 @@ fitZINB <- function(matCounts,
 			lsMuModel$matMuModel <- lsFitMuDisp$matMuModel
 			colnames(lsMuModel$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
 			lsMuModel$lsmatBatchModel <- lsFitMuDisp$lsmatBatchModel
-			for(mat in lsMuModel$lsmatBatchModel) colnames(mat) <- NULL # Need this so that column names dont grow to par.par.par...
+			for(i in seq(1, length(lsMuModel$lsmatBatchModel))) colnames(lsMuModel$lsmatBatchModel[[i]]) <- NULL # Need this so that column names dont grow to par.par.par...
 			
 			vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
 			vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
@@ -256,32 +258,37 @@ fitZINB <- function(matCounts,
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew
 			scaLogLikNew <- sum(lsFitMuDisp$vecLL)
-			#scaLogLikNew <- evalLogLikMatrix( matCounts=matCounts,
-			#																	lsMuModel=lsMuModel,
-			#																	lsDispModel=lsDispModel, 
-			#																	lsDropModel=lsDropModel,
-			#																	scaWindowRadius=scaWindowRadius,
-			#																	matWeights=matWeights )
 		})
 		
 		# Iteration complete
-		if(boolSuperVerbose){
-			if(any(vecboolDispEstConverged != 0)){
-				print(paste0("(Mean-) Dispersion estimation did not converge in ", 
-										 sum(vecboolDispEstConverged[vecboolDispEstConverged>0]), " cases [codes: ",
-										 paste(unique(vecboolDispEstConverged[vecboolDispEstConverged!=0]), collapse=","), "]."))
-			}
-			print(paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
-									 "loglikelihood of ", scaLogLikNew, " in ",
-									 round(tm_mudisp["elapsed"]/60,2)," min."))
-		} else {
-			if(boolVerbose){print(paste0("# ",scaIter, ".) complete with ",
-																	 "log likelihood of   ", scaLogLikNew, " in ",
-																	 round(tm_iter["elapsed"]/60,2)," min."))}
+		if(any(vecboolDispEstConverged != 0)){
+		  strMessage <- paste0("(Mean-) Dispersion estimation did not converge in ", 
+		               sum(vecboolDispEstConverged[vecboolDispEstConverged>0]), " cases [codes: ",
+		               paste(unique(vecboolDispEstConverged[vecboolDispEstConverged!=0]), collapse=","), "].")
+		  strReport <- paste0(strReport, strMessage, "\n")
+		  if(boolSuperVerbose) print(strMessage)
 		}
+		
+		strMessage <- paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
+		             "loglikelihood of ", scaLogLikNew, " in ",
+		             round(tm_mudisp["elapsed"]/60,2)," min.")
+		strReport <- paste0(strReport, strMessage, "\n")
+		if(boolSuperVerbose) print(strMessage)
+		
+		strMessage <- paste0("# ",scaIter, ". complete with ",
+		                     "log likelihood of   ", scaLogLikNew, " in ",
+		                     round(tm_iter["elapsed"]/60,2)," min.")
+		if(boolVerbose & !boolSuperVerbose) print(strMessage)
+		
 		vecEMLogLikModel[scaIter] <- scaLogLikNew
 		scaIter <- scaIter+1
 	}
+	
+	# Name matrix rows
+	rownames(lsMuModel$matMuModel) <- rownames(matCounts)
+	for(i in seq(1, length(lsMuModel$lsmatBatchModel))) rownames(lsMuModel$lsmatBatchModel[[i]]) <- rownames(matCounts)
+	rownames(lsDispModel$matDispModel) <- rownames(matCounts)
+	if(!boolExternalDropModel) rownames(lsDropModel$matDropoutLinModel) <- colnames(matCounts)
 	
 	# Evaluate convergence
 	if(all(as.logical(vecboolDispEstConverged)) &
@@ -295,5 +302,6 @@ fitZINB <- function(matCounts,
 		lsDispModel=lsDispModel,
 		lsDropModel=lsDropModel,
 		boolConvergenceModel=boolConvergenceModel,
-		vecEMLogLikModel=vecEMLogLikModel ))
+		vecEMLogLikModel=vecEMLogLikModel,
+		strReport=strReport ))
 }

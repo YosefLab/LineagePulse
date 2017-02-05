@@ -36,7 +36,6 @@
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 calcPostDrop_Vector <- function( vecMu,
   vecDisp,
   vecDrop,
@@ -99,8 +98,10 @@ calcPostDrop_Vector <- function( vecMu,
 #' @return matZ: (numeric matrix genes x cells)
 #'    Posterior probability of observation not being generated 
 #'    by drop-out.
+#'    
+#' @author David Sebastian Fischer
+#' 
 #' @export
-
 calcPostDrop_Matrix <- function( matMu,
   matDisp,
   matDrop,

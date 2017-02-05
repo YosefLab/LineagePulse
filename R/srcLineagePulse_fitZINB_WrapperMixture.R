@@ -38,7 +38,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
   
   ### (A) Pre-estimate drop-out model to speed up mixture model fitting
-  if(boolVerbose) print(paste0("### a) Fit H0 constant ZINB model and set drop-out model."))
+  strMessage <- paste0("### a) Fit H0 constant ZINB model and set drop-out model.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   tm_cycle <- system.time({
     lsZINBFitsRed <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
@@ -60,13 +62,19 @@ fitMixtureZINBModel <- function(objectLineagePulse,
     lsDropModel <- lsZINBFitsRed$lsDropModel
     boolConvergenceModelRed <- lsZINBFitsRed$boolConvergenceModel
     vecEMLogLikModelRed <- lsZINBFitsRed$vecEMLogLikModel
+    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
+                                           lsZINBFitsRed$strReport)
   })
   
-  if(boolVerbose) print(paste0("### Finished fitting H0 constant ZINB model ",
-                               "in ", round(tm_cycle["elapsed"]/60,2)," min."))
+  strMessage <- paste0("### Finished fitting H0 constant ZINB model ",
+                               "in ", round(tm_cycle["elapsed"]/60,2)," min.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   ### (B) EM-like estimation cycle: fit mixture model
-  if(boolVerbose) print(paste0("### b) EM-like iteration: Fit mixture model"))
+  strMessage <- paste0("### b) EM-like iteration: Fit mixture model")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   # (I) Initialise estimation
   # Initialise expression models as null model estimate:
@@ -106,10 +114,10 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   scaLogLikOld <- NA
   vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
   
-  if(boolSuperVerbose){
-    print(paste0("#  .   Initialised MM: ",
-                 "loglikelihood of   ", scaLogLikNew))
-  }
+  strMessage <- paste0("#  .   Initialised MM: ",
+                       "loglikelihood of   ", scaLogLikNew)
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolSuperVerbose) print(strMessage)
   
   boolResetDropout <- FALSE
   tm_RSAcycle <- system.time({
@@ -131,19 +139,27 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                                     RELTOL_BFGS_MM=RELTOL_BFGS_MM )
         matWeights <- lsWeightFits$matWeights
       })
-      if(boolSuperVerbose){
-        scaLogLikTemp <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                              lsMuModel=lsMuModelFull,
-                                              lsDispModel=lsDispModelFull, 
-                                              lsDropModel=lsDropModel,
-                                              matWeights=matWeights,
-                                              scaWindowRadius=NULL ))
-        print(paste0("# ", scaIter,".   E-step complete: ",
-                     "loglikelihood of  ", scaLogLikTemp, " in ",
-                     round(tm_estep["elapsed"]/60,2)," min."))
-        if(any(lsWeightFits$vecConvergence !=0 )) print(paste0("Weight estimation did not convergen in ",
-                                                               sum(lsWeightFits$vecConvergence !=0), " cases."))
+      
+      scaLogLikTemp <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                            lsMuModel=lsMuModelFull,
+                                            lsDispModel=lsDispModelFull, 
+                                            lsDropModel=lsDropModel,
+                                            matWeights=matWeights,
+                                            scaWindowRadius=NULL ))
+      
+      strMessage <- paste0("# ", scaIter,".   E-step complete: ",
+                   "loglikelihood of  ", scaLogLikTemp, " in ",
+                   round(tm_estep["elapsed"]/60,2)," min.")
+      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+      if(boolSuperVerbose) print(strMessage)
+      
+      if(any(lsWeightFits$vecConvergence !=0 )){
+        strMessage <- paste0("Weight estimation did not convergen in ",
+                             sum(lsWeightFits$vecConvergence !=0), " cases.")
+        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        if(boolSuperVerbose) print(strMessage)
       }
+      
       # Catch mixture drop-out
       vecidxAssignedMixture <- apply(matWeights, 1, which.max)
       vecboolMixtureDropped <- sapply(seq(1,scaNMixtures), function(mixture){
@@ -169,11 +185,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                              lsDropModel=lsDropModel,
                                              matWeights=matWeights,
                                              scaWindowRadius=NULL ))
-        if(boolSuperVerbose){
-          print(paste0("# ", scaIter,".   E-Reset complete: ",
-                       "loglikelihood of ", scaLogLikNew, 
-                       " (Mixture ", which(vecboolMixtureDropped)[1],")."))
-        }
+        
+        strMessage <- paste0("# ", scaIter,".   E-Reset complete: ",
+                             "loglikelihood of ", scaLogLikNew, 
+                             " (Mixture ", which(vecboolMixtureDropped)[1],").")
+        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        if(boolSuperVerbose) print(strMessage)
       }
       
       # M-like step: Estimate mixture model parameters
@@ -198,60 +215,48 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         lsMuModelFull <- lsZINBFitsFull$lsMuModel
         lsDispModelFull <- lsZINBFitsFull$lsDispModel
         boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
+        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
+                                               lsZINBFitsFull$strReport)
       })
       scaLogLikOld <- scaLogLikNew
       vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
       scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
-      if(boolSuperVerbose){
-        print(paste0("# ",scaIter,".   M-step complete: ",
-                     "loglikelihood of  ", scaLogLikNew, " in ",
-                     round(tm_mstep["elapsed"]/60,2)," min."))
-        if(lsZINBFitsFull$boolConvergenceModel !=0) print(paste0("Model estimation did not converge."))
-      } else if(boolVerbose){
-        print(paste0("# ",scaIter,". iteration complete: ",
-                     "loglikelihood of ", scaLogLikNew, " in ",
-                     round(tm_estep["elapsed"]/60,2)," min."))
+      
+      strMessage <- paste0("# ",scaIter,".   M-step complete: ",
+                           "loglikelihood of  ", scaLogLikNew, " in ",
+                           round(tm_mstep["elapsed"]/60,2)," min.")
+      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+      if(boolSuperVerbose) print(strMessage)
+      
+      if(lsZINBFitsFull$boolConvergenceModel !=0){
+        strMessage <- paste0("Model estimation did not converge.")
+        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        if(boolSuperVerbose) print(strMessage)
       }
+      
+      strMessage <- paste0("# ",scaIter,". iteration complete: ",
+                           "loglikelihood of ", scaLogLikNew, " in ",
+                           round(tm_estep["elapsed"]/60,2)," min.")
+      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+      if(boolVerbose & !boolSuperVerbose) print(strMessage)
       
       vecEMLogLikModelFull[scaIter] <- scaLogLikNew
       scaIter <- scaIter+1
     }
   })
   
-  if(boolVerbose) print(paste0("### Finished fitting H1 mixture ZINB model ",
-                               "in ", round(tm_cycle["elapsed"]/60,2)," min."))
-  
-  ### (C) Set degrees of freedom
-  # Compute degrees of freedom of model for each gene
-  # Drop-out model is ignored, would be counted at each gene.
-  # 1. Alternative model  H1:
-  # One mean parameter per mixture component
-  scaKbyGeneH1 <- dim(matWeights)[2]
-  # Dispersion model
-  if(strDispModel=="constant"){
-    # One dispersion factor per gene.
-    scaKbyGeneH1 <- scaKbyGeneH1 + 1
-  } else {
-    stop(paste0("ERROR in fitMixtureZINBModel(): strMuModel not recognised: ", strDispModel))
-  }
-  # 2. Null model H0:
-  # One mean per gene and one dispersion factor
-  scaKbyGeneH0 <- 1+1
+  strMessage <- paste0("### Finished fitting H1 mixture ZINB model ",
+                       "in ", round(tm_cycle["elapsed"]/60,2)," min.")
+  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   # Name rows and columns of parameter matrices
-  rownames(lsMuModelFull$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDispModelFull$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsMuModelRed$matMuModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDispModelRed$matDispModel) <- rownames(objectLineagePulse@matCountsProc)
-  rownames(lsDropModel$matDropoutLinModel) <- colnames(objectLineagePulse@matCountsProc)
   rownames(matWeights) <- colnames(objectLineagePulse@matCountsProc)
   
   lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelFull,
                               boolConvergenceH0=boolConvergenceModelRed,
                               vecEMLogLikH1=vecEMLogLikModelFull,
-                              vecEMLogLikH0=vecEMLogLikModelRed,
-                              scaKbyGeneH1=scaKbyGeneH1,
-                              scaKbyGeneH0=scaKbyGeneH0 )
+                              vecEMLogLikH0=vecEMLogLikModelRed )
   
   objectLineagePulse@lsMuModelH1        <- lsMuModelFull
   objectLineagePulse@lsDispModelH1      <- lsDispModelFull
@@ -260,7 +265,6 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   objectLineagePulse@lsDropModel        <- lsDropModel
   objectLineagePulse@matWeights         <- matWeights
   objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
-  objectLineagePulse@strReport          <- NULL
   
   return(objectLineagePulse)
 }

@@ -95,7 +95,8 @@ setClass(
     vecAllGenes         = "characterORNULL",
     vecConfounders      = "characterORNULL",
     boolFixedPopulations= "logical",
-    vecNormConst        = "numericORNULL" )
+    vecNormConst        = "numericORNULL",
+    strVersion          = "character")
 )
 
 ### 2. Enable accession of private elements via functions
@@ -321,15 +322,11 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #'
 #' @param object (LineagePulseObject) Output object of LineagePulse.
 #' @param fileReport (file) File to print report to.
-#' 
-#' @return NULL
 #'  
 #' @name writeReportToFile
 #' @export
-setGeneric('writeReportToFile', function(object, fileReport) standardGeneric('writeReportToFile'), valueClass = 'NULL')
+setGeneric('writeReportToFile', function(object, fileReport) standardGeneric('writeReportToFile'))
 
-#' Print LineagePulse report string to .txt file
-#' 
 #' Print LineagePulse report string to .txt file
 #' 
 #' @param object (LineagePulseObject) Output object of LineagePulse.
@@ -343,4 +340,26 @@ setGeneric('writeReportToFile', function(object, fileReport) standardGeneric('wr
 #' @export
 setMethod('writeReportToFile', signature(object='LineagePulseObject', fileReport='character'), 
           function(object, fileReport) write(object@strReport, file=fileReport, ncolumns=1) 
+)
+
+# b) Enable printing of report to stdout
+
+#' Print LineagePulse report string to stdout
+#'
+#' @param object (LineagePulseObject) Output object of LineagePulse.
+#'  
+#' @name writeReportToStdout
+#' @export
+setGeneric('writeReportToStdout', function(object) standardGeneric('writeReportToStdout'))
+
+#' Print LineagePulse report string to stdout
+#' 
+#' @param object (LineagePulseObject) Output object of LineagePulse.
+#' 
+#' @author David Sebastian Fischer
+#' 
+#' @name writeReportToStdout,LineagePulseObject-method
+#' @export
+setMethod('writeReportToStdout', signature(object='LineagePulseObject'), 
+          function(object) write(object@strReport, file="", ncolumns=1) 
 )

@@ -106,7 +106,10 @@ processSCDataMixture <- function(matCounts,
                                  vecNormConstExternal,
                                  strDispModel,
                                  scaMaxEstimationCyclesEMlike,
-                                 scaMaxEstimationCyclesDropModel){
+                                 scaMaxEstimationCyclesDropModel,
+																 boolVerbose,
+																 boolSuperVerbose,
+																 STR_VERSION){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -132,6 +135,12 @@ processSCDataMixture <- function(matCounts,
     }
     if(any(matInput[!is.na(matInput)]<0)){
       stop(paste0( "ERROR IN INPUT DATA CHECK: ", strMatInput, " contains negative elements. Requires count data." ))
+    }
+  }
+  # Checks whether elements are logical
+  checkLogical <- function(boolElement, strBoolElement){
+    if(!is.logical(boolElement)){
+      stop(paste0( "ERROR IN INPUT DATA CHECK: ", strBoolElement, " must be logical (TRUE or FALSE)." ))
     }
   }
   
@@ -222,6 +231,11 @@ processSCDataMixture <- function(matCounts,
   checkNull(scaNMixtures, "scaNMixtures")
   checkNumeric(scaNMixtures, "scaNMixtures")
   
+  # 8. booleans
+  checkLogical(boolFixedPopulations, "boolFixedPopulations")
+  checkLogical(boolVerbose, "boolVerbose")
+  checkLogical(boolSuperVerbose, "boolSuperVerbose")
+  
   # (II) Check settings
   # Check single dispersion estimation models
   if(!(strDispModel %in% c("constant"))){
@@ -231,6 +245,7 @@ processSCDataMixture <- function(matCounts,
   }
   
   # (III) Process data
+  strReport <- ""
   # Convert from data frame to matrix
   if(is.list(matCounts)){
     matCounts <- data.matrix(matCounts)
@@ -258,8 +273,23 @@ processSCDataMixture <- function(matCounts,
   }
   
   # Print summary of processing
-  print(paste0(sum(!vecidxGenes), " out of ", length(vecidxGenes), " genes did not contain non-zero observations and are excluded from analysis."))
-  print(paste0(sum(!vecidxCells), " out of ", length(vecidxCells), " cells did not contain non-zero observations and are excluded from analysis."))
+  strMessage <- paste0("LineagePulse ",STR_VERSION)
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("1. Data preprocessing")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", length(vecidxGenes), 
+                       " genes did not contain non-zero observations and are excluded from analysis.")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("# ", sum(!vecidxCells), " out of ", length(vecidxCells), 
+                       " cells did not contain non-zero observations and are excluded from analysis.")
+  strReport <- paste0(strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
@@ -276,11 +306,12 @@ processSCDataMixture <- function(matCounts,
                             matCountsProc       = matCountsProc,
                             matWeights          = NULL,
                             scaWindowRadius     = NULL,
-                            strReport           = NULL,
+                            strReport           = strReport,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= boolFixedPopulations,
-                            vecNormConst        = NULL )
+                            vecNormConst        = NULL,
+  													strVersion          = STR_VERSION)
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

@@ -45,11 +45,9 @@ runMixtureModel <- function(matCounts,
                             boolVerbose=TRUE,
                             boolSuperVerbose=FALSE ){
   
-  print("LineagePulse v1.0")
-  print("Mixture model v1.0")
+  STR_VERSION <- "v0.99"
   
   # 1. Data preprocessing
-  print("1. Data preprocessing:")
   vecAllGenes <- rownames(matCounts)
   lsProcessedSCData <- processSCDataMixture( matCounts=matCounts,
   																					 dfAnnotation=dfAnnotation,
@@ -60,7 +58,10 @@ runMixtureModel <- function(matCounts,
                                              vecNormConstExternal=vecNormConstExternal,
                                              strDispModel=strDispModel,
                                              scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
-                                             scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel )
+                                             scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
+  																					 boolVerbose=boolVerbose,
+  																					 boolSuperVerbose=boolSuperVerbose,
+  																					 STR_VERSION=STR_VERSION)
   objectLineagePulseMM <- lsProcessedSCData$objectLineagePulse
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
@@ -70,11 +71,9 @@ runMixtureModel <- function(matCounts,
   rm(matPiConstPredictors)
   rm(lsProcessedSCData)
   
-  # X. Inialise parallelisation
+  # Inialise parallelisation
   # Set the parallelisation environment in BiocParallel:
   if(scaNProc > 1){
-    # Set worker time out to 60*60*24*7 (7 days)
-    # For single machine (FORK) cluster
     register(MulticoreParam(workers=scaNProc)) 
     #timeout=60*60*24*7,
     #log=FALSE, 
@@ -90,12 +89,18 @@ runMixtureModel <- function(matCounts,
   
   
   # 2. Compute normalisation constants
-  print("2. Compute normalisation constants:")
+  strMessage <- paste0("2. Compute normalisation constants:")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
   objectLineagePulseMM <- calcNormConst(objectLineagePulseMM,
                                 vecNormConstExternal=vecNormConstExternalProc)
   
   # 3. Fit ZINB mixture and null model.
-  print("3. Fit ZINB mixture and null model.")
+  strMessage <- paste0("3. Fit ZINB mixture and null model.")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
   tm_fitmm <- system.time({
     objectLineagePulseMM <- fitMixtureZINBModel(objectLineagePulse=objectLineagePulseMM,
                                                 scaNMixtures=scaNMixtures,
@@ -105,17 +110,29 @@ runMixtureModel <- function(matCounts,
                                                 boolVerbose=boolVerbose,
                                                 boolSuperVerbose=boolSuperVerbose )
   })
-  print(paste("Time elapsed during ZINB mixture and null model fitting: ",round(tm_fitmm["elapsed"]/60,2),
-              " min",sep=""))
+  
+  strMessage <- paste0("Time elapsed during ZINB mixture and null model fitting: ",
+                       round(tm_fitmm["elapsed"]/60,2), " min")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
   
   # 4. Differential expression analysis:
-  print("4. Differential expression analysis:")
+  strMessage <- paste0("4. Differential expression analysis:")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
   tm_deanalysis_mf <- system.time({
     objectLineagePulseMM <- runDEAnalysis(objectLineagePulse=objectLineagePulseMM )
   })
-  print(paste("Time elapsed during differential expression analysis: ",
-              round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
   
-  print("LineagePulse complete.")
+  strMessage <- paste0("Time elapsed during differential expression analysis: ",
+              round(tm_deanalysis_mf["elapsed"]/60,2)," min")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  if(boolVerbose) print(strMessage)
+  
+  strMessage <- paste0("Finished runMixtureModel().")
+  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage)
+  if(boolVerbose) print(strMessage)
+  
   return(objectLineagePulseMM)
 }

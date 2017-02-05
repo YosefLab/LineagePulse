@@ -10,9 +10,9 @@
 #' @seealso Auxillary method not called by LineagePulse wrapper.
 #' Called separately by user.
 #' 
-#' @param lsDirOutLineagePulse: (list) [Default NULL]
-#'    List of LineagePulse output directories from which
-#'    dfDEResults is loaded.
+#' @param lsObjectLineagePulse: (list of LineagePulseObjects)
+#'    List of LineagePulseObjects with DE results table to 
+#'    base ECDF on.
 #' @param filePDF: (directory/filename)
 #'    File to which plot is saved (pdf).
 #' @param strRunLabels: (string vector arbitrary length)
@@ -20,29 +20,24 @@
 #'    to directories supplied in lsDirOutLineagePulse.
 #' @param strTitle: (string) Title of plot.
 #' 
-#' @return NULL
-#'    
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
-plotComparativeECDF <- function(
-  lsDirOutLineagePulse,
-  filePDF=NULL,
-  strRunLabels,
-  strTitle="Comparative Q-value ECDF"){
+plotComparativeECDF <- function(lsObjectLineagePulse,
+                                filePDF=NULL,
+                                strRunLabels,
+                                strTitle="Comparative Q-value ECDF"){
   
   if(length(lsDirOutLineagePulse) != length(strRunLabels)){
-    stop("Number of supplied directories and run names dont match.")
+    stop("Number of supplied lsObjectLineagePulse and run names dont match.")
   }
   lsVecECDF <- list()
-  vecNAnalysed <- array(NA, length(lsDirOutLineagePulse))
+  vecNAnalysed <- array(NA, length(lsObjectLineagePulse))
   vecX <- seq(-100,-1,by=0.1)
-  for(dirLP in lsDirOutLineagePulse){
-    load(paste0(dirLP,"/LineagePulse_dfDEAnalysis.RData"))
+  for(object in lsObjectLineagePulse){
     lsVecECDF[length(lsVecECDF)+1] <- list(sapply(vecX, function(thres){
-      sum(log(as.numeric(as.vector(dfDEAnalysis$adj.p)))/log(10) <= thres, na.rm=TRUE)}))
-    vecNAnalysed[length(lsVecECDF)] <- sum(!is.na(as.numeric(as.vector(dfDEAnalysis$adj.p))))
+      sum(log(as.numeric(as.vector(object@dfDEAnalysis$adj.p)))/log(10) <= thres, na.rm=TRUE)}))
+    vecNAnalysed[length(lsVecECDF)] <- sum(!is.na(as.numeric(as.vector(object@dfDEAnalysis$adj.p))))
   }
   
   # Generate data frame for ggplot
@@ -72,6 +67,4 @@ plotComparativeECDF <- function(
     dev.off()
   }
   print(gECDF)
-  
-  return(NULL)
 }

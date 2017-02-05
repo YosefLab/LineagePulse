@@ -29,8 +29,6 @@ source("srcLineagePulse_estimateMMAssignments.R")
 source("srcLineagePulse_evalDropoutModel.R")
 source("srcLineagePulse_evalImpulseModel.R")
 source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
-source("srcLineagePulse_fitZINB_fitMean.R")
-source("srcLineagePulse_fitZINB_fitDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
 source("srcLineagePulse_fitZINB.R")
 source("srcLineagePulse_fitZINB_WrapperMixture.R")
@@ -47,12 +45,6 @@ source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
 source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
-
-evalLogLikMuWindowZINB_comp <- cmpfun(evalLogLikMuWindowZINB)
-evalLogLikMuVecWindowsZINB_comp <- cmpfun(evalLogLikMuVecWindowsZINB)
-evalLogLikMuConstZINB_comp <- cmpfun(evalLogLikMuConstZINB)
-evalLogLikMuImpulseZINB_comp <- cmpfun(evalLogLikMuImpulseZINB)
-evalLogLikDispConstZINB_comp <- cmpfun(evalLogLikDispConstZINB)
 
 ################################################################################
 ### Main function
@@ -267,10 +259,9 @@ runLineagePulse <- function(matCounts,
 														boolVerbose=TRUE,
 														boolSuperVerbose=FALSE ){
 	
-	print("LineagePulse v1.0")
-	
-	# 1. Data preprocessing
-	print("1. Data preprocessing:")
+  STR_VERSION <- "v0.99"
+  
+  # 1. Data preprocessing
 	vecAllGenes <- rownames(matCounts)
 	lsProcessedSCData <- processSCData( matCounts=matCounts,
 																			dfAnnotation=dfAnnotation,
@@ -281,7 +272,11 @@ runLineagePulse <- function(matCounts,
 																			strDispModel=strDispModel,
 																			scaWindowRadius=scaWindowRadius,
 																			boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
-																			boolCoEstDispMean=boolCoEstDispMean )
+																			boolCoEstDispMean=boolCoEstDispMean,
+																			scaMaxEstimationCycles=scaMaxEstimationCycles,
+																			boolVerbose=boolVerbose,
+																			boolSuperVerbose=boolSuperVerbose,
+																			STR_VERSION=STR_VERSION)
 	objectLineagePulse <- lsProcessedSCData$objectLineagePulse
 	vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
 	matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
@@ -292,12 +287,9 @@ runLineagePulse <- function(matCounts,
 	rm(dfAnnotation)
 	rm(lsProcessedSCData)
 	
-	# X. Inialise parallelisation
-	print(paste0("Register parallelisation parameters: ", scaNProc, " threads."))
+	# Inialise parallelisation
 	# Set the parallelisation environment in BiocParallel:
 	if(scaNProc > 1){
-		# Set worker time out to 60*60*24*7 (7 days)
-		# For single machine (FORK) cluster
 		register(MulticoreParam(workers=scaNProc)) 
 		#timeout=60*60*24*7,
 		#log=FALSE, 
@@ -312,7 +304,10 @@ runLineagePulse <- function(matCounts,
 	}
 	
 	# 2. Cluster cells in pseudo-time
-	print("2. Clustering:")
+	strMessage <- paste0("2. Run/read clustering.")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
+	
 	tm_clustering <- system.time({
 		if(boolClusterInPseudotime){
 			# Cluster in pseudotime
@@ -320,7 +315,7 @@ runLineagePulse <- function(matCounts,
 																											scaKexternal=scaKClusters)
 		} else {
 			# Take observation time points as clusters
-			print("Chose given grouping (time points, cell types, conditions...).")
+			strMessage <- paste0("Chose given grouping (time points, cell types, conditions...).")
 			lsResultsClustering <- list()
 			lsResultsClustering[[1]] <- match(objectLineagePulse@dfAnnotationProc$pseudotime, sort(unique(objectLineagePulse@dfAnnotationProc$pseudotime)))
 			lsResultsClustering[[2]] <- sort( unique(objectLineagePulse@dfAnnotationProc$pseudotime) )
@@ -331,16 +326,23 @@ runLineagePulse <- function(matCounts,
 		plotPseudotimeClustering(vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime, 
 														 lsResultsClustering=lsResultsClustering)
 	})
-	print(paste("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2),
-							" min",sep=""))
+	strMessage <- paste0("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2), " min")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
 	
 	# 4. Compute normalisation constants
-	print("4. Compute normalisation constants:")
+	strMessage <- paste0("4. Compute normalisation constants:")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
+	
 	objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
 																			vecNormConstExternal=vecNormConstExternalProc)
 	
 	# 5. Fit ZINB model for both H1 and H0.
-	print("5. Fit ZINB model for both H1 and H0.")
+	strMessage <- paste0("5. Fit ZINB model for both H1 and H0.")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
+	
 	tm_fitmm <- system.time({
 		objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
 																							matPiConstPredictors=matPiConstPredictorsProc,
@@ -353,17 +355,28 @@ runLineagePulse <- function(matCounts,
 																							boolVerbose=boolVerbose,
 																							boolSuperVerbose=boolSuperVerbose )
 	})
-	print(paste("Time elapsed during ZINB fitting: ",round(tm_fitmm["elapsed"]/60,2),
-							" min",sep=""))
+	strMessage <- paste0("Time elapsed during ZINB fitting: ",
+	                     round(tm_fitmm["elapsed"]/60,2)," min")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
+	
 	
 	# 6. Differential expression analysis:
-	print("6. Differential expression analysis:")
+	strMessage <- paste0("6. Run differential expression analysis.")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
+	
 	tm_deanalysis_mf <- system.time({
 		objectLineagePulse <- runDEAnalysis( objectLineagePulse=objectLineagePulse )
 	})
-	print(paste("Time elapsed during differential expression analysis: ",
-							round(tm_deanalysis_mf["elapsed"]/60,2)," min",sep=""))
+	strMessage <- paste0("Time elapsed during differential expression analysis: ",
+	                     round(tm_deanalysis_mf["elapsed"]/60,2)," min")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+	if(boolVerbose) print(strMessage)
 	
-	print("LineagePulse complete.")
+	strMessage <- paste0("Finished runLineagePulse().")
+	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage)
+  if(boolVerbose) print(strMessage)
+  
 	return(objectLineagePulse)
 }

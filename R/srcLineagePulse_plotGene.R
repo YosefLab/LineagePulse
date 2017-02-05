@@ -4,220 +4,108 @@
 
 #' Plot counts and model for one gene
 #' 
-#' Plot counts and model for one gene as a scatter plot with line plots. 
+#' Plot counts and model for one gene as a scatter plot with model trajectories:
+#' Both as count vs pseudotime.
 #' Dropout rates can be given and are visualised as the colour of the observation
-#' points. Inferred and underlying reference models can be plotted as lines.
-#' Has the option to scale the point size according to the difference in 
-#' loglikelihood of the observation under H0 and H1.
+#' points. 
+#' Inferred and underlying reference models can be added.
 #' 
-#' @seealso Called by \code{runLineagePulse} or separately by user.
-#' 
-#' @param vecCounts: (numeric vector length cells) Observed counts for given
-#'    gene.
-#' @param vecPseudotime: (numerical vector length number of cells)
-#'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @param vecPiParamH1: (numeric vector length cells) [Default NULL]
-#'    Dropout parameter estimates for all cells under H1 model.
-#' @param vecImpulseModelParam: (numeric vector length impulse parameters=6)
-#'    [Default NULL] Impulse model parameters for given gene. 
-#'    Amplitudes in log format, like LineagePulse output!
-#' @param vecImpulseModelRefParam: (numeric vector length impulse parameters=6)
-#'    [Default NULL] Reference impulse model parameters for given gene.
-#'    Amplitudes in log format, like LineagePulse output!
-#' @param strNameImpulseModelRef: (str) [Default NULL] 
-#'    Name of reference impulse model for given gene.
-#' @param scaConstModelParam: (scalar) [Default NULL]
-#'    Constant model parameter for given gene: expression mean.
-#' @param scaConstModelRefParam: (scalar) [Default NULL]
-#'    Reference constant model parameter for given gene: expression mean.
+#' @param objectLineagePulse: (LineagePulseObject) LineagePulseObject
+#'    base plot on.
 #' @param strGeneID: (str) Name of gene, used for title of plot.
+#' @param vecReferenceMuParam: (numeric vector length number of cells)
+#'    [Default NULL] Reference mean trajectory which can be plotted
 #' @param strTitleSuffix: (str) String to be added to title.
-#' @param boolScaleByLL: (bool) [Default FALSE]
-#'    Whether to scale point size ccording to the difference in 
-#'    loglikelihood of the observation under H0 and H1.
-#' @param vecMuParamH0: (numeric vector number of cells)
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Mean parameter estimates for all cells under H0 model.
-#' @param vecMuParamH1: (numeric vector number of cells)
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Mean parameter estimates for all cells under H1 model.
-#' @param vecDispParamH0: (numeric vector number of cells)
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Dispersion parameter estimates for all cells under H0 model.
-#' @param vecDispParamH1: (numeric vector number of cells)
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Dispersion parameter estimates for all cells under H0 model.
-#' @param vecPiParamH0: (numeric vector number of cells)
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Dropout parameter estimates for all cells under H0 model.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Model scaling factors, one per cell.
-#' @param scaWindowRadius: (integer) 
-#'    [Defaul NULL] Only required if boolScaleByLL=TRUE.
-#'    Smoothing interval radius.
+#' @param boolColourByDropout: (bool) Whether to colour scatter
+#'    plot by posterior of drop-out.
 #' 
-#' @return gGenePlot: (ggplot object) Plot which can be printed or saved
-#'    to pdf. Inferred impulse and constant model are plotted as 
-#'    a constant line, the underlying models as dashed.
+#' @return gGenePlot: (ggplot object)
+#'    Model rajectories and scatter plot for given gene.
 #'    
 #' @author David Sebastian Fischer
 #' 
 #' @export
-plotGene <- function(vecCounts,
-  vecPseudotime,
-  vecPiParamH1=NULL,
-  vecImpulseModelParam=NULL,
-  vecImpulseModelRefParam=NULL,
-  strNameImpulseModelRef=NULL,
-  scaConstModelParam=NULL,
-  scaConstModelRefParam=NULL,
-  strGeneID,
-  strTitleSuffix=NULL,
-  boolScaleByLL=FALSE,
-  vecMuParamH0=NULL,
-  vecMuParamH1=NULL,
-  vecDispParamH0=NULL,
-  vecDispParamH1=NULL,
-  vecPiParamH0=NULL,
-  vecNormConst=NULL,
-  scaWindowRadius=NULL){
+plotGene <- function(objectLineagePulse,
+                     strGeneID,
+                     vecReferenceMuParam=NULL,
+                     strTitleSuffix=NULL,
+                     boolLogPlot=TRUE,
+                     boolColourByDropout=TRUE){
   
-  scaNumCells <- length(vecCounts)
+  ### 1. Extract data and models
+  vecCounts <- objectLineagePulse@matCountsProc[strGeneID,]
+  vecCountsNorm <- vecCounts
+  for(confounder in seq(1, length(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$vecConfounders))){
+    vecCountsNorm <- vecCountsNorm/(objectLineagePulse@lsMuModelH1$lsmatBatchModel[[confounder]][strGeneID,][
+      objectLineagePulse@lsMuModelH1$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+  }
+  vecMuParamH0 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH0$matMuModel[strGeneID,],
+                                         lsvecBatchModel=NULL,
+                                         lsMuModelGlobal=objectLineagePulse@lsMuModelH0$lsMuModelGlobal,
+                                         vecInterval=NULL )
+  vecMuParamH1 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH1$matMuModel[strGeneID,],
+                                         lsvecBatchModel=NULL,
+                                         lsMuModelGlobal=objectLineagePulse@lsMuModelH1$lsMuModelGlobal,
+                                         vecInterval=NULL )
+  vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
+                                               vecMu=vecMuParamH1,
+                                               vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[strGeneID,] )
+  if(boolLogPlot){
+    vecCountsNorm <- log(vecCountsNorm)/log(10)
+    vecMuParamH0 <- log(vecMuParamH0)/log(10)
+    vecMuParamH1 <- log(vecMuParamH1)/log(10)
+  }
+  
+  ### 2. Data scatter plot
   # Set drop-out rates as constant for visualistion if not given.
-  if(is.null(vecPiParamH1)){ vecPiParamH1 <- array(0, scaNumCells) }
-  
-  if(boolScaleByLL){
-    # Compute observation-wise loglikelihoods under null model
-    vecLogLikH0 <- sapply(seq(1,scaNumCells), 
-      function(j){
-        if(is.null(scaWindowRadius)){
-          vecInterval <- j
-        } else {
-          scaindIntervalStart <- max(1,j-scaWindowRadius)
-          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-        }
-        
-        scaLogLikCell <- evalLogLikGene(
-          vecCounts=vecCounts[vecInterval],
-          vecMu=vecMuParamH0[j]*vecNormConst[vecInterval],
-          vecNormConst=vecNormConst,
-          vecDisp=rep(vecDispParamH0[j], length(vecInterval)), 
-          vecPi=vecPiParamH0[vecInterval], 
-          vecboolNotZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
-          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0,
-          scaWindowRadius=scaWindowRadius )
-        return(scaLogLikCell)
-      }) 
-    
-    # Compute observation-wise loglikelihoods under alternative model
-    vecLogLikH1 <- sapply(seq(1,scaNumCells), 
-      function(j){
-        if(is.null(scaWindowRadius)){
-          vecInterval <- j
-        } else {
-          scaindIntervalStart <- max(1,j-scaWindowRadius)
-          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-        }
-        
-        scaLogLikCell <- evalLogLikGene(
-          vecCounts=vecCounts[vecInterval],
-          vecMu=vecMuParamH1[j]*vecNormConst[vecInterval],
-          vecNormConst=vecNormConst,
-          vecDisp=rep(vecDispParamH1[j], length(vecInterval)), 
-          vecPi=vecPiParamH1[vecInterval], 
-          vecboolNotZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]>0, 
-          vecboolZero= !is.na(vecCounts[vecInterval]) & vecCounts[vecInterval]==0,
-          scaWindowRadius=scaWindowRadius )
-        return(scaLogLikCell)
-      })
-    vecLogLikRatio <- vecLogLikH1-vecLogLikH0
-
+  if(boolColourByDropout){
     dfScatterCounts <- data.frame(
-      pt=vecPseudotime,
-      counts=vecCounts,
-      dropout_rate=vecPiParamH1,
-      loglik_ratio=vecLogLikRatio)
-    gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
-      geom_point(aes(colour=dropout_rate, size=loglik_ratio), show.legend=TRUE)
+      pseudotime=objectLineagePulse@lsMuModelH1$lsMuModelGlobal$vecPseudotime,
+      counts=vecCountsNorm,
+      dropout_rate=vecPiParamH1)
+    gGenePlot <- ggplot() +
+      geom_point(data=dfScatterCounts, aes(x=pseudotime, y=counts, colour=dropout_rate), show.legend=TRUE)
   } else {
     dfScatterCounts <- data.frame(
-      pt=vecPseudotime,
-      counts=vecCounts,
-      dropout_rate=vecPiParamH1)
-    gGenePlot <- ggplot(dfScatterCounts, aes(x=pt, y=counts)) +
-      geom_point(aes(colour=dropout_rate), show.legend=TRUE)
+      pseudotime=objectLineagePulse@lsMuModelH1$lsMuModelGlobal$vecPseudotime,
+      counts=vecCountsNorm)
+    gGenePlot <- ggplot() +
+      geom_point(data=dfScatterCounts, aes(x=pseudotime, y=counts), show.legend=TRUE)
   }
   
   gGenePlot <- gGenePlot + 
-    labs(title=paste0(strGeneID," ",strTitleSuffix)) +
+    labs(title=paste0(strGeneID, "\nlog10 q-value=", round(objectLineagePulse@dfResults[strGeneID,]$adj.p,2) )) +
     xlab(paste0("pseudotime")) +
     ylab(paste0("counts")) +
     scale_colour_gradient(high="red",low="green",limits=c(0, 1)) +
     theme(axis.text=element_text(size=14),
-      axis.title=element_text(size=14,face="bold"),
-      title=element_text(size=14,face="bold"),
-      legend.text=element_text(size=14)) +
-    annotate("text", x=(max(vecPseudotime)-min(vecPseudotime))*3/4,
-      y=max(vecCounts)*9/10, label="[Line legend]\nUnderlying model: dashed,\nInferred model: solid")
+          axis.title=element_text(size=14,face="bold"),
+          title=element_text(size=14,face="bold"),
+          legend.text=element_text(size=14)) 
   # Set plotting threshold based on observed data
   scaMaxPlot <- 2 * max(vecCounts)
   
-  # Add models to plot
-  scaNPoints <- 100 # Points to plot for each model
-  vecPTCoord <- seq(min(vecPseudotime), max(vecPseudotime),
-    by=(max(vecPseudotime)-min(vecPseudotime))/(scaNPoints-1) )
-  # Impulse model
-  if(!is.null(vecImpulseModelParam)){
-    vecImpulseValues <- evalImpulseModel_comp(vecTheta=vecImpulseModelParam,
-      vecTimepoints=vecPTCoord)
-    vecImpulseValues[vecImpulseValues > scaMaxPlot] <- NA
-    dfLineImpulse <- data.frame( pt=vecPTCoord,
-      impulse=vecImpulseValues)
-    gGenePlot <- gGenePlot + 
-      geom_line(data=dfLineImpulse, 
-        aes(x=pt, y=impulse),
-        linetype="solid",
-        show.legend=TRUE)
+  ### 3. Add models to plot
+  vecMuParamH0[vecMuParamH0 > scaMaxPlot] <- NA
+  vecMuParamH1[vecMuParamH1 > scaMaxPlot] <- NA
+  if(is.null(vecReferenceMuParam)){
+    dfLineImpulse <- data.frame( pseudotime=rep(objectLineagePulse@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 2),
+                                 counts=c(vecMuParamH0,
+                                          vecMuParamH1),
+                                 model=c(rep("H0", length(vecMuParamH0)), 
+                                         rep("H1", length(vecMuParamH1))) )
+  } else {
+    dfLineImpulse <- data.frame( pseudotime=rep(objectLineagePulse@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 3),
+                                 counts=c(vecMuParamH0,
+                                          vecMuParamH1,
+                                          vecReferenceMuParam),
+                                 model=c(rep("H0", length(vecMuParamH0)), 
+                                         rep("H1", length(vecMuParamH1)),
+                                         rep("Reference", length(vecReferenceMuParam))) )
   }
-  # Reference impulse model (e.g. true model if handling simulated data)
-  if(!is.null(vecImpulseModelRefParam)){
-    vecImpulseValuesRef <- evalImpulseModel_comp(vecTheta=vecImpulseModelRefParam,
-      vecTimepoints=vecPTCoord)
-    vecImpulseValuesRef[vecImpulseValuesRef > scaMaxPlot] <- NA
-    dfLineImpulse <- data.frame( pt=vecPTCoord,
-      impulse=vecImpulseValuesRef)
-    gGenePlot <- gGenePlot + geom_line(data=dfLineImpulse, 
-      aes(x=pt, y=impulse),
-      linetype="dashed",
-      show.legend=TRUE)
-  }
-  # Constant model
-  if(!is.null(scaConstModelParam)){
-    vecConstValues <- c(scaConstModelParam,scaConstModelParam)
-    vecConstValues[vecConstValues > scaMaxPlot] <- NA
-    vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
-    dfLineConst <- data.frame( pt=vecPTCoordConst,
-      const=vecConstValues)
-    gGenePlot <- gGenePlot + geom_line(data=dfLineConst,
-      aes(x=pt, y=const),
-      linetype="solid",
-      show.legend=TRUE)
-  }
-  # Reference constant model
-  if(!is.null(scaConstModelRefParam)){
-    vecConstRefValues <- c(scaConstModelRefParam,scaConstModelRefParam)
-    vecConstRefValues[vecConstRefValues > scaMaxPlot] <- NA
-    vecPTCoordConst <- c(min(vecPseudotime), max(vecPseudotime))
-    dfLineConstRef <- data.frame( pt=vecPTCoordConst,
-      const=vecConstRefValues)
-    gGenePlot <- gGenePlot + geom_line(data=dfLineConstRef, 
-      aes(x=pt, y=const),
-      linetype="dashed",
-      show.legend=TRUE)
-  }
+  gGenePlot <- gGenePlot + geom_line(data=dfLineImpulse, 
+                                     aes(x=pseudotime, y=counts, linetype=model),
+                                     show.legend=TRUE)
   
   return(gGenePlot)
 }
