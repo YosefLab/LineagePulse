@@ -58,7 +58,7 @@ simulateDataSet <- function(scaNCells,
   scaSDImpulseAmplitude=1,
   vecNormConstExternal=NULL,
   matDropoutModelExternal=NULL,
-  dirOutSimulation){
+  dirOutSimulation=NULL){
   
   ####
   # Internal functions
@@ -157,8 +157,8 @@ simulateDataSet <- function(scaNCells,
   # 3. Apply drop out
   # a. Set drop out models
   if(is.null(matDropoutModelExternal)){
-    a1 <- c(2,2,4)
-    a2 <- c(-0.01,-0.001,-0.01)
+    a1 <- c(1,1,2)
+    a2 <- c(-1,-0.1,-1)
     a1 <- array(a1, scaNCells)
     a2 <- array(a2, scaNCells)
     matDropoutLinModelHidden <- cbind(a1,a2)
@@ -199,18 +199,20 @@ simulateDataSet <- function(scaNCells,
   matSampledCountsObserved <- round(matSampledDataObserved)
   
   # Save simulation
-  save(vecPT,file=file.path(dirOutSimulation,"Simulation_vecPT.RData"))
-  save(vecConstIDs,file=file.path(dirOutSimulation,"Simulation_vecConstIDs.RData"))
-  save(vecImpulseIDs,file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
-  save(matImpulseModelHidden,file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
-  save(matMuHidden,file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
-  save(vecNormConstHidden,file=file.path(dirOutSimulation,"Simulation_vecNormConstHidden.RData"))
-  save(matDispHidden,file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
-  save(matSampledDataHidden,file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
-  save(matDropoutLinModelHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))
-  save(matDropoutRatesHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutRatesHidden.RData"))
-  save(matDropoutsHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutsHidden.RData"))
-  save(matSampledCountsObserved,file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
+  if(!is.null(dirOutSimulation)){
+    save(vecPT,file=file.path(dirOutSimulation,"Simulation_vecPT.RData"))
+    save(vecConstIDs,file=file.path(dirOutSimulation,"Simulation_vecConstIDs.RData"))
+    save(vecImpulseIDs,file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
+    save(matImpulseModelHidden,file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
+    save(matMuHidden,file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
+    save(vecNormConstHidden,file=file.path(dirOutSimulation,"Simulation_vecNormConstHidden.RData"))
+    save(matDispHidden,file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
+    save(matSampledDataHidden,file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
+    save(matDropoutLinModelHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))
+    save(matDropoutRatesHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutRatesHidden.RData"))
+    save(matDropoutsHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutsHidden.RData"))
+    save(matSampledCountsObserved,file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
+  }
   
   return(list( vecPT=vecPT,
     matSampledCountsObserved=matSampledCountsObserved ))

@@ -878,7 +878,7 @@ fitDispConstMuConstZINB <- function(vecCounts,
       vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
       return(vecBatchFactors)
     })
-  } else { lsvecBatchFactors <- NULL }
+  } else { lsvecBatchFactors <- NA }
   
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]
@@ -951,9 +951,6 @@ fitDispConstMuConstZINB <- function(vecCounts,
 #'    }
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
-
 fitDispConstMuVecWindowsZINB<- function(vecCounts,
                                         vecMuGuess,
                                         lsvecBatchParamGuess,
@@ -1010,11 +1007,8 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  # Catch boundary of likelihood domain on dispersion space
-  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
   # Catch boundary of likelihood domain on mu space
@@ -1033,7 +1027,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
       vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
       return(vecBatchFactors)
     })
-  } else { lsvecBatchFactors <- NULL }
+  } else { lsvecBatchFactors <- NA }
   
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]
@@ -1090,9 +1084,6 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
 #'    }
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
-
 fitDispConstMuClusterZINB <- function(vecCounts,
                                       vecMuGuess,
                                       lsvecBatchParamGuess,
@@ -1152,11 +1143,8 @@ fitDispConstMuClusterZINB <- function(vecCounts,
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  # Catch boundary of likelihood domain on dispersion space
-  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
   # Catch boundary of likelihood domain on mu space
@@ -1175,7 +1163,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
       vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
       return(vecBatchFactors)
     })
-  } else { lsvecBatchFactors <- NULL }
+  } else { lsvecBatchFactors <- NA }
   
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]
@@ -1232,9 +1220,6 @@ fitDispConstMuClusterZINB <- function(vecCounts,
 #'    }
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
-
 fitDispConstMuMMZINB <- function(vecCounts,
                                  vecMuGuess,
                                  lsvecBatchParamGuess,
@@ -1296,10 +1281,7 @@ fitDispConstMuMMZINB <- function(vecCounts,
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  # Catch boundary of likelihood domain on dispersion space
   if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
   if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
   
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
@@ -1319,7 +1301,7 @@ fitDispConstMuMMZINB <- function(vecCounts,
       vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
       return(vecBatchFactors)
     })
-  } else { lsvecBatchFactors <- NULL }
+  } else { lsvecBatchFactors <- NA }
   
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]
@@ -1391,8 +1373,6 @@ fitDispConstMuMMZINB <- function(vecCounts,
 #'    }
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
                                              vecImpulseParamGuess,
                                              lsvecBatchParamGuess,
@@ -1406,13 +1386,13 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
                                              MAXIT=1000,
                                              RELTOL=10^(-8) ){
   
-  boolError <- FALSE
   if(!is.null(lsvecBatchParamGuess)) vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess, log(unlist(lsvecBatchParamGuess)))
   else vecTheta <- c(log(scaDispGuess), vecImpulseParamGuess)
   
   fitDispMu <- tryCatch({
     unlist(optim(
-      par=vecTheta,			fn=evalLogLikDispConstMuImpulseZINB_comp, 
+      par=vecTheta,			
+      fn=evalLogLikDispConstMuImpulseZINB_comp, 
       vecCounts=vecCounts,
       lsMuModelGlobal=lsMuModelGlobal,
       vecTimepoints=vecTimepoints,
@@ -1454,17 +1434,12 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
       scaWindowRadius=scaWindowRadius, 
       scaLLInit=scaLLInit )
     save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-    #stop(strErrorMsg)
-    boolError <- TRUE
-    return(array(NA, 9))    
+    stop(strErrorMsg)
   })
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  # Catch boundary of likelihood domain on dispersion space
   if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
   if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   
   vecMuModel <- fitDispMu[2:8]
@@ -1485,7 +1460,7 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
       vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
       return(vecBatchFactors)
     })
-  } else { lsvecBatchFactors <- NULL }
+  } else { lsvecBatchFactors <- NA }
   
   scaLL <- fitDispMu["value"]
   scaConvergence <- fitDispMu["convergence"]

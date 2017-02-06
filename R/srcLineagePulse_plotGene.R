@@ -35,9 +35,11 @@ plotGene <- function(objectLineagePulse,
   ### 1. Extract data and models
   vecCounts <- objectLineagePulse@matCountsProc[strGeneID,]
   vecCountsNorm <- vecCounts
-  for(confounder in seq(1, length(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$vecConfounders))){
-    vecCountsNorm <- vecCountsNorm/(objectLineagePulse@lsMuModelH1$lsmatBatchModel[[confounder]][strGeneID,][
-      objectLineagePulse@lsMuModelH1$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+  if(!is.null(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$vecConfounders)){
+    for(confounder in seq(1, length(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$vecConfounders))){
+      vecCountsNorm <- vecCountsNorm/(objectLineagePulse@lsMuModelH1$lsmatBatchModel[[confounder]][strGeneID,][
+        objectLineagePulse@lsMuModelH1$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+    }
   }
   vecMuParamH0 <- decompressMeansByGene( vecMuModel=objectLineagePulse@lsMuModelH0$matMuModel[strGeneID,],
                                          lsvecBatchModel=NULL,
@@ -74,7 +76,7 @@ plotGene <- function(objectLineagePulse,
   }
   
   gGenePlot <- gGenePlot + 
-    labs(title=paste0(strGeneID, "\nlog10 q-value=", round(objectLineagePulse@dfResults[strGeneID,]$adj.p,2) )) +
+    labs(title=paste0(strGeneID, "\nlog10 q-value=", round(log(objectLineagePulse@dfResults[strGeneID,]$adj.p,2)/log(10)) )) +
     xlab(paste0("pseudotime")) +
     scale_colour_gradient(high="red",low="green",limits=c(0, 1)) +
     theme(axis.text=element_text(size=14),

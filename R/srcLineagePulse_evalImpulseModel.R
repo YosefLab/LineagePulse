@@ -10,8 +10,8 @@
 #' 
 #' @seealso Compiled version: \link{evalImpulseModel_comp}
 #' 
-#' @param vecImpulseParam (numeric vector number of impulse model parameters)
-#'    \{beta, h0, h1, h2, t1, t2\}
+#' @param vecImpulseParam (numeric vector number of impulse model parameters: 7)
+#'    \{beta1, beta2, h0, h1, h2, t1, t2\}
 #'    Vector of impulse model parameters.
 #' @param vecTimepoints (numeric vector length number of time points) 
 #'    Time points to be evaluated.
@@ -20,18 +20,8 @@
 #'     Model values for given time points.
 #'     
 #' @author David Sebastian Fischer
-#' 
-#' @export
 evalImpulseModel <- function(vecImpulseParam,
                              vecTimepoints){
-  
-  # beta1 is vecImpulseParam[1]
-  # beta2 is vecImpulseParam[2]
-  # h0 is vecImpulseParam[3]
-  # h1 is vecImpulseParam[4]
-  # h2 is vecImpulseParam[5]
-  # t1 is vecImpulseParam[6]
-  # t2 is vecImpulseParam[7]
   
   vecImpulseValue <- sapply(vecTimepoints, function(t){
     (1/vecImpulseParam[4]) * 
@@ -40,9 +30,6 @@ evalImpulseModel <- function(vecImpulseParam,
       (vecImpulseParam[5] + (vecImpulseParam[4]-vecImpulseParam[5])*
          (1/(1+exp(vecImpulseParam[2]*(t-vecImpulseParam[7])))))
   })
-  
-  # Catch lower bound on mu space
-  #vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
   
   return(vecImpulseValue)
 }
@@ -53,7 +40,7 @@ evalImpulseModel <- function(vecImpulseParam,
 #' Refer to \link{evalImpulseModel}.
 #' 
 #' @param vecImpulseParam (numeric vector number of impulse model parameters)
-#'    \{beta, h0, h1, h2, t1, t2\}
+#'    \{beta1, beta2, h0, h1, h2, t1, t2\}
 #'    Vector of impulse model parameters.
 #' @param vecTimepoints (numeric vector length number of time points) 
 #'    Time points to be evaluated.
@@ -62,6 +49,4 @@ evalImpulseModel <- function(vecImpulseParam,
 #'     Model values for given time points.
 #' 
 #' @author David Sebastian Fischer
-#' 
-#' @export
 evalImpulseModel_comp <- cmpfun(evalImpulseModel)

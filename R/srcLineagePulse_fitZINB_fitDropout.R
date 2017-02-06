@@ -227,7 +227,6 @@ fitPiZINB <- function(vecCounts,
 	#vecParamGuess <- rep(1, dim(matPiPredictors)[2])
 	vecParamGuess <- lsDropModel$matDropoutLinModel[idxTarget,]
 	vecParamGuess[2] <- log(-vecParamGuess[2])
-	boolError <- FALSE
 	lsLinModelFit <- tryCatch({
 		optim(
 			par=vecParamGuess,
@@ -267,9 +266,7 @@ fitPiZINB <- function(vecCounts,
 																scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[idxTarget],
 																scaLLInit=scaLLInit )
 		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		boolError <- TRUE
-		# Return intialisation
-		return(vecParamGuess)
+		stop()
 	})
 	
 	# (II) Extract results and correct for sensitivity boundaries
@@ -280,13 +277,8 @@ fitPiZINB <- function(vecCounts,
 	vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
 	if(vecLinModel[2] > -10^(-10)){ vecLinModel[2] <- -10^(-10) }
 	
-	if(boolError){
-		scaConvergence <- 1001
-	} else {
-		scaConvergence <- unlist(lsLinModelFit[["convergence"]])    
-	}
-	
-	scaLL <- lsLinModelFit[["value"]]
+	scaConvergence <- unlist(lsLinModelFit[["convergence"]])
+	scaLL <- unlist(lsLinModelFit[["value"]])
 	
 	return( list(vecLinModel=vecLinModel,
 							 scaConvergence=scaConvergence,

@@ -94,10 +94,7 @@ fitZINB <- function(matCounts,
 	             ncol=length(unique(vecBatchAssign)) ) # Initialise batch correction factors to 1
 	    })
 	  } else {
-	    lsvecBatchAssign <- list(rep(1,scaNumCells))
-	    lsMuModel$lsmatBatchModel <- lapply(lsvecBatchAssign, function(vecBatchAssign){
-	      matrix(NA, nrow=scaNumGenes, ncol=1 )
-	    })
+	    lsMuModel$lsmatBatchModel <- list(matrix(NA, nrow=scaNumGenes, ncol=1 ))
 	  }
 	} else {
 	  lsMuModel$lsmatBatchModel <- lsmatBatchModelInit
@@ -108,12 +105,7 @@ fitZINB <- function(matCounts,
 	  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <-lapply(lsvecBatchAssign, function(vecBatchAssign) unique(vecBatchAssign) )
 	  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
 	  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
-	} else {
-	  lsvecBatchAssign <- list(rep(1,scaNumCells))
-	  lsMuModel$lsMuModelGlobal$lsvecBatchUnique <- NA
-	  lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign <- lapply(lsvecBatchAssign, function(vecBatchAssign) match(vecBatchAssign, unique(vecBatchAssign)) )
-	  lsMuModel$lsMuModelGlobal$lsvecidxBatchUnique <- lapply(lsvecBatchAssign, function(vecBatchAssign) seq(1,length(unique(vecBatchAssign))) )
-	}
+	} 
 	lsMuModel$lsMuModelGlobal$scaDegFreedom <- dim(lsMuModel$matMuModel)[2] + # Mu model
 	  sum(sapply(lsMuModel$lsmatBatchModel, function(mat) dim(mat)[2]-1 )) # Batch correction model
 	
@@ -256,7 +248,6 @@ fitZINB <- function(matCounts,
 			colnames(lsMuModel$matMuModel) <- NULL # Need this so that column names dont grow to par.par.par...
 			lsMuModel$lsmatBatchModel <- lsFitMuDisp$lsmatBatchModel
 			for(i in seq(1, length(lsMuModel$lsmatBatchModel))) colnames(lsMuModel$lsmatBatchModel[[i]]) <- NULL # Need this so that column names dont grow to par.par.par...
-			
 			vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
 			vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
 			
