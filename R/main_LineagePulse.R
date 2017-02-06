@@ -9,6 +9,8 @@
 library(BiocParallel)
 library(compiler)
 library(ggplot2)
+
+### CHANGE THIS PATH TO THE PATH IN WHICH YOU HAVE LineagePulse/R ###
 setwd("~/gitDevelopment/LineagePulse/R")
 
 source("srcLineagePulse_evalLogLikZINB.R")
