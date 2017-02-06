@@ -98,9 +98,6 @@ fitMixtureZINBModel <- function(objectLineagePulse,
     matWeights[!is.na(vecFixedAssignments),] <- 0
     matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
   }
-  # Set expression models to NULL
-  #lsMuModelFull <- NULL
-  #lsDispModelFull <- NULL
   
   # (II) Estimation iteration on full model
   # Set iteration reporters

@@ -9,16 +9,7 @@
 ### Libraries and source code
 ################################################################################
 
-library(BiocParallel)
-#library(BatchJobs)
-library(compiler)
-library(ggplot2)
-library(MASS)
-#setwd("/Users/davidsebastianfischer/gitDevelopment/LineagePulse/R")
-#setwd("/data/yosef2/users/fischerd/code/LineagePulse/R")
-setwd("~/gitDevelopment/LineagePulse/R")
-
-source("main_LineagePulse.R")
+source("~/gitDevelopment/LineagePulse/R/main_LineagePulse.R")
 
 ################################################################################
 ### Main function: Fit mixture model to data
@@ -75,12 +66,6 @@ runMixtureModel <- function(matCounts,
   # Set the parallelisation environment in BiocParallel:
   if(scaNProc > 1){
     register(MulticoreParam(workers=scaNProc)) 
-    #timeout=60*60*24*7,
-    #log=FALSE, 
-    #threshold="INFO", 
-    #logdir=dirBPLogs))
-    # Use this on windows or if SOCK clusters wanted:
-    # For multiple machine (SOCK) cluster
     #register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
   } else {
     # For debugging in serial mode
@@ -89,7 +74,7 @@ runMixtureModel <- function(matCounts,
   
   
   # 2. Compute normalisation constants
-  strMessage <- paste0("2. Compute normalisation constants:")
+  strMessage <- paste0("--- Compute normalisation constants:")
   objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
@@ -97,7 +82,7 @@ runMixtureModel <- function(matCounts,
                                 vecNormConstExternal=vecNormConstExternalProc)
   
   # 3. Fit ZINB mixture and null model.
-  strMessage <- paste0("3. Fit ZINB mixture and null model.")
+  strMessage <- paste0("--- Fit ZINB mixture and null model.")
   objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
@@ -117,7 +102,7 @@ runMixtureModel <- function(matCounts,
   if(boolVerbose) print(strMessage)
   
   # 4. Differential expression analysis:
-  strMessage <- paste0("4. Differential expression analysis:")
+  strMessage <- paste0("--- Differential expression analysis:")
   objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   

@@ -81,19 +81,11 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
   scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
   if(scaDisp < 10^(-10)) scaDisp <- 10^(-10) 
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
   if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   vecDisp <- rep(scaDisp, length(vecCounts))
   
-  # Prevent means estimate from shrinking to zero
-  # to avoid numerical errors:
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
-  vecMu[vecMu > 10^(10)] <- 10^(10)
   
   vecMuParam <- rep(vecMu, length(vecCounts))
   
@@ -230,17 +222,10 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
   if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
   if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
   vecDisp <- rep(scaDisp, length(vecCounts))
   
-  # Prevent means estimate from shrinking to zero
-  # to avoid numerical errors:
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
   
   vecMuParam <- vecMu
@@ -377,24 +362,17 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
   # Log linker function to fit positive mean
-  vecMu <- exp(vecTheta[2:(max(lsMuModelGlobal$vecClusterAssign)+1)])
+  vecMu <- exp(vecTheta[2:(max(lsMuModelGlobal$vecidxClusterAssign)+1)])
   scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
-  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
-  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10)
   vecDisp <- rep(scaDisp, length(vecCounts))
   
-  # Prevent means estimate from shrinking to zero
-  # to avoid numerical errors:
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
   
-  vecMuParam <- vecMu[lsMuModelGlobal$vecClusterAssign]
+  vecMuParam <- vecMu[lsMuModelGlobal$vecidxClusterAssign]
   
   # Extract batch factors
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -531,17 +509,10 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
-  # Prevent dispersion estimate from shrinking to zero
-  # to avoid numerical errors:
-  # Could also write as if statement, this accomodates for vectors later.
   if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  # Prevent dispersion estimate from growing to infinity
-  # to avoid numerical errors:
   if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
   vecDisp <- rep(scaDisp, length(vecCounts))
   
-  # Prevent means estimate from shrinking to zero
-  # to avoid numerical errors:
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
   
   matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)

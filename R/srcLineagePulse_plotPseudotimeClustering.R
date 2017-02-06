@@ -11,30 +11,19 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param vecPseudotime: (numerical vector length number of cells)
-#'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#'    Has to be named: Names of elements are cell names.
-#' @param lsResultsClustering (list {"Assignments","Centroids","K"})
-#'    \itemize{
-#'      \item   Assignments: (integer vector length number of
-#'        cells) Index of cluster assigned to each cell.
-#'      \item   Centroids: 1D Coordinates of cluster centroids,
-#'        one scalar per centroid.
-#'      \item   K: (scalar) Number of clusters selected.
-#'      }
-#' @param strPDFname: (str) Name of .pdf with plots.
-#'          
-#' @return NULL
+#' @param objectLineagePulse: (LineagePulseObject)
+#' LineagePulse output object which was run with 
+#' strMuModel==clusters.
+#' 
+#' @return (ggplot object)
+#' Cell clustering in pseudotime visualisation.
 #'    
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
-plotPseudotimeClustering <- function(vecPseudotime, 
-  lsResultsClustering,
-  strPDFname="LineagePulse_ZINBfitsPseudotimeClustering.pdf"){
+plotPseudotimeClustering <- function(objectLineagePulse){
   
-  dfClusterBorders <- data.frame( borders=sapply( seq(1,length(lsResultsClustering$Centroids)-1), 
+  dfClusterBorders <- data.frame( borders=sapply( seq(1,max(objectLineagePulse@lsMuModelH1$lsMuModelGlobal$vecClusterAssign)-1), 
     function(centroid){(lsResultsClustering$Centroids[centroid]+lsResultsClustering$Centroids[centroid+1])/2} ))
   dfPseudotime <- data.frame( pseudotime=as.vector(vecPseudotime) )
   

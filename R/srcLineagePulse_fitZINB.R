@@ -51,7 +51,8 @@ fitZINB <- function(matCounts,
 																				 vecNormConst=vecNormConst,
 																				 scaNumCells=scaNumCells,
 																				 vecPseudotime=dfAnnotation$pseudotime,
-																				 vecClusterAssign=dfAnnotation$clusters,
+																				 vecidxClusterAssign=NA,
+																				 scaClusterK=NA,
 																				 vecConfounders=vecConfounders,
 																				 lsvecidxBatchAssign=NULL, # object called to determine assignment of cell to batch
 																				 lsvecidxBatchUnique=NULL, # Can be computer from lsvecidxBatchAssign but kept for speed
@@ -69,7 +70,7 @@ fitZINB <- function(matCounts,
 			lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=7)
 			lsMuModel$matMuModel[,c(3:5)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
 		} else if(strMuModel=="clusters"){
-			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=lsResultsClustering$K, byrow=FALSE)
+			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=length(unique(dfAnnotation$clusters)), byrow=FALSE)
 		} else if(strMuModel=="MM"){
 			lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=dim(matWeights)[2], byrow=FALSE)
 		} else  if(strMuModel=="windows"){
@@ -79,6 +80,10 @@ fitZINB <- function(matCounts,
 		}
 	} else {
 		lsMuModel$matMuModel <- matMuModelInit
+	}
+	if(strMuModel=="clusters"){
+	  lsMuModel$lsMuModelGlobal$vecidxClusterAssign <- match(dfAnnotation$clusters, unique(dfAnnotation$clusters))
+	  lsMuModel$lsMuModelGlobal$scaClusterK <- length(unique(dfAnnotation$clusters))
 	}
 	if(is.null(lsmatBatchModelInit)){
 	  # Initialise batch model parameters
@@ -284,11 +289,15 @@ fitZINB <- function(matCounts,
 		scaIter <- scaIter+1
 	}
 	
-	# Name matrix rows
+	# Name model matrix rows
 	rownames(lsMuModel$matMuModel) <- rownames(matCounts)
 	for(i in seq(1, length(lsMuModel$lsmatBatchModel))) rownames(lsMuModel$lsmatBatchModel[[i]]) <- rownames(matCounts)
 	rownames(lsDispModel$matDispModel) <- rownames(matCounts)
 	if(!boolExternalDropModel) rownames(lsDropModel$matDropoutLinModel) <- colnames(matCounts)
+	# Name model matrix columns
+	if(strMuModel=="clusters") colnames(lsMuModel$matMuModel) <- unique(dfAnnotation$clusters)
+	else if(strMuModel=="windows") colnames(lsMuModel$matMuModel) <- colnames(matCounts)
+	else if(strMuModel=="impulse") colnames(lsMuModel$matMuModel) <- c("beta1", "beta2", "h0", "h1", "h2", "t1", "t2")
 	
 	# Evaluate convergence
 	if(all(as.logical(vecboolDispEstConverged)) &

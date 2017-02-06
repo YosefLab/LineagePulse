@@ -10,27 +10,16 @@
 #' model selection is skipped on K-means results based on
 #' external K returned.
 #' 
-#' @seealso Called by \code{runLineagePulse}.
-#' 
 #' @param vecPseudotime: (numerical vector length number of cells)
 #'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' @param scaKexternal: (scalar) Externally set K.
+#' @param scaKexternal: (scalar) [Default NULL] Externally set K.
 #' 
-#' @return (list {"Assignments","Centroids","K"})
-#'    \itemize{
-#'      \item   Assignments: (integer vector length number of
-#'        cells) Index of cluster assigned to each cell.
-#'      \item   Centroids: 1D Coordinates of cluster centroids,
-#'        one scalar per centroid.
-#'      \item   K: (scalar) Number of clusters selected.
-#'      }
+#' @return (index vector length number of cells): 
+#' Cell-wise index of cluster assigned to each cell.
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
-
 clusterCellsInPseudotime <- function(vecPseudotime,
-  scaKexternal=NULL ){
+                                     scaKexternal=NULL ){
   
   if(!is.null(scaKexternal)){
     # Only run K-means on externally provided K
@@ -39,21 +28,16 @@ clusterCellsInPseudotime <- function(vecPseudotime,
       lsKmeansResults <- kmeans(x=vecPseudotime,centers=1)
     } else {
       vecCentroidsInit <- c(min(vecPseudotime) +
-          (max(vecPseudotime)-min(vecPseudotime))*(seq(0,scaKexternal-1)+0.5)/scaKexternal)
+                              (max(vecPseudotime)-min(vecPseudotime))*(seq(0,scaKexternal-1)+0.5)/scaKexternal)
       lsKmeansResults <- kmeans(x=vecPseudotime,centers=vecCentroidsInit)
     }
-    # Summarise output:
-    lsResultsKhat <- list(
-    	Assignments=lsKmeansResults$cluster,
-    	Centroids=lsKmeansResults$centers,
-    	K=scaKexternal )
+    vecAssignments=lsKmeansResults$cluster
   } else {
     # (I) Run K-means on range of K and do model selection
     # Range of K for K-means is number of unique cells
     vecPseudotimeUnique <- unique(vecPseudotime)
     K <- round( log(length(vecPseudotime))/log(2) )
     vecW <- array(NA,K)
-    lsCentroids <- list()
     matAssignments <- array(NA,c(K,length(vecPseudotime)))
     # Run K-means: Loop over range of K
     for(k in 1:K){
@@ -61,11 +45,10 @@ clusterCellsInPseudotime <- function(vecPseudotime,
         lsKmeansResults <- kmeans(x=vecPseudotime,centers=1)
       } else {
         vecCentroidsInit <- c(min(vecPseudotime) +
-            (max(vecPseudotime)-min(vecPseudotime))*(seq(0,k-1)+0.5)/k) 
+                                (max(vecPseudotime)-min(vecPseudotime))*(seq(0,k-1)+0.5)/k) 
         lsKmeansResults <- kmeans(x=vecPseudotime,centers=vecCentroidsInit)
       }
       vecW[k] <- sum(lsKmeansResults$withinss / (2*lsKmeansResults$size))
-      lsCentroids[[k]] <- lsKmeansResults$centers
       matAssignments[k,] <- lsKmeansResults$cluster
     }
     
@@ -106,12 +89,7 @@ clusterCellsInPseudotime <- function(vecPseudotime,
       vecGapStat[k] >= vecGapStat[k+1] - vecSK[k+1]
     })))+1
     
-    # Summarise output:
-    lsResultsKhat <- list(
-    	Assignments=matAssignments[Khat,],
-    	Centroids=sort( lsCentroids[[Khat]] ),
-    	K=Khat )
+    vecAssignments=matAssignments[Khat,]
   }
-
-  return(lsResultsKhat) 
+  return(vecAssignments) 
 }

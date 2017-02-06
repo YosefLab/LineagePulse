@@ -288,18 +288,15 @@ processSCData <- function(matCounts,
   dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Keep target normalisation constants
-  if(!is.null(vecNormConstExternal)){
-    vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
-  } else {
-    vecNormConstExternalProc <- NULL
-  }
+  if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
+  else vecNormConstExternalProc <- NULL
   
   # Print summary of processing
   strMessage <- paste0("LineagePulse ",STR_VERSION)
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  strMessage <- paste0("1. Data preprocessing")
+  strMessage <- paste0("--- Data preprocessing")
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   

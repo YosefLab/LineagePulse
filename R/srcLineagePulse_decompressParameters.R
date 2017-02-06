@@ -97,9 +97,9 @@ decompressMeansByGene <- function(vecMuModel,
     }
   } else if(lsMuModelGlobal$strMuModel=="clusters"){
     if(!is.null(vecInterval)){ 
-      vecMu <- vecMuModel[lsMuModelGlobal$vecindClusterAssign[vecInterval]]
+      vecMu <- vecMuModel[lsMuModelGlobal$vecidxClusterAssign[vecInterval]]
     } else { 
-      vecMu <- vecMuModel[lsMuModelGlobal$vecindClusterAssign]
+      vecMu <- vecMuModel[lsMuModelGlobal$vecidxClusterAssign]
     }
   } else  if(lsMuModelGlobal$strMuModel=="windows"){
     if(!is.null(vecInterval)){ 

@@ -277,7 +277,7 @@ processSCDataMixture <- function(matCounts,
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  strMessage <- paste0("1. Data preprocessing")
+  strMessage <- paste0("--- Data preprocessing")
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   

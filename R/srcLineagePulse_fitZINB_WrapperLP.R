@@ -62,14 +62,6 @@
 #'    fit other than offset and mean parameter (i.e. parameters which
 #'    are constant for all observations in a gene and externally supplied.)
 #'    Is null if no constant predictors are supplied.
-#' @param lsResultsClustering (list {"Assignments","Centroids","K"})
-#'    \itemize{
-#'      \item   Assignments: (integer vector length number of
-#'        cells) Index of cluster assigned to each cell.
-#'      \item   Centroids: 1D Coordinates of cluster centroids,
-#'        one scalar per centroid.
-#'      \item   K: (scalar) Number of clusters selected.
-#'      }
 #' @param strMuModel: (str) {"constant"}
 #'    [Default "impulse"] Model according to which the mean
 #'    parameter is fit to each gene as a function of 
@@ -113,7 +105,6 @@
 #' @export
 fitNullAlternative <- function(objectLineagePulse,
                                matPiConstPredictors,
-                               lsResultsClustering,
                                strMuModel="windows",
                                strDispModel="constant",
                                boolEstimateNoiseBasedOnH0=TRUE,
