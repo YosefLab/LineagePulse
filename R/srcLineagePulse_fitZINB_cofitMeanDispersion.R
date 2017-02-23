@@ -86,6 +86,7 @@ evalLogLikDispConstMuConstZINB <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu > 10^(10)] <- 10^(10)
   
   vecMuParam <- rep(vecMu, length(vecCounts))
   
@@ -227,6 +228,7 @@ evalLogLikDispConstMuVecWindowsZINB <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu > 10^(10)] <- 10^(10)
   
   vecMuParam <- vecMu
   
@@ -371,6 +373,7 @@ evalLogLikDispConstMuClustersZINB <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu > 10^(10)] <- 10^(10)
   
   vecMuParam <- vecMu[lsMuModelGlobal$vecidxClusterAssign]
   
@@ -509,11 +512,11 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   scaNParamUsed <- 1+length(vecMu)
   
   # (II) Prevent parameter shrinkage/explosion
-  if(scaDisp < 10^(-10)){ scaDisp <- 10^(-10) }
-  if(scaDisp > 1/10^(-10)){ scaDisp <- 1/10^(-10) }
-  vecDisp <- rep(scaDisp, length(vecCounts))
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10) 
+  if(scaDisp > 1/10^(-10)) scaDisp <- 1/10^(-10) 
   
   vecMu[vecMu < 10^(-10)] <- 10^(-10)
+  vecMu[vecMu > 10^(10)] <- 10^(10)
   
   matMuParam <- matrix(vecMu, nrow=scaNCells, ncol=scaNMixtures, byrow=TRUE)
   
@@ -531,7 +534,6 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
       
       matMuParam <- matMuParam*matrix(vecBatchParam, nrow=scaNCells, ncol=scaNMixtures, byrow=FALSE)
     }
-    #matMuParam[matMuParam < 10^(-10)] <- 10^(-10)
   }
   
   # Decompress parameters
@@ -542,9 +544,9 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
   }))
   scaLogLik <- evalLogLikGeneMM(vecCounts=vecCounts,
                                 matMuParam=matMuParam,
+                                vecNormConst=lsMuModelGlobal$vecNormConst,
                                 matDispParam=matrix(scaDisp, nrow=scaNCells, ncol=scaNMixtures),
                                 matDropParam=matDropParam,
-                                vecNormCons=lsMuModelGlobal$vecNormConst,
                                 matWeights=matWeights,
                                 vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
                                 vecboolZero= !is.na(vecCounts) & vecCounts==0 )
@@ -669,8 +671,8 @@ evalLogLikDispConstMuImpulseZINB <- function(vecTheta,
   vecDisp <- rep(scaDisp, length(vecCounts))
   
   # Prevent amplitude shrinkage/explosion
-  vecImpulseParam[vecImpulseParam < 10^(-10)] <- 10^-10
-  vecImpulseParam[vecImpulseParam > 10^(10)] <- 10^10
+  vecImpulseParam[3:5][vecImpulseParam[3:5] < 10^(-10)] <- 10^-10
+  vecImpulseParam[3:5][vecImpulseParam[3:5] > 10^(10)] <- 10^10
   
   vecMuParam <- evalImpulseModel_comp(vecImpulseParam=vecImpulseParam,
                                       vecTimepoints=vecTimepoints)[vecindTimepointAssign]
@@ -1013,6 +1015,7 @@ fitDispConstMuVecWindowsZINB<- function(vecCounts,
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
   # Catch boundary of likelihood domain on mu space
   vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- length(vecMuGuess)+1
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -1149,6 +1152,7 @@ fitDispConstMuClusterZINB <- function(vecCounts,
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
   # Catch boundary of likelihood domain on mu space
   vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- length(vecMuGuess)+1
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -1281,12 +1285,13 @@ fitDispConstMuMMZINB <- function(vecCounts,
   
   # (II) Extract results and correct for sensitivity boundaries
   scaDisp <- exp(fitDispMu[1])
-  if(scaDisp < 10^(-10)){scaDisp <- 10^(-10)}
-  if(scaDisp > 1/10^(-10)){scaDisp <- 1/10^(-10)}
+  if(scaDisp < 10^(-10)) scaDisp <- 10^(-10)
+  if(scaDisp > 10^(10)) scaDisp <- 10^(10)
   
   vecMuModel <- exp(fitDispMu[2:(length(vecMuGuess)+1)])
   # Catch boundary of likelihood domain on mu space
   vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
+  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- length(vecMuGuess)+1
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -1444,8 +1449,8 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
   
   vecMuModel <- fitDispMu[2:8]
   vecMuModel[3:5] <- exp(vecMuModel[3:5])
-  vecMuModel[vecMuModel < 10^(-10)] <- 10^(-10)
-  vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
+  vecMuModel[3:5][vecMuModel[3:5] < 10^(-10)] <- 10^(-10)
+  vecMuModel[3:5][vecMuModel[3:5] > 10^(10)] <- 10^(10)
   
   scaNParamUsed <- 1+length(vecMuModel)
   if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){

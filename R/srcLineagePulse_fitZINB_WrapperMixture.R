@@ -87,7 +87,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                                           scaN=scaNMixtures)
   # Add pseudo count to not generate error in optim in log space
   lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]
-  lsMuModelFull$matMuModel[lsMuModelFull$matMuModel==0] <- 10^(-5)
+  lsMuModelFull$matMuModel[lsMuModelFull$matMuModel < 10^(-5)] <- 10^(-5)
   lsDispModelFull <- lsDispModelRed
   # Set weights to uniform distribution
   matWeights <- matrix(1/scaNMixtures, 
@@ -216,8 +216,14 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                                lsZINBFitsFull$strReport)
       })
       scaLogLikOld <- scaLogLikNew
-      vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
-      scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
+      #vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
+      #scaLogLikNew <- vecLogLikIter[sum(!is.na(vecLogLikIter))]
+      scaLogLikNew <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                           lsMuModel=lsMuModelFull,
+                                           lsDispModel=lsDispModelFull, 
+                                           lsDropModel=lsDropModel,
+                                           matWeights=matWeights,
+                                           scaWindowRadius=NULL ))
       
       strMessage <- paste0("# ",scaIter,".   M-step complete: ",
                            "loglikelihood of  ", scaLogLikNew, " in ",

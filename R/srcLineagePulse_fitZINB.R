@@ -251,6 +251,19 @@ fitZINB <- function(matCounts,
 			vecboolMuEstConverged <- lsFitMuDisp$vecConvergence
 			vecboolDispEstConverged <- lsFitMuDisp$vecConvergence
 			
+			vecLogLikRef <- evalLogLikMatrix(matCounts=matCounts,
+			                                 lsMuModel=lsMuModel,
+			                                 lsDispModel=lsDispModel, 
+			                                 lsDropModel=lsDropModel,
+			                                 matWeights=matWeights,
+			                                 scaWindowRadius=NULL )
+			print(vecLogLikRef)
+			strMessage <- paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
+			                     "reference ll of  ", sum(vecLogLikRef), " in ",
+			                     round(tm_mudisp["elapsed"]/60,2)," min.")
+			print(strMessage)
+			print(lsFitMuDisp$vecLL)
+			
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew
 			scaLogLikNew <- sum(lsFitMuDisp$vecLL)
