@@ -2,7 +2,6 @@
 #++++++     Analyse LineagePulse output on simulated data given model    ++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-library(gplots)
 library(ggplot2)
 library(reshape2)
 

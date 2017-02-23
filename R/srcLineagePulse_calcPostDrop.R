@@ -37,11 +37,11 @@
 #' 
 #' @export
 calcPostDrop_Vector <- function( vecMu,
-  vecDisp,
-  vecDrop,
-  vecboolZero,
-  vecboolNotZero,
-  scaWindowRadius ){
+                                 vecDisp,
+                                 vecDrop,
+                                 vecboolZero,
+                                 vecboolNotZero,
+                                 scaWindowRadius ){
   
   scaNumSamples <- length(vecMu)
   
@@ -61,7 +61,7 @@ calcPostDrop_Vector <- function( vecMu,
         vecInterval <- j
       }
       scaZ <- sum(vecDrop[j]/(vecDrop[j] + 
-          (1-vecDrop[j])*vecNBZero[vecInterval])) *
+                                (1-vecDrop[j])*vecNBZero[vecInterval])) *
         1/length(vecInterval)
     } else {
       scaZ <- NA
@@ -102,27 +102,40 @@ calcPostDrop_Vector <- function( vecMu,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-calcPostDrop_Matrix <- function( matMu,
-  matDisp,
-  matDrop,
-  matboolZero,
-  matboolNotZeroObserved,
-  scaWindowRadius ){
+calcPostDrop_Matrix <- function( matCounts,
+                                 lsMuModel,
+                                 lsDispModel, 
+                                 lsDropModel,
+                                 scaWindowRadius=NULL  ){
   
-  scaNumGenes <- dim(matMu)[1]
-  scaNumCells <- dim(matMu)[2]
+  scaNumGenes <- dim(matCounts)[1]
+  scaNumCells <- dim(matCounts)[2]
   
-  # Compute probability of zero counts under 
-  # negative binomial model.
-  matNBZero <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
-    (matDisp[i,]/(matDisp[i,]+matMu[i,]))^matDisp[i,]
-  }))
   # Compute posterior of drop-out.
   matZ <- do.call(rbind, bplapply(seq(1,scaNumGenes), function(i){
+    # Decompress parameters by gene
+    vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
+                                         lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+                                         lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+                                         vecInterval=NULL )
+    vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
+                                          lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                                          vecInterval=NULL )
+    vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
+                                               vecMu=vecMuParam,
+                                               vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+    
+    # Evaluate loglikelihood of gene
+    vecCounts <- matCounts[i,]
+    
+    # Compute probability of zero counts under 
+    # negative binomial model.
+    vecNBZero <- (vecDispParam/(vecDispParam+vecMuParam))^vecDispParam
+    
     vecZ <- sapply(seq(1,scaNumCells), function(j){
-      if(matboolNotZeroObserved[i,j]){
+      if(!is.na(vecCounts[j]) & vecCounts[j]>0){
         scaZ <- 0
-      } else if(matboolZero[i,j]) {
+      } else if(!is.na(vecCounts[j]) & vecCounts[j]==0) {
         if(!is.null(scaWindowRadius)){
           scaindIntervalStart <- max(1,j-scaWindowRadius)
           scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
@@ -130,8 +143,7 @@ calcPostDrop_Matrix <- function( matMu,
         } else {
           vecInterval <- j
         }
-        scaZ <- sum(matDrop[i,j]/(matDrop[i,j] + 
-            (1-matDrop[i,j])*matNBZero[i,vecInterval])) *
+        scaZ <- sum(vecPiParam[j]/(vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[vecInterval])) *
           1/length(vecInterval)
       } else {
         scaZ <- NA
@@ -141,7 +153,7 @@ calcPostDrop_Matrix <- function( matMu,
     return(vecZ)
   }))
   
-  rownames(matZ) <- rownames(matMu)
-  colnames(matZ) <- colnames(matMu)
+  rownames(matZ) <- rownames(lsMuModel$matMuModel)
+  colnames(matZ) <- rownames(lsDropModel$matDropoutLinModel)
   return(matZ)
 }

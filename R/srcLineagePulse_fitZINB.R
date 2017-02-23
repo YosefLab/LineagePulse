@@ -257,12 +257,10 @@ fitZINB <- function(matCounts,
 			                                 lsDropModel=lsDropModel,
 			                                 matWeights=matWeights,
 			                                 scaWindowRadius=NULL )
-			print(vecLogLikRef)
 			strMessage <- paste0("# ",scaIter, ".   Mean+Disp co-estimation complete: ",
 			                     "reference ll of  ", sum(vecLogLikRef), " in ",
 			                     round(tm_mudisp["elapsed"]/60,2)," min.")
 			print(strMessage)
-			print(lsFitMuDisp$vecLL)
 			
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew

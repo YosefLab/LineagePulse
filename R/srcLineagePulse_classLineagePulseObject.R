@@ -5,11 +5,11 @@
 ### 1. Define output container class
 
 # Define class unions for slots
-setClassUnion('numericORNULL', members = c('numeric', 'NULL'))
-setClassUnion('matrixORNULL', members = c('matrix', 'NULL'))
-setClassUnion('characterORNULL', members = c('character', 'NULL'))
-setClassUnion('listORNULL', members = c('list', 'NULL'))
-setClassUnion('data.frameORNULL', members = c('data.frame', 'NULL'))
+setClassUnion('numericORNULL', members=c('numeric', 'NULL'))
+setClassUnion('matrixORNULL', members=c('matrix', 'NULL'))
+setClassUnion('characterORNULL', members=c('character', 'NULL'))
+setClassUnion('listORNULL', members=c('list', 'NULL'))
+setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 
 #' Container class for LineagePulse output
 #' 
