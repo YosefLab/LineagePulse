@@ -261,12 +261,10 @@ fitZINB <- function(matCounts,
 			                     "reference ll of  ", sum(vecLogLikRef), " in ",
 			                     round(tm_mudisp["elapsed"]/60,2)," min.")
 			print(strMessage)
-			print(vecLogLikRef)
 			
 			# Evaluate Likelihood
 			scaLogLikOld <- scaLogLikNew
 			scaLogLikNew <- sum(lsFitMuDisp$vecLL)
-			print(lsFitMuDisp$vecLL)
 		})
 		
 		# Iteration complete
