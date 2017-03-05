@@ -503,7 +503,7 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
                                         matWeights){ 
   
   scaNCells <- length(vecCounts)
-  scaNMixtures <- dim(matWeights)[1]
+  scaNMixtures <- dim(matWeights)[2]
   # (I) Linker functions
   # Log linker function to fit positive dispersion factor
   scaDisp <- exp(vecTheta[1])
@@ -1234,6 +1234,7 @@ fitDispConstMuMMZINB <- function(vecCounts,
                                  matWeights,
                                  MAXIT=1000,
                                  RELTOL=10^(-8) ){ 
+  
   
   # scaWindowRadius is set to NULL because smoothing
   # within clusters does't make sense - the clusters already impose
