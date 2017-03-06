@@ -102,27 +102,6 @@ setClass(
 ### 2. Enable accession of private elements via functions
 ### which carry the same name as the element.
 
-#' LineagePulseObject accessor method generics
-#' 
-#' Generics for methods which operate on LineagePulseObject.
-#'  
-#' @param object (object) Object from which to retrieve data.
-#' 
-#' @aliases  get_lsMuModelH1
-#'    get_lsDispModelH1
-#'    get_lsMuModelH0
-#'    get_lsDispModelH0
-#'    get_DropModel
-#'    get_lsFitZINBReporters
-#'    get_dfAnnotationProc 
-#'    get_vecNormConst
-#'    get_scaNProc
-#'    get_scaQThres
-#'    get_strReport
-#' 
-#' @name LineagePulseObject_Generics_Accessors
-NULL
-
 #' LineagePulseObject accession methods
 #' 
 #' Get internal data of LineagePulse output object.
@@ -316,50 +295,14 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 
 ### 3. Functions on LineagePulseObject that perform specific tasks
 
-# a) Enable printing of report to .txt file
+# a) Print report
 
-#' Print LineagePulse report string to .txt file
+#' Print LineagePulse report
+#' 
+#' Print LineagePulse report string to .txt file or stdout.
 #'
 #' @param object (LineagePulseObject) Output object of LineagePulse.
-#' @param fileReport (file) File to print report to.
+#' @param file (file) [DEFAULT ""] File to print report to. Default is stdout.
 #'  
-#' @name writeReportToFile
 #' @export
-setGeneric('writeReportToFile', function(object, fileReport) standardGeneric('writeReportToFile'))
-
-#' Print LineagePulse report string to .txt file
-#' 
-#' @param object (LineagePulseObject) Output object of LineagePulse.
-#' @param fileReport (file) File to print report to.
-#' 
-#' @return NULL
-#' 
-#' @author David Sebastian Fischer
-#' 
-#' @name writeReportToFile,LineagePulseObject,character-method
-#' @export
-setMethod('writeReportToFile', signature(object='LineagePulseObject', fileReport='character'), 
-          function(object, fileReport) write(object@strReport, file=fileReport, ncolumns=1) 
-)
-
-# b) Enable printing of report to stdout
-
-#' Print LineagePulse report string to stdout
-#'
-#' @param object (LineagePulseObject) Output object of LineagePulse.
-#'  
-#' @name writeReportToStdout
-#' @export
-setGeneric('writeReportToStdout', function(object) standardGeneric('writeReportToStdout'))
-
-#' Print LineagePulse report string to stdout
-#' 
-#' @param object (LineagePulseObject) Output object of LineagePulse.
-#' 
-#' @author David Sebastian Fischer
-#' 
-#' @name writeReportToStdout,LineagePulseObject-method
-#' @export
-setMethod('writeReportToStdout', signature(object='LineagePulseObject'), 
-          function(object) write(object@strReport, file="", ncolumns=1) 
-)
+writeReport <- function(object, file="") write(object@strReport, file=file, ncolumns=1)

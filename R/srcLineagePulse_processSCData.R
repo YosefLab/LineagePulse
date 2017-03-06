@@ -102,8 +102,7 @@ processSCData <- function(matCounts,
                           boolVecWindowsAsBFGS,
 													scaMaxEstimationCycles,
 													boolVerbose,
-													boolSuperVerbose,
-													STR_VERSION){
+													boolSuperVerbose){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -292,7 +291,7 @@ processSCData <- function(matCounts,
   else vecNormConstExternalProc <- NULL
   
   # Print summary of processing
-  strMessage <- paste0("LineagePulse ",STR_VERSION)
+  strMessage <- paste0("LineagePulse for count data: v0.99")#, packageDescription("LineagePulse", fields = "Version"))
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
@@ -335,7 +334,7 @@ processSCData <- function(matCounts,
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= FALSE,
                             vecNormConst        = NULL,
-  													strVersion          = STR_VERSION)
+  													strVersion          = 0.99)#packageDescription("LineagePulse", fields = "Version"))
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

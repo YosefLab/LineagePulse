@@ -28,7 +28,7 @@ evalDropoutModel <- function(vecPiModel,
   
   # Set offset parameter
   scaOffset <- 0.001
-  scaDropoutRate <- scaOffset+(1-scaOffset)*1/(1+exp(-(vecPiPredictors %*% vecPiModel )))
+  scaDropoutRate <- scaOffset+(1-2*scaOffset)*1/(1+exp(-(vecPiPredictors %*% vecPiModel )))
   
   return(scaDropoutRate)
 }

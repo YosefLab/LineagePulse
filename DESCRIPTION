@@ -1,0 +1,39 @@
+Package: LineagePulse
+Type: Package
+Title: Differential expression analysis of single-cell RNA-seq data
+Version: 0.99.2
+Date: 2017-03-06
+Authors@R: c(
+	person('David S', 'Fischer', NULL, 'david.fischer@helmholtz-muenchen.de', c('aut','cre')),
+	person('Fabian', 'Theis', NULL, 'fabian.theis@helmholtz-muenchen.de', 'ctb'),
+	person('Nir', 'Yosef', NULL, 'niryosef@berkeley.edu', 'ctb'))
+Author: David S Fischer [aut, cre], Fabian J Theis [ctb], Nir Yosef [ctb]
+Maintainer: David S Fischer <david.fischer@helmholtz-muenchen.de>
+Description: LineagePulse can perform longitudinal differential expression analysis based on pseudotime as a continuous covariate. Moreover, LineagePulse can perform differential expression analysis between discrete groups of cells and based on a mixture model (including responsive subset analysis, RSA).
+Encoding: UTF-8
+Imports:
+    BiocParallel,
+    ComplexHeatmap,
+    circlize,
+    compiler,
+    cowplot,
+    ggplot2,
+    grDevices,
+    knitr,
+    Matrix,
+    methods,
+    S4Vectors,
+    stats,
+    SummarizedExperiment
+biocViews: Software,
+    StatisticalMethod,
+    TimeCourse,
+    Sequencing,
+    DifferentialExpression,
+    GeneExpression,
+    CellBiology,
+    CellBasedAssays
+Collate:
+RoxygenNote: 6.0.1
+VignetteBuilder: knitr
+BugReports: https://github.com/YosefLab/LineagePulse/issues

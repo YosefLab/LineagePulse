@@ -1,1 +1,11 @@
-software_test_out/
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+DS_Store
+*/.DS_Store
+.directory
+*/.directory
+*.tar.gz
+LineagePulse.Rproj
+Rplots.pdf

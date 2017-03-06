@@ -233,8 +233,6 @@ runLineagePulse <- function(matCounts,
 														scaNProc=1,
 														boolVerbose=TRUE,
 														boolSuperVerbose=FALSE ){
-	
-  STR_VERSION <- "v0.99"
   
   # 1. Data preprocessing
 	vecAllGenes <- rownames(matCounts)
@@ -250,8 +248,7 @@ runLineagePulse <- function(matCounts,
 																			boolCoEstDispMean=boolCoEstDispMean,
 																			scaMaxEstimationCycles=scaMaxEstimationCycles,
 																			boolVerbose=boolVerbose,
-																			boolSuperVerbose=boolSuperVerbose,
-																			STR_VERSION=STR_VERSION)
+																			boolSuperVerbose=boolSuperVerbose)
 	objectLineagePulse <- lsProcessedSCData$objectLineagePulse
 	vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
 	matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
