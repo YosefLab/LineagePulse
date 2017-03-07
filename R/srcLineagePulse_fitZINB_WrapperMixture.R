@@ -268,11 +268,18 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         # the overall loglikelihood. Therefore:
         # 1. Convergence is not broken.
         # 2. The model get s a chance to leave a bad local minimum.
+        # Note: Also update dispersion to H0.
         vecboolBadGeneModel <- vecLLNew < vecLLH0
         if(any(vecboolBadGeneModel)){
           lsMuModelFull$matMuModel[vecboolBadGeneModel,] <- matrix(
             lsMuModelRed$matMuModel[vecboolBadGeneModel,],
-            nrow=sum(vecboolBadGeneModel), ncol=scaNMixtures,
+            nrow=sum(vecboolBadGeneModel), 
+            ncol=dim(lsMuModelFull$matMuModel)[2],
+            byrow=FALSE)
+          lsDispModelFull$matDispModel[vecboolBadGeneModel,] <- matrix(
+            lsDispModelRed$matDispModel[vecboolBadGeneModel,],
+            nrow=sum(vecboolBadGeneModel), 
+            ncol=dim(lsDispModelFull$matDispModel)[2],
             byrow=FALSE)
           vecLLNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
                                        lsMuModel=lsMuModelFull,
