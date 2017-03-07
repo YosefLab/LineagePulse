@@ -52,29 +52,26 @@ evalLikZINB <- function(vecCounts,
                         vecboolZero){  
   
   # Note on handling very low probabilities: 
-  # The following scalar is used as a sensitivity bound for
-  # log likelihoods:
-  # scaPrecLim <- -323*log(10)
-  # Accordingle, this is the bound for likelihoods
-  scaPrecLim <- 10^(-323)
+  # This bounds below the bound on the loglikelihood
+  # scaLikPrecLim <- 10^(-323)
   
+  vecLik <- array(NA, length(vecCounts))
   # Likelihood of zero counts:
-  vecLikZeros <- (1-vecPi[vecboolZero])*
+  vecLik[vecboolZero] <- (1-vecPi[vecboolZero])*
     (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
                              vecMu[vecboolZero]))^vecDisp[vecboolZero] +
     vecPi[vecboolZero]
   # Likelihood of non-zero counts:
-  vecLikNonzeros <- (1-vecPi[vecboolNotZero])*dnbinom(
+  vecLik[vecboolNotZero] <- (1-vecPi[vecboolNotZero])*dnbinom(
     vecCounts[vecboolNotZero], 
     mu=vecMu[vecboolNotZero], 
     size=vecDisp[vecboolNotZero], 
     log=FALSE)
-  # Compute likelihood of all data:
-  vecLik <- array(NA, length(vecCounts))
-  vecLik[vecboolZero] <- vecLikZeros 
-  vecLik[vecboolNotZero] <- vecLikNonzeros
+
   # Catch low likehood observations
-  vecLik[vecLik < scaPrecLim] <- scaPrecLim #?
+  # Do not need this as likelihood goes to zero in worst case,
+  # ie will not contribute to sum!
+  # vecLik[vecLik < scaLikPrecLim] <- scaLikPrecLim
   
   # Return vector of likelihoods for weighting.
   return(vecLik)
@@ -165,27 +162,24 @@ evalLogLikZINB <- function(vecCounts,
   # zero probabilities. Zero probabilities are handled
   # through substitution of the minimal probability under
   # machine precision.
-  scaLogPrecLim <- -323*log(10)
+  scaLogLikPrecLim <- -700
   
   # Likelihood of zero counts:
   vecLogLikZeros <- log((1-vecPi[vecboolZero])*
                           (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
                                                    vecMu[vecboolZero]))^vecDisp[vecboolZero] +
                           vecPi[vecboolZero])
-  vecLogLikZeros[vecLogLikZeros < scaLogPrecLim] <- scaLogPrecLim
+  vecLogLikZeros[vecLogLikZeros < scaLogLikPrecLim] <- scaLogLikPrecLim
   scaLogLikZeros <- sum(vecLogLikZeros)
   # Likelihood of non-zero counts:
-  vecLogLikNonzerosDropout <- log(1-vecPi[vecboolNotZero])
-  vecLogLikNonzerosNB <- dnbinom(
-    vecCounts[vecboolNotZero], 
-    mu=vecMu[vecboolNotZero], 
-    size=vecDisp[vecboolNotZero], 
-    log=TRUE)
-  vecLogLikNonzerosDropout[vecLogLikNonzerosDropout < scaLogPrecLim] <- scaLogPrecLim
-  vecLogLikNonzerosNB[vecLogLikNonzerosNB < scaLogPrecLim] <- scaLogPrecLim
-  # Replace zero likelihood observation with machine precision
-  # for taking log.
-  scaLogLikNonzeros <- sum( vecLogLikNonzerosDropout+vecLogLikNonzerosNB )
+  vecLogLikNonzeros <- log(1-vecPi[vecboolNotZero]) +
+    dnbinom(
+      vecCounts[vecboolNotZero], 
+      mu=vecMu[vecboolNotZero], 
+      size=vecDisp[vecboolNotZero], 
+      log=TRUE)
+  vecLogLikNonzeros[vecLogLikNonzeros < scaLogLikPrecLim] <- scaLogLikPrecLim
+  scaLogLikNonzeros <- sum(vecLogLikNonzeros)
   # Compute likelihood of all data:
   scaLogLik <- scaLogLikZeros + scaLogLikNonzeros
   # Maximise log likelihood: Return likelihood as value to optimisation routine
@@ -403,8 +397,10 @@ evalLogLikGeneMM <- function(vecCounts,
                              vecboolNotZero, 
                              vecboolZero ){
   
+  scaLogLikPrecLim <- -700
+  
   # Loop over models:
-  matLikSum <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
+  matLik <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
     evalLikZINB_comp(
       vecCounts=vecCounts,
       vecMu=matMuParam[,m]*vecNormConst,
@@ -413,7 +409,9 @@ evalLogLikGeneMM <- function(vecCounts,
       vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero ) *matWeights[,m]
   }))
-  scaLogLik <- sum(log(apply(matLikSum,1,sum)), na.rm=TRUE)
+  vecLogLikSum <- log(apply(matLik,1,sum))
+  vecLogLikSum[vecLogLikSum < scaLogLikPrecLim] <- scaLogLikPrecLim
+  scaLogLik <- sum(vecLogLikSum, na.rm=TRUE)
   
   return(scaLogLik)
 }
@@ -429,11 +427,13 @@ evalLogLikCellMM <- function(vecCounts,
                              vecboolNotZero, 
                              vecboolZero ){
   
+  scaLogLikPrecLim <- -700
+  
   scaNGenes <- length(vecCounts)
   # Initialise sum of likelihoods, this is the mixture model sum under the log
   vecLikSum <- array(0, scaNGenes)
   # Loop over models:
-  matLikSum <- do.call(cbind, lapply(seq(1, length(vecWeights)), function(m){
+  matLik <- do.call(cbind, lapply(seq(1, length(vecWeights)), function(m){
     # Evaluate loglikelihood of observations of cell under current model
     evalLikZINB_comp(
       vecCounts=vecCounts,
@@ -443,7 +443,9 @@ evalLogLikCellMM <- function(vecCounts,
       vecboolNotZero=vecboolNotZero, 
       vecboolZero=vecboolZero )*vecWeights[m]
   }))
-  scaLogLik <- sum(log(apply(matLikSum,1,sum)), na.rm=TRUE)
+  vecLogLikSum <- log(apply(matLik,1,sum))
+  vecLogLikSum[vecLogLikSum < scaLogLikPrecLim] <- scaLogLikPrecLim
+  scaLogLik <- sum(vecLogLikSum, na.rm=TRUE)
   
   return(scaLogLik)
 }
@@ -580,7 +582,7 @@ evalLogLikMatrix <- function(matCounts,
           matDispParam=matDispParam,
           matDropParam=matDropParam,
           matWeights=matWeights,
-          vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+          vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
           vecboolZero= !is.na(vecCounts) & vecCounts==0 )
         
       } else {
