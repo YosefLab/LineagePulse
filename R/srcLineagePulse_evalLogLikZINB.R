@@ -56,7 +56,7 @@ evalLikZINB <- function(vecCounts,
   # log likelihoods:
   # scaPrecLim <- -323*log(10)
   # Accordingle, this is the bound for likelihoods
-  scaPrecLim <- 10^(-50) #10^(-323)
+  scaPrecLim <- 10^(-323)
   
   # Likelihood of zero counts:
   vecLikZeros <- (1-vecPi[vecboolZero])*
@@ -165,7 +165,7 @@ evalLogLikZINB <- function(vecCounts,
   # zero probabilities. Zero probabilities are handled
   # through substitution of the minimal probability under
   # machine precision.
-  scaLogPrecLim <- -50*log(10)#-323*log(10)
+  scaLogPrecLim <- -323*log(10)
   
   # Likelihood of zero counts:
   vecLogLikZeros <- log((1-vecPi[vecboolZero])*
