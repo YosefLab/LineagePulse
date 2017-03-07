@@ -65,7 +65,7 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
                                      matDropParam=matDropParam,
                                      scaNormConst=scaNormConst,
                                      vecWeights=vecWeights,
-                                     vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                     vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
                                      vecboolZero= !is.na(vecCounts) & vecCounts==0 )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine

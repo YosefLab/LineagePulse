@@ -200,7 +200,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
               vecMu=vecMuParam*lsMuModelFull$lsMuModelGlobal$vecNormConst[j],
               vecDisp=vecDispParam, 
               vecPi=vecDropParam,
-              vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+              vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
               vecboolZero= !is.na(vecCounts) & vecCounts==0 )
             return(scaLogLik)
           })

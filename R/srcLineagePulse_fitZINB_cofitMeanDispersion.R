@@ -548,7 +548,7 @@ evalLogLikDispConstMuMMZINB <- function(vecTheta,
                                 matDispParam=matrix(scaDisp, nrow=scaNCells, ncol=scaNMixtures),
                                 matDropParam=matDropParam,
                                 matWeights=matWeights,
-                                vecboolNotZero= !is.na(vecCounts) & vecCounts>=0, 
+                                vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
                                 vecboolZero= !is.na(vecCounts) & vecCounts==0 )
   
   # Maximise log likelihood: Return likelihood as value to optimisation routine
