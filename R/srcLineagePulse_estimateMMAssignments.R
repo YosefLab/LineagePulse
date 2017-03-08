@@ -43,6 +43,8 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
                                     matDispParam,
                                     matDropParam,
                                     scaNormConst,
+																		vecidxAllowedMixture,
+																		scaNMixtures,
                                     vecboolNotZero,
                                     vecboolZero){
   
@@ -52,12 +54,11 @@ evalLogLikWeightsMMZINB <- function(vecTheta,
   
   # (II) Linker functions
   # Logistic linker for probability
-  vecWeights <- 1/(1+exp(-vecTheta))
+  vecWeightsToFit <- 1/(1+exp(-vecTheta))
   # Enforce normalisation
-  vecWeights <- vecWeights/sum(vecWeights)
-  
-  # Loop over models:
-  scaNCells <- length(vecCounts)
+  vecWeightsToFit <- vecWeightsToFit/sum(vecWeightsToFit)
+  vecWeights <- array(0, scaNMixtures)
+  vecWeights[vecidxAllowedMixture] <- vecWeightsToFit
   
   scaLogLik <- evalLogLikCellMM_comp(vecCounts=vecCounts,
   																	 matMuParam=matMuParam,
@@ -80,11 +81,13 @@ fitMMAssignmentsCell <- function(vecCounts,
                                  matDropParam,
                                  scaNormConst,
                                  vecWeights,
+																 vecidxAllowedMixture,
+																 scaNMixtures,
                                  MAXIT=1000,
                                  RELTOL=10^(-8) ){
   
   # Project weights into logit space (linker) for fitting
-  vecWeightInit <- -log(1/vecWeights-1)
+  vecWeightInit <- -log(1/vecWeights[vecidxAllowedMixture]-1)
   
   fitWeights <- tryCatch({
     optim(    
@@ -95,6 +98,8 @@ fitMMAssignmentsCell <- function(vecCounts,
       matDispParam=matDispParam,
       matDropParam=matDropParam,
       scaNormConst=scaNormConst,
+      vecidxAllowedMixture=vecidxAllowedMixture,
+      scaNMixtures=scaNMixtures,
       vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
       vecboolZero= !is.na(vecCounts) & vecCounts==0,
       method="BFGS",
@@ -121,9 +126,11 @@ fitMMAssignmentsCell <- function(vecCounts,
   vecWeightsInLogitSpace[vecWeightsInLogitSpace < -log(10)*10] <- -log(10)*10
   vecWeightsInLogitSpace[vecWeightsInLogitSpace > log(10)*10] <- log(10)*10
   # Extract weights from linker space values
-  vecWeights <- 1/(1+exp(-vecWeightsInLogitSpace))
+  vecWeightsToFit <- 1/(1+exp(-vecWeightsInLogitSpace))
   # Enforce normalisation
-  vecWeights <- vecWeights/sum(vecWeights)
+  vecWeightsToFit <- vecWeightsToFit/sum(vecWeightsToFit)
+  vecWeights <- array(0, scaNMixtures)
+  vecWeights[vecidxAllowedMixture] <- vecWeightsToFit
   
   return(list( vecWeights=vecWeights,
                scaLL=fitWeights$value,
@@ -133,6 +140,7 @@ fitMMAssignmentsCell <- function(vecCounts,
 estimateMMAssignmentsMatrix <- function(matCounts,
 																				dfAnnotation,
 																				boolFixedPopulations,
+																				lsvecFixedCentrByPop,
                                         lsMuModel,
                                         lsDispModel,
                                         lsDropModel,
@@ -147,7 +155,11 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   scaNumMixtures <- dim(matWeights)[2]
   
   # Select non a-priori fixed cells
-  if(boolFixedPopulations) vecidxToFit <- which(is.na(dfAnnotation$populations))
+  if(boolFixedPopulations){
+    # Non-fixed cells are cells which are not fixed to a population with one centroid
+    vecidxPopWithOneCentroid <- sapply(lsvecFixedCentrByPop, function(p) p==1)
+    vecidxToFit <- which(!(dfAnnotation$populations %in% names(lsvecFixedCentrByPop)[vecidxPopWithOneCentroid]))
+  }
   else vecidxToFit <- seq(1, scaNumCells) # Select all cells
   
   # Parallelise weight estimation over cells
@@ -174,12 +186,16 @@ estimateMMAssignmentsMatrix <- function(matCounts,
     } else {
       stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
     }
+    if(is.na(dfAnnotation$populations[j])) vecidxAllowedMixture <- seq(1,scaNumMixtures)
+    else vecidxAllowedMixture <- vecidxAllowedMixture[dfAnnotation$populations[j]]
     fitWeights <- fitMMAssignmentsCell(vecCounts=matCounts[,j],
     																	 matMuParam=matMuParam,
                                        matDispParam=matDispParam,
                                        matDropParam=matDropParam,
                                        scaNormConst=vecNormConst[j],
                                        vecWeights=matWeights[j,],
+    																	 vecidxAllowedMixture=vecidxAllowedMixture,
+    																	 scaNMixtures=scaNumMixtures,
                                        MAXIT=MAXIT_BFGS_MM,
                                        RELTOL=RELTOL_BFGS_MM )
     return(fitWeights)
@@ -189,6 +205,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   vecLLFit <- sapply(lsFitsWeights, function(fit) fit$scaLL )
   vecConvcergenceFit <- sapply(lsFitsWeights, function(fit) fit$scaConvergence )
   
+  print(head(matWeights))
   return(list( matWeights=matWeights,
                vecLL=vecLLFit,
                vecConvcergence=vecConvcergenceFit ))

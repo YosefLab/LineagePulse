@@ -95,6 +95,7 @@ setClass(
     vecAllGenes         = "characterORNULL",
     vecConfounders      = "characterORNULL",
     boolFixedPopulations= "logical",
+    vecNCentroidsPerPop = "numericORNULL",
     vecNormConst        = "numericORNULL",
     strVersion          = "character")
 )

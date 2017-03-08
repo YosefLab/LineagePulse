@@ -26,6 +26,7 @@ runMixtureModel <- function(matCounts,
 														dfAnnotation,
 														vecConfounders,
 														boolFixedPopulations,
+														vecNCentroidsPerPop=NULL,
                             scaNMixtures,
                             matPiConstPredictors=NULL,
                             vecNormConstExternal=NULL,
@@ -44,6 +45,7 @@ runMixtureModel <- function(matCounts,
   																					 dfAnnotation=dfAnnotation,
   																					 vecConfounders=vecConfounders,
   																					 boolFixedPopulations=boolFixedPopulations,
+  																					 vecNCentroidsPerPop=vecNCentroidsPerPop,
                                              scaNMixtures=scaNMixtures,
                                              matPiConstPredictors=matPiConstPredictors,
                                              vecNormConstExternal=vecNormConstExternal,
@@ -71,7 +73,6 @@ runMixtureModel <- function(matCounts,
     # For debugging in serial mode
     register(SerialParam())
   }
-  
   
   # 2. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")

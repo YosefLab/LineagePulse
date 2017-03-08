@@ -105,7 +105,20 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   if(objectLineagePulse@boolFixedPopulations){
     vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
     matWeights[!is.na(vecFixedAssignments),] <- 0
-    matWeights[!is.na(vecFixedAssignments),vecFixedAssignments[!is.na(vecFixedAssignments)]] <- 1
+    scaNCentroidsUsed <- 0
+    lsvecFixedCentrByPop <- list()
+    for(p in seq(1, length(objectLineagePulse@vecNCentroidsPerPop))){
+      vecidxCentroidsOfPop <- seq(scaNCentroidsUsed+1, scaNCentroidsUsed+objectLineagePulse@vecNCentroidsPerPop[p])
+      matWeights[which(objectLineagePulse@dfAnnotationProc$populations %in% 
+                         names(objectLineagePulse@vecNCentroidsPerPop[p])), 
+                 vecidxCentroidsOfPop] <- 1/objectLineagePulse@vecNCentroidsPerPop[p]
+      lsvecFixedCentrByPop[[match(objectLineagePulse@vecNCentroidsPerPop[p], 
+                                  objectLineagePulse@vecNCentroidsPerPop)]] <- vecidxCentroidsOfPop
+      scaNCentroidsUsed <- scaNCentroidsUsed+p
+    }
+    names(lsvecFixedCentrByPop) <- names(objectLineagePulse@vecNCentroidsPerPop)
+  } else {
+    lsvecFixedCentrByPop <- NULL 
   }
   
   # (II) Estimation iteration on full model
@@ -136,6 +149,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         lsWeightFits <- estimateMMAssignmentsMatrix(matCounts=objectLineagePulse@matCountsProc,
                                                     dfAnnotation=objectLineagePulse@dfAnnotationProc,
                                                     boolFixedPopulations=objectLineagePulse@boolFixedPopulations,
+                                                    lsvecFixedCentrByPop=lsvecFixedCentrByPop,
                                                     vecNormConst=objectLineagePulse@vecNormConst,
                                                     lsMuModel=lsMuModelFull,
                                                     lsDispModel=lsDispModelFull,

@@ -101,6 +101,7 @@ processSCDataMixture <- function(matCounts,
 																 dfAnnotation,
 																 vecConfounders,
 																 boolFixedPopulations,
+																 vecNCentroidsPerPop,
                                  scaNMixtures,
                                  matPiConstPredictors,
                                  vecNormConstExternal,
@@ -149,7 +150,7 @@ processSCDataMixture <- function(matCounts,
   checkNull(matCounts,"matCounts")
   checkCounts(matCounts,"matCounts")
   
-  # 2. dfAnnotation, vecConfounders, boolFixedPopulations
+  # 2. dfAnnotation, vecConfounders, boolFixedPopulations, vecNCentroidsPerPop
   if(!is.null(dfAnnotation)){
   	# Check that all cells are mentioned in dfAnnotation
   	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
@@ -170,8 +171,8 @@ processSCDataMixture <- function(matCounts,
   									"Supply batch assignments for all cells and all confounders given in vecConfounders"))
   		}
   	}
-  	if(!boolFixedPopulations){
-  		if(!"population" %in% colnames(dfAnnotation)){
+  	if(boolFixedPopulations){
+  		if(!"populations" %in% colnames(dfAnnotation)){
   			stop(paste0("ERROR IN INPUT DATA CHECK: ",
   									"population does not occur in dfAnnotation (columns)."))
   		} else {
@@ -186,13 +187,47 @@ processSCDataMixture <- function(matCounts,
   				}
   			}
   		}
+  	  if(!is.null(vecNCentroidsPerPop)){
+  	    vecFixedPop <- unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
+  	    # Check names
+  	    if(!all(names(vecNCentroidsPerPop) %in% vecFixedPop)){
+  	      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  	                  "Not all names(vecNCentroidsPerPop) are in dfAnnotation$populations."))
+  	    }
+  	    if(!all(vecFixedPop %in% names(vecNCentroidsPerPop))){
+  	      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  	                  "Not all dfAnnotation$populations are in names(vecNCentroidsPerPop)."))
+  	    }
+  	    # Check content
+  	    checkNumeric(vecNCentroidsPerPop)
+  	    if(sum(vecNCentroidsPerPop)==scaNMixtures){
+  	      warning(paste0("WARNING IN INPUT DATA CHECK: ",
+  	                     "Sum of centroids per fixed populations",
+  	                     "(vecNCentroidsPerPop) is equal ",
+  	                     "to total number of centroids (scaNMixtures). ",
+  	                     "There are no free centroids."))
+  	    }
+  	    if(sum(vecNCentroidsPerPop)>scaNMixtures){
+  	      stop(paste0("WARNING IN INPUT DATA CHECK: ",
+  	                  "Sum of centroids per fixed populations",
+  	                  "(vecNCentroidsPerPop) is larger ",
+  	                  "than total number of centroids (scaNMixtures)."))
+  	    }
+  	  }
+  	} else {
+  	  if(!is.null(vecNCentroidsPerPop)){
+  	    stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  	                "Do not supply vecNCentroidsPerPop if boolFixedPopulations=FALSE."))
+  	  } 
   	}
   } else {
   	if(!is.null(vecConfounders)){
-  		stop(paste0("vecConfounders supplied but no dfAnnotation which carries batch structure."))
+  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  		            "vecConfounders supplied but no dfAnnotation which carries batch structure."))
   	}
   	if(boolFixedPopulations){
-  		stop(paste0("boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
+  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  		            "boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
   	}
   }
   
@@ -270,6 +305,16 @@ processSCDataMixture <- function(matCounts,
   if(boolFixedPopulations){
     vecFixedAssignmentsUnique <-  unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
     dfAnnotation$populations <- match(dfAnnotation$populations, vecFixedAssignmentsUnique)
+    if(is.null(vecNCentroidsPerPop)){
+      # Create vecNCentroidsPerPop if boolFixedPopulations and this was not given
+      # with one centroid per population.
+      vecFixedPop <- unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
+      vecNCentroidsPerPop <- rep(1, length(vecFixedPop))
+      names(vecNCentroidsPerPop) <- vecFixedPop
+    } else {
+      # Make sure order is right
+      vecNCentroidsPerPop <- vecNCentroidsPerPop[vecFixedAssignmentsUnique]
+    }
   }
   
   # Print summary of processing
@@ -310,6 +355,7 @@ processSCDataMixture <- function(matCounts,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= boolFixedPopulations,
+  													vecNCentroidsPerPop = vecNCentroidsPerPop,
                             vecNormConst        = NULL,
   													strVersion          = STR_VERSION)
   

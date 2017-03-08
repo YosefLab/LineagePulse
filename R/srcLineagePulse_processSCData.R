@@ -333,6 +333,7 @@ processSCData <- function(matCounts,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= FALSE,
+  													vecNCentroidsPerPop = NULL,
                             vecNormConst        = NULL,
   													strVersion          = 0.99)#packageDescription("LineagePulse", fields = "Version"))
   
