@@ -1,5 +1,6 @@
 initialiseCentroidsFromCells <- function(matCounts,
-                                         vecFixedCells=NULL,
+                                         lsvecFixedCentrByPop=NULL,
+                                         vecAssignPop=NULL,
                                          scaN){
   
   scaNCells <- dim(matCounts)[2]
@@ -9,13 +10,18 @@ initialiseCentroidsFromCells <- function(matCounts,
   matDist <- 1-cor(matCounts)
   
   # Assign centroids for populations set a priori
-  vecPopulationsSet <- unique(vecFixedCells[!is.na(vecFixedCells)])
-  for(pop in vecPopulationsSet){
+  scaNCentrAssign <- 0
+  for(pop in lsvecFixedCentrByPop){
+    scaNCentrPop <- length(pop)
     # Chose cell with minimum cumulative distance to other cells
     # -> cells which lies in centre of population.
-    vecidxCurrentCells <- which(vecFixedCells==pop)
-    vecCumulDist <- apply(matDist[vecidxCurrentCells,vecidxCurrentCells], 1, function(cell) sum(cell, na.rm=TRUE) )
-    vecidxCentroidCells[pop] <- which.min(vecCumulDist)
+    vecidxCurrentCells <- which(vecAssignPop==names(pop))
+    vecidxCumulDist <- sort(apply(matDist[vecidxCurrentCells,vecidxCurrentCells], 1, 
+                                   function(cell) sum(cell, na.rm=TRUE) ),
+                             decreasing=FALSE, index.return=TRUE)$ix
+    vecidxCentroidCells[(scaNCentrAssign+1):(scaNCentrAssign+scaNCentrPop)] <- 
+      vecidxCumulDist[1:scaNCentrPop]
+    scaNCentrAssign <- scaNCentrAssign+scaNCentrPop
   }
   
   # Greedy: Iteratively select cell with high cumulative distance
@@ -23,7 +29,7 @@ initialiseCentroidsFromCells <- function(matCounts,
   # to all other previously selected cells.
   # Scales linear in scaN.
   for(centroid in which(is.na(vecidxCentroidCells))){
-    vecidxCellsCovered <- c(vecidxCentroidCells[!is.na(vecidxCentroidCells)], which(!is.na(vecFixedCells)))
+    vecidxCellsCovered <- c(vecidxCentroidCells[!is.na(vecidxCentroidCells)], which(!is.na(vecAssignPop)))
     vecidxCellsLeft <- setdiff(seq(1,scaNCells), vecidxCellsCovered)
     vecidxCumulDistSort <- sort(apply(matDist[vecidxCellsLeft,vecidxCellsCovered], 1, function(cell) sum(cell, na.rm=TRUE)), index.return=TRUE)$ix
     vecidxCentroidCells[centroid] <- vecidxCumulDistSort[round(length(vecidxCumulDistSort)/2)]

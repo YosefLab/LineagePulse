@@ -87,21 +87,10 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   
   # (I) Initialise estimation
   # Initialise expression models as null model estimate:
-  # Use cells to initialise centroids: Chose cells so that 
-  # the overall distance is maximised.
-  lsMuModelFull <- lsMuModelRed
-  lsMuModelFull$lsMuModelGlobal$strMuModel <- "MM"
-  vecidxCellsForCentroids <- initialiseCentroidsFromCells(matCounts=objectLineagePulse@matCountsProc,
-                                                          vecFixedCells=objectLineagePulse@dfAnnotationProc$populations,
-                                                          scaN=scaNMixtures)
-  # Add pseudo count to not generate error in optim in log space
-  lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]
-  lsMuModelFull$matMuModel[lsMuModelFull$matMuModel < 10^(-5)] <- 10^(-5)
-  lsDispModelFull <- lsDispModelRed
+  # Correct fixed weights (RSA)
   # Set weights to uniform distribution
   matWeights <- matrix(1/scaNMixtures, 
                        nrow=scaNCells, ncol=scaNMixtures)
-  # Correct fixed weights (RSA)
   if(objectLineagePulse@boolFixedPopulations){
     vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
     matWeights[!is.na(vecFixedAssignments),] <- 0
@@ -120,6 +109,18 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   } else {
     lsvecFixedCentrByPop <- NULL 
   }
+  # Use cells to initialise centroids: Chose cells so that 
+  # the overall distance is maximised.
+  lsMuModelFull <- lsMuModelRed
+  lsMuModelFull$lsMuModelGlobal$strMuModel <- "MM"
+  vecidxCellsForCentroids <- initialiseCentroidsFromCells(matCounts=objectLineagePulse@matCountsProc,
+                                                          lsvecFixedCentrByPop=lsvecFixedCentrByPop,
+                                                          vecAssignPop=objectLineagePulse@dfAnnotationProc$populations,
+                                                          scaN=scaNMixtures)
+  # Add pseudo count to not generate error in optim in log space
+  lsMuModelFull$matMuModel <- objectLineagePulse@matCountsProc[,vecidxCellsForCentroids]
+  lsMuModelFull$matMuModel[lsMuModelFull$matMuModel < 10^(-5)] <- 10^(-5)
+  lsDispModelFull <- lsDispModelRed
   
   # (II) Estimation iteration on full model
   # Set iteration reporters
@@ -173,6 +174,11 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
       if(boolSuperVerbose) print(strMessage)
       
+      strMessage <- paste0("# ", scaIter,".   Cumulative mixture weights  ", 
+                           paste(round(apply(matWeights,2,sum),2), collapse=" "))
+      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+      if(boolSuperVerbose) print(strMessage)
+      
       if(any(lsWeightFits$vecConvergence !=0 )){
         strMessage <- paste0("Weight estimation did not convergen in ",
                              sum(lsWeightFits$vecConvergence !=0), " cases.")
@@ -181,11 +187,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
       }
       
       # Catch mixture drop-out
-      vecidxAssignedMixture <- apply(matWeights, 1, which.max)
-      vecboolMixtureDropped <- sapply(seq(1,scaNMixtures), function(mixture){
-        sum(vecidxAssignedMixture==mixture) <= 1
-      })
-      if(scaIter >1 & any(vecboolMixtureDropped)){
+      #vecidxAssignedMixture <- apply(matWeights, 1, which.max)
+      #vecboolMixtureDropped <- sapply(seq(1,scaNMixtures), function(mixture){
+      #  sum(vecidxAssignedMixture==mixture) <= 1
+      #})
+      vecboolMixtureDropped <- array(FALSE, scaNMixtures)
+      if(scaIter>1 & any(vecboolMixtureDropped)){
         boolMixtureReset <- TRUE
         # Reinitialise one mixture component
         # Get badly described cell: Chose via likelihood under of non-dropout mixtures.
@@ -193,18 +200,18 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         #vecidxBadlyDescrCells <- sort(apply(matWeights, 1, max), index.return=TRUE, decreasing=FALSE)$ix
         matLLCellgivenMixture <- do.call(cbind, lapply(which(!vecboolMixtureDropped), function(m){
           sapply(seq(1,scaNCells), function(j){
-            vecMuParam <- do.call(c, lapply(seq(1,scaNumGenes), function(i){
-              decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,m],
-                                    lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
-                                    lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+            vecMuParam <- do.call(c, lapply(seq(1,scaNGenes), function(i){
+              decompressMeansByGene(vecMuModel=lsMuModelFull$matMuModel[i,m],
+                                    lsvecBatchModel=lapply(lsMuModelFull$lsmatBatchModel, function(mat) mat[i,] ),
+                                    lsMuModelGlobal=lsMuModelFull$lsMuModelGlobal,
                                     vecInterval=j)
             }))
             vecDropParam <- decompressDropoutRateByCell(
               vecDropModel=lsDropModel$matDropoutLinModel[j,],
-              vecMu=matMuParam[,m],
+              vecMu=vecMuParam,
               matPiConstPredictors=lsDropModel$matPiConstPredictors )
-            if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-              vecDispParam <- as.vector(lsDispModel$matDispModel)
+            if(lsDispModelFull$lsDispModelGlobal$strDispModel=="constant"){
+              vecDispParam <- as.vector(lsDispModelFull$matDispModel)
             } else {
               stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
             }
@@ -259,8 +266,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                     strMuModel="MM",
                                     strDispModel="constant",
                                     scaMaxEstimationCycles=1,
-                                    boolVerbose=TRUE,
-                                    boolSuperVerbose=TRUE)
+                                    boolVerbose=FALSE,
+                                    boolSuperVerbose=FALSE)
           lsMuModelFull <- lsZINBFitsFull$lsMuModel
           lsDispModelFull <- lsZINBFitsFull$lsDispModel
           boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel

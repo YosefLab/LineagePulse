@@ -157,7 +157,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   # Select non a-priori fixed cells
   if(boolFixedPopulations){
     # Non-fixed cells are cells which are not fixed to a population with one centroid
-    vecidxPopWithOneCentroid <- sapply(lsvecFixedCentrByPop, function(p) p==1)
+    vecidxPopWithOneCentroid <- sapply(lsvecFixedCentrByPop, function(p) length(p)==1)
     vecidxToFit <- which(!(dfAnnotation$populations %in% names(lsvecFixedCentrByPop)[vecidxPopWithOneCentroid]))
   }
   else vecidxToFit <- seq(1, scaNumCells) # Select all cells
@@ -187,7 +187,7 @@ estimateMMAssignmentsMatrix <- function(matCounts,
       stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
     }
     if(is.na(dfAnnotation$populations[j])) vecidxAllowedMixture <- seq(1,scaNumMixtures)
-    else vecidxAllowedMixture <- vecidxAllowedMixture[dfAnnotation$populations[j]]
+    else vecidxAllowedMixture <- lsvecFixedCentrByPop[[dfAnnotation$populations[j]]]
     fitWeights <- fitMMAssignmentsCell(vecCounts=matCounts[,j],
     																	 matMuParam=matMuParam,
                                        matDispParam=matDispParam,
@@ -205,7 +205,6 @@ estimateMMAssignmentsMatrix <- function(matCounts,
   vecLLFit <- sapply(lsFitsWeights, function(fit) fit$scaLL )
   vecConvcergenceFit <- sapply(lsFitsWeights, function(fit) fit$scaConvergence )
   
-  print(head(matWeights))
   return(list( matWeights=matWeights,
                vecLL=vecLLFit,
                vecConvcergence=vecConvcergenceFit ))
