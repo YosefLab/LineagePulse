@@ -102,6 +102,7 @@ processSCDataMixture <- function(matCounts,
 																 vecConfounders,
 																 boolFixedPopulations,
 																 vecNCentroidsPerPop,
+																 vecH0Pop,
                                  scaNMixtures,
                                  matPiConstPredictors,
                                  vecNormConstExternal,
@@ -213,6 +214,12 @@ processSCDataMixture <- function(matCounts,
   	                  "(vecNCentroidsPerPop) is larger ",
   	                  "than total number of centroids (scaNMixtures)."))
   	    }
+  	    if(!is.null(vecH0Pop)){
+  	      if(!all(vecH0Pop %in% vecFixedPop)){
+  	        stop(paste0("ERROR IN INPUT DATA CHECK: ",
+  	                    "Not all vecH0Pop are in dfAnnotation$populations."))
+  	      }
+  	    }
   	  }
   	} else {
   	  if(!is.null(vecNCentroidsPerPop)){
@@ -229,6 +236,10 @@ processSCDataMixture <- function(matCounts,
   		stop(paste0("ERROR IN INPUT DATA CHECK: ",
   		            "boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
   	}
+    if(!is.null(vecH0Pop)){
+      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                  "vecH0Pop supplied but no dfAnnotation which carries population assignments."))
+    }
   }
   
   # 3. matPiConstPredictors
@@ -344,10 +355,12 @@ processSCDataMixture <- function(matCounts,
                             dfResults           = NULL,
                             lsDispModelH0       = NULL,
                             lsDispModelH1       = NULL,
+                            lsDispModelConst    = NULL,
                             lsDropModel         = NULL,
                             lsFitZINBReporters  = NULL,
                             lsMuModelH1         = NULL,
                             lsMuModelH0         = NULL,
+                            lsMuModelConst      = NULL,
                             matCountsProc       = matCountsProc,
                             matWeights          = NULL,
                             scaWindowRadius     = NULL,
@@ -356,6 +369,7 @@ processSCDataMixture <- function(matCounts,
   													vecConfounders      = vecConfounders,
   													boolFixedPopulations= boolFixedPopulations,
   													vecNCentroidsPerPop = vecNCentroidsPerPop,
+  													vecH0Pop            = vecH0Pop,
                             vecNormConst        = NULL,
   													strVersion          = STR_VERSION)
   

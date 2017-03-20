@@ -84,9 +84,11 @@ setClass(
     dfResults           = "data.frameORNULL",
     lsDispModelH0       = "listORNULL",
     lsDispModelH1       = "listORNULL",
+    lsDispModelConst    = "listORNULL",
     lsDropModel         = "listORNULL",
     lsMuModelH0         = "listORNULL",
     lsMuModelH1         = "listORNULL",
+    lsMuModelConst      = "listORNULL",
     lsFitZINBReporters  = "listORNULL",
     matCountsProc       = "matrixORNULL",
     matWeights          = "matrixORNULL",
@@ -96,6 +98,7 @@ setClass(
     vecConfounders      = "characterORNULL",
     boolFixedPopulations= "logical",
     vecNCentroidsPerPop = "numericORNULL",
+    vecH0Pop            = "characterORNULL",
     vecNormConst        = "numericORNULL",
     strVersion          = "character")
 )

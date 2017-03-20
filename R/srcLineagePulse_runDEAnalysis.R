@@ -51,11 +51,16 @@ runDEAnalysis <- function(objectLineagePulse){
   # Multiple testing correction (Benjamini-Hochberg)
   vecPvalueBH <- p.adjust(vecPvalue, method = "BH")
   
+  if(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$strMuModel=="constant"){
+    vecMu <- as.vector(objectLineagePulse@lsMuModelH0$matMuModel)
+  } else {
+    vecMu <- as.vector(objectLineagePulse@lsMuModelConst$matMuModel)
+  }
   dfResults <- data.frame(
-    gene=row.names(objectLineagePulse@matCountsProc),
+    gene=rownames(objectLineagePulse@matCountsProc),
     p=as.numeric(vecPvalue),
     adj.p=as.numeric(vecPvalueBH),
-    mean_H0=as.vector(objectLineagePulse@lsMuModelH0$matMuModel),
+    mean_H0=vecMu,
     dispersion_H0=as.vector(objectLineagePulse@lsDispModelH0$matDispModel),
     loglik_full=vecLogLikFull,
     loglik_red=vecLogLikRed,

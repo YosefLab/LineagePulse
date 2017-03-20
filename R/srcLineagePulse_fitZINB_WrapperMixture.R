@@ -8,10 +8,8 @@
 #' A: Fit a constant model to all cells. The resulting drop-out model
 #'    is used for the EM-like iteration. This is also the null model
 #'    for the LRT as the full model is fir based on this drop-out model.
-#' B: EM-like iteration to get mixture assignments.
-#' C: Fit full model based on mixture assignments as MLE to 
-#'    do LRT later.
-#'    
+#' B: EM-like iteration to fit H1 mixture model.
+#'  
 #' @export
 fitMixtureZINBModel <- function(objectLineagePulse,
                                 scaNMixtures,
@@ -38,7 +36,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
   
   ### (A) Pre-estimate drop-out model to speed up mixture model fitting
-  strMessage <- paste0("### a) Fit H0 constant ZINB model and set drop-out model.")
+  strMessage <- paste0("### a) Fit constant ZINB model and set drop-out model.")
   objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
@@ -81,7 +79,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                scaWindowRadius=NULL )
   
   ### (B) EM-like estimation cycle: fit mixture model
-  strMessage <- paste0("### b) EM-like iteration: Fit mixture model")
+  strMessage <- paste0("### b) EM-like iteration: Fit H1 mixture model")
   objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
@@ -313,10 +311,6 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                " gene models which are worse than a constant model.")
           objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
           if(boolSuperVerbose) print(strMessage)
-          strMessage <- paste0("# ",scaIter,".   Reset complete:  ",
-                               "loglikelihood of  ", sum(vecLLNew))
-          objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-          if(boolSuperVerbose) print(strMessage)
         }
         scaLogLikOld <- scaLogLikNew
         #vecLogLikIter <- lsZINBFitsFull$vecEMLogLikModel
@@ -356,9 +350,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   rownames(matWeights) <- colnames(objectLineagePulse@matCountsProc)
   
   lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelFull,
-                              boolConvergenceH0=boolConvergenceModelRed,
+                              boolConvergenceConst=boolConvergenceModelRed,
                               vecEMLogLikH1=vecEMLogLikModelFull,
-                              vecEMLogLikH0=vecEMLogLikModelRed )
+                              vecEMLogLikConst=vecEMLogLikModelRed )
   
   objectLineagePulse@lsMuModelH1        <- lsMuModelFull
   objectLineagePulse@lsDispModelH1      <- lsDispModelFull
@@ -367,6 +361,16 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   objectLineagePulse@lsDropModel        <- lsDropModel
   objectLineagePulse@matWeights         <- matWeights
   objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
+  
+  # Fit non-constant null mixture model if necessary
+  # Only possible if there s a reference set of mixtures (RSA scenario)
+  if(objectLineagePulse@boolFixedPopulations){
+    objectLineagePulse <- fitH0MixtureZINBModel(
+      objectLineagePulse=objectLineagePulse,
+      vecidxMixturesH0=unlist(lsvecFixedCentrByPop[objectLineagePulse@vecH0Pop]),
+      boolVerbose=boolVerbose,
+      boolSuperVerbose=boolSuperVerbose)
+  }
   
   return(objectLineagePulse)
 }
