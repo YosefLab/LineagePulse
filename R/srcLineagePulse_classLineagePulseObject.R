@@ -92,7 +92,6 @@ setClass(
     lsFitZINBReporters  = "listORNULL",
     matCountsProc       = "matrixORNULL",
     matWeights          = "matrixORNULL",
-    scaWindowRadius     = "numericORNULL",
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
     vecConfounders      = "characterORNULL",

@@ -76,8 +76,6 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #' based on true time (time of sampling) (boolClusterInPseudotime).
 #' 
 #' ADDITIONAL FACULTATIVE SETTINGS
-#' 4. Decide whether you want to use local negative binomial model
-#' smooting (scaWindowRadius). 
 #' 5. Supply gene-specific drop-out predictors if wanted 
 #' (matPiConstPredictors).
 #' 6. Set optimisation parameters (boolEstimateNoiseBasedOnH0,
@@ -152,12 +150,6 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #' @param scaKCluster: (integer) [Default NULL] Forces number of centroids
 #'    in K-means to be K: setting this to an integer (not NULL) skips model
 #'    selection in clusterting.
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
 #' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
 #'    Whether to co-estimate logistic drop-out model with the 
 #'    constant null model or with the alternative model. The
@@ -224,10 +216,11 @@ runLineagePulse <- function(matCounts,
 														vecConfounders=NULL,
 														strMuModel="impulse",
 														strDispModel="constant",
+														strDropModel="logistic_ofMu",
+														strDropFitGroup="PerCell",
 														matPiConstPredictors=NULL,
 														vecNormConstExternal=NULL,
 														scaKClusters=NULL,
-														scaWindowRadius=NULL,
 														boolEstimateNoiseBasedOnH0=FALSE,
 														boolVecWindowsAsBFGS=FALSE,
 														boolCoEstDispMean=TRUE,
@@ -245,7 +238,6 @@ runLineagePulse <- function(matCounts,
 																			vecNormConstExternal=vecNormConstExternal,
 																			strMuModel=strMuModel,
 																			strDispModel=strDispModel,
-																			scaWindowRadius=scaWindowRadius,
 																			boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
 																			boolCoEstDispMean=boolCoEstDispMean,
 																			scaMaxEstimationCycles=scaMaxEstimationCycles,
@@ -333,6 +325,8 @@ runLineagePulse <- function(matCounts,
 																							boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
 																							strMuModel=strMuModel,
 																							strDispModel=strDispModel,
+																							strDropModel=strDropModel,
+																							strDropFitGroup=strDropFitGroup,
 																							scaMaxEstimationCycles=scaMaxEstimationCycles,
 																							boolVerbose=boolVerbose,
 																							boolSuperVerbose=boolSuperVerbose )

@@ -38,8 +38,6 @@
 #' @param vecDisp: (vector number of cells) Negative binomial
 #'    mean parameter estimated.
 #' @param vecDrop: (vector number of cells) Dropout estimates of cells. 
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #'    
 #' @return list (length 2)
 #'    \itemize{
@@ -55,20 +53,18 @@
 #' 
 #' @export
 
-initialiseImpulseParametes <- function(vecCounts,
+initialiseImpulseParameters <- function(vecCounts,
                                        lsMuModelGlobal,
                                        vecMu,
                                        vecDisp,
-                                       vecDrop,
-                                       scaWindowRadius){
+                                       vecDrop){
   
   # Compute posterior of drop-out
   vecPostNB <- 1-calcPostDrop_Vector( vecMu=vecMu,
                                       vecDisp=vecDisp,
                                       vecDrop=vecDrop,
                                       vecboolZero= !is.na(vecCounts) & vecCounts==0,
-                                      vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-                                      scaWindowRadius=scaWindowRadius )
+                                      vecboolNotZero= !is.na(vecCounts) & vecCounts>0 )
   
   # Observations are pooled to give rough estimates of expression
   # levels in local environment. The pooling are either the clusters

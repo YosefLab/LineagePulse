@@ -216,102 +216,6 @@ evalLogLikZINB <- function(vecCounts,
 #' @export
 evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
 
-
-#' Compute smoothed loglikelihood of zero-inflated negative binomial model
-#' for a vector of counts.
-#' 
-#' This likelihood function is a wrapper for computing the likelihood with
-#' neighbourhood smoothing for a vector of counts.
-#' 
-#' @seealso Called directly by \code{evalLogLikGene} and by
-#' loglikelihood wrappers that operate on sliding window mean
-#' estimates: \code{evalLogLikMuVecWindowsZINB} and
-#' \code{evalLogLikDispConstMuVecWindowsZINB}. Calls
-#' \code{evalLogLikZINB} on neighbourhoods.
-#' Compiled version: \link{evalLogLikSmoothZINB}
-#'
-#' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
-#' @param vecMu (numeric vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (numeric vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
-#'    
-#' @return scaLogLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
-#' 
-#' @export
-evalLogLikSmoothZINB <- function(vecCounts,
-                                 vecMu,
-                                 vecNormConst,
-                                 vecDisp, 
-                                 vecPi, 
-                                 vecboolNotZero, 
-                                 vecboolZero,
-                                 scaWindowRadius=NULL ){
-  
-  scaNumCells <- length(vecCounts)
-  scaLogLik <- sum(sapply(seq(1,scaNumCells), function(j){
-    scaindIntervalStart <- max(1,j-scaWindowRadius)
-    scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-    vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-    scaLogLikCell <- evalLogLikZINB_comp(
-      vecCounts=vecCounts[vecInterval],
-      vecMu=vecMu[j]*vecNormConst[vecInterval],
-      vecDisp=rep(vecDisp[j], length(vecInterval)), 
-      vecPi=vecPi[vecInterval], 
-      vecboolNotZero=vecboolNotZero[vecInterval], 
-      vecboolZero=vecboolZero[vecInterval])
-    return(scaLogLikCell)
-  }))
-  return(scaLogLik)
-}
-
-#' Compiled function: evalLogLikSmoothZINB
-#' 
-#' Pre-compile heavily used functions.
-#' Refer to \link{evalLogLikSmoothZINB}
-#' 
-#' @seealso \link{evalLogLikSmoothZINB}
-#'
-#' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
-#' @param vecMu (numeric vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (numeric vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
-#'    
-#' @return scaLogLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
-#' 
-#' @export
-evalLogLikSmoothZINB_comp <- cmpfun(evalLogLikSmoothZINB)
-
-
 #' Wrapper for log likelihood of zero-inflated negative binomial model
 #' for a vector of counts.
 #' 
@@ -348,8 +252,6 @@ evalLogLikSmoothZINB_comp <- cmpfun(evalLogLikSmoothZINB)
 #'    Whether observation is larger than zero.
 #' @param vecboolZero: (bool vector number of cells)
 #'    Whether observation is zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #'    
 #' @return scaLogLik: (scalar) Likelihood under zero-inflated
 #' 	  negative binomial model.
@@ -363,28 +265,15 @@ evalLogLikGene <- function(vecCounts,
                            vecDisp, 
                            vecPi,
                            vecboolNotZero, 
-                           vecboolZero,
-                           scaWindowRadius=NULL ){
+                           vecboolZero ){
   
-  if(!is.null(scaWindowRadius)){
-    scaLogLik <- evalLogLikSmoothZINB_comp(
-      vecCounts=vecCounts,
-      vecMu=vecMu,
-      vecNormConst=vecNormConst,
-      vecDisp=vecDisp, 
-      vecPi=vecPi,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero,
-      scaWindowRadius=scaWindowRadius)
-  } else {
-    scaLogLik <- evalLogLikZINB_comp(
-      vecCounts=vecCounts,
-      vecMu=vecMu*vecNormConst,
-      vecDisp=vecDisp, 
-      vecPi=vecPi,
-      vecboolNotZero=vecboolNotZero, 
-      vecboolZero=vecboolZero )
-  }
+  scaLogLik <- evalLogLikZINB_comp(
+    vecCounts=vecCounts,
+    vecMu=vecMu*vecNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPi,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero )
   return(scaLogLik)
 }
 
@@ -530,8 +419,6 @@ evalLogLikCellMM_comp <- cmpfun(evalLogLikCellMM)
 #'    are constant for all observations in a gene and externally supplied.)
 #'    Is null if no constant predictors are supplied.
 #'    }
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #'
 #' @return vecLogLik: (vector length number of genes) 
 #' Loglikelihood of each gene under zero-inflated negative binomial model.
@@ -543,8 +430,7 @@ evalLogLikMatrix <- function(matCounts,
                              lsMuModel,
                              lsDispModel, 
                              lsDropModel,
-                             matWeights=NULL,
-                             scaWindowRadius=NULL ){
+                             matWeights=NULL ){
   
   vecLogLik <- unlist(
     bplapply( seq(1,dim(matCounts)[1]), function(i){
@@ -571,7 +457,8 @@ evalLogLikMatrix <- function(matCounts,
           decompressDropoutRateByGene(
             matDropModel=lsDropModel$matDropoutLinModel,
             vecMu=matMuParam[,m],
-            vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+            vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+            lsDropModelGlobal=lsDropModel$lsDropModelGlobal )
         }))
         
         vecCounts <- matCounts[i,]
@@ -599,7 +486,8 @@ evalLogLikMatrix <- function(matCounts,
         vecPiParam <- decompressDropoutRateByGene(
           matDropModel=lsDropModel$matDropoutLinModel,
           vecMu=vecMuParam,
-          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+          vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+          lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
         
         # Evaluate loglikelihood of gene
         vecCounts <- matCounts[i,]
@@ -610,8 +498,7 @@ evalLogLikMatrix <- function(matCounts,
           vecDisp=vecDispParam, 
           vecPi=vecPiParam,
           vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-          vecboolZero= !is.na(vecCounts) & vecCounts==0,
-          scaWindowRadius=scaWindowRadius)
+          vecboolZero= !is.na(vecCounts) & vecCounts==0)
       }
       return(scaLL)
     })

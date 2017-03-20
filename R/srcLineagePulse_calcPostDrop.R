@@ -26,8 +26,6 @@
 #'    Whether observation is zero.
 #' @param vecboolNotZero: (bool vector samples)
 #'    Whether observation is real and non-zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #' 
 #' @return vecZ:  (numeric vector samples)
 #'    Posterior probability of observation not being generated 
@@ -40,8 +38,7 @@ calcPostDrop_Vector <- function( vecMu,
                                  vecDisp,
                                  vecDrop,
                                  vecboolZero,
-                                 vecboolNotZero,
-                                 scaWindowRadius ){
+                                 vecboolNotZero ){
   
   scaNumSamples <- length(vecMu)
   
@@ -53,16 +50,9 @@ calcPostDrop_Vector <- function( vecMu,
     if(vecboolNotZero[j]){
       scaZ <- 0
     } else if(vecboolZero[j]) {
-      if(!is.null(scaWindowRadius)){
-        scaindIntervalStart <- max(1,j-scaWindowRadius)
-        scaindIntervalEnd <- min(scaNumSamples,j+scaWindowRadius)
-        vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-      } else {
-        vecInterval <- j
-      }
       scaZ <- sum(vecDrop[j]/(vecDrop[j] + 
-                                (1-vecDrop[j])*vecNBZero[vecInterval])) *
-        1/length(vecInterval)
+                                (1-vecDrop[j])*vecNBZero[j])) *
+        1/length(j)
     } else {
       scaZ <- NA
     }
@@ -92,8 +82,6 @@ calcPostDrop_Vector <- function( vecMu,
 #'    Whether observation is zero.
 #' @param matboolNotZeroObserved: (bool matrix genes x cells)
 #'    Whether observation is real and non-zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #' 
 #' @return matZ: (numeric matrix genes x cells)
 #'    Posterior probability of observation not being generated 
@@ -105,8 +93,7 @@ calcPostDrop_Vector <- function( vecMu,
 calcPostDrop_Matrix <- function( matCounts,
                                  lsMuModel,
                                  lsDispModel, 
-                                 lsDropModel,
-                                 scaWindowRadius=NULL  ){
+                                 lsDropModel  ){
   
   scaNumGenes <- dim(matCounts)[1]
   scaNumCells <- dim(matCounts)[2]
@@ -123,7 +110,8 @@ calcPostDrop_Matrix <- function( matCounts,
                                           vecInterval=NULL )
     vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropoutLinModel,
                                                vecMu=vecMuParam,
-                                               vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
+                                               vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
+                                               lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
     
     # Evaluate loglikelihood of gene
     vecCounts <- matCounts[i,]
@@ -136,15 +124,8 @@ calcPostDrop_Matrix <- function( matCounts,
       if(!is.na(vecCounts[j]) & vecCounts[j]>0){
         scaZ <- 0
       } else if(!is.na(vecCounts[j]) & vecCounts[j]==0) {
-        if(!is.null(scaWindowRadius)){
-          scaindIntervalStart <- max(1,j-scaWindowRadius)
-          scaindIntervalEnd <- min(scaNumCells,j+scaWindowRadius)
-          vecInterval <- seq(scaindIntervalStart,scaindIntervalEnd)
-        } else {
-          vecInterval <- j
-        }
-        scaZ <- sum(vecPiParam[j]/(vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[vecInterval])) *
-          1/length(vecInterval)
+        scaZ <- sum(vecPiParam[j]/(vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[j])) *
+          1/length(j)
       } else {
         scaZ <- NA
       }

@@ -42,12 +42,6 @@
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
 #' @param boolCoEstDispMean: (bool) [Default TRUE]
 #'    Whether mean and dispersion parameters are to be co-estimated
 #'    (simulatneous optimisation). Only available for certain 
@@ -363,7 +357,6 @@ processSCDataMixture <- function(matCounts,
                             lsMuModelConst      = NULL,
                             matCountsProc       = matCountsProc,
                             matWeights          = NULL,
-                            scaWindowRadius     = NULL,
                             strReport           = strReport,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,

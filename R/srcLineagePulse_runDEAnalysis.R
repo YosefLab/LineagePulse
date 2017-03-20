@@ -28,13 +28,11 @@ runDEAnalysis <- function(objectLineagePulse){
                                 lsMuModel=objectLineagePulse@lsMuModelH1,
                                 lsDispModel=objectLineagePulse@lsDispModelH1, 
                                 lsDropModel=objectLineagePulse@lsDropModel,
-                                scaWindowRadius=objectLineagePulse@scaWindowRadius,
                                 matWeights=objectLineagePulse@matWeights)
   vecLogLikRed <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
                                    lsMuModel=objectLineagePulse@lsMuModelH0,
                                    lsDispModel=objectLineagePulse@lsDispModelH0, 
                                    lsDropModel=objectLineagePulse@lsDropModel,
-                                   scaWindowRadius=objectLineagePulse@scaWindowRadius,
                                    matWeights=objectLineagePulse@matWeights)
 
   # (II) Differential expression analysis

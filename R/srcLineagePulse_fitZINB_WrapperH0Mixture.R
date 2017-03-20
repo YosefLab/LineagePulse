@@ -91,7 +91,6 @@ fitH0MixtureZINBModel <- function(objectLineagePulse,
                                    vecNormConst=objectLineagePulse@vecNormConst,
                                    matWeights=matWeightsRed,
                                    matPiConstPredictors=NULL,
-                                   scaWindowRadius=NULL,
                                    boolVecWindowsAsBFGS=FALSE,
                                    lsDropModel=objectLineagePulse@lsDropModel,
                                    matMuModelInit=matMuModelInit,
@@ -108,8 +107,7 @@ fitH0MixtureZINBModel <- function(objectLineagePulse,
                                        lsMuModel=lsZINBFitsRed$lsMuModel,
                                        lsDispModel=lsZINBFitsRed$lsDispModel, 
                                        lsDropModel=objectLineagePulse@lsDropModel,
-                                       matWeights=matWeightsRed,
-                                       scaWindowRadius=NULL )
+                                       matWeights=matWeightsRed )
         })
         strMessage <- paste0("# M-step in subspace ",l," complete: ",
                              "loglikelihood of  ", sum(vecLLNew), " in ",

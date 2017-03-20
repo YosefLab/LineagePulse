@@ -19,8 +19,6 @@
 #'    Whether observation is zero.
 #' @param matboolNotZeroObserved: (bool matrix genes x cells)
 #'    Whether observation is real and non-zero.
-#' @param scaWindowRadius: (integer) 
-#'    Smoothing interval radius.
 #' 
 #' @return matZ: (numeric matrix genes x cells)
 #'    Posterior probability of observation not being generated 

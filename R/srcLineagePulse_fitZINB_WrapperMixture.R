@@ -14,6 +14,8 @@
 fitMixtureZINBModel <- function(objectLineagePulse,
                                 scaNMixtures,
                                 strDispModel="const",
+                                strDropModel="logistic_ofMu",
+                                strDropFitGroup="PerCell",
                                 scaMaxEstimationCyclesDropModel=20,
                                 scaMaxEstimationCyclesEMlike=20,
                                 boolVerbose=TRUE,
@@ -47,11 +49,12 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                              vecNormConst=objectLineagePulse@vecNormConst,
                              matWeights=NULL,
                              matPiConstPredictors=NULL,
-                             scaWindowRadius=NULL,
                              boolVecWindowsAsBFGS=FALSE,
                              lsDropModel=NULL,
                              strMuModel="constant",
                              strDispModel="constant",
+                             strDropModel=strDropModel,
+                             strDropFitGroup=strDropFitGroup,
                              scaMaxEstimationCycles=scaMaxEstimationCyclesDropModel,
                              boolVerbose=boolVerbose,
                              boolSuperVerbose=boolSuperVerbose)
@@ -75,8 +78,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                lsMuModel=lsMuModelRed,
                                lsDispModel=lsDispModelRed, 
                                lsDropModel=lsDropModel,
-                               matWeights=NULL,
-                               scaWindowRadius=NULL )
+                               matWeights=NULL )
   
   ### (B) EM-like estimation cycle: fit mixture model
   strMessage <- paste0("### b) EM-like iteration: Fit H1 mixture model")
@@ -127,8 +129,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                        lsMuModel=lsMuModelFull,
                                        lsDispModel=lsDispModelFull, 
                                        lsDropModel=lsDropModel,
-                                       matWeights=matWeights,
-                                       scaWindowRadius=NULL ))
+                                       matWeights=matWeights ))
   scaLogLikOld <- NA
   vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
   
@@ -163,8 +164,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                             lsMuModel=lsMuModelFull,
                                             lsDispModel=lsDispModelFull, 
                                             lsDropModel=lsDropModel,
-                                            matWeights=matWeights,
-                                            scaWindowRadius=NULL ))
+                                            matWeights=matWeights ))
       
       strMessage <- paste0("# ", scaIter,".   E-step complete: ",
                    "loglikelihood of  ", scaLogLikTemp, " in ",
@@ -207,7 +207,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
             vecDropParam <- decompressDropoutRateByCell(
               vecDropModel=lsDropModel$matDropoutLinModel[j,],
               vecMu=vecMuParam,
-              matPiConstPredictors=lsDropModel$matPiConstPredictors )
+              matPiConstPredictors=lsDropModel$matPiConstPredictors,
+              lsDropModelGlobal=lsDropModel$lsDropModelGlobal )
             if(lsDispModelFull$lsDispModelGlobal$strDispModel=="constant"){
               vecDispParam <- as.vector(lsDispModelFull$matDispModel)
             } else {
@@ -238,8 +239,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                              lsMuModel=lsMuModelFull,
                                              lsDispModel=lsDispModelFull, 
                                              lsDropModel=lsDropModel,
-                                             matWeights=matWeights,
-                                             scaWindowRadius=NULL ))
+                                             matWeights=matWeights ))
         
         strMessage <- paste0("# ", scaIter,".   E-Reset complete: ",
                              "loglikelihood of ", scaLogLikNew, 
@@ -255,7 +255,6 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                     vecNormConst=objectLineagePulse@vecNormConst,
                                     matWeights=matWeights,
                                     matPiConstPredictors=NULL,
-                                    scaWindowRadius=NULL,
                                     boolVecWindowsAsBFGS=FALSE,
                                     lsDropModel=lsDropModel,
                                     matMuModelInit=lsMuModelFull$matMuModel,
@@ -277,8 +276,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                      lsMuModel=lsMuModelFull,
                                      lsDispModel=lsDispModelFull, 
                                      lsDropModel=lsDropModel,
-                                     matWeights=matWeights,
-                                     scaWindowRadius=NULL )
+                                     matWeights=matWeights )
         # Check that no gene has a worse model fit than the null model,
         # re-initialise centroid coordinates of this gene to constant if this 
         # is the case. Under arbitrary mixture assignments, setting all
@@ -304,8 +302,7 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                        lsMuModel=lsMuModelFull,
                                        lsDispModel=lsDispModelFull, 
                                        lsDropModel=lsDropModel,
-                                       matWeights=matWeights,
-                                       scaWindowRadius=NULL )
+                                       matWeights=matWeights )
           strMessage <- paste0("# ",scaIter,".   M-step resulted in ",
                                sum(vecboolBadGeneModel), 
                                " gene models which are worse than a constant model.")

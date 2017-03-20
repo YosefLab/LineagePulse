@@ -51,7 +51,8 @@ plotGene <- function(objectLineagePulse,
                                          vecInterval=NULL )
   vecPiParamH1 <- decompressDropoutRateByGene( matDropModel=objectLineagePulse@lsDropModel$matDropoutLinModel,
                                                vecMu=vecMuParamH1,
-                                               vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[strGeneID,] )
+                                               vecPiConstPredictors=objectLineagePulse@lsDropModel$matPiConstPredictors[strGeneID,],
+                                               lsDropModelGlobal=objectLineagePulse@lsDropModel$lsDropModelGlobal)
   if(boolLogPlot){
     vecCountsNorm <- log(vecCountsNorm)/log(10)
     vecMuParamH0 <- log(vecMuParamH0)/log(10)

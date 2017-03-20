@@ -70,10 +70,11 @@
 #' @author David Sebastian Fischer
 #' 
 #' @export
-decompressMeansByGene <- function(vecMuModel,
-																	lsvecBatchModel=NULL,
-                                  lsMuModelGlobal,
-                                  vecInterval=NULL ){
+decompressMeansByGene <- function(
+  vecMuModel,
+  lsvecBatchModel=NULL,
+  lsMuModelGlobal,
+  vecInterval=NULL ){
   
   # Set interval to entire gene if not given
   # Dont do this to save time at the moment (dont reorder things
@@ -107,27 +108,27 @@ decompressMeansByGene <- function(vecMuModel,
       vecMu <- vecMuModel
     }
   } else if(lsMuModelGlobal$strMuModel=="MM"){
-  	# Expect mean of ONE MIXTURE component! vecMuModel is scalar
-  	if(!is.null(vecInterval)){ 
-  		vecMu <- rep(vecMuModel, length(vecInterval))
-  	} else { 
-  		vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells)
-  	}
+    # Expect mean of ONE MIXTURE component! vecMuModel is scalar
+    if(!is.null(vecInterval)){ 
+      vecMu <- rep(vecMuModel, length(vecInterval))
+    } else { 
+      vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells)
+    }
   } else {
     stop(paste0("ERROR decompressMeans(): lsMuModelGlobal$strMuModel=", 
                 lsMuModelGlobal$strMuModel, " not recognised."))
   }
-	# Scale by batch factors
-	if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-		for(confounder in seq(1,length(lsvecBatchModel))){
-			if(!is.null(vecInterval)){
-			  vecMu <- vecMu*(lsvecBatchModel[[confounder]][(lsMuModelGlobal$lsvecidxBatchAssign[[confounder]])[vecInterval]])
-			} else { 
-			  vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
-			}
-		}
-	}
-	
+  # Scale by batch factors
+  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+    for(confounder in seq(1,length(lsvecBatchModel))){
+      if(!is.null(vecInterval)){
+        vecMu <- vecMu*(lsvecBatchModel[[confounder]][(lsMuModelGlobal$lsvecidxBatchAssign[[confounder]])[vecInterval]])
+      } else { 
+        vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+      }
+    }
+  }
+  
   return(vecMu)
 }
 
@@ -206,15 +207,28 @@ decompressDispByGene <- function(vecDispModel,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
-decompressDropoutRateByGene <- function(matDropModel,
-                                        vecMu,
-                                        vecPiConstPredictors ){
+decompressDropoutRateByGene <- function(
+  matDropModel,
+  vecMu=NULL,
+  vecPiConstPredictors=NULL,
+  lsDropModelGlobal ){
   
-  vecPi <- sapply(seq(1,length(vecMu)), function(j){
-    evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
-                          vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
-  })
+  if(lsDropModelGlobal$strDropModel=="logistic"){
+    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
+      evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
+                            vecPiPredictors=c(1, vecPiConstPredictors))
+    })
+  } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
+      evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
+                            vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
+    })
+  } else {
+    stop(paste0("ERROR IN decompressDropoutRateByGene: ",
+                "lsDropModelGlobal$strDropModel=",
+                lsDropModelGlobal$strDropModel,
+                " not recognised."))
+  }
   
   return(vecPi)
 }
@@ -245,15 +259,28 @@ decompressDropoutRateByGene <- function(matDropModel,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
-decompressDropoutRateByCell <- function(vecDropModel,
-                                        vecMu,
-                                        matPiConstPredictors ){
+decompressDropoutRateByCell <- function(
+  vecDropModel,
+  vecMu=NULL,
+  matPiConstPredictors=NULL,
+  lsDropModelGlobal){
   
-  vecPi <- sapply(seq(1,length(vecMu)), function(i){
-    evalDropoutModel_comp(vecPiModel=vecDropModel, 
-                          vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
-  })
+  if(lsDropModelGlobal$strDropModel=="logistic"){
+    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
+      evalDropoutModel_comp(vecPiModel=vecDropModel, 
+                            vecPiPredictors=c(1, matPiConstPredictors[i,]))
+    })
+  } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
+      evalDropoutModel_comp(vecPiModel=vecDropModel, 
+                            vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
+    })
+  } else {
+    stop(paste0("ERROR IN decompressDropoutRateByCell: ",
+                "lsDropModelGlobal$strDropModel=",
+                lsDropModelGlobal$strDropModel,
+                " not recognised."))
+  }
   
   return(vecPi)
 }

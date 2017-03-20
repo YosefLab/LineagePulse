@@ -42,12 +42,6 @@
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
-#' @param scaWindowRadius: (integer) [Default NULL]
-#'    Smoothing interval radius of cells within pseudotemporal
-#'    ordering. Each negative binomial model inferred on
-#'    observation [gene i, cell j] is fit and evaluated on 
-#'    the observations [gene i, cells in neighbourhood of j],
-#'    the model is locally smoothed in pseudotime.
 #' @param boolCoEstDispMean: (bool) [Default TRUE]
 #'    Whether mean and dispersion parameters are to be co-estimated
 #'    (simulatneous optimisation). Only available for certain 
@@ -97,7 +91,6 @@ processSCData <- function(matCounts,
                           vecNormConstExternal,
                           strMuModel,
                           strDispModel,
-                          scaWindowRadius,
                           boolCoEstDispMean,
                           boolVecWindowsAsBFGS,
 													scaMaxEstimationCycles,
@@ -202,26 +195,6 @@ processSCData <- function(matCounts,
   
   # (II) Check settings
   # 1. Check general mean estimation settings
-  if(!is.null(scaWindowRadius)){
-    if(scaWindowRadius==0){
-      stop(paste0("LineagePulse received scaWindowRadius=0.", 
-                  " Set to NULL if smoothing is not desired."))
-    }
-  }
-  if(!is.null(scaWindowRadius) & !(strMuModel %in% c("windows","impulse","constant"))){
-    stop(paste0("Smooting via scaWindowRadius can only be applied in strMuModel=",
-                "constant, windows and impulse. Set scaWindowRadius=NULL or adjust strMuModel.",
-                " Given: strMuModel=", strMuModel, " scaWindowRadius=", scaWindowRadius))
-  }
-  if(boolVecWindowsAsBFGS & !strMuModel=="windows"){
-    stop(paste0("boolVecWindowsAsBFGS set to TRUE but strMuModel=",
-                strMuModel, ". boolVecWindowsAsBFGS is only used",
-                " with strMuModel=windows."))
-  }
-  if(strMuModel=="windows" & is.null(scaWindowRadius)){
-    stop(paste0("Cannot use strMuModel=windows with scaWindowRadius=NULL.",
-                " Means have to be regularised by smoothing in windows mode."))
-  }
   
   # 2. Check single mean-/dispersion estimation models
   if(!boolCoEstDispMean){
@@ -287,7 +260,7 @@ processSCData <- function(matCounts,
   dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
   matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
   # Keep target normalisation constants
-  if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[names(vecPseudotimeProc)]
+  if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[colnames(matCountsProc)]
   else vecNormConstExternalProc <- NULL
   
   # Print summary of processing
@@ -330,7 +303,6 @@ processSCData <- function(matCounts,
                             lsMuModelConst      = NULL,
                             matCountsProc       = matCountsProc,
                             matWeights          = NULL,
-                            scaWindowRadius     = scaWindowRadius,
                             strReport           = strReport,
                             vecAllGenes         = rownames(matCounts),
   													vecConfounders      = vecConfounders,
@@ -338,7 +310,7 @@ processSCData <- function(matCounts,
   													vecNCentroidsPerPop = NULL,
   													vecH0Pop            = NULL,
                             vecNormConst        = NULL,
-  													strVersion          = 0.99)#packageDescription("LineagePulse", fields = "Version"))
+  													strVersion          = "0.99")#packageDescription("LineagePulse", fields = "Version"))
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

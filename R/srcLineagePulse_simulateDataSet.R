@@ -49,7 +49,6 @@
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 simulateDataSet <- function(scaNCells,
   scaNConst,
   scaNImp,
@@ -58,6 +57,8 @@ simulateDataSet <- function(scaNCells,
   scaSDImpulseAmplitude=1,
   vecNormConstExternal=NULL,
   matDropoutModelExternal=NULL,
+  strDropModel="logistic_ofMu",
+  strDropFitGroup="PerCell",
   dirOutSimulation=NULL){
   
   ####
@@ -75,6 +76,7 @@ simulateDataSet <- function(scaNCells,
   names(vecPT) <- paste0("_",seq(1,scaNCells))
   
   # 2. Create hidden data set
+  print("Draw mean trajectories")
   vecConstIDs <- paste0(rep("_",scaNConst),c(1:scaNConst))
   vecImpulseIDs <- paste0(rep("_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
   # a. Draw means from uniform (first half of genes): one mean per gene
@@ -139,6 +141,7 @@ simulateDataSet <- function(scaNCells,
     ncol=dim(matMuHidden)[2], byrow=TRUE)
   
   # e. draw dispersions by gene
+  print("Draw dispersion")
   vecDispHidden <- runif(dim(matMuHidden)[1])*2+0.05
   matDispHidden <- matrix(vecDispHidden,nrow=dim(matMuHidden)[1],
     ncol=dim(matMuHidden)[2], byrow=FALSE)
@@ -146,6 +149,7 @@ simulateDataSet <- function(scaNCells,
   colnames(matDispHidden) <- names(vecPT)
   
   # f. add noise - draw from negative binomial
+  print("Simulate negative binomial noise")
   matSampledDataHidden <- do.call(rbind, lapply(seq(1,dim(matMuHidden)[1]), function(gene){
     sapply(seq(1,scaNCells), function(cell){
       rnbinom(n=1, mu=matMuHidden[gene,cell], size=vecDispHidden[gene])
@@ -155,6 +159,7 @@ simulateDataSet <- function(scaNCells,
   colnames(matSampledDataHidden) <- names(vecPT)
   
   # 3. Apply drop out
+  print("Simulate drop-out")
   # a. Set drop out models
   if(is.null(matDropoutModelExternal)){
     a1 <- c(1,1,2)
@@ -170,12 +175,20 @@ simulateDataSet <- function(scaNCells,
     }
   }
   rownames(matDropoutLinModelHidden) <- names(vecPT)
+  lsDropModelGlobal <- list(
+    strDropModel=strDropModel,
+    strDropFitGroup=strDropFitGroup,
+    scaNumGenes=dim(matSampledDataHidden)[1],
+    scaNumCells=dim(matSampledDataHidden)[2]
+  )
   
   # b. Draw drop-out rates
   lsDropoutRatesHidden <- lapply(seq(1,scaNCells), function(cell){
-    decompressDropoutRateByCell(vecDropModel=matDropoutLinModelHidden[cell,],
+    decompressDropoutRateByCell(
+      vecDropModel=matDropoutLinModelHidden[cell,],
       vecMu=matMuHidden[,cell],
-      matPiConstPredictors=NULL)
+      matPiConstPredictors=NULL,
+      lsDropModelGlobal=lsDropModelGlobal)
   })
   matDropoutRatesHidden <- do.call(cbind, lsDropoutRatesHidden)
   rownames(matDropoutRatesHidden) <- rownames(matMuHidden)

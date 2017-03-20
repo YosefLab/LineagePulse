@@ -39,47 +39,92 @@
 #' @author David Sebastian Fischer
 #' 
 #' @export
-evalLogLikPiZINB <- function(vecTheta,
-														 vecCounts,
-														 matMu,
-														 scaNormConst,
-														 matDisp,
-														 matPiPredictors,
-														 vecboolNotZero,
-														 vecboolZero ){ 
-	
-	# (I) Linker functions
-	# Force mean parameter to be negative
-	vecTheta[2] <- -exp(vecTheta[2])
-	
-	# (II) Prevent parameter shrinkage/explosion
-	vecTheta[vecTheta < -10^(10)] <- -10^(10)
-	vecTheta[vecTheta > 10^(10)] <- 10^(10)
-	if(vecTheta[2] > -10^(-10)) vecTheta[2] <- -10^(-10)
-	
-	vecPiEst <- sapply(seq(1,dim(matPiPredictors)[1]), function(i){
-		evalDropoutModel_comp(vecPiModel=vecTheta, 
-													vecPiPredictors=matPiPredictors[i,])
-	})
-	
-	# (III) Evaluate loglikelihood of estimate
-	# Loglikelihood is evaluated on each window which was has
-	# target cell in its neighbourhood. Note that the negative binomial
-	# parameters therefore change for each iteration as these represent
-	# SEPARATE windows, and not a smoothing of the target cell to its 
-	# neighbours. ("Trans-terms")
-	scaLogLik <- sum(sapply(seq(1,dim(matMu)[2]), function(cell){
-		evalLogLikZINB_comp( vecCounts=vecCounts,
-												 vecMu=matMu[,cell]*scaNormConst,
-												 vecDisp=matDisp[,cell], 
-												 vecPi=vecPiEst,
-												 vecboolNotZero=vecboolNotZero, 
-												 vecboolZero=vecboolZero )
-	}))
-	
-	# Maximise log likelihood: Return likelihood as value to optimisation routine
-	return(scaLogLik)
+evalLogLikPiZINB_SingleCell <- function(
+  vecTheta,
+  vecCounts,
+  vecMu,
+  scaNormConst,
+  vecDisp,
+  matPiAllPredictors,
+  strDropModel,
+  vecboolNotZero,
+  vecboolZero ){ 
+  
+  # (I) Linker functions
+  # Force mean parameter to be negative
+  if(strDropModel=="logistic_ofMu"){
+    vecTheta[2] <- -exp(vecTheta[2])
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  vecTheta[vecTheta < -10^(10)] <- -10^(10)
+  vecTheta[vecTheta > 10^(10)] <- 10^(10)
+  if(strDropModel=="logistic_ofMu"){
+    if(vecTheta[2] > -10^(-10)) vecTheta[2] <- -10^(-10)
+  }
+  
+  vecPiEst <- sapply(seq(1,dim(matPiAllPredictors)[1]), function(i){
+    evalDropoutModel_comp(
+      vecPiModel=vecTheta, 
+      vecPiPredictors=matPiAllPredictors[i,] )
+  })
+  
+  # (III) Evaluate loglikelihood of estimate
+  scaLogLik <- evalLogLikZINB_comp(
+    vecCounts=vecCounts,
+    vecMu=vecMu*scaNormConst,
+    vecDisp=vecDisp, 
+    vecPi=vecPiEst,
+    vecboolNotZero=vecboolNotZero, 
+    vecboolZero=vecboolZero )
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
 }
+
+evalLogLikPiZINB_SingleCell_comp <- cmpfun(evalLogLikPiZINB_SingleCell)
+
+# Adapted for memory usage
+evalLogLikPiZINB_ManyCells <- function(
+  vecTheta,
+  matCounts,
+  lsMuModel,
+  lsDispModel,
+  lsDropModel){ 
+  
+  scaNumGenes <- dim(matCounts)[1]
+  # (I) Linker functions
+  # Force mean parameter to be negative
+  if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    vecTheta[2] <- -exp(vecTheta[2])
+  }
+  
+  # (II) Prevent parameter shrinkage/explosion
+  vecTheta[vecTheta < -10^(10)] <- -10^(10)
+  vecTheta[vecTheta > 10^(10)] <- 10^(10)
+  if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    if(vecTheta[2] > -10^(-10)) vecTheta[2] <- -10^(-10)
+  }
+  lsDropModel$matDropoutLinModel <- matrix(
+    vecTheta,
+    nrow=lsDropModel$lsDropModelGlobal$scaNumCells,
+    ncol=length(vecTheta),
+    byrow = TRUE)
+  
+  # (III) Evaluate loglikelihood of estimate
+  # Have to decompress parameters in loop to keep memory usage down.
+  # This slows as this could be pre-computed outside of optim!
+  scaLogLik <- sum(evalLogLikMatrix(
+    matCounts=matCounts,
+    lsMuModel=lsMuModel,
+    lsDispModel=lsDispModel, 
+    lsDropModel=lsDropModel,
+    matWeights=NULL ))
+  
+  # Maximise log likelihood: Return likelihood as value to optimisation routine
+  return(scaLogLik)
+}
+
 
 #' Compiled function: evalLogLikPiZINB
 #' 
@@ -113,7 +158,7 @@ evalLogLikPiZINB <- function(vecTheta,
 #' @author David Sebastian Fischer
 #' 
 #' @export
-evalLogLikPiZINB_comp <- cmpfun(evalLogLikPiZINB)
+evalLogLikPiZINB_ManyCells_comp <- cmpfun(evalLogLikPiZINB_ManyCells)
 
 #' Optimisation function for drop-out model fitting
 #' 
@@ -135,56 +180,7 @@ evalLogLikPiZINB_comp <- cmpfun(evalLogLikPiZINB)
 #'    Other gene-specific predictors can be added.
 #' @param vecCounts (count vector number of genes)
 #'    Observed read counts, not observed are NA.
-#' @param lsMuModel: (list length 2)
-#'    All objects necessary to compute mean parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matMuModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of mean model for each gene.
-#'      \item lsMuModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'        \itemize{
-#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
-#'        "windows"} Name of the mean model.
-#'          \item scaNumCells: (scalar) [Default NA] Number of cells
-#'        for which model is evaluated. Used for constant model.
-#'          \item vecPseudotime: (numerical vector number of cells)
-#'        [Default NA] Pseudotime coordinates of cells. Used for
-#'        impulse model.
-#'          \item vecindClusterAssign: (integer vector length number of
-#'        cells) [Default NA] Index of cluster assigned to each cell.
-#'        Used for clusters model.
-#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
-#'        of a gene are simultaneously estiamted as a vector with BFGS
-#'        in windows mode.
-#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-#'        for BFGS estimation of impulse model with optim (termination criterium).
-#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-#'        change in objective function for BFGS estimation of impulse 
-#'        model with optim (termination criterium).
-#'      }
-#'    }
-#' @param lsDispModel: (list length 2)
-#'    All objects necessary to compute dispersion parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matDispModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of dispersion model for each gene.
-#'      \item lsDispModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'        \itemize{
-#'          \item strDispModel: (str) {"constant"} 
-#'        Name of the dispersion model.
-#'          \item scaNumCells: (scalar) [Default NA] Number of cells
-#'        for which model is evaluated. Used for constant model.
-#'          \item vecPseudotime: (numerical vector number of cells)
-#'        [Default NA] Pseudotime coordinates of cells. Used for
-#'        impulse model.
-#'          \item vecindClusterAssign: (integer vector length number of
-#'        cells) [Default NA] Index of cluster assigned to each cell.
-#'        Used for clusters model.
-#'      }
-#'    }
+#' @param lsMuModel:
 #' @param vecNormConst: (numeric vector number of cells) 
 #'    Model scaling factors, one per cell.
 #' @param vecidxInterval: (integer vector neighbourhood)
@@ -198,89 +194,189 @@ evalLogLikPiZINB_comp <- cmpfun(evalLogLikPiZINB)
 #' @author David Sebastian Fischer
 #' 
 #' @export
+fitPi_SingleCell <- function(
+  vecParamGuess,
+  vecCounts,
+  vecMuParam,
+  scaNormConst,
+  vecDispParam,
+  matPiAllPredictors,
+  lsDropModelGlobal ){ 
+  
+  # (I) Numerical maximum likelihood estimation of linear model
+  lsLinModelFit <- tryCatch({
+    optim(
+      par=vecParamGuess,
+      evalLogLikPiZINB_SingleCell_comp,
+      matPiAllPredictors=matPiAllPredictors,
+      vecCounts=vecCounts,
+      vecMu=vecMuParam,
+      vecDisp=vecDispParam,
+      scaNormConst=scaNormConst,
+      strDropModel=lsDropModelGlobal$strDropModel,
+      vecboolNotZero=!is.na(vecCounts) & vecCounts>0,
+      vecboolZero= !is.na(vecCounts) & vecCounts==0,
+      method="BFGS",
+      control=list(maxit=lsDropModelGlobal$MAXIT_BFGS_Pi,
+                   reltol=lsDropModelGlobal$RELTOL_BFGS_Pi,
+                   fnscale=-1)
+    )[c("par","value","convergence")]
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting logistic drop-out model: fitPi_SingleCell()."))
+    print(strErrorMsg)
+    stop()
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  vecLinModel <- unlist(lsLinModelFit[["par"]])
+  if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    vecLinModel[2] <- -exp(vecLinModel[2])
+  }
+  # # Catch boundary of likelihood domain on parameter space
+  vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
+  vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
+  if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    if(vecLinModel[2] > -10^(-10)) vecLinModel[2] <- -10^(-10)
+  }
+  
+  scaConvergence <- unlist(lsLinModelFit[["convergence"]])
+  scaLL <- unlist(lsLinModelFit[["value"]])
+  
+  return( list(vecLinModel=vecLinModel,
+               scaConvergence=scaConvergence,
+               scaLL=scaLL) )
+}
 
-fitPiZINB <- function(vecCounts,
-											lsMuModel,
-											lsDispModel,
-											lsDropModel,
-											vecidxInterval,
-											idxTarget){ 
-	
-	scaNumGenes <- length(vecCounts)
-	# Decompress parameters
-	matMuParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-		decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
-													lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
-													lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-													vecInterval=vecidxInterval)
-	}))
-	matDispParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-		decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-												 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-												 vecInterval=vecidxInterval)
-	}))
-	matPiPredictors <- cbind(1, log(matMuParam[,match(idxTarget,vecidxInterval)]), 
-													 lsDropModel$matPiConstPredictors)
-	
-	# (I) Numerical maximum likelihood estimation of linear model
-	# Initialise optimisation of linear model:
-	#vecParamGuess <- rep(1, dim(matPiPredictors)[2])
-	vecParamGuess <- lsDropModel$matDropoutLinModel[idxTarget,]
-	vecParamGuess[2] <- log(-vecParamGuess[2])
-	lsLinModelFit <- tryCatch({
-		optim(
-			par=vecParamGuess,
-			evalLogLikPiZINB_comp,
-			matPiPredictors=matPiPredictors,
-			vecCounts=vecCounts,
-			matMu=matMuParam,
-			matDisp=matDispParam,
-			scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[idxTarget],
-			vecboolNotZero=!is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0,
-			method="BFGS",
-			control=list(maxit=lsDropModel$lsPiOptimHyperparam$MAXIT_BFGS_Pi,
-									 reltol=lsDropModel$lsPiOptimHyperparam$RELTOL_BFGS_Pi,
-									 fnscale=-1)
-		)[c("par","value","convergence")]
-	}, error=function(strErrorMsg){
-		print(paste0("ERROR: Fitting logistic drop-out model: fitPiZINB().",
-								 " Wrote report into LineagePulse_lsErrorCausingGene.RData"))
-		print(strErrorMsg)
-		scaLLInit <- evalLogLikPiZINB_comp(
-			vecTheta=vecParamGuess,
-			matPiPredictors=matPiPredictors,
-			vecCounts=vecCounts,
-			matMu=matMuParam,
-			matDisp=matDispParam,
-			scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[idxTarget],
-			vecboolNotZero= !is.na(vecCounts) & vecCounts>0,
-			vecboolZero= !is.na(vecCounts) & vecCounts==0)
-		print(paste0("scaLLInit", scaLLInit))
-		print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
-		lsErrorCausingGene <- list( vecParamGuess=vecParamGuess,
-																vecCounts=vecCounts, 
-																matPiPredictors=lsDropModel$matPiPredictors,
-																matMuParam=matMuParam, 
-																matDispParam=matDispParam,
-																scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[idxTarget],
-																scaLLInit=scaLLInit )
-		save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
-		stop()
-	})
-	
-	# (II) Extract results and correct for sensitivity boundaries
-	vecLinModel <- unlist(lsLinModelFit[["par"]])
-	vecLinModel[2] <- -exp(vecLinModel[2])
-	# # Catch boundary of likelihood domain on parameter space
-	vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
-	vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
-	if(vecLinModel[2] > -10^(-10)){ vecLinModel[2] <- -10^(-10) }
-	
-	scaConvergence <- unlist(lsLinModelFit[["convergence"]])
-	scaLL <- unlist(lsLinModelFit[["value"]])
-	
-	return( list(vecLinModel=vecLinModel,
-							 scaConvergence=scaConvergence,
-							 scaLL=scaLL) )
+fitPi_ManyCells <- function(
+  vecParamGuess,
+  matCounts,
+  lsMuModel,
+  lsDispModel,
+  lsDropModel){ 
+  
+  # (I) Numerical maximum likelihood estimation of linear model
+  lsLinModelFit <- tryCatch({
+    optim(
+      par=vecParamGuess,
+      evalLogLikPiZINB_ManyCells_comp,
+      matCounts=matCounts,
+      lsMuModel=lsMuModel,
+      lsDispModel=lsDispModel,
+      lsDropModel=lsDropModel,
+      method="BFGS",
+      control=list(maxit=lsDropModel$lsDropModelGlobal$MAXIT_BFGS_Pi,
+                   reltol=lsDropModel$lsDropModelGlobal$RELTOL_BFGS_Pi,
+                   fnscale=-1)
+    )[c("par","value","convergence")]
+  }, error=function(strErrorMsg){
+    print(paste0("ERROR: Fitting logistic drop-out model: fitPi_ManyCells()."))
+    print(strErrorMsg)
+    print(paste0("vecParamGuess ", paste(vecParamGuess, collapse=" ")))
+    stop()
+  })
+  
+  # (II) Extract results and correct for sensitivity boundaries
+  vecLinModel <- unlist(lsLinModelFit[["par"]])
+  if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    vecLinModel[2] <- -exp(vecLinModel[2])
+  }
+  # # Catch boundary of likelihood domain on parameter space
+  vecLinModel[vecLinModel < -10^(10)] <- -10^(10)
+  vecLinModel[vecLinModel > 10^(10)] <- 10^(10)
+  if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+    if(vecLinModel[2] > -10^(-10)) vecLinModel[2] <- -10^(-10)
+  }
+  
+  scaConvergence <- unlist(lsLinModelFit[["convergence"]])
+  scaLL <- unlist(lsLinModelFit[["value"]])
+  
+  return( list(vecLinModel=vecLinModel,
+               scaConvergence=scaConvergence,
+               scaLL=scaLL) )
+}
+
+fitZINBPi <- function(matCounts,
+                      lsMuModel,
+                      lsDispModel,
+                      lsDropModel){
+  
+  scaNumGenes <- dim(matCounts)[1]
+  scaNumCells <- dim(matCounts)[2]
+  if(lsDropModel$lsDropModelGlobal$strDropFitGroup=="PerCell"){
+    lsFitsPi <- bplapply(seq(1,scaNumCells), function(j){
+      # Decompress parameters
+      vecMuParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+        decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
+                              lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+                              lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+                              vecInterval=j)
+      }))
+      vecDispParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
+        decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
+                             lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                             vecInterval=j)
+      }))
+      if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+        matPiAllPredictors<-cbind(rep(1,scaNumGenes),
+                                  log(vecMuParam),
+                                  lsDropModel$matPiConstPredictors)
+      } else if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic"){
+        matPiAllPredictors<-cbind(rep(1,scaNumGenes),
+                                  lsDropModel$matPiConstPredictors)
+      } else {
+        stop(paste0("ERROR fitZINBPi: ",
+                    "lsDropModel$lsDropModelGlobal$strDropModel=",
+                    lsDropModel$lsDropModelGlobal$strDropModel,
+                    " not recognised."))
+      }
+      # Initialise optimisation of linear model:
+      vecParamGuess <- lsDropModel$matDropoutLinModel[j,]
+      if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+        vecParamGuess[2] <- log(-vecParamGuess[2])
+      }
+      
+      lsFitPi <- fitPi_SingleCell(
+        vecParamGuess=vecParamGuess,
+        vecCounts=matCounts[,j],
+        vecMuParam=vecMuParam,
+        scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[j],
+        vecDispParam=vecDispParam,
+        matPiAllPredictors=matPiAllPredictors,
+        lsDropModelGlobal=lsDropModel$lsDropModelGlobal )
+      return(lsFitPi)
+    })
+    matDropoutLinModel <- do.call(rbind, lapply(lsFitsPi, function(cell) cell$vecLinModel))
+    vecboolConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)
+    vecLL <- sapply(lsFitsPi, function(cell) cell$scaLL) 
+  } else if(lsDropModel$lsDropModelGlobal$strDropFitGroup=="ForAllCells"){
+    # Initialise optimisation of linear model:
+    vecParamGuess <- lsDropModel$matDropoutLinModel[1,] # All rows are the same!
+    if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+      vecParamGuess[2] <- log(-vecParamGuess[2])
+    }
+    
+    lsFitPi <- fitPi_ManyCells(
+      vecParamGuess=vecParamGuess,
+      matCounts=matCounts,
+      lsMuModel=lsMuModel,
+      lsDispModel=lsDispModel,
+      lsDropModel=lsDropModel)
+    matDropoutLinModel <- matrix(lsFitPi$vecLinModel,
+                                 nrow=scaNumCells,
+                                 ncol=length(lsFitPi$vecLinModel),
+                                 byrow = TRUE)
+    vecboolConverged <- lsFitPi$scaConvergence
+    vecLL <- lsFitPi$scaLL
+  } else {
+    stop(paste0("ERROR fitZINBPi: ",
+                "lsDropModel$lsDropModelGlobal$strDropFitGroup=",
+                lsDropModel$lsDropModelGlobal$strDropFitGroup,
+                " not recognised."))
+  }
+  
+  return(list(
+    matDropoutLinModel = matDropoutLinModel,
+    vecboolConverged   = vecboolConverged,
+    vecLL              = vecLL 
+  ))
 }

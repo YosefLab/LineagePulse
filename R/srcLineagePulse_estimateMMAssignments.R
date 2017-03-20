@@ -178,7 +178,8 @@ estimateMMAssignmentsMatrix <- function(matCounts,
     matDropParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
       decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
                                   vecMu=matMuParam[,m],
-                                  matPiConstPredictors=lsDropModel$matPiConstPredictors )
+                                  matPiConstPredictors=lsDropModel$matPiConstPredictors,
+                                  lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
     }))
     if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
       vecDispParam <- as.vector(lsDispModel$matDispModel)
