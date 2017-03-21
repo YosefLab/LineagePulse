@@ -71,18 +71,20 @@ runDropOutModelSelection <- function(
   # and elements must be named in the same way
   if(length(lsstrDropModel)!=length(lsstrDropFitGroup) |
      length(lsstrDropModel)!=length(lsmatPiConstPredictors)){
-    stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                "Length of all lists defining drop-out models must be the same: ",
-                "lsstrDropModel, lsstrDropFitGroup and lsmatPiConstPredictors.",
-                "Each position in these lists corresponds to one drop-out model."))
+    stop(paste0(
+      "ERROR IN INPUT TO compareDropOutModels: ",
+      "Length of all lists defining drop-out models must be the same: ",
+      "lsstrDropModel, lsstrDropFitGroup and lsmatPiConstPredictors.",
+      "Each position in these lists corresponds to one drop-out model."))
   }
   if(!all(names(lsstrDropModel)==names(lsstrDropFitGroup)) |
      !all(names(lsstrDropModel)==names(lsmatPiConstPredictors))){
-    stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                "The vector of elments names in all lists",
-                "defining drop-out models must be the same: ",
-                "lsstrDropModel, lsstrDropFitGroup and lsmatPiConstPredictors.",
-                "Each position in these lists corresponds to one drop-out model."))
+    stop(paste0(
+      "ERROR IN INPUT TO compareDropOutModels: ",
+      "The vector of elments names in all lists",
+      "defining drop-out models must be the same: ",
+      "lsstrDropModel, lsstrDropFitGroup and lsmatPiConstPredictors.",
+      "Each position in these lists corresponds to one drop-out model."))
   }
   # II) Check that drop-out models are nested within each other
   # as they appear in list:
@@ -96,12 +98,13 @@ runDropOutModelSelection <- function(
       idxFirst_ForAllCells <- match("ForAllCells", unlist(lsstrDropFitGroup))
       vecidx_PerCell <- which("PerCell" %in% unlist(lsstrDropFitGroup))
       if(any(vecidx_PerCell>idxFirst_ForAllCells)){
-        stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                    "Drop-out models must be nested within each other ",
-                    "with the model with the highest number of degrees ",
-                    "of freedom appearing first. ",
-                    "That implies that all models with strDropFitGroup=ForAllCells ",
-                    "must be preceded by all models with strDropFitGroup=PerCell."))
+        stop(paste0(
+          "ERROR IN INPUT TO compareDropOutModels: ",
+          "Drop-out models must be nested within each other ",
+          "with the model with the highest number of degrees ",
+          "of freedom appearing first. ",
+          "That implies that all models with strDropFitGroup=ForAllCells ",
+          "must be preceded by all models with strDropFitGroup=PerCell."))
       }
     }
     # b) Check lsstrDropModel
@@ -109,45 +112,51 @@ runDropOutModelSelection <- function(
       idxFirst_logistic <- match("logistic", unlist(lsstrDropFitGroup))
       vecidx_logistic_ofMu <- which("logistic_ofMu" %in% unlist(lsstrDropFitGroup))
       if(any(vecidx_logistic_ofMu>idxFirst_logistic)){
-        stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                    "Drop-out models must be nested within each other ",
-                    "with the model with the highest number of degrees ",
-                    "of freedom appearing first. ",
-                    "That implies that all models with strDropModel=logistic ",
-                    "must be preceded by all models with strDropModel=logistic_ofMu."))
+        stop(paste0(
+          "ERROR IN INPUT TO compareDropOutModels: ",
+          "Drop-out models must be nested within each other ",
+          "with the model with the highest number of degrees ",
+          "of freedom appearing first. ",
+          "That implies that all models with strDropModel=logistic ",
+          "must be preceded by all models with strDropModel=logistic_ofMu."))
       }
     }
     # c) Check lsmatPiConstPredictors
-    vecboolPiConstPredictorsIsNull <- sapply(lsmatPiConstPredictors, function(m) is.null(m) )
-    lsmatPiConstPredictorsNotNull <- lsmatPiConstPredictors[!vecboolPiConstPredictorsIsNull]
+    vecboolPiConstPredictorsIsNull <- 
+      sapply(lsmatPiConstPredictors, function(m) is.null(m) )
+    lsmatPiConstPredictorsNotNull <- 
+      lsmatPiConstPredictors[!vecboolPiConstPredictorsIsNull]
     if(any(vecboolPiConstPredictorsIsNull)){
       # Check NULL
       idxFirst_null <- which(vecboolPiConstPredictorsIsNull)[1]
       vecidx_notnull <- which(!vecboolPiConstPredictorsIsNull)
       if(any(vecidx_notnull>idxFirst_null)){
-        stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                    "Drop-out models must be nested within each other ",
-                    "with the model with the highest number of degrees ",
-                    "of freedom appearing first. ",
-                    "That implies that all models with matPiConstPredictors=NULL ",
-                    "must be preceded by all models with matPiConstPredictors!=NULL"))
+        stop(paste0(
+          "ERROR IN INPUT TO compareDropOutModels: ",
+          "Drop-out models must be nested within each other ",
+          "with the model with the highest number of degrees ",
+          "of freedom appearing first. ",
+          "That implies that all models with matPiConstPredictors=NULL ",
+          "must be preceded by all models with matPiConstPredictors!=NULL"))
       }
       # Check columns
       if(sum(!vecboolPiConstPredictorsIsNull)>1){
         for(i1 in seq(1,(length(lsmatPiConstPredictorsNotNull)-1))){
           for(i2 in seq(i1+1,length(lsmatPiConstPredictorsNotNull))){
             for(c2 in seq(1, dim(lsmatPiConstPredictorsNotNull[[i2]])[2])){
-              boolColMatch <- any(sapply(seq(1, dim(lsmatPiConstPredictorsNotNull[[i2]])[2]), 
-                                         function(c1) all(c1==c2) ))
+              boolColMatch <- any(sapply(
+                seq(1, dim(lsmatPiConstPredictorsNotNull[[i2]])[2]), 
+                function(c1) all(c1==c2) ))
               if(!boolColMatch){
                 if(any(vecidx_notnull>idxFirst_null)){
-                  stop(paste0("ERROR IN INPUT TO compareDropOutModels: ",
-                              "Drop-out models must be nested within each other ",
-                              "with the model with the highest number of degrees ",
-                              "of freedom appearing first. lsmatPiConstPredictorsNotNull: ",
-                              "Column ", c2, " of model ",
-                              vecidx_notnull[i2], " does not occur ",
-                              "in model ", vecidx_notnull[i1], "."))
+                  stop(paste0(
+                    "ERROR IN INPUT TO compareDropOutModels: ",
+                    "Drop-out models must be nested within each other ",
+                    "with the model with the highest number of degrees ",
+                    "of freedom appearing first. lsmatPiConstPredictorsNotNull: ",
+                    "Column ", c2, " of model ",
+                    vecidx_notnull[i2], " does not occur ",
+                    "in model ", vecidx_notnull[i1], "."))
                 }
               }
             }
@@ -159,16 +168,17 @@ runDropOutModelSelection <- function(
   
   ### 2. Data preprocessing
   vecAllGenes <- rownames(matCounts)
-  lsProcessedSCData <- processSCData( matCounts=matCounts,
-                                      dfAnnotation=dfAnnotation,
-                                      vecConfounders=vecConfounders,
-                                      matPiConstPredictors=lsmatPiConstPredictors[[1]],
-                                      vecNormConstExternal=vecNormConstExternal,
-                                      strMuModel=strMuModel,
-                                      strDispModel=strDispModel,
-                                      scaMaxEstimationCycles=scaMaxEstimationCycles,
-                                      boolVerbose=boolVerbose,
-                                      boolSuperVerbose=boolSuperVerbose)
+  lsProcessedSCData <- processSCData(
+    matCounts=matCounts,
+    dfAnnotation=dfAnnotation,
+    vecConfounders=vecConfounders,
+    matPiConstPredictors=lsmatPiConstPredictors[[1]],
+    vecNormConstExternal=vecNormConstExternal,
+    strMuModel=strMuModel,
+    strDispModel=strDispModel,
+    scaMaxEstimationCycles=scaMaxEstimationCycles,
+    boolVerbose=boolVerbose,
+    boolSuperVerbose=boolSuperVerbose)
   objectLineagePulse <- lsProcessedSCData$objectLineagePulse
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   # Have to handle matPiConstPredictorsProc individually
@@ -179,7 +189,8 @@ runDropOutModelSelection <- function(
   strMessage <- paste0("The following negative binomial model expression model \n",
                        "is used for all drop-out models: ",
                        "mu=",strMuModel, ", dispersion=", strDispModel, ".")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objectLineagePulse@strReport <- 
+    paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) message(strMessage)
   
   # Clear memory
@@ -200,51 +211,64 @@ runDropOutModelSelection <- function(
   if(strMuModel=="clusters"){
     ### 3. Cluster cells in pseudo-time
     strMessage <- paste0("--- Run/read clustering.")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objectLineagePulse@strReport <- 
+      paste0(objectLineagePulse@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     tm_clustering <- system.time({
       if(is.null(objectLineagePulse@dfAnnotationProc$clusters)){
         # Internal clustering
         if(!is.null(scaKClusters)){
-          strMessage <- paste0("Use internally created clustering (K-means) with ",
-                               scaKClusters, " clusters.")
+          strMessage <- paste0(
+            "Use internally created clustering (K-means) with ",
+            scaKClusters, " clusters.")
         } else {
-          strMessage <- paste0("Use internally created clustering (K-means) with ",
-                               " internal model selection to select number of clusters.")
+          strMessage <- paste0(
+            "Use internally created clustering (K-means) with ",
+            " internal model selection to select number of clusters.")
         }
-        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        objectLineagePulse@strReport <- 
+          paste0(objectLineagePulse@strReport, strMessage, "\n")
         if(boolSuperVerbose) print(strMessage)
         
-        objectLineagePulse@dfAnnotationProc$clusters <- clusterCellsInPseudotime(vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime,
-                                                                                 scaKexternal=scaKClusters)
+        objectLineagePulse@dfAnnotationProc$clusters <- clusterCellsInPseudotime(
+          vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime,
+          scaKexternal=scaKClusters)
         
-        strMessage <- paste0("Chose the number of clusters K as ", 
-                             max(objectLineagePulse@dfAnnotationProc$clusters),
-                             " based on the Gap-statistic.")
-        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        strMessage <- paste0(
+          "Chose the number of clusters K as ", 
+          max(objectLineagePulse@dfAnnotationProc$clusters),
+          " based on the Gap-statistic.")
+        objectLineagePulse@strReport <- 
+          paste0(objectLineagePulse@strReport, strMessage, "\n")
         if(boolSuperVerbose) print(strMessage)
       } else {
         # External clustering
-        strMessage <- paste0("Use externally created clustering (K-means) supplied through ",
-                             "dfAnnotation$clusters with ",
-                             length(unique(objectLineagePulse@dfAnnotationProc$clusters)),
-                             " clusters.")
-        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+        strMessage <- paste0(
+          "Use externally created clustering (K-means) supplied through ",
+          "dfAnnotation$clusters with ",
+          length(unique(objectLineagePulse@dfAnnotationProc$clusters)),
+          " clusters.")
+        objectLineagePulse@strReport <- 
+          paste0(objectLineagePulse@strReport, strMessage, "\n")
         if(boolSuperVerbose) print(strMessage)
       }
     })
-    strMessage <- paste0("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2), " min")
+    strMessage <- paste0(
+      "Time elapsed during clustering: ",
+      round(tm_clustering["elapsed"]/60,2), " min")
     objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
   }
   ### 4. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objectLineagePulse@strReport <- 
+    paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
-                                      vecNormConstExternal=vecNormConstExternalProc)
+  objectLineagePulse <- calcNormConst(
+    objectLineagePulse=objectLineagePulse,
+    vecNormConstExternal=vecNormConstExternalProc)
   
   ### 5. Fit list of drop-out models
   scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
@@ -254,34 +278,41 @@ runDropOutModelSelection <- function(
   vecModelsToFit <- names(lsstrDropModel)
   lsFits <- list()
   for(m in vecModelsToFit){
-    strMessage <- paste0("### Fit drop-out model ", m, 
-                         " (", match(m, vecModelsToFit),"/", length(vecModelsToFit), ").")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    strMessage <- paste0(
+      "### Fit drop-out model ", m, 
+      " (", match(m, vecModelsToFit),"/", length(vecModelsToFit), ").")
+    objectLineagePulse@strReport <- 
+      paste0(objectLineagePulse@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_modelfit <- system.time({
-      lsFitsModelM <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-                              dfAnnotation=objectLineagePulse@dfAnnotationProc,
-                              vecConfounders=vecConfounders,
-                              vecNormConst=objectLineagePulse@vecNormConst,
-                              lsDropModel=NULL,
-                              strMuModel=strMuModel,
-                              strDispModel=strDispModel,
-                              strDropModel=lsstrDropModel[[m]],
-                              strDropFitGroup=lsstrDropFitGroup[[m]],
-                              matPiConstPredictors=lsmatPiConstPredictorsProc[[m]],
-                              boolVerbose=boolVerbose,
-                              boolSuperVerbose=boolSuperVerbose)
-      vecLogLikFit <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                       lsMuModel=lsFitsModelM$lsMuModel,
-                                       lsDispModel=lsFitsModelM$lsDispModel, 
-                                       lsDropModel=lsFitsModelM$lsDropModel,
-                                       matWeights=NULL )
+      lsFitsModelM <- fitZINB(
+        matCounts=objectLineagePulse@matCountsProc,
+        dfAnnotation=objectLineagePulse@dfAnnotationProc,
+        vecConfounders=vecConfounders,
+        vecNormConst=objectLineagePulse@vecNormConst,
+        lsDropModel=NULL,
+        strMuModel=strMuModel,
+        strDispModel=strDispModel,
+        strDropModel=lsstrDropModel[[m]],
+        strDropFitGroup=lsstrDropFitGroup[[m]],
+        matPiConstPredictors=lsmatPiConstPredictorsProc[[m]],
+        boolVerbose=boolVerbose,
+        boolSuperVerbose=boolSuperVerbose)
+      
+      vecLogLikFit <- evalLogLikMatrix(
+        matCounts=objectLineagePulse@matCountsProc,
+        lsMuModel=lsFitsModelM$lsMuModel,
+        lsDispModel=lsFitsModelM$lsDispModel, 
+        lsDropModel=lsFitsModelM$lsDropModel,
+        matWeights=NULL )
     })
-    strMessage <- paste0("Fitted ZINB model with drop-out model ", m, 
-                         " with ll of  ", sum(vecLogLikFit), 
-                         " in ", round(tm_modelfit["elapsed"]/60,2)," min.")
-    objectLineagePulse@strReport <- paste0(lsFitsModelM$strReport, strMessage, "\n")
+    strMessage <- paste0(
+      "Fitted ZINB model with drop-out model ", m, 
+      " with ll of  ", sum(vecLogLikFit), 
+      " in ", round(tm_modelfit["elapsed"]/60,2)," min.")
+    objectLineagePulse@strReport <- 
+      paste0(lsFitsModelM$strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     lsFits[[m]]$lsMuModel <- lsFitsModelM$lsMuModel
@@ -290,9 +321,11 @@ runDropOutModelSelection <- function(
     lsFits[[m]]$strReport <- lsFitsModelM$strReport
     lsFits[[m]]$vecLogLikFit <- vecLogLikFit
     if(lsstrDropFitGroup[[m]]=="PerCell"){
-      lsFits[[m]]$scaDF_AllDropModels <- scaNCells*dim(lsFitsModelM$lsDropModel$matDropoutLinModel)[2]
+      lsFits[[m]]$scaDF_AllDropModels <- scaNCells*
+        dim(lsFitsModelM$lsDropModel$matDropoutLinModel)[2]
     } else if(lsstrDropFitGroup[[m]]=="ForAllCells"){
-      lsFits[[m]]$scaDF_AllDropModels <- dim(lsFitsModelM$lsDropModel$matDropoutLinModel)[2]
+      lsFits[[m]]$scaDF_AllDropModels <- 
+        dim(lsFitsModelM$lsDropModel$matDropoutLinModel)[2]
     } else {
       stop(paste0("ERROR IN runDropOutModelSelection: ",
                   "lsstrDropFitGroup[[m]]=", lsstrDropFitGroup[[m]], 
@@ -304,7 +337,8 @@ runDropOutModelSelection <- function(
   
   ### 6. Model selection
   strMessage <- paste0("### Model selection:")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objectLineagePulse@strReport <- 
+    paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   # Compute total degrees of freedom
   scaDF_MuModel <- lsFits[[1]]$lsMuModel$lsMuModelGlobal$scaDegFreedom
@@ -317,7 +351,8 @@ runDropOutModelSelection <- function(
   matLL <- do.call(cbind, lapply(lsFits, function(lsFit) sum(lsFit$vecLogLikFit) ))
   if(boolCheckLRT){
     strMessage <- paste0("# 1. Loglikelihood ratio tests")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objectLineagePulse@strReport <- 
+      paste0(objectLineagePulse@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     matPvalLRT <- matrix(NA, nrow=scaNModels, ncol=scaNModels)
     for(i1 in seq(1,scaNModels)){
@@ -335,7 +370,8 @@ runDropOutModelSelection <- function(
   
   # b) BIC
   strMessage <- paste0("# 2. BIC")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objectLineagePulse@strReport <- 
+    paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   vecBIC <- sapply(seq(1,scaNModels), function(i){
     calcBIC(n=scaNGenes*scaNCells,
@@ -345,7 +381,8 @@ runDropOutModelSelection <- function(
   
   # c) AIC
   strMessage <- paste0("# 3. AIC")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objectLineagePulse@strReport <- 
+    paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   vecAIC <- sapply(seq(1,scaNModels), function(i){
     calcAIC(k=vecDF[i],
