@@ -211,9 +211,9 @@ processSCDataMixture <- function(matCounts,
   
   # 3. matPiConstPredictors
   if(!is.null(matPiConstPredictors)){
-    checkNumeric(matPiConstPredictors,"matPiConstPredictors")
+    checkNumeric(as.matrix(matPiConstPredictors),"matPiConstPredictors")
     if(!is.null(rownames(matCounts))){
-      if(!rownames(matCounts) %in% rownames(matPiConstPredictors)){
+      if(any(!rownames(matCounts) %in% rownames(matPiConstPredictors))){
         stop(paste0("ERROR IN INPUT DATA CHECK: Some genes named in rows of matCounts do not ",
                     "occur in rows of matPiConstPredictors."))   
       }
@@ -315,7 +315,7 @@ processSCDataMixture <- function(matCounts,
   if(boolVerbose) print(strMessage)
   
   # Reduce matPiConstPredictors to genes in matCountsProc
-  matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
+  matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),]
   
   objectLineagePulse <- new('LineagePulseObject',
                             dfAnnotationProc    = dfAnnotationProc,

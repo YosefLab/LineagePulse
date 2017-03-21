@@ -173,10 +173,10 @@ runDropOutModelSelection <- function(
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   # Have to handle matPiConstPredictorsProc individually
   lsmatPiConstPredictorsProc <- lapply(lsmatPiConstPredictors, function(mat){
-    mat[rownames(objectLineagePulse$matCountsProc),]
+    return(mat[rownames(objectLineagePulse@matCountsProc),,drop=FALSE])
   })
   
-  strMessage <- paste0("The following negative binomial model expression model ",
+  strMessage <- paste0("The following negative binomial model expression model \n",
                        "is used for all drop-out models: ",
                        "mu=",strMuModel, ", dispersion=", strDispModel, ".")
   objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")

@@ -77,7 +77,7 @@ processSCData <- function(matCounts,
   # Checks whether elements are numeric
   checkNumeric <- function(matInput, strMatInput){
     if(any(!is.numeric(matInput))){
-      stop(paste0( "ERROR: ", strMatInput, " contains non-numeric elements. Requires count data." ))
+      stop(paste0( "ERROR: ", strMatInput, " contains non-numeric elements." ))
     }
   }
   # Checks whether elements are count data: non-negative integer finite numeric elements.
@@ -132,9 +132,9 @@ processSCData <- function(matCounts,
   
   # 3. matPiConstPredictors
   if(!is.null(matPiConstPredictors)){
-    checkNumeric(matPiConstPredictors,"matPiConstPredictors")
+    checkNumeric(as.matrix(matPiConstPredictors),"matPiConstPredictors")
     if(!is.null(rownames(matCounts))){
-      if(!rownames(matCounts) %in% rownames(matPiConstPredictors)){
+      if(any(!rownames(matCounts) %in% rownames(matPiConstPredictors))){
         stop(paste0("ERROR: Some genes named in rows of matCounts do not ",
                     "occur in rows of matPiConstPredictors."))   
       }
@@ -227,7 +227,7 @@ processSCData <- function(matCounts,
   if(boolVerbose) print(strMessage)
   
   # Reduce matPiConstPredictors to genes in matCountsProc
-  matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc)]
+  matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),]
   
   objectLineagePulse <- new('LineagePulseObject',
                             dfAnnotationProc    = dfAnnotationProc,
