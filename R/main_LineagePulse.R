@@ -79,7 +79,7 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #' 5. Supply gene-specific drop-out predictors if wanted 
 #' (matPiConstPredictors).
 #' 6. Set optimisation parameters (boolEstimateNoiseBasedOnH0,
-#' boolVecWindowsAsBFGS, boolCoEstDispMean, scaMaxEstimationCycles).
+#' scaMaxEstimationCycles).
 #' 7. Chose the number of processes you want to use (scaNProc), LineagePulse
 #' is parallelised on all computation intensive steps. Note that
 #' the current parallelisation scheme runs on Unix (MacOS) and Linux but
@@ -160,31 +160,6 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #'    model), a trade-off for speed over accuracy can be taken
 #'    and the dropout model can be chosen to be estimated based
 #'    on the constant null expression model (set to TRUE).
-#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
-#'    mean parameters of a gene are co-estimated in "windows"
-#'    mode with BFGS algorithm (optimisation with dimensionality
-#'    of number of cells) or estimated one by one, conditioned
-#'    one the latest estimates of neighbours. The latter case
-#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
-#'    and each mean parameter is optimised once only.
-#' @param boolCoEstDispMean: (bool) [Default TRUE]
-#'    Whether mean and dispersion parameters are to be co-estimated
-#'    (simulatneous optimisation). Only available for certain 
-#'    dispersion and mean models.
-#'    Note that co-estimation in model estimation B (without drop-
-#'    out model estimation) leads to a single step estimation as 
-#'    mean and dispersion parameter don't have to be iterated over.
-#'    This makes estimation of large data sets with complex H1 mean
-#'    model (e.g. impulse) possible, as the drop-out model can be 
-#'    estimated based on H0 (boolEstimateNoiseBasedOnH0) so that
-#'    the complex model only has to be estimated once (simultaneous
-#'    with the dispersion parameters). This may generally lead to better
-#'    convergence as the steps in coordinate-ascent are in a larger
-#'    space, closer to full gradient ascent. Setting to TRUE
-#'    is encouraged. Optimisation routines for individual mean 
-#'    and dispersion fitting (if FALSE) exist, but these may be viewed
-#'    as non-deprecated parts of an earlier implementation of the
-#'    alorithm.
 #' @param scaMaxEstimationCycles: (integer) [Default 20] Maximum number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 
@@ -318,7 +293,6 @@ runLineagePulse <- function(matCounts,
 		objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
 																							matPiConstPredictors=matPiConstPredictorsProc,
 																							boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
-																							boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
 																							strMuModel=strMuModel,
 																							strDispModel=strDispModel,
 																							strDropModel=strDropModel,

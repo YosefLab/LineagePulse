@@ -110,7 +110,6 @@ fitNullAlternative <- function(objectLineagePulse,
                                strDropModel="logistic_ofMu",
                                strDropFitGroup="PerCell",
                                boolEstimateNoiseBasedOnH0=TRUE,
-                               boolVecWindowsAsBFGS=FALSE,
                                scaMaxEstimationCycles=20,
                                boolVerbose=FALSE,
                                boolSuperVerbose=FALSE ){
@@ -152,6 +151,7 @@ fitNullAlternative <- function(objectLineagePulse,
                             strDispModel=strDispModelB,
     												strDropModel=strDropModel,
     												strDropFitGroup=strDropFitGroup,
+    												matPiConstPredictors=matPiConstPredictors,
                             boolVerbose=boolVerbose,
                             boolSuperVerbose=boolSuperVerbose)
   })
@@ -185,6 +185,7 @@ fitNullAlternative <- function(objectLineagePulse,
                             strMuModel=strMuModelB,
                             strDispModel=strDispModelB,
     												strDropFitGroup=strDropFitGroup,
+    												matPiConstPredictors=matPiConstPredictors,
                             boolVerbose=boolVerbose,
                             boolSuperVerbose=boolSuperVerbose)
   })
