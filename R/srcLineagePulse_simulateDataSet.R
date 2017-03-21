@@ -77,8 +77,12 @@ simulateDataSet <- function(scaNCells,
   
   # 2. Create hidden data set
   print("Draw mean trajectories")
-  vecConstIDs <- paste0(rep("_",scaNConst),c(1:scaNConst))
-  vecImpulseIDs <- paste0(rep("_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
+  if(scaNConst>0) vecConstIDs <- paste0(rep("_",scaNConst),c(1:scaNConst))
+  else vecConstIDs <- NULL
+  
+  if(scaNImp>0) vecImpulseIDs <- paste0(rep("_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
+  else vecImpulseIDs <- NULL
+  
   # a. Draw means from uniform (first half of genes): one mean per gene
   vecMuConstHidden <- runif(scaNConst)*scaMumax
   matMuConstHidden <- matrix(vecMuConstHidden,
@@ -102,6 +106,7 @@ simulateDataSet <- function(scaNCells,
   h0[h0<0.00001] <-0.00001
   h1[h1<0.00001] <-0.00001
   h2[h2<0.00001] <-0.00001
+  if(scaNImp>0){
   lsMuImpulseHidden <- lapply(seq(1,scaNImp), function(gene){
     evalImpulse(t=vecPT,
       beta=beta[gene],
@@ -111,6 +116,7 @@ simulateDataSet <- function(scaNCells,
       h1=h1[gene],
       h2=h2[gene])
   })
+  } else { lsMuImpulseHidden <- list(matrix(0, nrow=0, ncol=scaNCells)) }
   matImpulseModelHidden <- cbind(beta, h0, h1, h2, t1, t2)
   matMuImpulseHidden <- do.call(rbind, lsMuImpulseHidden)
   rownames(matImpulseModelHidden) <- vecImpulseIDs
@@ -121,6 +127,8 @@ simulateDataSet <- function(scaNCells,
   # Not coded
   
   # d. Merge data
+  print(dim(matMuConstHidden))
+  print(dim(matMuImpulseHidden))
   matMuHidden <- do.call(rbind, list(matMuConstHidden, matMuImpulseHidden))
   
   # Add size factors

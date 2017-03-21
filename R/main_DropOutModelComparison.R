@@ -278,7 +278,7 @@ runDropOutModelSelection <- function(
                                        lsDropModel=lsFitsModelM$lsDropModel,
                                        matWeights=NULL )
     })
-    strMessage <- paste0("Fitted ZINB model with drop-out model", m, 
+    strMessage <- paste0("Fitted ZINB model with drop-out model ", m, 
                          " with ll of  ", sum(vecLogLikFit), 
                          " in ", round(tm_modelfit["elapsed"]/60,2)," min.")
     objectLineagePulse@strReport <- paste0(lsFitsModelM$strReport, strMessage, "\n")
