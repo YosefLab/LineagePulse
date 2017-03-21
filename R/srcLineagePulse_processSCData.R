@@ -42,33 +42,6 @@
 #'    [Default "constant"] Model according to which dispersion
 #'    parameter is fit to each gene as a function of 
 #'    pseudotime in the alternative model (H1).
-#' @param boolCoEstDispMean: (bool) [Default TRUE]
-#'    Whether mean and dispersion parameters are to be co-estimated
-#'    (simulatneous optimisation). Only available for certain 
-#'    dispersion and mean models:
-#'    dispersion models: constant.
-#'    mean models: constant, cluster, sliding window vector, impulse.
-#'    Note that co-estimation in model estimation B (without drop-
-#'    out model estimation) leads to a single step estimation as 
-#'    mean and dispersion parameter don't have to be iterated over.
-#'    This makes estimation of large data sets with complex H1 mean
-#'    model (e.g. impulse) possible, as the drop-out model can be 
-#'    estimated based on H0 (boolEstimateNoiseBasedOnH0) so that
-#'    the complex model only has to be estimated once (simultaneous
-#'    with the dispersion parameters). This may generally lead to better
-#'    convergence as the steps in coordinate-ascent are in a larger
-#'    space, closer to full gradient ascent. Setting to TRUE
-#'    is encouraged. Optimisation routines for individual mean 
-#'    and dispersion fitting (if FALSE) exist, but these may be viewed
-#'    as non-deprecated parts of an earlier implementation of the
-#'    alorithm.
-#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
-#'    mean parameters of a gene are co-estimated in "windows"
-#'    mode with BFGS algorithm (optimisation with dimensionality
-#'    of number of cells) or estimated one by one, conditioned
-#'    one the latest estimates of neighbours. The latter case
-#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
-#'    and each mean parameter is optimised once only.
 #'
 #' @return list: (length 3)
 #'    \itemize{
@@ -91,8 +64,6 @@ processSCData <- function(matCounts,
                           vecNormConstExternal,
                           strMuModel,
                           strDispModel,
-                          boolCoEstDispMean,
-                          boolVecWindowsAsBFGS,
 													scaMaxEstimationCycles,
 													boolVerbose,
 													boolSuperVerbose){
@@ -188,8 +159,6 @@ processSCData <- function(matCounts,
   checkNumeric(scaMaxEstimationCycles, "scaMaxEstimationCycles")
   
   # 6. booleans
-  checkLogical(boolCoEstDispMean, "boolCoEstDispMean")
-  checkLogical(boolVecWindowsAsBFGS, "boolVecWindowsAsBFGS")
   checkLogical(boolVerbose, "boolVerbose")
   checkLogical(boolSuperVerbose, "boolSuperVerbose")
   
@@ -197,43 +166,13 @@ processSCData <- function(matCounts,
   # 1. Check general mean estimation settings
   
   # 2. Check single mean-/dispersion estimation models
-  if(!boolCoEstDispMean){
-    # a) Mean models
-    if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
-      stop(paste0("strMuModel not recognised: ", strMuModel, 
-                  " Must be one of: windows, clusters, impulse, constant."))
-    }
-    # b) Dispersion models
-    if(!(strDispModel %in% c("constant"))){
-      stop(paste0("strDispModel not recognised: ", strDispModel, 
-                  " Must be one of: constant."))
-    }
-  }
   
   # 3. Check co-estimation models
   # Note: These functions are implemented separately from
   # single mean and dispersion estimation.
-  if(boolCoEstDispMean){
-    if(!(strMuModel %in% c("windows","clusters","impulse","constant"))){
-      stop(paste0("strMuModel not recognised: ", strMuModel, 
-                  " Must be one of: windows, clusters, impulse, constant if co-estimation",
-                  " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
-    }
-    if(strMuModel=="windows" & !boolVecWindowsAsBFGS){
-      stop(paste0("The dispersion parameter co-estimation couples all LL",
-                  " terms of a gene so that there is no computational",
-                  " advantage in not estimating all mean parameters",
-                  " simultaneously. Set boolVecWindowsAsBFGS=TRUE",
-                  " if (strMuModel==windows and boolCoEstDispMean=TRUE)."))
-    }
-    if(strMuModel=="windows")
-      if(!(strDispModel %in% c("constant"))){
-        stop(paste0("strDispModel not recognised: ", strDispModel, 
-                    " Must be one of: constant if co-estimation",
-                    " of mean and dispersion is used (boolCoEstDispMean=TRUE)."))
-      }
-  } else {
-    stop(paste0("Seperate mean and dispersion estimation currently not implemented."))
+  if(!(strMuModel %in% c("clusters","impulse","constant"))){
+    stop(paste0("strMuModel not recognised: ", strMuModel, 
+                " Must be one of: clusters, impulse, constant."))
   }
   
   # (III) Process data
