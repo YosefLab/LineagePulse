@@ -1151,9 +1151,6 @@ fitDispConstMuImpulseOneInitZINB <- function(vecCounts,
 #'      \item vecClusterAssign: (integer vector length number of
 #'    cells) [Default NA] Index of cluster assigned to each cell.
 #'    Used for clusters model.
-#'      \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
-#'    of a gene are simultaneously estiamted as a vector with BFGS
-#'    in windows mode.
 #'      \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'    for BFGS estimation of impulse model with optim (termination criterium).
 #'      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
@@ -1375,9 +1372,6 @@ fitDispConstMuImpulseZINB <- function(vecCounts,
 #'          \item vecClusterAssign: (integer vector length number of
 #'        cells) [Default NA] Index of cluster assigned to each cell.
 #'        Used for clusters model.
-#'          \item boolVecWindowsAsBFGS: (bool) Whether mean parameters
-#'        of a gene are simultaneously estiamted as a vector with BFGS
-#'        in windows mode.
 #'          \item MAXIT_BFGS_MuDisp: (int) Maximum number of iterations
 #'        for BFGS estimation of impulse model with optim (termination criterium).
 #'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of

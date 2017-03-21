@@ -80,13 +80,6 @@
 #'    model), a trade-off for speed over accuracy can be taken
 #'    and the dropout model can be chosen to be estimated based
 #'    on the constant null expression model (set to TRUE).
-#' @param boolVecWindowsAsBFGS: (bool) [Default FALSE] Whether
-#'    mean parameters of a gene are co-estimated in "windows"
-#'    mode with BFGS algorithm (optimisation with dimensionality
-#'    of number of cells) or estimated one by one, conditioned
-#'    one the latest estimates of neighbours. The latter case
-#'    (boolVecWindowsAsBFGS=FALSE) is coordinate ascent within the gene
-#'    and each mean parameter is optimised once only.
 #' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
 #'    of estimation cycles performed in fitZINB(). One cycle
 #'    contain one estimation of of each parameter of the 

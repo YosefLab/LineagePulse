@@ -4,7 +4,6 @@ fitZINB <- function(matCounts,
                     vecNormConst,
                     matWeights=NULL,
                     matPiConstPredictors=NULL,
-                    boolVecWindowsAsBFGS=FALSE,
                     lsDropModel=NULL,
                     matMuModelInit=NULL,
                     lsmatBatchModelInit=NULL,
@@ -58,7 +57,6 @@ fitZINB <- function(matCounts,
                                          lsvecidxBatchAssign=NULL, # object called to determine assignment of cell to batch
                                          lsvecidxBatchUnique=NULL, # Can be computer from lsvecidxBatchAssign but kept for speed
                                          lsvecBatchUnique=NULL, # Kept so that idx vector can be associated with batch names
-                                         boolVecWindowsAsBFGS=boolVecWindowsAsBFGS,
                                          MAXIT_BFGS_MuDisp=MAXIT_BFGS_MuDisp,
                                          RELTOL_BFGS_MuDisp=RELTOL_BFGS_MuDisp) )
   # Initialise mean model parameters
