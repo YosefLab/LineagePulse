@@ -113,8 +113,10 @@ processSCData <- function(matCounts,
   		stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
   	}
   	# Check structure
-  	checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
-  	checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+  	if(strMuModel=="impulse"){
+  	  checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+  	  checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+  	}
   	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
   		stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
   	}
@@ -187,12 +189,17 @@ processSCData <- function(matCounts,
     rownames(matPiConstPredictors) <- rownames(matCounts)
   }
   # Take out cells with NA pseudotime coordinate
-  vecidxPTnotNA <- !is.na(dfAnnotation$pseudotime)
-  dfAnnotationProc <- dfAnnotation[vecidxPTnotNA,]
-  vecidxPTsort <- sort(dfAnnotationProc$pseudotime,
-  								 decreasing=FALSE, index.return=TRUE)$ix
-  dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
-  matCountsProc <- matCounts[,dfAnnotationProc$cell]
+  if(strMuModel=="impulse"){
+    vecidxPTnotNA <- !is.na(dfAnnotation$pseudotime)
+    dfAnnotationProc <- dfAnnotation[vecidxPTnotNA,]
+    vecidxPTsort <- sort(dfAnnotationProc$pseudotime,
+                         decreasing=FALSE, index.return=TRUE)$ix
+    dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
+    matCountsProc <- matCounts[,dfAnnotationProc$cell]
+  } else {
+    dfAnnotationProc <- dfAnnotation
+    matCountsProc <- matCounts
+  }
   # Remove all zero or NA genes/cells
   vecidxGenes <- apply(matCountsProc, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
   vecidxCells <- apply(matCountsProc, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
@@ -211,10 +218,12 @@ processSCData <- function(matCounts,
   strReport <- paste0(strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), 
-                       " cells did not have a pseudotime coordinate and were excluded.")
-  strReport <- paste0(strReport, strMessage, "\n")
-  if(boolVerbose) print(strMessage)
+  if(strMuModel=="impulse"){
+    strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), 
+                         " cells did not have a pseudotime coordinate and were excluded.")
+    strReport <- paste0(strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+  }
   
   strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", length(vecidxGenes), 
                        " genes did not contain non-zero observations and are excluded from analysis.")
