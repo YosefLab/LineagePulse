@@ -86,6 +86,11 @@ runDropOutModelSelection <- function(
       "lsstrDropModel, lsstrDropFitGroup and lsmatPiConstPredictors.",
       "Each position in these lists corresponds to one drop-out model."))
   }
+  if(is.null(names(lsstrDropModel))){
+    stop(paste0(
+      "ERROR IN INPUT TO compareDropOutModels: ",
+      "Name lists of drop-out models."))
+  }
   # II) Check that drop-out models are nested within each other
   # as they appear in list:
   # Model with minimal degrees of freedom at end of list.
@@ -260,6 +265,7 @@ runDropOutModelSelection <- function(
     objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
   }
+  
   ### 4. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")
   objectLineagePulse@strReport <- 
