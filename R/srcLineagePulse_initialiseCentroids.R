@@ -31,8 +31,13 @@ initialiseCentroidsFromCells <- function(matCounts,
   for(centroid in which(is.na(vecidxCentroidCells))){
     vecidxCellsCovered <- c(vecidxCentroidCells[!is.na(vecidxCentroidCells)], which(!is.na(vecAssignPop)))
     vecidxCellsLeft <- setdiff(seq(1,scaNCells), vecidxCellsCovered)
-    vecidxCumulDistSort <- sort(apply(matDist[vecidxCellsLeft,vecidxCellsCovered], 1, function(cell) sum(cell, na.rm=TRUE)), index.return=TRUE)$ix
-    vecidxCentroidCells[centroid] <- vecidxCumulDistSort[round(length(vecidxCumulDistSort)/2)]
+    if(length(vecidxCellsCovered)>0){
+      vecidxCumulDistSort <- sort(apply(matDist[vecidxCellsLeft,vecidxCellsCovered,drop=FALSE], 1, function(cell) sum(cell, na.rm=TRUE)), index.return=TRUE)$ix
+      vecidxCentroidCells[centroid] <- vecidxCumulDistSort[round(length(vecidxCumulDistSort)/2)]
+    } else {
+      vecidxCumulDistSort <- sort(apply(matDist, 1, function(cell) sum(cell, na.rm=TRUE)), index.return=TRUE)$ix
+      vecidxCentroidCells[centroid] <- vecidxCumulDistSort[round(length(vecidxCumulDistSort)/2)]
+    }
   }
   
   return(vecidxCentroidCells)
