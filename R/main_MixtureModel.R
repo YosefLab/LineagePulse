@@ -67,6 +67,7 @@ runMixtureModel <- function(matCounts,
   rm(matCounts)
   rm(matPiConstPredictors)
   rm(lsProcessedSCData)
+  gc()
   
   # Inialise parallelisation
   # Set the parallelisation environment in BiocParallel:

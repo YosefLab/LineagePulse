@@ -224,6 +224,7 @@ runLineagePulse <- function(matCounts,
 	rm(matPiConstPredictors)
 	rm(dfAnnotation)
 	rm(lsProcessedSCData)
+	gc()
 	
 	# Inialise parallelisation
 	# Set the parallelisation environment in BiocParallel:
