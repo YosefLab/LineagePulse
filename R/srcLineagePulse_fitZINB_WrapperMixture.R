@@ -68,16 +68,9 @@ fitMixtureZINBModel <- function(objectLineagePulse,
   })
   
   strMessage <- paste0("### Finished fitting H0 constant ZINB model ",
-                               "in ", round(tm_cycle["elapsed"]/60,2)," min.")
+                       "in ", round(tm_cycle["elapsed"]/60,2)," min.")
   objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
-  
-  # Use for catching bad gene-wise models in H1 fitting
-  vecLLH0 <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                               lsMuModel=lsMuModelRed,
-                               lsDispModel=lsDispModelRed, 
-                               lsDropModel=lsDropModel,
-                               matWeights=NULL )
   
   ### (B) EM-like estimation cycle: fit mixture model
   strMessage <- paste0("### b) EM-like iteration: Fit H1 mixture model")
@@ -166,8 +159,8 @@ fitMixtureZINBModel <- function(objectLineagePulse,
                                             matWeights=matWeights ))
       
       strMessage <- paste0("# ", scaIter,".   E-step complete: ",
-                   "loglikelihood of  ", scaLogLikTemp, " in ",
-                   round(tm_estep["elapsed"]/60,2)," min.")
+                           "loglikelihood of  ", scaLogLikTemp, " in ",
+                           round(tm_estep["elapsed"]/60,2)," min.")
       objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
       if(boolSuperVerbose) print(strMessage)
       
@@ -284,7 +277,18 @@ fitMixtureZINBModel <- function(objectLineagePulse,
         # 1. Convergence is not broken.
         # 2. The model get s a chance to leave a bad local minimum.
         # Note: Also update dispersion to H0.
-        vecboolBadGeneModel <- vecLLNew < vecLLH0
+        # Note: Due to numerical LL thresholding, the null model evaluated
+        # as a constant model for all cells and evaluated in a mixture model
+        # in which every centroid is the constant model, may differ.
+        # The null model on the mixture model LL is the value we have to
+        # compare against to guarantee convergence.
+        vecLLH0MM <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
+                                      lsMuModel=lsMuModelRed,
+                                      lsDispModel=lsDispModelRed, 
+                                      lsDropModel=lsDropModel,
+                                      matWeights=matWeights,
+                                      boolConstModelOnMMLL=TRUE)
+        vecboolBadGeneModel <- vecLLNew < vecLLH0MM
         if(any(vecboolBadGeneModel)){
           lsMuModelFull$matMuModel[vecboolBadGeneModel,] <- matrix(
             lsMuModelRed$matMuModel[vecboolBadGeneModel,],

@@ -22,43 +22,45 @@ source("~/gitDevelopment/LineagePulse/R/main_LineagePulse.R")
 #' @author David Sebastian Fischer
 #' 
 #' @export
-runMixtureModel <- function(matCounts,
-														dfAnnotation,
-														vecConfounders,
-														boolFixedPopulations,
-														vecNCentroidsPerPop=NULL,
-														vecH0Pop=NULL,
-                            scaNMixtures,
-                            matPiConstPredictors=NULL,
-                            vecNormConstExternal=NULL,
-                            strDispModel="constant",
-														strDropModel="logistic_ofMu",
-														strDropFitGroup="PerCell",
-                            scaMaxEstimationCyclesEMlike=20,
-                            scaMaxEstimationCyclesDropModel=20,
-                            scaNProc=1,
-                            boolVerbose=TRUE,
-                            boolSuperVerbose=FALSE ){
+runMixtureModel <- function(
+  matCounts,
+  dfAnnotation,
+  vecConfounders,
+  boolFixedPopulations,
+  vecNCentroidsPerPop=NULL,
+  vecH0Pop=NULL,
+  scaNMixtures,
+  matPiConstPredictors=NULL,
+  vecNormConstExternal=NULL,
+  strDispModel="constant",
+  strDropModel="logistic_ofMu",
+  strDropFitGroup="PerCell",
+  scaMaxEstimationCyclesEMlike=20,
+  scaMaxEstimationCyclesDropModel=20,
+  scaNProc=1,
+  boolVerbose=TRUE,
+  boolSuperVerbose=FALSE ){
   
   STR_VERSION <- "v0.99"
   
   # 1. Data preprocessing
   vecAllGenes <- rownames(matCounts)
-  lsProcessedSCData <- processSCDataMixture( matCounts=matCounts,
-  																					 dfAnnotation=dfAnnotation,
-  																					 vecConfounders=vecConfounders,
-  																					 boolFixedPopulations=boolFixedPopulations,
-  																					 vecNCentroidsPerPop=vecNCentroidsPerPop,
-  																					 vecH0Pop=vecH0Pop,
-                                             scaNMixtures=scaNMixtures,
-                                             matPiConstPredictors=matPiConstPredictors,
-                                             vecNormConstExternal=vecNormConstExternal,
-                                             strDispModel=strDispModel,
-                                             scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
-                                             scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
-  																					 boolVerbose=boolVerbose,
-  																					 boolSuperVerbose=boolSuperVerbose,
-  																					 STR_VERSION=STR_VERSION)
+  lsProcessedSCData <- processSCDataMixture(
+    matCounts=matCounts,
+    dfAnnotation=dfAnnotation,
+    vecConfounders=vecConfounders,
+    boolFixedPopulations=boolFixedPopulations,
+    vecNCentroidsPerPop=vecNCentroidsPerPop,
+    vecH0Pop=vecH0Pop,
+    scaNMixtures=scaNMixtures,
+    matPiConstPredictors=matPiConstPredictors,
+    vecNormConstExternal=vecNormConstExternal,
+    strDispModel=strDispModel,
+    scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
+    scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
+    boolVerbose=boolVerbose,
+    boolSuperVerbose=boolSuperVerbose,
+    STR_VERSION=STR_VERSION)
   objectLineagePulseMM <- lsProcessedSCData$objectLineagePulse
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
@@ -85,7 +87,7 @@ runMixtureModel <- function(matCounts,
   if(boolVerbose) print(strMessage)
   
   objectLineagePulseMM <- calcNormConst(objectLineagePulseMM,
-                                vecNormConstExternal=vecNormConstExternalProc)
+                                        vecNormConstExternal=vecNormConstExternalProc)
   
   # 3. Fit ZINB mixture and null model.
   strMessage <- paste0("--- Fit ZINB mixture and null model.")
@@ -93,14 +95,15 @@ runMixtureModel <- function(matCounts,
   if(boolVerbose) print(strMessage)
   
   tm_fitmm <- system.time({
-    objectLineagePulseMM <- fitMixtureZINBModel(objectLineagePulse=objectLineagePulseMM,
-                                                scaNMixtures=scaNMixtures,
-                                                strDispModel=strDispModel,
-                                                strDropModel=strDropModel,
-                                                scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
-                                                scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
-                                                boolVerbose=boolVerbose,
-                                                boolSuperVerbose=boolSuperVerbose )
+    objectLineagePulseMM <- fitMixtureZINBModel(
+      objectLineagePulse=objectLineagePulseMM,
+      scaNMixtures=scaNMixtures,
+      strDispModel=strDispModel,
+      strDropModel=strDropModel,
+      scaMaxEstimationCyclesDropModel=scaMaxEstimationCyclesDropModel,
+      scaMaxEstimationCyclesEMlike=scaMaxEstimationCyclesEMlike,
+      boolVerbose=boolVerbose,
+      boolSuperVerbose=boolSuperVerbose )
   })
   
   strMessage <- paste0("Time elapsed during ZINB mixture and null model fitting: ",
@@ -118,7 +121,7 @@ runMixtureModel <- function(matCounts,
   })
   
   strMessage <- paste0("Time elapsed during differential expression analysis: ",
-              round(tm_deanalysis_mf["elapsed"]/60,2)," min")
+                       round(tm_deanalysis_mf["elapsed"]/60,2)," min")
   objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   

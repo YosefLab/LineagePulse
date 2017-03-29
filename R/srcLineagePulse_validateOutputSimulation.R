@@ -2,9 +2,6 @@
 #++++++     Analyse LineagePulse output on simulated data given model    ++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-library(ggplot2)
-library(reshape2)
-
 #' Generate metrics for comparison of ZINB fit against underlying model
 #' 
 #' Compare inferred parameters with underlying model parameters. Loads

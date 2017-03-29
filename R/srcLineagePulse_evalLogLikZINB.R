@@ -67,7 +67,7 @@ evalLikZINB <- function(vecCounts,
     mu=vecMu[vecboolNotZero], 
     size=vecDisp[vecboolNotZero], 
     log=FALSE)
-
+  
   # Catch low likehood observations
   # Do not need this as likelihood goes to zero in worst case,
   # ie will not contribute to sum!
@@ -427,10 +427,19 @@ evalLogLikMatrix <- function(matCounts,
                              lsMuModel,
                              lsDispModel, 
                              lsDropModel,
-                             matWeights=NULL ){
+                             matWeights=NULL,
+                             boolConstModelOnMMLL=FALSE){
+  
+  # Make sure usage of boolConstModelOnMMLL is correct
+  if(boolConstModelOnMMLL &
+     (is.null(matWeights) | 
+     lsMuModel$lsMuModelGlobal$strMuModel!="constant")){
+    stop("boolConstModelOnMMLL usage wrong in evalLogLikMatrix().")
+  }
   
   vecLogLik <- unlist(
     bplapply( seq(1,dim(matCounts)[1]), function(i){
+      vecCounts <- matCounts[i,] # Iterator index on sparse matrix does not work!
       if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
         
         matMuParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){
@@ -458,7 +467,6 @@ evalLogLikMatrix <- function(matCounts,
             lsDropModelGlobal=lsDropModel$lsDropModelGlobal )
         }))
         
-        vecCounts <- matCounts[i,]
         scaLL <- evalLogLikGeneMM(
           vecCounts=vecCounts,
           matMuParam=matMuParam,
@@ -487,15 +495,26 @@ evalLogLikMatrix <- function(matCounts,
           lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
         
         # Evaluate loglikelihood of gene
-        vecCounts <- matCounts[i,]
-        scaLL <- evalLogLikGene(
-          vecCounts=vecCounts,
-          vecMu=vecMuParam,
-          vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
-          vecDisp=vecDispParam, 
-          vecPi=vecPiParam,
-          vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-          vecboolZero= !is.na(vecCounts) & vecCounts==0)
+        if(boolConstModelOnMMLL) {
+          scaLL <- evalLogLikGeneMM(
+            vecCounts=vecCounts,
+            matMuParam=do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecMuParam )),
+            vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
+            matDispParam=do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecDispParam )),
+            matDropParam=do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecPiParam )),
+            matWeights=matWeights,
+            vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+            vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+        } else {
+          scaLL <- evalLogLikGene(
+            vecCounts=vecCounts,
+            vecMu=vecMuParam,
+            vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
+            vecDisp=vecDispParam, 
+            vecPi=vecPiParam,
+            vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
+            vecboolZero= !is.na(vecCounts) & vecCounts==0)
+        }
       }
       return(scaLL)
     })
