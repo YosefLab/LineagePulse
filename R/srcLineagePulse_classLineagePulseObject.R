@@ -7,7 +7,6 @@
 # Define class unions for slots
 setClassUnion('numericORNULL', members=c('numeric', 'NULL'))
 setClassUnion('matrixORNULL', members=c('matrix', 'NULL'))
-setClassUnion('dgCMatrixORNULL', members=c('dgCMatrix', 'NULL'))
 setClassUnion('characterORNULL', members=c('character', 'NULL'))
 setClassUnion('listORNULL', members=c('list', 'NULL'))
 setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
@@ -91,7 +90,7 @@ setClass(
     lsMuModelH1         = "listORNULL",
     lsMuModelConst      = "listORNULL",
     lsFitZINBReporters  = "listORNULL",
-    matCountsProc       = "dgCMatrixORNULL",
+    matCountsProc       = "dgCMatrix",
     matWeights          = "matrixORNULL",
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
