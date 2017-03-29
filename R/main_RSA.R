@@ -9,9 +9,8 @@
 ### Libraries and source code
 ################################################################################
 
-
-source("~/gitDevelopment/LineagePulse/R/main_LineagePulse.R")
 source("~/gitDevelopment/LineagePulse/R/main_MixtureModel.R")
+source("~/gitDevelopment/LineagePulse/R/main_LineagePulse.R")
 
 ################################################################################
 ### Main function: RSA

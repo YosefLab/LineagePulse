@@ -9,6 +9,7 @@
 library(BiocParallel)
 library(compiler)
 library(ggplot2)
+library(Matrix)
 
 ### CHANGE THIS PATH TO THE PATH IN WHICH YOU HAVE LineagePulse/R ###
 setwd("~/gitDevelopment/LineagePulse/R")
@@ -42,8 +43,6 @@ source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
 source("srcLineagePulse_validateOutput.R")
 source("srcLineagePulse_validateOutputSimulation.R")
-
-library(Matrix)
 
 ################################################################################
 ### Main function
