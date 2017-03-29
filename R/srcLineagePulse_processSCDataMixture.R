@@ -65,20 +65,20 @@
 #' 
 #' @export
 processSCDataMixture <- function(matCounts,
-																 dfAnnotation,
-																 vecConfounders,
-																 boolFixedPopulations,
-																 vecNCentroidsPerPop,
-																 vecH0Pop,
+                                 dfAnnotation,
+                                 vecConfounders,
+                                 boolFixedPopulations,
+                                 vecNCentroidsPerPop,
+                                 vecH0Pop,
                                  scaNMixtures,
                                  matPiConstPredictors,
                                  vecNormConstExternal,
                                  strDispModel,
                                  scaMaxEstimationCyclesEMlike,
                                  scaMaxEstimationCyclesDropModel,
-																 boolVerbose,
-																 boolSuperVerbose,
-																 STR_VERSION){
+                                 boolVerbose,
+                                 boolSuperVerbose,
+                                 STR_VERSION){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -120,89 +120,89 @@ processSCDataMixture <- function(matCounts,
   
   # 2. dfAnnotation, vecConfounders, boolFixedPopulations, vecNCentroidsPerPop
   if(!is.null(dfAnnotation)){
-  	# Check that all cells are mentioned in dfAnnotation
-  	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
-  		stop(paste0("ERROR IN INPUT DATA CHECK: Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
-  	}
-  	# Check structure
-  	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
-  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  								"Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
-  	}
-  	if(!is.null(vecConfounders)){
-  		if(!all(vecConfounders %in% colnames(dfAnnotation))){
-  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  									"Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
-  		}
-  		if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
-  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  									"Supply batch assignments for all cells and all confounders given in vecConfounders"))
-  		}
-  	}
-  	if(boolFixedPopulations){
-  		if(!"populations" %in% colnames(dfAnnotation)){
-  			stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  									"population does not occur in dfAnnotation (columns)."))
-  		} else {
-  			if(!is.null(scaNMixtures)){
-  				if(scaNMixtures < length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]))){
-  					stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  											"Number of populations in dfAnnotation$populations (",
-  											length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])),
-  											"):", unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]),
-  											" must not exceed maximum number of populations given by scaNMixtures=",
-  											scaNMixtures))
-  				}
-  			}
-  		}
-  	  if(!is.null(vecNCentroidsPerPop)){
-  	    vecFixedPop <- unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
-  	    # Check names
-  	    if(!all(names(vecNCentroidsPerPop) %in% vecFixedPop)){
-  	      stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  	                  "Not all names(vecNCentroidsPerPop) are in dfAnnotation$populations."))
-  	    }
-  	    if(!all(vecFixedPop %in% names(vecNCentroidsPerPop))){
-  	      stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  	                  "Not all dfAnnotation$populations are in names(vecNCentroidsPerPop)."))
-  	    }
-  	    # Check content
-  	    checkNumeric(vecNCentroidsPerPop)
-  	    if(sum(vecNCentroidsPerPop)==scaNMixtures){
-  	      warning(paste0("WARNING IN INPUT DATA CHECK: ",
-  	                     "Sum of centroids per fixed populations",
-  	                     "(vecNCentroidsPerPop) is equal ",
-  	                     "to total number of centroids (scaNMixtures). ",
-  	                     "There are no free centroids."))
-  	    }
-  	    if(sum(vecNCentroidsPerPop)>scaNMixtures){
-  	      stop(paste0("WARNING IN INPUT DATA CHECK: ",
-  	                  "Sum of centroids per fixed populations",
-  	                  "(vecNCentroidsPerPop) is larger ",
-  	                  "than total number of centroids (scaNMixtures)."))
-  	    }
-  	    if(!is.null(vecH0Pop)){
-  	      if(!all(vecH0Pop %in% vecFixedPop)){
-  	        stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  	                    "Not all vecH0Pop are in dfAnnotation$populations."))
-  	      }
-  	    }
-  	  }
-  	} else {
-  	  if(!is.null(vecNCentroidsPerPop)){
-  	    stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  	                "Do not supply vecNCentroidsPerPop if boolFixedPopulations=FALSE."))
-  	  } 
-  	}
+    # Check that all cells are mentioned in dfAnnotation
+    if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
+      stop(paste0("ERROR IN INPUT DATA CHECK: Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+    }
+    # Check structure
+    if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
+      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                  "Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+    }
+    if(!is.null(vecConfounders)){
+      if(!all(vecConfounders %in% colnames(dfAnnotation))){
+        stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                    "Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
+      }
+      if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
+        stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                    "Supply batch assignments for all cells and all confounders given in vecConfounders"))
+      }
+    }
+    if(boolFixedPopulations){
+      if(!"populations" %in% colnames(dfAnnotation)){
+        stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                    "population does not occur in dfAnnotation (columns)."))
+      } else {
+        if(!is.null(scaNMixtures)){
+          if(scaNMixtures < length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]))){
+            stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                        "Number of populations in dfAnnotation$populations (",
+                        length(unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])),
+                        "):", unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)]),
+                        " must not exceed maximum number of populations given by scaNMixtures=",
+                        scaNMixtures))
+          }
+        }
+      }
+      if(!is.null(vecNCentroidsPerPop)){
+        vecFixedPop <- unique(dfAnnotation$populations[!is.na(dfAnnotation$populations)])
+        # Check names
+        if(!all(names(vecNCentroidsPerPop) %in% vecFixedPop)){
+          stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                      "Not all names(vecNCentroidsPerPop) are in dfAnnotation$populations."))
+        }
+        if(!all(vecFixedPop %in% names(vecNCentroidsPerPop))){
+          stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                      "Not all dfAnnotation$populations are in names(vecNCentroidsPerPop)."))
+        }
+        # Check content
+        checkNumeric(vecNCentroidsPerPop)
+        if(sum(vecNCentroidsPerPop)==scaNMixtures){
+          warning(paste0("WARNING IN INPUT DATA CHECK: ",
+                         "Sum of centroids per fixed populations",
+                         "(vecNCentroidsPerPop) is equal ",
+                         "to total number of centroids (scaNMixtures). ",
+                         "There are no free centroids."))
+        }
+        if(sum(vecNCentroidsPerPop)>scaNMixtures){
+          stop(paste0("WARNING IN INPUT DATA CHECK: ",
+                      "Sum of centroids per fixed populations",
+                      "(vecNCentroidsPerPop) is larger ",
+                      "than total number of centroids (scaNMixtures)."))
+        }
+        if(!is.null(vecH0Pop)){
+          if(!all(vecH0Pop %in% vecFixedPop)){
+            stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                        "Not all vecH0Pop are in dfAnnotation$populations."))
+          }
+        }
+      }
+    } else {
+      if(!is.null(vecNCentroidsPerPop)){
+        stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                    "Do not supply vecNCentroidsPerPop if boolFixedPopulations=FALSE."))
+      } 
+    }
   } else {
-  	if(!is.null(vecConfounders)){
-  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  		            "vecConfounders supplied but no dfAnnotation which carries batch structure."))
-  	}
-  	if(boolFixedPopulations){
-  		stop(paste0("ERROR IN INPUT DATA CHECK: ",
-  		            "boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
-  	}
+    if(!is.null(vecConfounders)){
+      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                  "vecConfounders supplied but no dfAnnotation which carries batch structure."))
+    }
+    if(boolFixedPopulations){
+      stop(paste0("ERROR IN INPUT DATA CHECK: ",
+                  "boolFixedPopulations=TRUE but no dfAnnotation which carries population assignments."))
+    }
     if(!is.null(vecH0Pop)){
       stop(paste0("ERROR IN INPUT DATA CHECK: ",
                   "vecH0Pop supplied but no dfAnnotation which carries population assignments."))
@@ -230,7 +230,7 @@ processSCDataMixture <- function(matCounts,
     checkNumeric(vecNormConstExternal,"vecNormConstExternal")
     if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
       stop("ERROR IN INPUT DATA CHECK: ",
-      		 "Not all cells in matCounts are given in vecNormConstExternal")
+           "Not all cells in matCounts are given in vecNormConstExternal")
     }
   }
   
@@ -253,7 +253,7 @@ processSCDataMixture <- function(matCounts,
   # Check single dispersion estimation models
   if(!(strDispModel %in% c("constant"))){
     stop(paste0("ERROR IN INPUT DATA CHECK: ",
-    						"strDispModel not recognised: ", strDispModel, 
+                "strDispModel not recognised: ", strDispModel, 
                 " Must be one of: constant."))
   }
   
@@ -317,27 +317,34 @@ processSCDataMixture <- function(matCounts,
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),]
   
-  objectLineagePulse <- new('LineagePulseObject',
-                            dfAnnotationProc    = dfAnnotationProc,
-                            dfResults           = NULL,
-                            lsDispModelH0       = NULL,
-                            lsDispModelH1       = NULL,
-                            lsDispModelConst    = NULL,
-                            lsDropModel         = NULL,
-                            lsFitZINBReporters  = NULL,
-                            lsMuModelH1         = NULL,
-                            lsMuModelH0         = NULL,
-                            lsMuModelConst      = NULL,
-                            matCountsProc       = matCountsProc,
-                            matWeights          = NULL,
-                            strReport           = strReport,
-                            vecAllGenes         = rownames(matCounts),
-  													vecConfounders      = vecConfounders,
-  													boolFixedPopulations= boolFixedPopulations,
-  													vecNCentroidsPerPop = vecNCentroidsPerPop,
-  													vecH0Pop            = vecH0Pop,
-                            vecNormConst        = NULL,
-  													strVersion          = STR_VERSION)
+  objectLineagePulse <- new(
+    'LineagePulseObject',
+    dfAnnotationProc    = dfAnnotationProc,
+    dfResults           = NULL,
+    lsDispModelH0       = NULL,
+    lsDispModelH1       = NULL,
+    lsDispModelConst    = NULL,
+    lsDropModel         = NULL,
+    lsFitZINBReporters  = NULL,
+    lsMuModelH1         = NULL,
+    lsMuModelH0         = NULL,
+    lsMuModelConst      = NULL,
+    matCountsProc       = sparseMatrix(i = (which(matCountsProc>0)-1) %% dim(matCountsProc)[1],
+                                       j = (which(matCountsProc>0)-1) %/% dim(matCountsProc)[1], 
+                                       x = matCountsProc[which(matCountsProc>0)], 
+                                       dims = dim(matCountsProc),
+                                       dimnames = dimnames(matCountsProc),
+                                       symmetric = FALSE,
+                                       index1 = FALSE),
+    matWeights          = NULL,
+    strReport           = strReport,
+    vecAllGenes         = rownames(matCounts),
+    vecConfounders      = vecConfounders,
+    boolFixedPopulations= boolFixedPopulations,
+    vecNCentroidsPerPop = vecNCentroidsPerPop,
+    vecH0Pop            = vecH0Pop,
+    vecNormConst        = NULL,
+    strVersion          = STR_VERSION)
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

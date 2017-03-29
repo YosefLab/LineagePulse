@@ -334,7 +334,6 @@ fitZINBPi <- function(matCounts,
       if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
         vecParamGuess[2] <- log(-vecParamGuess[2])
       }
-      
       lsFitPi <- fitPi_SingleCell(
         vecParamGuess=vecParamGuess,
         vecCounts=matCounts[,j],

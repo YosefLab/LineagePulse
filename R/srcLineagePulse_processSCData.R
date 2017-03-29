@@ -59,14 +59,14 @@
 
 processSCData <- function(matCounts,
                           dfAnnotation,
-													vecConfounders,
-													matPiConstPredictors,
+                          vecConfounders,
+                          matPiConstPredictors,
                           vecNormConstExternal,
                           strMuModel,
                           strDispModel,
-													scaMaxEstimationCycles,
-													boolVerbose,
-													boolSuperVerbose){
+                          scaMaxEstimationCycles,
+                          boolVerbose,
+                          boolSuperVerbose){
   
   # Check whether object was supplied (is not NULL).
   checkNull <- function(objectInput,strObjectInput){
@@ -108,28 +108,28 @@ processSCData <- function(matCounts,
   
   # 2. dfAnnotation, vecConfounders
   if(!is.null(dfAnnotation)){
-  	# Check that all cells are mentioned in dfAnnotation
-  	if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
-  		stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
-  	}
-  	# Check structure
-  	if(strMuModel=="impulse"){
-  	  checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
-  	  checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
-  	}
-  	if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
-  		stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
-  	}
-  	if(!is.null(vecConfounders)){
-  		if(!all(vecConfounders %in% colnames(dfAnnotation))){
-  			stop(paste0("Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
-  		}
-  		if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
-  			stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfounders"))
-  		}
-  	}
+    # Check that all cells are mentioned in dfAnnotation
+    if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
+      stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+    }
+    # Check structure
+    if(strMuModel=="impulse"){
+      checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+      checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+    }
+    if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
+      stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+    }
+    if(!is.null(vecConfounders)){
+      if(!all(vecConfounders %in% colnames(dfAnnotation))){
+        stop(paste0("Not all confounders given in vecConfounders given in dfAnnotation (columns)."))
+      }
+      if(any(is.null(dfAnnotation[,vecConfounders]) | is.na(dfAnnotation[,vecConfounders]))){
+        stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfounders"))
+      }
+    }
   } else {
-  	stop(paste0("Supply dfAnnotation."))
+    stop(paste0("Supply dfAnnotation."))
   }
   
   # 3. matPiConstPredictors
@@ -238,27 +238,34 @@ processSCData <- function(matCounts,
   # Reduce matPiConstPredictors to genes in matCountsProc
   matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),]
   
-  objectLineagePulse <- new('LineagePulseObject',
-                            dfAnnotationProc    = dfAnnotationProc,
-                            dfResults           = NULL,
-                            lsDispModelH0       = NULL,
-                            lsDispModelH1       = NULL,
-                            lsDispModelConst    = NULL,
-                            lsDropModel         = NULL,
-                            lsFitZINBReporters  = NULL,
-                            lsMuModelH1         = NULL,
-                            lsMuModelH0         = NULL,
-                            lsMuModelConst      = NULL,
-                            matCountsProc       = matCountsProc,
-                            matWeights          = NULL,
-                            strReport           = strReport,
-                            vecAllGenes         = rownames(matCounts),
-  													vecConfounders      = vecConfounders,
-  													boolFixedPopulations= FALSE,
-  													vecNCentroidsPerPop = NULL,
-  													vecH0Pop            = NULL,
-                            vecNormConst        = NULL,
-  													strVersion          = "0.99")#packageDescription("LineagePulse", fields = "Version"))
+  objectLineagePulse <- new(
+    'LineagePulseObject',
+    dfAnnotationProc    = dfAnnotationProc,
+    dfResults           = NULL,
+    lsDispModelH0       = NULL,
+    lsDispModelH1       = NULL,
+    lsDispModelConst    = NULL,
+    lsDropModel         = NULL,
+    lsFitZINBReporters  = NULL,
+    lsMuModelH1         = NULL,
+    lsMuModelH0         = NULL,
+    lsMuModelConst      = NULL,
+    matCountsProc       = sparseMatrix(i = (which(matCountsProc>0)-1) %% dim(matCountsProc)[1],
+                                       j = (which(matCountsProc>0)-1) %/% dim(matCountsProc)[1], 
+                                       x = matCountsProc[which(matCountsProc>0)], 
+                                       dims = dim(matCountsProc),
+                                       dimnames = dimnames(matCountsProc),
+                                       symmetric = FALSE,
+                                       index1 = FALSE),
+    matWeights          = NULL,
+    strReport           = strReport,
+    vecAllGenes         = rownames(matCounts),
+    vecConfounders      = vecConfounders,
+    boolFixedPopulations= FALSE,
+    vecNCentroidsPerPop = NULL,
+    vecH0Pop            = NULL,
+    vecNormConst        = NULL,
+    strVersion          = "0.99")#packageDescription("LineagePulse", fields = "Version"))
   
   return(list(objectLineagePulse=objectLineagePulse,
               vecNormConstExternalProc=vecNormConstExternalProc,

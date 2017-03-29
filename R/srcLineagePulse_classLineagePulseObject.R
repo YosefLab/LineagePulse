@@ -10,6 +10,7 @@ setClassUnion('matrixORNULL', members=c('matrix', 'NULL'))
 setClassUnion('characterORNULL', members=c('character', 'NULL'))
 setClassUnion('listORNULL', members=c('list', 'NULL'))
 setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
+setClassUnion('dgCMatrixORNULL', members=c('dgCMatrix', 'NULL'))
 
 #' Container class for LineagePulse output
 #' 
@@ -90,7 +91,7 @@ setClass(
     lsMuModelH1         = "listORNULL",
     lsMuModelConst      = "listORNULL",
     lsFitZINBReporters  = "listORNULL",
-    matCountsProc       = "matrixORNULL",
+    matCountsProc       = "dgCMatrixORNULL",
     matWeights          = "matrixORNULL",
     strReport           = "characterORNULL",
     vecAllGenes         = "characterORNULL",
