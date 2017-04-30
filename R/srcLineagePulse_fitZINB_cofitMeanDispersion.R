@@ -1457,7 +1457,7 @@ fitZINBMuDisp <- function( matCountsProc,
     if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
       if(lsMuModel$lsMuModelGlobal$strMuModel=="constant"){
         fitDispMu <- fitDispConstMuConstZINB(
-          vecCounts=matCountsProc[i,],
+          vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
           scaMuGuess=lsMuModel$matMuModel[i,],
           lsvecBatchParamGuess=lsvecBatchParamGuess,
           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
@@ -1473,7 +1473,7 @@ fitZINBMuDisp <- function( matCountsProc,
         # Estimate mean parameter by cluster. No smoothing is used.
         # Estimate mean parameters
         fitDispMu <-fitDispConstMuClusterZINB(
-          vecCounts=matCountsProc[i,],
+          vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
           vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
           lsvecBatchParamGuess=lsvecBatchParamGuess,
           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
@@ -1491,7 +1491,7 @@ fitZINBMuDisp <- function( matCountsProc,
         
         # Estimate mean parameters
         fitDispMu <-fitDispConstMuMMZINB(
-          vecCounts=matCountsProc[i,],
+          vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
           vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
           lsvecBatchParamGuess=lsvecBatchParamGuess,
           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
@@ -1508,7 +1508,7 @@ fitZINBMuDisp <- function( matCountsProc,
       } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){      
         # Estimate mean parameters
         fitDispMu <- fitDispConstMuImpulseZINB(
-          vecCounts=matCountsProc[i,],
+          vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
           vecImpulseParamGuess=lsMuModel$matMuModel[i,], # Mu model
           lsvecBatchParamGuess=lsvecBatchParamGuess,
           lsMuModelGlobal=lsMuModel$lsMuModelGlobal,

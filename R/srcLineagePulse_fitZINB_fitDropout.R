@@ -336,7 +336,7 @@ fitZINBPi <- function(matCounts,
       }
       lsFitPi <- fitPi_SingleCell(
         vecParamGuess=vecParamGuess,
-        vecCounts=matCounts[,j],
+        vecCounts=matCounts[,as.double(j)],
         vecMuParam=vecMuParam,
         scaNormConst=lsMuModel$lsMuModelGlobal$vecNormConst[j],
         vecDispParam=vecDispParam,
