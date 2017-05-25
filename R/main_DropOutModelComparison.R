@@ -182,7 +182,8 @@ runDropOutModelSelection <- function(
     matPiConstPredictors=lsmatPiConstPredictors[[1]],
     vecNormConstExternal=vecNormConstExternal,
     strMuModel=strMuModel,
-    strDispModel=strDispModel,
+    strDispModelFull=strDispModelFull,
+    strDispModelRed=NULL,
     scaMaxEstimationCycles=scaMaxEstimationCycles,
     boolVerbose=boolVerbose,
     boolSuperVerbose=boolSuperVerbose)
