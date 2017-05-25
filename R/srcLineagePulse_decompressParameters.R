@@ -71,65 +71,76 @@
 #' 
 #' @export
 decompressMeansByGene <- function(
-  vecMuModel,
-  lsvecBatchModel=NULL,
-  lsMuModelGlobal,
-  vecInterval=NULL ){
-  
-  # Set interval to entire gene if not given
-  # Dont do this to save time at the moment (dont reorder things
-  # that are already ordered correctly)
-  #if(is.null(vecInterval)){ vecInterval <- seq(1, lsMuModelGlobal$scaNumCells) }
-  
-  if(lsMuModelGlobal$strMuModel=="constant"){
-    if(!is.null(vecInterval)){ 
-      vecMu <- rep(vecMuModel, length(vecInterval))
-    } else { 
-      vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells) 
+    vecMuModel,
+    lsvecBatchModel=NULL,
+    lsMuModelGlobal,
+    vecInterval=NULL ){
+    
+    # Set interval to entire gene if not given
+    # Dont do this to save time at the moment (dont reorder things
+    # that are already ordered correctly)
+    #if(is.null(vecInterval)){ vecInterval <- seq(1, lsMuModelGlobal$scaNumCells) }
+    
+    if(lsMuModelGlobal$strMuModel=="constant"){
+        if(!is.null(vecInterval)){ 
+            vecMu <- rep(vecMuModel, length(vecInterval))
+        } else { 
+            vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells) 
+        }
+    } else if(lsMuModelGlobal$strMuModel=="impulse"){
+        if(!is.null(vecInterval)){
+            vecMu <- evalImpulseModel_comp(
+                vecImpulseParam=vecMuModel, 
+                vecTimepoints=lsMuModelGlobal$vecPseudotime[vecInterval])
+        } else { 
+            vecMu <- evalImpulseModel_comp(
+                vecImpulseParam=vecMuModel, 
+                vecTimepoints=lsMuModelGlobal$vecPseudotime) 
+        }
+    } else if(lsMuModelGlobal$strMuModel=="splines"){
+        if(!is.null(vecInterval)){
+            vecMu <- exp(as.vector(lsMuModelGlobal$matSplineBasis[
+                vecInterval,,drop=FALSE] %*% vecMuModel))
+        } else { 
+            vecMu <- exp(as.vector(lsMuModelGlobal$matSplineBasis %*% vecMuModel))
+        }
+    } else if(lsMuModelGlobal$strMuModel=="groups"){
+        if(!is.null(vecInterval)){ 
+            vecMu <- vecMuModel[lsMuModelGlobal$vecidxGroups[vecInterval]]
+        } else { 
+            vecMu <- vecMuModel[lsMuModelGlobal$vecidxGroups]
+        }
+    } else  if(lsMuModelGlobal$strMuModel=="windows"){
+        if(!is.null(vecInterval)){ 
+            vecMu <- vecMuModel[vecInterval]
+        } else { 
+            vecMu <- vecMuModel
+        }
+    } else if(lsMuModelGlobal$strMuModel=="MM"){
+        # Expect mean of ONE MIXTURE component! vecMuModel is scalar
+        if(!is.null(vecInterval)){ 
+            vecMu <- rep(vecMuModel, length(vecInterval))
+        } else { 
+            vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells)
+        }
+    } else {
+        stop(paste0("ERROR decompressMeans(): lsMuModelGlobal$strMuModel=", 
+                    lsMuModelGlobal$strMuModel, " not recognised."))
     }
-  } else if(lsMuModelGlobal$strMuModel=="impulse"){
-    if(!is.null(vecInterval)){
-      vecMu <- evalImpulseModel_comp(vecImpulseParam=vecMuModel, 
-                                     vecTimepoints=lsMuModelGlobal$vecPseudotime[vecInterval])
-    } else { 
-      vecMu <- evalImpulseModel_comp(vecImpulseParam=vecMuModel, 
-                                     vecTimepoints=lsMuModelGlobal$vecPseudotime) 
+    # Scale by batch factors
+    if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
+        for(conf in seq(1,lsMuModelGlobal$scaNConfounders, by=1)){
+            if(!is.null(vecInterval)){
+                vecMu <- vecMu*(lsvecBatchModel[[conf]][
+                    (lsMuModelGlobal$lsvecidxBatchAssign[[conf]])[vecInterval]])
+            } else { 
+                vecMu <- vecMu*(lsvecBatchModel[[conf]][
+                    lsMuModelGlobal$lsvecidxBatchAssign[[conf]]])
+            }
+        }
     }
-  } else if(lsMuModelGlobal$strMuModel=="clusters"){
-    if(!is.null(vecInterval)){ 
-      vecMu <- vecMuModel[lsMuModelGlobal$vecidxClusterAssign[vecInterval]]
-    } else { 
-      vecMu <- vecMuModel[lsMuModelGlobal$vecidxClusterAssign]
-    }
-  } else  if(lsMuModelGlobal$strMuModel=="windows"){
-    if(!is.null(vecInterval)){ 
-      vecMu <- vecMuModel[vecInterval]
-    } else { 
-      vecMu <- vecMuModel
-    }
-  } else if(lsMuModelGlobal$strMuModel=="MM"){
-    # Expect mean of ONE MIXTURE component! vecMuModel is scalar
-    if(!is.null(vecInterval)){ 
-      vecMu <- rep(vecMuModel, length(vecInterval))
-    } else { 
-      vecMu <- rep(vecMuModel, lsMuModelGlobal$scaNumCells)
-    }
-  } else {
-    stop(paste0("ERROR decompressMeans(): lsMuModelGlobal$strMuModel=", 
-                lsMuModelGlobal$strMuModel, " not recognised."))
-  }
-  # Scale by batch factors
-  if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
-    for(confounder in seq(1,length(lsvecBatchModel))){
-      if(!is.null(vecInterval)){
-        vecMu <- vecMu*(lsvecBatchModel[[confounder]][(lsMuModelGlobal$lsvecidxBatchAssign[[confounder]])[vecInterval]])
-      } else { 
-        vecMu <- vecMu*(lsvecBatchModel[[confounder]][lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
-      }
-    }
-  }
-  
-  return(vecMu)
+    
+    return(vecMu)
 }
 
 #' Compute dispersion parameter estimates from mean parameter model for a gene
@@ -144,7 +155,7 @@ decompressMeansByGene <- function(
 #' @param lsDispModelGlobal: (list) Global variables for dispersion model,
 #'    common to all genes.
 #'    \itemize{
-#'      \item strDispModel: (str) {"constant"} 
+#'      \item strDispModel: (str) {"constant", "MM"} 
 #'    Name of the dispersion model
 #'      \item scaNumCells: (scalar) [Default NULL] Number of cells
 #'    for which model is evaluated. Used for constant model.
@@ -164,21 +175,54 @@ decompressMeansByGene <- function(
 #' @author David Sebastian Fischer
 #' 
 #' @export
-
 decompressDispByGene <- function(vecDispModel,
+                                 lsvecBatchModel=NULL,
                                  lsDispModelGlobal,
                                  vecInterval=NULL ){
-  
-  if(lsDispModelGlobal$strDispModel=="constant"){
-    if(!is.null(vecInterval)){ scaReps <- length(vecInterval)
-    } else { scaReps <- lsDispModelGlobal$scaNumCells }
-    vecDisp <- rep(vecDispModel, scaReps)
-  } else {
-    stop(paste0("ERROR decompressDispersions(): lsDispModelGlobal$strDispModel=", 
-                lsDispModelGlobal$strDispModel, " not recognised."))
-  }
-  
-  return(vecDisp)
+    
+    if(lsDispModelGlobal$strDispModel=="constant"){
+        if(!is.null(vecInterval)) { 
+            vecDisp <- rep(vecDispModel, length(vecInterval))
+        } else { 
+            vecDisp <- rep(vecDispModel, lsDispModelGlobal$scaNumCells)
+        }
+    } else if(lsDispModelGlobal$strDispModel=="splines"){
+        if(!is.null(vecInterval)){
+            vecDisp <- exp(as.vector(lsDispModelGlobal$matSplineBasis[
+                vecInterval,,drop=FALSE] %*% vecDispModel))
+        } else { 
+            vecDisp <- exp(as.vector(lsDispModelGlobal$matSplineBasis %*% vecDispModel))
+        }
+    } else if(lsDispModelGlobal$strDispModel=="groups"){
+        if(!is.null(vecInterval)){ 
+            vecDisp <- vecDispModel[lsDispModelGlobal$vecidxGroups[vecInterval]]
+        } else { 
+            vecDisp <- vecDispModel[lsDispModelGlobal$vecidxGroups]
+        }
+    } else if(lsDispModelGlobal$strDispModel=="MM"){
+        # Expect mean of ONE MIXTURE component! vecDispModel is scalar
+        if(!is.null(vecInterval)){ 
+            vecDisp <- rep(vecDispModel, length(vecInterval))
+        } else { 
+            vecDisp <- rep(vecDispModel, lsDispModelGlobal$scaNumCells)
+        }
+    } else {
+        stop(paste0("ERROR decompressDispersions(): lsDispModelGlobal$strDispModel=", 
+                    lsDispModelGlobal$strDispModel, " not recognised."))
+    }
+    
+    # Scale by batch factors
+    if(!is.null(lsDispModelGlobal$lsvecidxBatchAssign)){
+        for(conf in seq(1,lsDispModelGlobal$scaNConfounders, by=1)){
+            if(!is.null(vecInterval)){
+                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][(lsDispModelGlobal$lsvecidxBatchAssign[[conf]])[vecInterval]])
+            } else { 
+                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][lsDispModelGlobal$lsvecidxBatchAssign[[conf]]])
+            }
+        }
+    }
+    
+    return(vecDisp)
 }
 
 #' Compute dropout rate parameter estimates from dropout rate model for a gene
@@ -208,29 +252,29 @@ decompressDispByGene <- function(vecDispModel,
 #' 
 #' @export
 decompressDropoutRateByGene <- function(
-  matDropModel,
-  vecMu=NULL,
-  vecPiConstPredictors=NULL,
-  lsDropModelGlobal ){
-  
-  if(lsDropModelGlobal$strDropModel=="logistic"){
-    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
-      evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
-                            vecPiPredictors=c(1, vecPiConstPredictors))
-    })
-  } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
-    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
-      evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
-                            vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
-    })
-  } else {
-    stop(paste0("ERROR IN decompressDropoutRateByGene: ",
-                "lsDropModelGlobal$strDropModel=",
-                lsDropModelGlobal$strDropModel,
-                " not recognised."))
-  }
-  
-  return(vecPi)
+    matDropModel,
+    vecMu=NULL,
+    vecPiConstPredictors=NULL,
+    lsDropModelGlobal ){
+    
+    if(lsDropModelGlobal$strDropModel=="logistic"){
+        vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
+            evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
+                                  vecPiPredictors=c(1, vecPiConstPredictors))
+        })
+    } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+        vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
+            evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
+                                  vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
+        })
+    } else {
+        stop(paste0("ERROR IN decompressDropoutRateByGene: ",
+                    "lsDropModelGlobal$strDropModel=",
+                    lsDropModelGlobal$strDropModel,
+                    " not recognised."))
+    }
+    
+    return(vecPi)
 }
 
 #' Compute dropout rate parameter estimates from dropout rate model for a cell
@@ -260,27 +304,27 @@ decompressDropoutRateByGene <- function(
 #' 
 #' @export
 decompressDropoutRateByCell <- function(
-  vecDropModel,
-  vecMu=NULL,
-  matPiConstPredictors=NULL,
-  lsDropModelGlobal){
-  
-  if(lsDropModelGlobal$strDropModel=="logistic"){
-    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
-      evalDropoutModel_comp(vecPiModel=vecDropModel, 
-                            vecPiPredictors=c(1, matPiConstPredictors[i,]))
-    })
-  } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
-    vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
-      evalDropoutModel_comp(vecPiModel=vecDropModel, 
-                            vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
-    })
-  } else {
-    stop(paste0("ERROR IN decompressDropoutRateByCell: ",
-                "lsDropModelGlobal$strDropModel=",
-                lsDropModelGlobal$strDropModel,
-                " not recognised."))
-  }
-  
-  return(vecPi)
+    vecDropModel,
+    vecMu=NULL,
+    matPiConstPredictors=NULL,
+    lsDropModelGlobal){
+    
+    if(lsDropModelGlobal$strDropModel=="logistic"){
+        vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
+            evalDropoutModel_comp(vecPiModel=vecDropModel, 
+                                  vecPiPredictors=c(1, matPiConstPredictors[i,]))
+        })
+    } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
+        vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
+            evalDropoutModel_comp(vecPiModel=vecDropModel, 
+                                  vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
+        })
+    } else {
+        stop(paste0("ERROR IN decompressDropoutRateByCell: ",
+                    "lsDropModelGlobal$strDropModel=",
+                    lsDropModelGlobal$strDropModel,
+                    " not recognised."))
+    }
+    
+    return(vecPi)
 }

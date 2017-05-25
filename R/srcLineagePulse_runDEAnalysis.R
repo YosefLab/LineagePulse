@@ -11,36 +11,36 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param: objectLineagePulse: (LineagePulseObject)
+#' @param: objLP: (LineagePulseObject)
 #' LineagePulseObject with fitted null and alternative models.
 #' 
-#' @return objectLineagePulse: (LineagePulseObject)
+#' @return objLP: (LineagePulseObject)
 #' LineagePulseObject with analysis summary table (dfResults)
 #' added.
 #'    
 #' @author David Sebastian Fischer
 #' 
 #' @export
-runDEAnalysis <- function(objectLineagePulse){
+runDEAnalysis <- function(objLP){
   
   # (I) Compute log likelihoods
-  vecLogLikFull <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                lsMuModel=objectLineagePulse@lsMuModelH1,
-                                lsDispModel=objectLineagePulse@lsDispModelH1, 
-                                lsDropModel=objectLineagePulse@lsDropModel,
-                                matWeights=objectLineagePulse@matWeights)
-  vecLogLikRed <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                   lsMuModel=objectLineagePulse@lsMuModelH0,
-                                   lsDispModel=objectLineagePulse@lsDispModelH0, 
-                                   lsDropModel=objectLineagePulse@lsDropModel,
-                                   matWeights=objectLineagePulse@matWeights)
+  vecLogLikFull <- evalLogLikMatrix(matCounts=objLP@matCountsProc,
+                                lsMuModel=objLP@lsMuModelH1,
+                                lsDispModel=objLP@lsDispModelH1, 
+                                lsDropModel=objLP@lsDropModel,
+                                matWeights=objLP@matWeights)
+  vecLogLikRed <- evalLogLikMatrix(matCounts=objLP@matCountsProc,
+                                   lsMuModel=objLP@lsMuModelH0,
+                                   lsDispModel=objLP@lsDispModelH0, 
+                                   lsDropModel=objLP@lsDropModel,
+                                   matWeights=objLP@matWeights)
 
   # (II) Differential expression analysis
   # Compute difference in degrees of freedom between null model and alternative model.
-  scaDFbyGeneH1 <- objectLineagePulse@lsMuModelH1$lsMuModelGlobal$scaDegFreedom + 
-    objectLineagePulse@lsDispModelH1$lsDispModelGlobal$scaDegFreedom
-  scaDFbyGeneH0 <- objectLineagePulse@lsMuModelH0$lsMuModelGlobal$scaDegFreedom + 
-    objectLineagePulse@lsDispModelH0$lsDispModelGlobal$scaDegFreedom
+  scaDFbyGeneH1 <- objLP@lsMuModelH1$lsMuModelGlobal$scaDegFreedom + 
+    objLP@lsDispModelH1$lsDispModelGlobal$scaDegFreedom
+  scaDFbyGeneH0 <- objLP@lsMuModelH0$lsMuModelGlobal$scaDegFreedom + 
+    objLP@lsDispModelH0$lsDispModelGlobal$scaDegFreedom
   scaDeltaDegFreedom <- scaDFbyGeneH1 - scaDFbyGeneH0
   # Compute test statistic: Deviance
   vecDeviance <- 2*(vecLogLikFull - vecLogLikRed)
@@ -49,17 +49,16 @@ runDEAnalysis <- function(objectLineagePulse){
   # Multiple testing correction (Benjamini-Hochberg)
   vecPvalueBH <- p.adjust(vecPvalue, method = "BH")
   
-  if(objectLineagePulse@lsMuModelH0$lsMuModelGlobal$strMuModel=="constant"){
-    vecMu <- as.vector(objectLineagePulse@lsMuModelH0$matMuModel)
+  if(objLP@lsMuModelH0$lsMuModelGlobal$strMuModel=="constant"){
+    vecMu <- as.vector(objLP@lsMuModelH0$matMuModel)
   } else {
-    vecMu <- as.vector(objectLineagePulse@lsMuModelConst$matMuModel)
+    vecMu <- as.vector(objLP@lsMuModelConst$matMuModel)
   }
   dfResults <- data.frame(
-    gene=rownames(objectLineagePulse@matCountsProc),
+    gene=rownames(objLP@matCountsProc),
     p=as.numeric(vecPvalue),
     adj.p=as.numeric(vecPvalueBH),
     mean_H0=vecMu,
-    dispersion_H0=as.vector(objectLineagePulse@lsDispModelH0$matDispModel),
     loglik_full=vecLogLikFull,
     loglik_red=vecLogLikRed,
     deviance=vecDeviance,
@@ -68,11 +67,11 @@ runDEAnalysis <- function(objectLineagePulse){
     stringsAsFactors=FALSE)
   rownames(dfResults) <- dfResults$gene
   
-  dfResults <- dfResults[match(objectLineagePulse@vecAllGenes,dfResults$gene),]
-  rownames(dfResults) <- objectLineagePulse@vecAllGenes
-  vecboolAllZero <- !(objectLineagePulse@vecAllGenes %in% rownames(objectLineagePulse@matCountsProc))
+  dfResults <- dfResults[match(objLP@vecAllGenes,dfResults$gene),]
+  rownames(dfResults) <- objLP@vecAllGenes
+  vecboolAllZero <- !(objLP@vecAllGenes %in% rownames(objLP@matCountsProc))
   dfResults$allZero <- vecboolAllZero
   
-  objectLineagePulse@dfResults <- dfResults
-  return(objectLineagePulse)
+  objLP@dfResults <- dfResults
+  return(objLP)
 }

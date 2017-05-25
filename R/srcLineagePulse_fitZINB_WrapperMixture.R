@@ -1,6 +1,4 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++  EM-like iteration for mixture model  ++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+###  EM-like iteration for mixture model
 
 #' Fit ZINB mixture model
 #' 
@@ -12,9 +10,9 @@
 #'  
 #' @export
 fitMixtureZINBModel <- function(
-    objectLineagePulse,
+    objLP,
     scaNMixtures,
-    strDispModel="const",
+    strDispModel="constant",
     strDropModel="logistic_ofMu",
     strDropFitGroup="PerCell",
     scaMaxEstimationCyclesDropModel=20,
@@ -35,20 +33,21 @@ fitMixtureZINBModel <- function(
     # in the objective (loglikelihood).
     ####################################################
     
-    scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
-    scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
+    scaNGenes <- dim(objLP@matCountsProc)[1]
+    scaNCells <- dim(objLP@matCountsProc)[2]
     
     ### (A) Pre-estimate drop-out model to speed up mixture model fitting
     strMessage <- paste0("### a) Fit constant ZINB model and set drop-out model.")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     tm_cycle <- system.time({
         lsZINBFitsRed <- fitZINB(
-            matCounts=objectLineagePulse@matCountsProc,
-            dfAnnotation=objectLineagePulse@dfAnnotationProc,
-            vecConfounders=objectLineagePulse@vecConfounders,
-            vecNormConst=objectLineagePulse@vecNormConst,
+            matCounts=objLP@matCountsProc,
+            dfAnnotation=objLP@dfAnnotationProc,
+            vecConfoundersMu=objLP@vecConfoundersMu,
+            vecConfoundersDisp=objLP@vecConfoundersDisp,
+            vecNormConst=objLP@vecNormConst,
             matWeights=NULL,
             matPiConstPredictors=NULL,
             lsDropModel=NULL,
@@ -64,19 +63,19 @@ fitMixtureZINBModel <- function(
         lsDropModel <- lsZINBFitsRed$lsDropModel
         boolConvergenceModelRed <- lsZINBFitsRed$boolConvergenceModel
         vecEMLogLikModelRed <- lsZINBFitsRed$vecEMLogLikModel
-        objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
-                                               lsZINBFitsRed$strReport)
+        objLP@strReport <- paste0(objLP@strReport,
+                                  lsZINBFitsRed$strReport)
         rm(lsZINBFitsRed)
     })
     
     strMessage <- paste0("### Finished fitting H0 constant ZINB model ",
                          "in ", round(tm_cycle["elapsed"]/60,2)," min.")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     ### (B) EM-like estimation cycle: fit mixture model
     strMessage <- paste0("### b) EM-like iteration: Fit H1 mixture model")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     # (I) Initialise estimation
@@ -85,21 +84,21 @@ fitMixtureZINBModel <- function(
     # Set weights to uniform distribution
     matWeights <- matrix(1/scaNMixtures, 
                          nrow=scaNCells, ncol=scaNMixtures)
-    if(objectLineagePulse@boolFixedPopulations){
-        vecFixedAssignments <- objectLineagePulse@dfAnnotationProc$populations
+    if(objLP@boolFixedPopulations){
+        vecFixedAssignments <- objLP@dfAnnotationProc$populations
         matWeights[!is.na(vecFixedAssignments),] <- 0
         scaNCentroidsUsed <- 0
         lsvecFixedCentrByPop <- list()
-        for(p in seq(1, length(objectLineagePulse@vecNCentroidsPerPop))){
-            vecidxCentroidsOfPop <- seq(scaNCentroidsUsed+1, scaNCentroidsUsed+objectLineagePulse@vecNCentroidsPerPop[p])
-            matWeights[which(objectLineagePulse@dfAnnotationProc$populations %in% 
-                                 names(objectLineagePulse@vecNCentroidsPerPop[p])), 
-                       vecidxCentroidsOfPop] <- 1/objectLineagePulse@vecNCentroidsPerPop[p]
-            lsvecFixedCentrByPop[[match(objectLineagePulse@vecNCentroidsPerPop[p], 
-                                        objectLineagePulse@vecNCentroidsPerPop)]] <- vecidxCentroidsOfPop
+        for(p in seq(1, length(objLP@vecNCentroidsPerPop))){
+            vecidxCentroidsOfPop <- seq(scaNCentroidsUsed+1, scaNCentroidsUsed+objLP@vecNCentroidsPerPop[p])
+            matWeights[which(objLP@dfAnnotationProc$populations %in% 
+                                 names(objLP@vecNCentroidsPerPop[p])), 
+                       vecidxCentroidsOfPop] <- 1/objLP@vecNCentroidsPerPop[p]
+            lsvecFixedCentrByPop[[match(objLP@vecNCentroidsPerPop[p], 
+                                        objLP@vecNCentroidsPerPop)]] <- vecidxCentroidsOfPop
             scaNCentroidsUsed <- scaNCentroidsUsed+p
         }
-        names(lsvecFixedCentrByPop) <- names(objectLineagePulse@vecNCentroidsPerPop)
+        names(lsvecFixedCentrByPop) <- names(objLP@vecNCentroidsPerPop)
     } else {
         lsvecFixedCentrByPop <- NULL 
     }
@@ -108,21 +107,50 @@ fitMixtureZINBModel <- function(
     lsMuModelFull <- lsMuModelRed
     lsMuModelFull$lsMuModelGlobal$strMuModel <- "MM"
     vecidxCellsForCentroids <- initialiseCentroidsFromCells(
-        matCounts=objectLineagePulse@matCountsProc,
+        matCounts=objLP@matCountsProc,
         lsvecFixedCentrByPop=lsvecFixedCentrByPop,
-        vecAssignPop=objectLineagePulse@dfAnnotationProc$populations,
+        vecAssignPop=objLP@dfAnnotationProc$populations,
         scaN=scaNMixtures)
     # Add pseudo count to not generate error in optim in log space
-    lsMuModelFull$matMuModel <- as.matrix(objectLineagePulse@matCountsProc[
+    lsMuModelFull$matMuModel <- as.matrix(objLP@matCountsProc[
         ,as.double(vecidxCellsForCentroids),sparse=FALSE]) # not a sparseMatrix
     lsMuModelFull$matMuModel[lsMuModelFull$matMuModel < 10^(-5)] <- 10^(-5)
+    ###
+    #lsMuModelFull$matMuModel <- matrix(
+    #    as.vector(lsMuModelFull$matMuModel), 
+    #    nrow = dim(lsMuModelFull$matMuModel)[1],
+    #    ncol = scaNMixtures,
+    #    byrow = FALSE)
+    if(!is.null(lsMuModelFull$lsMuModelGlobal$scaNConfounders)){
+        for(conf in seq(1, lsMuModelFull$lsMuModelGlobal$scaNConfounders, by=1)) {
+            lsMuModelFull$lsmatBatchModel[[conf]] <- 
+                matrix(1, nrow=scaNGenes,ncol=lsMuModelFull$lsMuModelGlobal$vecNBatches[conf])
+        }
+    }
+    ###
+    
     lsDispModelFull <- lsDispModelRed
+    lsDispModelFull$lsDispModelGlobal$scaNMix <- scaNMixtures
+    if(strDispModel == "MM") {
+        lsDispModelFull$lsDispModelGlobal$strDispModel <- "MM"
+        lsDispModelFull$matDispModel <- matrix(
+            as.vector(lsDispModelFull$matDispModel), 
+            nrow = dim(lsDispModelFull$matDispModel)[1],
+            ncol = scaNMixtures,
+            byrow = FALSE)
+    }
+    if(!is.null(lsDispModelFull$lsDispModelGlobal$scaNConfounders)) {
+        for(conf in seq(1, lsDispModelFull$lsDispModelGlobal$scaNConfounders, by=1)) {
+            lsDispModelFull$lsmatBatchModel[[conf]] <- 
+                matrix(1, nrow=scaNGenes,ncol=lsDispModelFull$lsDispModelGlobal$vecNBatches[conf])
+        }
+    }
     
     # (II) Estimation iteration on full model
     # Set iteration reporters
     scaIter <- 1
     scaLogLikNew <- sum(evalLogLikMatrix(
-        matCounts=objectLineagePulse@matCountsProc,
+        matCounts=objLP@matCountsProc,
         lsMuModel=lsMuModelFull,
         lsDispModel=lsDispModelFull, 
         lsDropModel=lsDropModel,
@@ -131,8 +159,8 @@ fitMixtureZINBModel <- function(
     vecEMLogLikModelFull <- array(NA, scaMaxEstimationCyclesEMlike)
     
     strMessage <- paste0("#  .   Initialised MM: ",
-                         "loglikelihood of   ", scaLogLikNew)
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                         "ll   ", scaLogLikNew)
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolSuperVerbose) print(strMessage)
     
     boolMixtureReset <- FALSE
@@ -144,11 +172,11 @@ fitMixtureZINBModel <- function(
             # E-like step: Estimation of mixture assignments
             tm_estep <- system.time({
                 lsWeightFits <- estimateMMAssignmentsMatrix(
-                    matCounts=objectLineagePulse@matCountsProc,
-                    dfAnnotation=objectLineagePulse@dfAnnotationProc,
-                    boolFixedPopulations=objectLineagePulse@boolFixedPopulations,
+                    matCounts=objLP@matCountsProc,
+                    dfAnnotation=objLP@dfAnnotationProc,
+                    boolFixedPopulations=objLP@boolFixedPopulations,
                     lsvecFixedCentrByPop=lsvecFixedCentrByPop,
-                    vecNormConst=objectLineagePulse@vecNormConst,
+                    vecNormConst=objLP@vecNormConst,
                     lsMuModel=lsMuModelFull,
                     lsDispModel=lsDispModelFull,
                     lsDropModel=lsDropModel,
@@ -159,27 +187,27 @@ fitMixtureZINBModel <- function(
             })
             
             scaLogLikTemp <- sum(evalLogLikMatrix(
-                matCounts=objectLineagePulse@matCountsProc,
+                matCounts=objLP@matCountsProc,
                 lsMuModel=lsMuModelFull,
                 lsDispModel=lsDispModelFull, 
                 lsDropModel=lsDropModel,
                 matWeights=matWeights ))
             
             strMessage <- paste0("# ", scaIter,".   E-step complete: ",
-                                 "loglikelihood of  ", scaLogLikTemp, " in ",
+                                 "ll  ", scaLogLikTemp, " in ",
                                  round(tm_estep["elapsed"]/60,2)," min.")
-            objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+            objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
             if(boolSuperVerbose) print(strMessage)
             
             strMessage <- paste0("# ", scaIter,".   Cumulative mixture weights  ", 
                                  paste(round(apply(matWeights,2,sum),2), collapse=" "))
-            objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+            objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
             if(boolSuperVerbose) print(strMessage)
             
             if(any(lsWeightFits$vecConvergence !=0 )){
                 strMessage <- paste0("Weight estimation did not convergen in ",
                                      sum(lsWeightFits$vecConvergence !=0), " cases.")
-                objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
                 if(boolSuperVerbose) print(strMessage)
             }
             
@@ -214,7 +242,7 @@ fitMixtureZINBModel <- function(
                         } else {
                             stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
                         }
-                        vecCounts <- objectLineagePulse@matCountsProc[,j]
+                        vecCounts <- objLP@matCountsProc[,j]
                         scaLogLik <- evalLikZINB_comp(
                             vecCounts=vecCounts,
                             vecMu=vecMuParam*lsMuModelFull$lsMuModelGlobal$vecNormConst[j],
@@ -227,7 +255,7 @@ fitMixtureZINBModel <- function(
                 }))
                 vecidxBadlyDescrCells <- sort(apply(matLLCellgivenMixture,1,max), decreasing=FALSE, index.return=TRUE)$ix
                 idxCellForCentroidsReset <- vecidxBadlyDescrCells[round(length(vecidxBadlyDescrCells)/5)]
-                vecCentroid <- objectLineagePulse@matCountsProc[,idxCellForCentroidsReset]
+                vecCentroid <- objLP@matCountsProc[,idxCellForCentroidsReset]
                 # Add pseudo count to not generate error in optim in log space
                 # Do not generate disadvantage through pseudocount for modeling
                 # of zeros for new centroid: Pseudocount in minimum modelled value.
@@ -235,48 +263,52 @@ fitMixtureZINBModel <- function(
                 lsMuModelFull$matMuModel[,which(vecboolMixtureDropped)[1]] <- vecCentroid
                 # Compute new likelihood
                 scaLogLikOld <- scaLogLikNew
-                scaLogLikNew <- sum(evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                                     lsMuModel=lsMuModelFull,
-                                                     lsDispModel=lsDispModelFull, 
-                                                     lsDropModel=lsDropModel,
-                                                     matWeights=matWeights ))
+                scaLogLikNew <- sum(evalLogLikMatrix(
+                    matCounts=objLP@matCountsProc,
+                    lsMuModel=lsMuModelFull,
+                    lsDispModel=lsDispModelFull, 
+                    lsDropModel=lsDropModel,
+                    matWeights=matWeights ))
                 
                 strMessage <- paste0("# ", scaIter,".   E-Reset complete: ",
-                                     "loglikelihood of ", scaLogLikNew, 
+                                     "ll ", scaLogLikNew, 
                                      " (Mixture ", which(vecboolMixtureDropped)[1],").")
-                objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
                 if(boolSuperVerbose) print(strMessage)
             } else {
                 # M-like step: Estimate mixture model parameters
                 tm_mstep <- system.time({
                     lsZINBFitsFull <- fitZINB(
-                        matCounts=objectLineagePulse@matCountsProc,
-                        dfAnnotation=objectLineagePulse@dfAnnotationProc,
-                        vecConfounders=objectLineagePulse@vecConfounders,
-                        vecNormConst=objectLineagePulse@vecNormConst,
+                        matCounts=objLP@matCountsProc,
+                        dfAnnotation=objLP@dfAnnotationProc,
+                        vecConfoundersMu=objLP@vecConfoundersMu,
+                        vecConfoundersDisp=objLP@vecConfoundersDisp,
+                        vecNormConst=objLP@vecNormConst,
                         matWeights=matWeights,
                         matPiConstPredictors=NULL,
                         lsDropModel=lsDropModel,
                         matMuModelInit=lsMuModelFull$matMuModel,
-                        lsmatBatchModelInit=lsMuModelFull$lsmatBatchModel,
+                        lsmatBatchModelInitMu=lsMuModelFull$lsmatBatchModel,
                         matDispModelInit=lsDispModelFull$matDispModel,
+                        lsmatBatchModelInitDisp=lsDispModelFull$lsmatBatchModel,
                         strMuModel="MM",
-                        strDispModel="constant",
+                        strDispModel=strDispModel,
                         scaMaxEstimationCycles=1,
                         boolVerbose=FALSE,
                         boolSuperVerbose=FALSE)
                     lsMuModelFull <- lsZINBFitsFull$lsMuModel
                     lsDispModelFull <- lsZINBFitsFull$lsDispModel
                     boolConvergenceModelFull <- lsZINBFitsFull$boolConvergenceModel
-                    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
-                                                           lsZINBFitsFull$strReport)
+                    objLP@strReport <- paste0(objLP@strReport,
+                                              lsZINBFitsFull$strReport)
                     rm(lsZINBFitsFull)
                 })
-                vecLLNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                             lsMuModel=lsMuModelFull,
-                                             lsDispModel=lsDispModelFull, 
-                                             lsDropModel=lsDropModel,
-                                             matWeights=matWeights )
+                vecLLNew <- evalLogLikMatrix(
+                    matCounts=objLP@matCountsProc,
+                    lsMuModel=lsMuModelFull,
+                    lsDispModel=lsDispModelFull, 
+                    lsDropModel=lsDropModel,
+                    matWeights=matWeights )
                 # Check that no gene has a worse model fit than the null model,
                 # re-initialise centroid coordinates of this gene to constant if this 
                 # is the case. Under arbitrary mixture assignments, setting all
@@ -291,12 +323,13 @@ fitMixtureZINBModel <- function(
                 # in which every centroid is the constant model, may differ.
                 # The null model on the mixture model LL is the value we have to
                 # compare against to guarantee convergence.
-                vecLLH0MM <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                              lsMuModel=lsMuModelRed,
-                                              lsDispModel=lsDispModelRed, 
-                                              lsDropModel=lsDropModel,
-                                              matWeights=matWeights,
-                                              boolConstModelOnMMLL=TRUE)
+                vecLLH0MM <- evalLogLikMatrix(
+                    matCounts=objLP@matCountsProc,
+                    lsMuModel=lsMuModelRed,
+                    lsDispModel=lsDispModelRed, 
+                    lsDropModel=lsDropModel,
+                    matWeights=matWeights,
+                    boolConstModelOnMMLL=TRUE)
                 vecboolBadGeneModel <- vecLLNew < vecLLH0MM
                 if(any(vecboolBadGeneModel)){
                     lsMuModelFull$matMuModel[vecboolBadGeneModel,] <- matrix(
@@ -304,20 +337,33 @@ fitMixtureZINBModel <- function(
                         nrow=sum(vecboolBadGeneModel), 
                         ncol=dim(lsMuModelFull$matMuModel)[2],
                         byrow=FALSE)
+                    if(!is.null(lsMuModelFull$lsMuModelGlobal$scaNConfounders)) {
+                        for(conf in seq(1, lsMuModelFull$lsMuModelGlobal$scaNConfounders, by=1)) {
+                            lsMuModelFull$lsmatBatchModel[[conf]][vecboolBadGeneModel,] <- 
+                                lsMuModelRed$lsmatBatchModel[[conf]][vecboolBadGeneModel,]
+                        }
+                    }
                     lsDispModelFull$matDispModel[vecboolBadGeneModel,] <- matrix(
                         lsDispModelRed$matDispModel[vecboolBadGeneModel,],
                         nrow=sum(vecboolBadGeneModel), 
                         ncol=dim(lsDispModelFull$matDispModel)[2],
                         byrow=FALSE)
-                    vecLLNew <- evalLogLikMatrix(matCounts=objectLineagePulse@matCountsProc,
-                                                 lsMuModel=lsMuModelFull,
-                                                 lsDispModel=lsDispModelFull, 
-                                                 lsDropModel=lsDropModel,
-                                                 matWeights=matWeights )
+                    if(!is.null(lsDispModelFull$lsDispModelGlobal$scaNConfounders)) {
+                        for(conf in seq(1, lsDispModelFull$lsDispModelGlobal$scaNConfounders, by=1)) {
+                            lsDispModelFull$lsmatBatchModel[[conf]][vecboolBadGeneModel,] <- 
+                                lsDispModelRed$lsmatBatchModel[[conf]][vecboolBadGeneModel,]
+                        }
+                    }
+                    vecLLNew <- evalLogLikMatrix(
+                        matCounts=objLP@matCountsProc,
+                        lsMuModel=lsMuModelFull,
+                        lsDispModel=lsDispModelFull, 
+                        lsDropModel=lsDropModel,
+                        matWeights=matWeights )
                     strMessage <- paste0("# ",scaIter,".   M-step resulted in ",
                                          sum(vecboolBadGeneModel), 
                                          " gene models which are worse than a constant model.")
-                    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
                     if(boolSuperVerbose) print(strMessage)
                 }
                 scaLogLikOld <- scaLogLikNew
@@ -326,22 +372,22 @@ fitMixtureZINBModel <- function(
                 scaLogLikNew <- sum(vecLLNew)
                 
                 strMessage <- paste0("# ",scaIter,".   M-step complete: ",
-                                     "loglikelihood of  ", scaLogLikNew, " in ",
+                                     "ll  ", scaLogLikNew, " in ",
                                      round(tm_mstep["elapsed"]/60,2)," min.")
-                objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
                 if(boolSuperVerbose) print(strMessage)
                 
                 if(boolConvergenceModelFull !=0){
                     strMessage <- paste0("Model estimation did not converge.")
-                    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+                    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
                     if(boolSuperVerbose) print(strMessage)
                 }
             }
             
             strMessage <- paste0("# ",scaIter,". iteration complete: ",
-                                 "loglikelihood of ", scaLogLikNew, " in ",
+                                 "ll ", scaLogLikNew, " in ",
                                  round(tm_estep["elapsed"]/60,2)," min.")
-            objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+            objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
             if(boolVerbose & !boolSuperVerbose) print(strMessage)
             
             vecEMLogLikModelFull[scaIter] <- scaLogLikNew
@@ -351,11 +397,11 @@ fitMixtureZINBModel <- function(
     
     strMessage <- paste0("### Finished fitting H1 mixture ZINB model ",
                          "in ", round(tm_cycle["elapsed"]/60,2)," min.")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     # Name rows and columns of parameter matrices
-    rownames(matWeights) <- colnames(objectLineagePulse@matCountsProc)
+    rownames(matWeights) <- colnames(objLP@matCountsProc)
     
     lsFitZINBReporters <- list(
         boolConvergenceH1=boolConvergenceModelFull,
@@ -363,23 +409,23 @@ fitMixtureZINBModel <- function(
         vecEMLogLikH1=vecEMLogLikModelFull,
         vecEMLogLikConst=vecEMLogLikModelRed )
     
-    objectLineagePulse@lsMuModelH1        <- lsMuModelFull
-    objectLineagePulse@lsDispModelH1      <- lsDispModelFull
-    objectLineagePulse@lsMuModelH0        <- lsMuModelRed
-    objectLineagePulse@lsDispModelH0      <- lsDispModelRed
-    objectLineagePulse@lsDropModel        <- lsDropModel
-    objectLineagePulse@matWeights         <- matWeights
-    objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
+    objLP@lsMuModelH1        <- lsMuModelFull
+    objLP@lsDispModelH1      <- lsDispModelFull
+    objLP@lsMuModelH0        <- lsMuModelRed
+    objLP@lsDispModelH0      <- lsDispModelRed
+    objLP@lsDropModel        <- lsDropModel
+    objLP@matWeights         <- matWeights
+    objLP@lsFitZINBReporters <- lsFitZINBReporters
     
     # Fit non-constant null mixture model if necessary
     # Only possible if there s a reference set of mixtures (RSA scenario)
-    if(objectLineagePulse@boolFixedPopulations){
-        objectLineagePulse <- fitH0MixtureZINBModel(
-            objectLineagePulse=objectLineagePulse,
-            vecidxMixturesH0=unlist(lsvecFixedCentrByPop[objectLineagePulse@vecH0Pop]),
+    if(objLP@boolFixedPopulations){
+        objLP <- fitH0MixtureZINBModel(
+            objLP=objLP,
+            vecidxMixturesH0=unlist(lsvecFixedCentrByPop[objLP@vecH0Pop]),
             boolVerbose=boolVerbose,
             boolSuperVerbose=boolSuperVerbose)
     }
     
-    return(objectLineagePulse)
+    return(objLP)
 }

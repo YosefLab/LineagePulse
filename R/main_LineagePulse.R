@@ -10,13 +10,13 @@ library(BiocParallel)
 library(compiler)
 library(ggplot2)
 library(Matrix)
+library(splines)
 
 ### CHANGE THIS PATH TO THE PATH IN WHICH YOU HAVE LineagePulse/R ###
 setwd("~/gitDevelopment/LineagePulse/R")
 
 source("srcLineagePulse_evalLogLikZINB.R")
 
-source("srcLineagePulse_clusterCellsInPseudotime.R")
 source("srcLineagePulse_calcPostDrop.R")
 source("srcLineagePulse_calcNormConst.R")
 source("srcLineagePulse_classLineagePulseObject.R")
@@ -35,7 +35,6 @@ source("srcLineagePulse_initialiseImpulseParameters.R")
 source("srcLineagePulse_initialiseCentroids.R")
 source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
-source("srcLineagePulse_plotPseudotimeClustering.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_processSCDataMixture.R")
 source("srcLineagePulse_runDEAnalysis.R")
@@ -127,8 +126,11 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #'    column is given, otherwise clustering is internally generated.
 #'    rownames: Must be IDs from column cell.
 #'    Remaining entries in table are ignored.
-#' @param vecConfounders: Confounders to correct for in batch
-#'    correction modeling, must be subset of column names of
+#' @param vecConfounders: Confounders to correct for in mu batch
+#'    correction model, must be subset of column names of
+#'    dfAnnotation which describe condounding variables.
+#' @param vecConfoundersDisp: Confounders to correct for in dispersion batch
+#'    correction model, must be subset of column names of
 #'    dfAnnotation which describe condounding variables.
 #' @param strMuModel: (str) {"constant", "cluster", "MM",
 #'    "windows","impulse"}
@@ -187,144 +189,112 @@ source("srcLineagePulse_validateOutputSimulation.R")
 #' @author David Sebastian Fischer
 #' 
 #' @export
-runLineagePulse <- function(matCounts,
-														dfAnnotation,
-														vecConfounders=NULL,
-														strMuModel="impulse",
-														strDispModel="constant",
-														strDropModel="logistic_ofMu",
-														strDropFitGroup="PerCell",
-														matPiConstPredictors=NULL,
-														vecNormConstExternal=NULL,
-														scaKClusters=NULL,
-														boolEstimateNoiseBasedOnH0=FALSE,
-														scaMaxEstimationCycles=20,
-														scaNProc=1,
-														boolVerbose=TRUE,
-														boolSuperVerbose=FALSE ){
-  
-  # 1. Data preprocessing
-	vecAllGenes <- rownames(matCounts)
-	lsProcessedSCData <- processSCData( matCounts=matCounts,
-																			dfAnnotation=dfAnnotation,
-																			vecConfounders=vecConfounders,
-																			matPiConstPredictors=matPiConstPredictors,
-																			vecNormConstExternal=vecNormConstExternal,
-																			strMuModel=strMuModel,
-																			strDispModel=strDispModel,
-																			scaMaxEstimationCycles=scaMaxEstimationCycles,
-																			boolVerbose=boolVerbose,
-																			boolSuperVerbose=boolSuperVerbose)
-	objectLineagePulse <- lsProcessedSCData$objectLineagePulse
-	vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
-	matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
-	
-	# Clear memory
-	rm(matCounts)
-	rm(matPiConstPredictors)
-	rm(dfAnnotation)
-	rm(lsProcessedSCData)
-	gc()
-	
-	# Inialise parallelisation
-	# Set the parallelisation environment in BiocParallel:
-	if(scaNProc > 1){
-		register(MulticoreParam(workers=scaNProc)) 
-		#register(SnowParam(workers=scaNProc, timeout=60*60*24*7))
-	} else {
-		# For debugging in serial mode
-		register(SerialParam())
-	}
-	
-	if(strMuModel=="clusters"){
-	  # 2. Cluster cells in pseudo-time
-	  strMessage <- paste0("--- Run/read clustering.")
-	  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	  if(boolVerbose) print(strMessage)
-	  
-	  tm_clustering <- system.time({
-	    if(is.null(objectLineagePulse@dfAnnotationProc$clusters)){
-	      # Internal clustering
-	      if(!is.null(scaKClusters)){
-	        strMessage <- paste0("Use internally created clustering (K-means) with ",
-	                                                     scaKClusters, " clusters.")
-	      } else {
-	        strMessage <- paste0("Use internally created clustering (K-means) with ",
-	                             " internal model selection to select number of clusters.")
-	      }
-	      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	      if(boolSuperVerbose) print(strMessage)
-	      
-	      objectLineagePulse@dfAnnotationProc$clusters <- clusterCellsInPseudotime(vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime,
-	                                                                               scaKexternal=scaKClusters)
-	      
-	      strMessage <- paste0("Chose the number of clusters K as ", 
-	                           max(objectLineagePulse@dfAnnotationProc$clusters),
-	                           " based on the Gap-statistic.")
-	      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	      if(boolSuperVerbose) print(strMessage)
-	    } else {
-	      # External clustering
-	      strMessage <- paste0("Use externally created clustering (K-means) supplied through ",
-	                           "dfAnnotation$clusters with ",
-	                           length(unique(objectLineagePulse@dfAnnotationProc$clusters)),
-	                           " clusters.")
-	      objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	      if(boolSuperVerbose) print(strMessage)
-	    }
-	  })
-	  strMessage <- paste0("Time elapsed during clustering: ",round(tm_clustering["elapsed"]/60,2), " min")
-	  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	  if(boolVerbose) print(strMessage)
-	}
-	
-	# 3. Compute normalisation constants
-	strMessage <- paste0("--- Compute normalisation constants:")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	if(boolVerbose) print(strMessage)
-	
-	objectLineagePulse <- calcNormConst(objectLineagePulse=objectLineagePulse,
-																			vecNormConstExternal=vecNormConstExternalProc)
-	
-	# 5. Fit ZINB model for both H1 and H0.
-	strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	if(boolVerbose) print(strMessage)
-	
-	tm_fitmm <- system.time({
-		objectLineagePulse <- fitNullAlternative( objectLineagePulse=objectLineagePulse,
-																							matPiConstPredictors=matPiConstPredictorsProc,
-																							boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
-																							strMuModel=strMuModel,
-																							strDispModel=strDispModel,
-																							strDropModel=strDropModel,
-																							strDropFitGroup=strDropFitGroup,
-																							scaMaxEstimationCycles=scaMaxEstimationCycles,
-																							boolVerbose=boolVerbose,
-																							boolSuperVerbose=boolSuperVerbose )
-	})
-	strMessage <- paste0("Time elapsed during ZINB fitting: ",
-	                     round(tm_fitmm["elapsed"]/60,2)," min")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	if(boolVerbose) print(strMessage)
-	
-	
-	# 6. Differential expression analysis:
-	strMessage <- paste0("--- Run differential expression analysis.")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	if(boolVerbose) print(strMessage)
-	
-	tm_deanalysis_mf <- system.time({
-		objectLineagePulse <- runDEAnalysis( objectLineagePulse=objectLineagePulse )
-	})
-	strMessage <- paste0("Time elapsed during differential expression analysis: ",
-	                     round(tm_deanalysis_mf["elapsed"]/60,2)," min")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-	if(boolVerbose) print(strMessage)
-	
-	strMessage <- paste0("Finished runLineagePulse().")
-	objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage)
-  if(boolVerbose) print(strMessage)
-  
-	return(objectLineagePulse)
+runLineagePulse <- function(
+    matCounts,
+    dfAnnotation,
+    vecConfoundersMu=NULL,
+    vecConfoundersDisp=NULL,
+    strMuModel="impulse",
+    strDispModelFull="constant",
+    strDispModelRed="constant",
+    strDropModel="logistic_ofMu",
+    strDropFitGroup="PerCell",
+    scaDFSplinesMu=3,
+    scaDFSplinesDisp=3,
+    matPiConstPredictors=NULL,
+    vecNormConstExternal=NULL,
+    boolEstimateNoiseBasedOnH0=FALSE,
+    scaMaxEstimationCycles=20,
+    scaNProc=1,
+    boolVerbose=TRUE,
+    boolSuperVerbose=FALSE ){
+    
+    # 1. Data preprocessing
+    vecAllGenes <- rownames(matCounts)
+    lsProcessedSCData <- processSCData(
+        matCounts=matCounts,
+        dfAnnotation=dfAnnotation,
+        vecConfoundersMu=vecConfoundersMu,
+        vecConfoundersDisp=vecConfoundersDisp,
+        matPiConstPredictors=matPiConstPredictors,
+        vecNormConstExternal=vecNormConstExternal,
+        strMuModel=strMuModel,
+        strDispModelFull=strDispModelFull,
+        strDispModelRed=strDispModelRed,
+        scaDFSplinesMu=scaDFSplinesMu,
+        scaDFSplinesDisp=scaDFSplinesDisp,
+        scaMaxEstimationCycles=scaMaxEstimationCycles,
+        boolVerbose=boolVerbose,
+        boolSuperVerbose=boolSuperVerbose)
+    objLP <- lsProcessedSCData$objLP
+    vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
+    matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
+    
+    # Clear memory
+    rm(matCounts)
+    rm(matPiConstPredictors)
+    rm(dfAnnotation)
+    rm(lsProcessedSCData)
+    gc()
+    
+    # Inialise parallelisation
+    # Set the parallelisation environment in BiocParallel:
+    if(scaNProc > 1){
+        register(MulticoreParam(workers=scaNProc)) 
+    } else {
+        # For debugging in serial mode
+        register(SerialParam())
+    }
+    
+    # 2. Compute normalisation constants
+    strMessage <- paste0("--- Compute normalisation constants:")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    objLP <- calcNormConst(objLP=objLP,
+                           vecNormConstExternal=vecNormConstExternalProc)
+    
+    # 3. Fit ZINB model for both H1 and H0.
+    strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    tm_fitmm <- system.time({
+        objLP <- fitContinuousModels(
+            objLP=objLP,
+            matPiConstPredictors=matPiConstPredictorsProc,
+            boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,
+            strMuModel=strMuModel,
+            strDispModelFull=strDispModelFull,
+            strDispModelRed=strDispModelRed,
+            strDropModel=strDropModel,
+            strDropFitGroup=strDropFitGroup,
+            scaMaxEstimationCycles=scaMaxEstimationCycles,
+            boolVerbose=boolVerbose,
+            boolSuperVerbose=boolSuperVerbose )
+    })
+    strMessage <- paste0("Time elapsed during ZINB fitting: ",
+                         round(tm_fitmm["elapsed"]/60,2)," min")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    
+    # 4. Differential expression analysis:
+    strMessage <- paste0("--- Run differential expression analysis.")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    tm_deanalysis_mf <- system.time({
+        objLP <- runDEAnalysis( objLP=objLP )
+    })
+    strMessage <- paste0("Time elapsed during differential expression analysis: ",
+                         round(tm_deanalysis_mf["elapsed"]/60,2)," min")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    strMessage <- paste0("Finished runLineagePulse().")
+    objLP@strReport <- paste0(objLP@strReport, strMessage)
+    if(boolVerbose) print(strMessage)
+    
+    return(objLP)
 }

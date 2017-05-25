@@ -61,14 +61,15 @@ evalLogLikWeightsMMZINB <- function(
     vecWeights <- array(0, scaNMixtures)
     vecWeights[vecidxAllowedMixture] <- vecWeightsToFit
     
-    scaLogLik <- evalLogLikCellMM_comp(vecCounts=vecCounts,
-                                       matMuParam=matMuParam,
-                                       matDispParam=matDispParam,
-                                       matDropParam=matDropParam,
-                                       scaNormConst=scaNormConst,
-                                       vecWeights=vecWeights,
-                                       vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-                                       vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+    scaLogLik <- evalLogLikCellMM_comp(
+        vecCounts=vecCounts,
+        matMuParam=matMuParam,
+        matDispParam=matDispParam,
+        matDropParam=matDropParam,
+        scaNormConst=scaNormConst,
+        vecWeights=vecWeights,
+        vecboolNotZero=vecboolNotZero, 
+        vecboolZero=vecboolZero )
     
     # Maximise log likelihood: Return likelihood as value to optimisation routine
     return(scaLogLik)
@@ -76,16 +77,17 @@ evalLogLikWeightsMMZINB <- function(
 
 evalLogLikWeightsMMZINB_comp <- cmpfun(evalLogLikWeightsMMZINB)
 
-fitMMAssignmentsCell <- function(vecCounts,
-                                 matMuParam,
-                                 matDispParam,
-                                 matDropParam,
-                                 scaNormConst,
-                                 vecWeights,
-                                 vecidxAllowedMixture,
-                                 scaNMixtures,
-                                 MAXIT=1000,
-                                 RELTOL=10^(-8) ){
+fitMMAssignmentsCell <- function(
+    vecCounts,
+    matMuParam,
+    matDispParam,
+    matDropParam,
+    scaNormConst,
+    vecWeights,
+    vecidxAllowedMixture,
+    scaNMixtures,
+    MAXIT=1000,
+    RELTOL=10^(-8) ){
     
     # Project weights into logit space (linker) for fitting
     vecWeightInit <- -log(1/vecWeights[vecidxAllowedMixture]-1)
@@ -121,7 +123,7 @@ fitMMAssignmentsCell <- function(vecCounts,
         save(lsErrorCausingGene,file=file.path(getwd(),"LineagePulse_lsErrorCausingGene.RData"))
         stop(strErrorMsg)
     })
-    
+
     # Impose sensitivity bounds
     vecWeightsInLogitSpace <- fitWeights$par
     vecWeightsInLogitSpace[vecWeightsInLogitSpace < -log(10)*10] <- -log(10)*10
@@ -161,8 +163,9 @@ estimateMMAssignmentsMatrix <- function(
         # Non-fixed cells are cells which are not fixed to a population with one centroid
         vecidxPopWithOneCentroid <- sapply(lsvecFixedCentrByPop, function(p) length(p)==1)
         vecidxToFit <- which(!(dfAnnotation$populations %in% names(lsvecFixedCentrByPop)[vecidxPopWithOneCentroid]))
+    } else {
+        vecidxToFit <- seq(1, scaNumCells) # Select all cells
     }
-    else vecidxToFit <- seq(1, scaNumCells) # Select all cells
     
     # Parallelise weight estimation over cells
     lsFitsWeights <- bplapply( vecidxToFit, function(j){
@@ -177,19 +180,37 @@ estimateMMAssignmentsMatrix <- function(
             }))
         }))
         
-        # Parameter decompression: Cell-specific
+        if(lsDispModel$lsDispModelGlobal$strDispModel == "constant") {
+            vecDispParam <- sapply(seq(1,scaNumGenes), function(i){
+                decompressDispByGene(
+                    vecDispModel=lsDispModel$matDispModel[i,1],
+                    lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,] ),
+                    lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                    vecInterval=j)
+            })
+            matDispParam <- matrix(vecDispParam, nrow = scaNumGenes,
+                                   ncol = scaNumMixtures, byrow = FALSE)
+        } else  if(lsDispModel$lsDispModelGlobal$strDispModel == "MM") {
+            matDispParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
+                sapply(seq(1,scaNumGenes), function(i){
+                    decompressDispByGene(
+                        vecDispModel=lsDispModel$matDispModel[i,m],
+                        lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,] ),
+                        lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
+                        vecInterval=j)
+                })
+            }))
+        } else {
+            stop("estimateMMAssignmentsMatrix()")
+        }
+        
         matDropParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m){
             decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
                                         vecMu=matMuParam[,m],
                                         matPiConstPredictors=lsDropModel$matPiConstPredictors,
                                         lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
         }))
-        if(lsDispModel$lsDispModelGlobal$strDispModel=="constant"){
-            vecDispParam <- as.vector(lsDispModel$matDispModel)
-            matDispParam <- do.call(cbind, lapply(seq(1,scaNumMixtures), function(m) vecDispParam ))
-        } else {
-            stop(paste0("ERROR estimateMMAssignmentsMatrix(): strDispModel=", lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
-        }
+        
         if(is.na(dfAnnotation$populations[j])) vecidxAllowedMixture <- seq(1,scaNumMixtures)
         else vecidxAllowedMixture <- lsvecFixedCentrByPop[[dfAnnotation$populations[j]]]
         fitWeights <- fitMMAssignmentsCell(
@@ -203,6 +224,7 @@ estimateMMAssignmentsMatrix <- function(
             scaNMixtures=scaNumMixtures,
             MAXIT=MAXIT_BFGS_MM,
             RELTOL=RELTOL_BFGS_MM )
+        
         return(fitWeights)
     })
     matWeightsToFit <- do.call(rbind, lapply(lsFitsWeights, function(fit) fit$vecWeights ))

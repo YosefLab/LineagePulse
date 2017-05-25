@@ -23,7 +23,8 @@
 runMixtureModel <- function(
   matCounts,
   dfAnnotation,
-  vecConfounders,
+  vecConfoundersMu=NULL,
+  vecConfoundersDisp=NULL,
   boolFixedPopulations,
   vecNCentroidsPerPop=NULL,
   vecH0Pop=NULL,
@@ -46,7 +47,8 @@ runMixtureModel <- function(
   lsProcessedSCData <- processSCDataMixture(
     matCounts=matCounts,
     dfAnnotation=dfAnnotation,
-    vecConfounders=vecConfounders,
+    vecConfoundersMu=vecConfoundersMu,
+    vecConfoundersDisp=vecConfoundersDisp,
     boolFixedPopulations=boolFixedPopulations,
     vecNCentroidsPerPop=vecNCentroidsPerPop,
     vecH0Pop=vecH0Pop,
@@ -59,7 +61,7 @@ runMixtureModel <- function(
     boolVerbose=boolVerbose,
     boolSuperVerbose=boolSuperVerbose,
     STR_VERSION=STR_VERSION)
-  objectLineagePulseMM <- lsProcessedSCData$objectLineagePulse
+  objLPMM <- lsProcessedSCData$objLP
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
   
@@ -81,20 +83,20 @@ runMixtureModel <- function(
   
   # 2. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  objectLineagePulseMM <- calcNormConst(objectLineagePulseMM,
+  objLPMM <- calcNormConst(objLPMM,
                                         vecNormConstExternal=vecNormConstExternalProc)
   
   # 3. Fit ZINB mixture and null model.
   strMessage <- paste0("--- Fit ZINB mixture and null model.")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
   tm_fitmm <- system.time({
-    objectLineagePulseMM <- fitMixtureZINBModel(
-      objectLineagePulse=objectLineagePulseMM,
+    objLPMM <- fitMixtureZINBModel(
+      objLP=objLPMM,
       scaNMixtures=scaNMixtures,
       strDispModel=strDispModel,
       strDropModel=strDropModel,
@@ -106,26 +108,26 @@ runMixtureModel <- function(
   
   strMessage <- paste0("Time elapsed during ZINB mixture and null model fitting: ",
                        round(tm_fitmm["elapsed"]/60,2), " min")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
   # 4. Differential expression analysis:
   strMessage <- paste0("--- Differential expression analysis:")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
   tm_deanalysis_mf <- system.time({
-    objectLineagePulseMM <- runDEAnalysis(objectLineagePulse=objectLineagePulseMM )
+    objLPMM <- runDEAnalysis(objLP=objLPMM )
   })
   
   strMessage <- paste0("Time elapsed during differential expression analysis: ",
                        round(tm_deanalysis_mf["elapsed"]/60,2)," min")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage, "\n")
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
   strMessage <- paste0("Finished runMixtureModel().")
-  objectLineagePulseMM@strReport <- paste0(objectLineagePulseMM@strReport, strMessage)
+  objLPMM@strReport <- paste0(objLPMM@strReport, strMessage)
   if(boolVerbose) print(strMessage)
   
-  return(objectLineagePulseMM)
+  return(objLPMM)
 }

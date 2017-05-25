@@ -35,7 +35,7 @@ getNormData <- function(matCounts,
   matNormData <- do.call(rbind, bplapply(rownames(matCounts), function(id){
     # Extract batch parameters
     vecBatchParam <- array(1, scaNumCells)
-    if(!is.null(lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign)){
+    if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)){
       for(confounder in seq(1,scaNumConfounders)){
         vecBatchParam <- vecBatchParam*(lsMuModel$lsmatBatchModel[[confounder]][id,][
           lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])

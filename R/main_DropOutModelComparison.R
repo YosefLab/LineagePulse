@@ -52,7 +52,8 @@ calcAIC <- function(k,ll){
 runDropOutModelSelection <- function(
   matCounts,
   dfAnnotation,
-  vecConfounders=NULL,
+  vecConfoundersMu=NULL,
+  vecConfoundersDisp=NULL,
   strMuModel="constant",
   strDispModel="constant",
   lsstrDropModel,
@@ -176,7 +177,8 @@ runDropOutModelSelection <- function(
   lsProcessedSCData <- processSCData(
     matCounts=matCounts,
     dfAnnotation=dfAnnotation,
-    vecConfounders=vecConfounders,
+    vecConfoundersMu=vecConfoundersMu,
+    vecConfoundersDisp=vecConfoundersDisp,
     matPiConstPredictors=lsmatPiConstPredictors[[1]],
     vecNormConstExternal=vecNormConstExternal,
     strMuModel=strMuModel,
@@ -214,60 +216,7 @@ runDropOutModelSelection <- function(
     register(SerialParam())
   }
   
-  if(strMuModel=="clusters"){
-    ### 3. Cluster cells in pseudo-time
-    strMessage <- paste0("--- Run/read clustering.")
-    objectLineagePulse@strReport <- 
-      paste0(objectLineagePulse@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
-    
-    tm_clustering <- system.time({
-      if(is.null(objectLineagePulse@dfAnnotationProc$clusters)){
-        # Internal clustering
-        if(!is.null(scaKClusters)){
-          strMessage <- paste0(
-            "Use internally created clustering (K-means) with ",
-            scaKClusters, " clusters.")
-        } else {
-          strMessage <- paste0(
-            "Use internally created clustering (K-means) with ",
-            " internal model selection to select number of clusters.")
-        }
-        objectLineagePulse@strReport <- 
-          paste0(objectLineagePulse@strReport, strMessage, "\n")
-        if(boolSuperVerbose) print(strMessage)
-        
-        objectLineagePulse@dfAnnotationProc$clusters <- clusterCellsInPseudotime(
-          vecPseudotime=objectLineagePulse@dfAnnotationProc$pseudotime,
-          scaKexternal=scaKClusters)
-        
-        strMessage <- paste0(
-          "Chose the number of clusters K as ", 
-          max(objectLineagePulse@dfAnnotationProc$clusters),
-          " based on the Gap-statistic.")
-        objectLineagePulse@strReport <- 
-          paste0(objectLineagePulse@strReport, strMessage, "\n")
-        if(boolSuperVerbose) print(strMessage)
-      } else {
-        # External clustering
-        strMessage <- paste0(
-          "Use externally created clustering (K-means) supplied through ",
-          "dfAnnotation$clusters with ",
-          length(unique(objectLineagePulse@dfAnnotationProc$clusters)),
-          " clusters.")
-        objectLineagePulse@strReport <- 
-          paste0(objectLineagePulse@strReport, strMessage, "\n")
-        if(boolSuperVerbose) print(strMessage)
-      }
-    })
-    strMessage <- paste0(
-      "Time elapsed during clustering: ",
-      round(tm_clustering["elapsed"]/60,2), " min")
-    objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
-  }
-  
-  ### 4. Compute normalisation constants
+  ### 3. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")
   objectLineagePulse@strReport <- 
     paste0(objectLineagePulse@strReport, strMessage, "\n")
@@ -277,7 +226,7 @@ runDropOutModelSelection <- function(
     objectLineagePulse=objectLineagePulse,
     vecNormConstExternal=vecNormConstExternalProc)
   
-  ### 5. Fit list of drop-out models
+  ### 4. Fit list of drop-out models
   scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
   scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
   scaNModels <- length(lsstrDropModel)
@@ -296,7 +245,8 @@ runDropOutModelSelection <- function(
       lsFitsModelM <- fitZINB(
         matCounts=objectLineagePulse@matCountsProc,
         dfAnnotation=objectLineagePulse@dfAnnotationProc,
-        vecConfounders=vecConfounders,
+        vecConfoundersDisp=vecConfoundersDisp,
+        vecConfoundersMu=vecConfoundersMu,
         vecNormConst=objectLineagePulse@vecNormConst,
         lsDropModel=NULL,
         strMuModel=strMuModel,
@@ -342,7 +292,7 @@ runDropOutModelSelection <- function(
     rm(lsFitsModelM)
   }
   
-  ### 6. Model selection
+  ### 5. Model selection
   strMessage <- paste0("### Model selection:")
   objectLineagePulse@strReport <- 
     paste0(objectLineagePulse@strReport, strMessage, "\n")

@@ -55,167 +55,179 @@
 #' \code{fitZINBMuDisp}.
 #' Calls \code{evalLogLikMatrix} to follow convergence.
 #' 
-#' @param objectLineagePulse: (LineagePulseObject)
+#' @param objLP: (LineagePulseObject)
 #' LineagePulseObject for which null and alternative model are to be fitted.
 #' @param matPiConstPredictors: (numeric matrix genes x number of constant
-#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
-#'    fit other than offset and mean parameter (i.e. parameters which
-#'    are constant for all observations in a gene and externally supplied.)
-#'    Is null if no constant predictors are supplied.
+#' gene-wise drop-out predictors) Predictors for logistic drop-out 
+#' fit other than offset and mean parameter (i.e. parameters which
+#' are constant for all observations in a gene and externally supplied.)
+#' Is null if no constant predictors are supplied.
 #' @param strMuModel: (str) {"constant"}
-#'    [Default "impulse"] Model according to which the mean
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
+#' [Default "impulse"] Model according to which the mean
+#' parameter is fit to each gene as a function of 
+#' pseudotime in the alternative model (H1).
 #' @param strDispModel: (str) {"constant"}
-#'    [Default "constant"] Model according to which dispersion
-#'    parameter is fit to each gene as a function of 
-#'    pseudotime in the alternative model (H1).
+#' [Default "constant"] Model according to which dispersion
+#' parameter is fit to each gene as a function of 
+#' pseudotime in the alternative model (H1).
 #' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
-#'    Whether to co-estimate logistic drop-out model with the 
-#'    constant null model or with the alternative model. The
-#'    co-estimation with the noise model typically extends the
-#'    run-time of this model-estimation step strongly. While
-#'    the drop-out model is more accurate if estimated based on
-#'    a more realistic model expression model (the alternative
-#'    model), a trade-off for speed over accuracy can be taken
-#'    and the dropout model can be chosen to be estimated based
-#'    on the constant null expression model (set to TRUE).
+#' Whether to co-estimate logistic drop-out model with the 
+#' constant null model or with the alternative model. The
+#' co-estimation with the noise model typically extends the
+#' run-time of this model-estimation step strongly. While
+#' the drop-out model is more accurate if estimated based on
+#' a more realistic model expression model (the alternative
+#' model), a trade-off for speed over accuracy can be taken
+#' and the dropout model can be chosen to be estimated based
+#' on the constant null expression model (set to TRUE).
 #' @param scaMaxEstimationCycles: (integer) [Default 20] Maximium number 
-#'    of estimation cycles performed in fitZINB(). One cycle
-#'    contain one estimation of of each parameter of the 
-#'    zero-inflated negative binomial model as coordinate ascent.
+#' of estimation cycles performed in fitZINB(). One cycle
+#' contain one estimation of of each parameter of the 
+#' zero-inflated negative binomial model as coordinate ascent.
 #' @param verbose: (bool) Whether to follow convergence of the 
-#'    iterative parameter estimation with one report per cycle.
+#' iterative parameter estimation with one report per cycle.
 #' @param boolSuperVerbose: (bool) Whether to follow convergence of the 
-#'    iterative parameter estimation in high detail with local 
-#'    convergence flags and step-by-step loglikelihood computation.
+#' iterative parameter estimation in high detail with local 
+#' convergence flags and step-by-step loglikelihood computation.
 #' 
-#' @return objectLineagePulse: (LineagePulseObject)
+#' @return objLP: (LineagePulseObject)
 #' LineagePulseObject with models with and fitting reporters added.
 #' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
-fitNullAlternative <- function(objectLineagePulse,
-                               matPiConstPredictors,
-                               strMuModel="windows",
-                               strDispModel="constant",
-                               strDropModel="logistic_ofMu",
-                               strDropFitGroup="PerCell",
-                               boolEstimateNoiseBasedOnH0=TRUE,
-                               scaMaxEstimationCycles=20,
-                               boolVerbose=FALSE,
-                               boolSuperVerbose=FALSE ){
-  
-  ####################################################
-  # Set sequence of model estimation: Which mean model
-  # (H0 or H1) is co-estimated with noise model and which
-  # is estimated conditioned on the noise model of this estimation.
-  if(boolEstimateNoiseBasedOnH0){
-    strMuModelA <- "constant"
-    strMuModelB <- strMuModel
-    strDispModelA <- "constant"
-    strDispModelB <- strDispModel
-    strNameModelA <- paste0("H0: ",strMuModelA)
-    strNameModelB <- paste0("H1: ",strMuModelB)
-  } else {
-    strMuModelA <- strMuModel
-    strMuModelB <- "constant"
-    strDispModelA <- strDispModel
-    strDispModelB <- "constant"
-    strNameModelA <- paste0("H1: ",strMuModelA)
-    strNameModelB <- paste0("H0: ",strMuModelB)
-  }
-  
-  ####################################################
-  # Fit model A
-  strMessage <- paste0("### a) Fit negative binomial model A (",
-               strNameModelA,") with noise model.")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-  if(boolVerbose) print(strMessage)
-  
-  tm_cycle <- system.time({
-    lsFitsModelA <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-    												dfAnnotation=objectLineagePulse@dfAnnotationProc,
-    												vecConfounders=objectLineagePulse@vecConfounders,
-    												vecNormConst=objectLineagePulse@vecNormConst,
-                            lsDropModel=NULL,
-                            strMuModel=strMuModelA,
-                            strDispModel=strDispModelB,
-    												strDropModel=strDropModel,
-    												strDropFitGroup=strDropFitGroup,
-    												matPiConstPredictors=matPiConstPredictors,
-                            boolVerbose=boolVerbose,
-                            boolSuperVerbose=boolSuperVerbose)
-  })
-  lsMuModelA <- lsFitsModelA$lsMuModel
-  lsDispModelA <- lsFitsModelA$lsDispModel
-  lsDropModel <- lsFitsModelA$lsDropModel
-  boolConvergenceModelA <- lsFitsModelA$boolConvergenceModel
-  vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
-                                         lsFitsModelA$strReport)
-  rm(lsFitsModelA)
-  
-  strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
-               "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min.")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-  if(boolVerbose) print(strMessage)
-  
-  ####################################################
-  # Fit model B
-  strMessage <- paste0("### a) Fit negative binomial model B (",
-               strNameModelB,") with noise model.")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-  if(boolVerbose) print(strMessage)
-  
-  tm_cycleB <- system.time({
-    lsFitsModelB <- fitZINB(matCounts=objectLineagePulse@matCountsProc,
-    												dfAnnotation=objectLineagePulse@dfAnnotationProc,
-    												vecConfounders=objectLineagePulse@vecConfounders,
-    												vecNormConst=objectLineagePulse@vecNormConst,
-                            lsDropModel=lsDropModel,
-                            strMuModel=strMuModelB,
-                            strDispModel=strDispModelB,
-    												strDropFitGroup=strDropFitGroup,
-    												matPiConstPredictors=matPiConstPredictors,
-                            boolVerbose=boolVerbose,
-                            boolSuperVerbose=boolSuperVerbose)
-  })
-  lsMuModelB <- lsFitsModelB$lsMuModel
-  lsDispModelB <- lsFitsModelB$lsDispModel
-  boolConvergenceModelB <- lsFitsModelB$boolConvergenceModel
-  vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport,
-                                         lsFitsModelB$strReport)
-  rm(lsFitsModelB)
-  
-  strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
-               "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
-  objectLineagePulse@strReport <- paste0(objectLineagePulse@strReport, strMessage, "\n")
-  if(boolVerbose) print(strMessage)
-  
-  if(boolEstimateNoiseBasedOnH0){
-    lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelB,
-                                boolConvergenceH0=boolConvergenceModelA,
-                                vecEMLogLikH1=vecEMLogLikModelB,
-                                vecEMLogLikH0=vecEMLogLikModelA)
-    objectLineagePulse@lsMuModelH1         <- lsMuModelB
-    objectLineagePulse@lsDispModelH1       <- lsDispModelB
-    objectLineagePulse@lsMuModelH0        <- lsMuModelA
-    objectLineagePulse@lsDispModelH0      <- lsDispModelA
-  } else {
-    lsFitZINBReporters <- list( boolConvergenceH1=boolConvergenceModelA,
-                                boolConvergenceH0=boolConvergenceModelB,
-                                vecEMLogLikH1=vecEMLogLikModelA,
-                                vecEMLogLikH0=vecEMLogLikModelB)
-    objectLineagePulse@lsMuModelH1         <- lsMuModelA
-    objectLineagePulse@lsDispModelH1       <- lsDispModelA
-    objectLineagePulse@lsMuModelH0        <- lsMuModelB
-    objectLineagePulse@lsDispModelH0      <- lsDispModelB
-  }
-  objectLineagePulse@lsDropModel        <- lsDropModel
-  objectLineagePulse@lsFitZINBReporters <- lsFitZINBReporters
-  
-  return(objectLineagePulse)
+fitContinuousModels <- function(
+    objLP,
+    matPiConstPredictors,
+    strMuModel="windows",
+    strDispModelFull="constant",
+    strDispModelRed="constant",
+    strDropModel="logistic_ofMu",
+    strDropFitGroup="PerCell",
+    boolEstimateNoiseBasedOnH0=TRUE,
+    scaMaxEstimationCycles=20,
+    boolVerbose=FALSE,
+    boolSuperVerbose=FALSE ){
+    
+    ####################################################
+    # Set sequence of model estimation: Which mean model
+    # (H0 or H1) is co-estimated with noise model and which
+    # is estimated conditioned on the noise model of this estimation.
+    if(boolEstimateNoiseBasedOnH0){
+        strMuModelA <- "constant"
+        strMuModelB <- strMuModel
+        strDispModelA <- strDispModelRed
+        strDispModelB <- strDispModelFull
+        strNameModelA <- paste0("H0: mu=",strMuModelA, " disp=", strDispModelA)
+        strNameModelB <- paste0("H1: mu=",strMuModelB, " disp=", strDispModelB)
+    } else {
+        strMuModelA <- strMuModel
+        strMuModelB <- "constant"
+        strDispModelA <- strDispModelFull
+        strDispModelB <- strDispModelRed
+        strNameModelA <- paste0("H1: mu=",strMuModelA, " disp=", strDispModelA)
+        strNameModelB <- paste0("H0: mu=",strMuModelB, " disp=", strDispModelB)
+    }
+    
+    ####################################################
+    # Fit model A
+    strMessage <- paste0("### a) Fit negative binomial model A (",
+                         strNameModelA,") with noise model.")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    tm_cycle <- system.time({
+        lsFitsModelA <- fitZINB(
+            matCounts=objLP@matCountsProc,
+            dfAnnotation=objLP@dfAnnotationProc,
+            vecConfoundersMu=objLP@vecConfoundersMu,
+            vecConfoundersDisp=objLP@vecConfoundersDisp,
+            vecNormConst=objLP@vecNormConst,
+            lsDropModel=NULL,
+            strMuModel=strMuModelA,
+            strDispModel=strDispModelA,
+            strDropModel=strDropModel,
+            strDropFitGroup=strDropFitGroup,
+            scaDFSplinesDisp=objLP@scaDFSplinesDisp,
+            scaDFSplinesMu=objLP@scaDFSplinesMu,
+            matPiConstPredictors=matPiConstPredictors,
+            boolVerbose=boolVerbose,
+            boolSuperVerbose=boolSuperVerbose)
+    })
+    lsMuModelA <- lsFitsModelA$lsMuModel
+    lsDispModelA <- lsFitsModelA$lsDispModel
+    lsDropModel <- lsFitsModelA$lsDropModel
+    boolConvergenceModelA <- lsFitsModelA$boolConvergenceModel
+    vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
+    objLP@strReport <- paste0(objLP@strReport,
+                              lsFitsModelA$strReport)
+    rm(lsFitsModelA)
+    
+    strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
+                         "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min.")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    ####################################################
+    # Fit model B
+    strMessage <- paste0("### b) Fit negative binomial model B (",
+                         strNameModelB,").")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    tm_cycleB <- system.time({
+        lsFitsModelB <- fitZINB(
+            matCounts=objLP@matCountsProc,
+            dfAnnotation=objLP@dfAnnotationProc,
+            vecConfoundersMu=objLP@vecConfoundersMu,
+            vecConfoundersDisp=objLP@vecConfoundersDisp,
+            vecNormConst=objLP@vecNormConst,
+            lsDropModel=lsDropModel,
+            strMuModel=strMuModelB,
+            strDispModel=strDispModelB,
+            strDropFitGroup=strDropFitGroup,
+            scaDFSplinesDisp=objLP@scaDFSplinesDisp,
+            scaDFSplinesMu=objLP@scaDFSplinesMu,
+            matPiConstPredictors=matPiConstPredictors,
+            boolVerbose=boolVerbose,
+            boolSuperVerbose=boolSuperVerbose)
+    })
+    lsMuModelB <- lsFitsModelB$lsMuModel
+    lsDispModelB <- lsFitsModelB$lsDispModel
+    boolConvergenceModelB <- lsFitsModelB$boolConvergenceModel
+    vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
+    objLP@strReport <- paste0(objLP@strReport,
+                              lsFitsModelB$strReport)
+    rm(lsFitsModelB)
+    
+    strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
+                         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
+    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    if(boolVerbose) print(strMessage)
+    
+    if(boolEstimateNoiseBasedOnH0){
+        lsFitZINBReporters <- list(
+            boolConvergenceH1=boolConvergenceModelB,
+            boolConvergenceH0=boolConvergenceModelA,
+            vecEMLogLikH1=vecEMLogLikModelB,
+            vecEMLogLikH0=vecEMLogLikModelA)
+        objLP@lsMuModelH1 <- lsMuModelB
+        objLP@lsDispModelH1 <- lsDispModelB
+        objLP@lsMuModelH0 <- lsMuModelA
+        objLP@lsDispModelH0 <- lsDispModelA
+    } else {
+        lsFitZINBReporters <- list(
+            boolConvergenceH1=boolConvergenceModelA,
+            boolConvergenceH0=boolConvergenceModelB,
+            vecEMLogLikH1=vecEMLogLikModelA,
+            vecEMLogLikH0=vecEMLogLikModelB)
+        objLP@lsMuModelH1 <- lsMuModelA
+        objLP@lsDispModelH1 <- lsDispModelA
+        objLP@lsMuModelH0 <- lsMuModelB
+        objLP@lsDispModelH0 <- lsDispModelB
+    }
+    objLP@lsDropModel <- lsDropModel
+    objLP@lsFitZINBReporters <- lsFitZINBReporters
+    
+    return(objLP)
 }
