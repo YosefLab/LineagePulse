@@ -188,18 +188,18 @@ runDropOutModelSelection <- function(
     scaMaxEstimationCycles=scaMaxEstimationCycles,
     boolVerbose=boolVerbose,
     boolSuperVerbose=boolSuperVerbose)
-  objectLineagePulse <- lsProcessedSCData$objectLineagePulse
+  objLP <- lsProcessedSCData$objLP
   vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
   # Have to handle matPiConstPredictorsProc individually
   lsmatPiConstPredictorsProc <- lapply(lsmatPiConstPredictors, function(mat){
-    return(mat[rownames(objectLineagePulse@matCountsProc),,drop=FALSE])
+    return(mat[rownames(objLP@matCountsProc),,drop=FALSE])
   })
   
   strMessage <- paste0("The following negative binomial model expression model \n",
                        "is used for all drop-out models: ",
                        "mu=",strMuModel, ", dispersion=", strDispModel, ".")
-  objectLineagePulse@strReport <- 
-    paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objLP@strReport <- 
+    paste0(objLP@strReport, strMessage, "\n")
   if(boolVerbose) message(strMessage)
   
   # Clear memory
@@ -220,17 +220,17 @@ runDropOutModelSelection <- function(
   
   ### 3. Compute normalisation constants
   strMessage <- paste0("--- Compute normalisation constants:")
-  objectLineagePulse@strReport <- 
-    paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objLP@strReport <- 
+    paste0(objLP@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   
-  objectLineagePulse <- calcNormConst(
-    objectLineagePulse=objectLineagePulse,
+  objLP <- calcNormConst(
+    objLP=objLP,
     vecNormConstExternal=vecNormConstExternalProc)
   
   ### 4. Fit list of drop-out models
-  scaNGenes <- dim(objectLineagePulse@matCountsProc)[1]
-  scaNCells <- dim(objectLineagePulse@matCountsProc)[2]
+  scaNGenes <- dim(objLP@matCountsProc)[1]
+  scaNCells <- dim(objLP@matCountsProc)[2]
   scaNModels <- length(lsstrDropModel)
   
   vecModelsToFit <- names(lsstrDropModel)
@@ -239,17 +239,17 @@ runDropOutModelSelection <- function(
     strMessage <- paste0(
       "### Fit drop-out model ", m, 
       " (", match(m, vecModelsToFit),"/", length(vecModelsToFit), ").")
-    objectLineagePulse@strReport <- 
-      paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- 
+      paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_modelfit <- system.time({
       lsFitsModelM <- fitZINB(
-        matCounts=objectLineagePulse@matCountsProc,
-        dfAnnotation=objectLineagePulse@dfAnnotationProc,
+        matCounts=objLP@matCountsProc,
+        dfAnnotation=objLP@dfAnnotationProc,
         vecConfoundersDisp=vecConfoundersDisp,
         vecConfoundersMu=vecConfoundersMu,
-        vecNormConst=objectLineagePulse@vecNormConst,
+        vecNormConst=objLP@vecNormConst,
         lsDropModel=NULL,
         strMuModel=strMuModel,
         strDispModel=strDispModel,
@@ -260,7 +260,7 @@ runDropOutModelSelection <- function(
         boolSuperVerbose=boolSuperVerbose)
       
       vecLogLikFit <- evalLogLikMatrix(
-        matCounts=objectLineagePulse@matCountsProc,
+        matCounts=objLP@matCountsProc,
         lsMuModel=lsFitsModelM$lsMuModel,
         lsDispModel=lsFitsModelM$lsDispModel, 
         lsDropModel=lsFitsModelM$lsDropModel,
@@ -270,7 +270,7 @@ runDropOutModelSelection <- function(
       "Fitted ZINB model with drop-out model ", m, 
       " with ll of  ", sum(vecLogLikFit), 
       " in ", round(tm_modelfit["elapsed"]/60,2)," min.")
-    objectLineagePulse@strReport <- 
+    objLP@strReport <- 
       paste0(lsFitsModelM$strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
@@ -296,8 +296,8 @@ runDropOutModelSelection <- function(
   
   ### 5. Model selection
   strMessage <- paste0("### Model selection:")
-  objectLineagePulse@strReport <- 
-    paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objLP@strReport <- 
+    paste0(objLP@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   # Compute total degrees of freedom
   scaDF_MuModel <- lsFits[[1]]$lsMuModel$lsMuModelGlobal$scaDegFreedom
@@ -310,8 +310,8 @@ runDropOutModelSelection <- function(
   matLL <- do.call(cbind, lapply(lsFits, function(lsFit) sum(lsFit$vecLogLikFit) ))
   if(boolCheckLRT){
     strMessage <- paste0("# 1. Loglikelihood ratio tests")
-    objectLineagePulse@strReport <- 
-      paste0(objectLineagePulse@strReport, strMessage, "\n")
+    objLP@strReport <- 
+      paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     matPvalLRT <- matrix(NA, nrow=scaNModels, ncol=scaNModels)
     for(i1 in seq(1,scaNModels)){
@@ -329,8 +329,8 @@ runDropOutModelSelection <- function(
   
   # b) BIC
   strMessage <- paste0("# 2. BIC")
-  objectLineagePulse@strReport <- 
-    paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objLP@strReport <- 
+    paste0(objLP@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   vecBIC <- sapply(seq(1,scaNModels), function(i){
     calcBIC(n=scaNGenes*scaNCells,
@@ -340,8 +340,8 @@ runDropOutModelSelection <- function(
   
   # c) AIC
   strMessage <- paste0("# 3. AIC")
-  objectLineagePulse@strReport <- 
-    paste0(objectLineagePulse@strReport, strMessage, "\n")
+  objLP@strReport <- 
+    paste0(objLP@strReport, strMessage, "\n")
   if(boolVerbose) print(strMessage)
   vecAIC <- sapply(seq(1,scaNModels), function(i){
     calcAIC(k=vecDF[i],
@@ -355,7 +355,7 @@ runDropOutModelSelection <- function(
     matPvalLRT=matPvalLRT,
     vecBIC=vecBIC,
     vecAIC=vecAIC,
-    objectLineagePulse=objectLineagePulse,
+    objLP=objLP,
     lsFits=lsFits
   ))
 }
