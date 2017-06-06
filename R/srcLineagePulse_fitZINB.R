@@ -1,3 +1,5 @@
+### Fit ZINB model
+
 fitZINB <- function(
     matCounts,
     dfAnnotation,
@@ -81,8 +83,16 @@ fitZINB <- function(
             lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=7)
             lsMuModel$matMuModel[,c(3:5)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
         } else if(strMuModel=="splines"){
-            lsMuModel$matMuModel <- matrix(0, nrow=scaNumGenes, ncol=scaDFSplinesMu)
-            lsMuModel$matMuModel[,1] <- 1
+            # Note : counts ~ exp(W*C) where W is spline basis and C are coefficients
+            # Therefore: log(counts) ~ W*C is a very similar problem. We ignore ZINB noise
+            # and initialise the coefficients based on this problem with gaussian noise 
+            # (linear model optimised with RSS and without intercept: notation ylm(~0+x)).
+            vecPTSpline <- ns(x = dfAnnotation$pseudotime, df = scaDFSplinesMu, intercept = TRUE)
+            lsMuModel$matMuModel <- do.call(rbind, lapply(seq(1,scaNumGenes) ,function(i){
+                vecCounts <- as.vector(log(matCounts[as.double(i),]+1))
+                lmFit <- lm(vecCounts ~ 0+vecPTSpline)
+                return(as.vector(lmFit$coef))
+            }))
         } else if(strMuModel=="groups"){
             lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=length(unique(dfAnnotation$groups)), byrow=FALSE)
         } else if(strMuModel=="MM"){

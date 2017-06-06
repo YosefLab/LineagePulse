@@ -353,8 +353,8 @@ evalLogLikContinuousZINB <- function(
                 by = 1)]
         scaNParamUsed <- scaNParamUsed + length(vecMuModel)
         
-        vecMuModel[vecMuModel < -10*log(10)] <- -10*log(10)
-        vecMuModel[vecMuModel > 10*log(10)] <- 10*log(10)
+        vecMuModel[vecMuModel < -10^(10)] <- -10^(10)
+        vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
         
         vecMuParam <- exp(as.vector(lsMuModelGlobal$matSplineBasis %*% 
                                         vecMuModel))
@@ -366,6 +366,7 @@ evalLogLikContinuousZINB <- function(
         vecImpulseParam[3:5] <- exp(vecImpulseParam[3:5]) # Log linker for amplitudes
         scaNParamUsed <- scaNParamUsed + length(vecImpulseParam)
         
+        vecImpulseParam[1:2][vecImpulseParam[1:2] < 10^(-10)] <- 10^(-10)
         vecImpulseParam[3:5][vecImpulseParam[3:5] < 10^(-10)] <- 10^(-10)
         vecImpulseParam[3:5][vecImpulseParam[3:5] > 10^(10)] <- 10^(10)
         
@@ -813,6 +814,7 @@ fitContinuousZINB <- function(
         vecMuModel[3:5] <- exp(vecMuModel[3:5])
         scaNParamUsed <- scaNParamUsed + length(vecMuModel)
         
+        vecMuModel[1:2][vecMuModel[1:2] < 10^(-10)] <- 10^(-10)
         vecMuModel[3:5][vecMuModel[3:5] < 10^(-10)] <- 10^(-10)
         vecMuModel[3:5][vecMuModel[3:5] > 10^(10)] <- 10^(10)
     } else if(lsMuModelGlobal$strMuModel == "splines") {
@@ -822,8 +824,8 @@ fitContinuousZINB <- function(
             by = 1)]
         scaNParamUsed <- scaNParamUsed + length(vecMuModel)
         
-        vecMuModel[vecMuModel < -10*log(10)] <- -10*log(10)
-        vecMuModel[vecMuModel > 10*log(10)] <- 10*log(10)
+        vecMuModel[vecMuModel < -10^(10)] <- -10^(10)
+        vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
     } else {
         stop("fitImpulseOneInitZINB()")
     }
