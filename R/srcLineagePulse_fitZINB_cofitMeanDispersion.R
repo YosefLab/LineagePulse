@@ -301,8 +301,8 @@ evalLogLikContinuousZINB <- function(
                 by = 1)]
         scaNParamUsed <- length(vecDispModel)
         
-        vecDispModel[vecDispModel < -10^(10)] <- -10^(10) 
-        vecDispModel[vecDispModel > 10^(10)] <- 10^(10)
+        vecDispModel[vecDispModel < -10*log(10)] <- -10*log(10) 
+        vecDispModel[vecDispModel > 10*log(10)] <- 10*log(10)
         
         vecDispParam <- exp(as.vector(lsDispModelGlobal$matSplineBasis %*% 
                                           vecDispModel))
@@ -353,8 +353,8 @@ evalLogLikContinuousZINB <- function(
                 by = 1)]
         scaNParamUsed <- scaNParamUsed + length(vecMuModel)
         
-        vecMuModel[vecMuModel < -10^(10)] <- -10^(10)
-        vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
+        vecMuModel[vecMuModel < -10*log(10)] <- -10*log(10)
+        vecMuModel[vecMuModel > 10*log(10)] <- 10*log(10)
         
         vecMuParam <- exp(as.vector(lsMuModelGlobal$matSplineBasis %*% 
                                         vecMuModel))
@@ -698,7 +698,11 @@ fitContinuousZINB <- function(
     lsDropModelGlobal,
     vecPiParam){
     
-    vecTheta <- log(vecDispGuess)
+    if(lsDispModelGlobal$strDispModel %in% c("splines")) {
+        vecTheta <- vecDispGuess # don't use log space
+    } else {
+        vecTheta <- log(vecDispGuess)
+    }
     if(!is.null(lsvecBatchParamGuessDisp)){
         vecTheta <- c(vecTheta, log(unlist(lsvecBatchParamGuessDisp)))
     }
@@ -761,8 +765,8 @@ fitContinuousZINB <- function(
             by = 1)]
         scaNParamUsed <- scaNParamUsed + length(vecDispModel)
         
-        vecDispModel[vecDispModel < -10^(10)] <- -10^(10)
-        vecDispModel[vecDispModel > 10^(10)] <- 10^(10)
+        vecDispModel[vecDispModel < -10*log(10)] <- -10*log(10)
+        vecDispModel[vecDispModel > 10*log(10)] <- 10*log(10)
     } else {
         stop("fitImpulseOneInitZINB()")
     }
@@ -818,8 +822,8 @@ fitContinuousZINB <- function(
             by = 1)]
         scaNParamUsed <- scaNParamUsed + length(vecMuModel)
         
-        vecMuModel[vecMuModel < -10^(10)] <- -10^(10)
-        vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
+        vecMuModel[vecMuModel < -10*log(10)] <- -10*log(10)
+        vecMuModel[vecMuModel > 10*log(10)] <- 10*log(10)
     } else {
         stop("fitImpulseOneInitZINB()")
     }

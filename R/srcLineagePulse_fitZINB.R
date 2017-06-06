@@ -81,7 +81,8 @@ fitZINB <- function(
             lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=7)
             lsMuModel$matMuModel[,c(3:5)] <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=3, byrow=FALSE)
         } else if(strMuModel=="splines"){
-            lsMuModel$matMuModel <- matrix(1, nrow=scaNumGenes, ncol=scaDFSplinesMu)
+            lsMuModel$matMuModel <- matrix(0, nrow=scaNumGenes, ncol=scaDFSplinesMu)
+            lsMuModel$matMuModel[,1] <- 1# log(vecMuModelInit)
         } else if(strMuModel=="groups"){
             lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=length(unique(dfAnnotation$groups)), byrow=FALSE)
         } else if(strMuModel=="MM"){
@@ -171,7 +172,7 @@ fitZINB <- function(
         } else if(strDispModel=="MM"){
             lsDispModel$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=dim(matWeights)[2])
         } else if(strDispModel=="splines"){
-            lsDispModel$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=scaDFSplinesDisp)
+            lsDispModel$matDispModel <- matrix(0, nrow=scaNumGenes, ncol=scaDFSplinesDisp)
         } else if(strDispModel=="groups"){
             lsDispModel$matDispModel <- matrix(1, nrow=scaNumGenes, ncol=length(unique(dfAnnotation$groups)))
         } else {

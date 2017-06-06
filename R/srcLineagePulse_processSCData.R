@@ -245,7 +245,7 @@ processSCData <- function(
     if(boolVerbose) print(strMessage)
     
     # Reduce matPiConstPredictors to genes in matCountsProc
-    matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),]
+    matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),,drop=FALSE]
     
     objLP <- new(
         'LineagePulseObject',
