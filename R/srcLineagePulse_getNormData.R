@@ -9,16 +9,11 @@
 #' 
 #' @seealso Called by \code{fitZINB}. Can be called by user.
 #' 
-#' @param matMu: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#' @param matDisp: (vector number of genes) Gene-wise 
-#'    negative binomial dispersion coefficients.
-#' @param matDrop: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#' @param matboolZero: (bool matrix genes x cells)
-#'    Whether observation is zero.
-#' @param matboolNotZeroObserved: (bool matrix genes x cells)
-#'    Whether observation is real and non-zero.
+#' @param matCounts: (numeric matrix genes x cells)
+#'    Count data.
+#' @param lsMuModel: (list) Mean parameter model parameters.
+#' @param boolDepth: (bool) [Default TRUE] Whether to normalize for sequencing depth.
+#' @param boolBatch: (bool) [Default TRUE] Whether to normalize for batch.
 #' 
 #' @return matZ: (numeric matrix genes x cells)
 #'    Posterior probability of observation not being generated 
@@ -28,27 +23,37 @@
 #' 
 #' @export
 getNormData <- function(matCounts,
-                        lsMuModel){
-  
-  scaNumCells <- dim(matCounts)[2]
-  scaNumConfounders <- length(lsMuModel$lsmatBatchModel)
-  matNormData <- do.call(rbind, bplapply(rownames(matCounts), function(id){
-    # Extract batch parameters
-    vecBatchParam <- array(1, scaNumCells)
-    if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)){
-      for(confounder in seq(1,scaNumConfounders)){
-        vecBatchParam <- vecBatchParam*(lsMuModel$lsmatBatchModel[[confounder]][id,][
-          lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
-      }
+                        lsMuModel,
+                        boolDepth = TRUE,
+                        boolBatch = TRUE){
+    
+    if(!boolDepth & !boolBatch) {
+        warning("No normalisation chosen")
     }
-    # Normalise counts by depth and batch factors
-    vecNormData <- matCounts[id,]/
-      lsMuModel$lsMuModelGlobal$vecNormConst/
-      vecBatchParam
-    return(vecNormData)
-  }))
-  
-  rownames(matNormData) <- rownames(matCounts)
-  colnames(matNormData) <- colnames(matCounts)
-  return(matNormData)
+    
+    scaNumCells <- dim(matCounts)[2]
+    scaNumConfounders <- length(lsMuModel$lsmatBatchModel)
+    matNormData <- do.call(rbind, bplapply(rownames(matCounts), function(id){
+        # Extract batch parameters
+        vecBatchParam <- array(1, scaNumCells)
+        if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)){
+            for(confounder in seq(1,scaNumConfounders)){
+                vecBatchParam <- vecBatchParam*(lsMuModel$lsmatBatchModel[[confounder]][id,][
+                    lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+            }
+        }
+        # Normalise counts by depth and/or batch factors as required
+        vecNormData <- matCounts[id,]
+        if(boolDepth) {
+            vecNormData <-vecNormData/lsMuModel$lsMuModelGlobal$vecNormConst
+        }
+        if(boolBatch) {
+            vecNormData <- vecNormData/vecBatchParam
+        }
+        return(vecNormData)
+    }))
+    
+    rownames(matNormData) <- rownames(matCounts)
+    colnames(matNormData) <- colnames(matCounts)
+    return(matNormData)
 }

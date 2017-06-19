@@ -69,26 +69,39 @@ plotGene <- function(
     
     ### 2. Data scatter plot
     # Set drop-out rates as constant for visualistion if not given.
-    if(boolColourByDropout){
-        dfScatterCounts <- data.frame(
-            pseudotime=objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime,
-            counts=vecCountsToPlot,
-            dropout_posterior=vecDropPosterior) #vecPiParamH1)
-        gGenePlot <- ggplot() +
-            geom_point(data=dfScatterCounts, aes(x=pseudotime, y=counts, colour=dropout_posterior), show.legend=TRUE)
-    } else {
-        dfScatterCounts <- data.frame(
-            pseudotime=objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime,
-            counts=vecCountsToPlot)
-        gGenePlot <- ggplot() +
-            geom_point(data=dfScatterCounts, aes(x=pseudotime, y=counts), show.legend=TRUE)
+    dfScatterCounts <- data.frame( counts=vecCountsToPlot )
+    if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+        dfScatterCounts$x <- objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime
+        
+        if(boolColourByDropout){
+            dfScatterCounts$dropout_posterior <- vecDropPosterior
+            gGenePlot <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(x=x, y=counts, colour=dropout_posterior), show.legend=TRUE)
+        } else {
+            gGenePlot <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(x=x, y=counts), show.legend=TRUE)
+        }
+        
+    } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
+        dfScatterCounts$x <- seq(1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells, by=1)
+        dfScatterCounts$groups <- objLP@dfAnnotationProc$groups
+        
+        if(boolColourByDropout){
+            dfScatterCounts$dropout_posterior <- vecDropPosterior
+            gGenePlot <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(
+                    x=x, y=counts, colour=dropout_posterior, shape = groups), show.legend=TRUE)
+        } else {
+            gGenePlot <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(x=x, y=counts, shape = groups), show.legend=TRUE)
+        }
     }
     
     gGenePlot <- gGenePlot + 
         labs(title=paste0(
             strGeneID, "\nlog10 q-value=", 
             round(log(objLP@dfResults[strGeneID,]$adj.p,2)/log(10)) )) +
-        xlab(paste0("pseudotime")) +
+        xlab(paste0("x")) +
         scale_colour_gradient(high="red",low="green",limits=c(0, 1)) +
         theme(axis.text=element_text(size=14),
               axis.title=element_text(size=14,face="bold"),
@@ -104,25 +117,45 @@ plotGene <- function(
     vecMuParamH0[vecMuParamH0 > scaMaxPlot] <- NA
     vecMuParamH1[vecMuParamH1 > scaMaxPlot] <- NA
     if(is.null(vecReferenceMuParam)){
-        dfLineImpulse <- data.frame(
-            pseudotime=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 2),
-            counts=c(vecMuParamH0,
-                     vecMuParamH1),
-            model=c(rep("H0", length(vecMuParamH0)), 
-                    rep("H1", length(vecMuParamH1))) )
+        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+            dfLineImpulse <- data.frame(
+                x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 2),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1))) )
+        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
+            dfLineImpulse <- data.frame(
+                x=rep(seq(1,objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 2),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1))) )
+        }
     } else {
-        dfLineImpulse <- data.frame(
-            pseudotime=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 3),
-            counts=c(vecMuParamH0,
-                     vecMuParamH1,
-                     vecReferenceMuParam),
-            model=c(rep("H0", length(vecMuParamH0)), 
-                    rep("H1", length(vecMuParamH1)),
-                    rep("Reference", length(vecReferenceMuParam))) )
+        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+            dfLineImpulse <- data.frame(
+                x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 3),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1,
+                         vecReferenceMuParam),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1)),
+                        rep("Reference", length(vecReferenceMuParam))) )
+        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
+            dfLineImpulse <- data.frame(
+                x=rep(seq(1,objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 3),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1,
+                         vecReferenceMuParam),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1)),
+                        rep("Reference", length(vecReferenceMuParam))) )
+        }
     }
     gGenePlot <- gGenePlot + geom_line(
         data=dfLineImpulse, 
-        aes(x=pseudotime, y=counts, linetype=model),
+        aes(x=x, y=counts, linetype=model),
         show.legend=TRUE)
     if(boolH1NormCounts) {
         gGenePlot <- gGenePlot + ylab("normalised counts")
