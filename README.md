@@ -12,8 +12,9 @@ Clone the GitHub LineagePulse repository first into you local target directory
 and then install the package via "R CMD INSTALL .".
 
 ### VIGNETTE
-View the vignette (.html) in your browser by double clicking on "vignettes/LineagePulse_Tutorial.html".
-# Problems with BiocParallel:
+View the vignette (.html) in your browser by double clicking on "vignettes/LineagePulse_Tutorial.Rmd".
+
+### Problems with BiocParallel:
 LineagePulse is parallelised with BiocParallel. 
 If BiocParallel does not start any processes during the model estimation, add 
 options(bphost="localhost")
