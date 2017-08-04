@@ -2,21 +2,19 @@ Package: LineagePulse
 Type: Package
 Title: Differential expression analysis of single-cell RNA-seq data
 Version: 0.99.2
-Date: 2017-03-06
+Date: 2017-08-04
 Authors@R: c(
-	person('David S', 'Fischer', NULL, 'david.fischer@helmholtz-muenchen.de', c('aut','cre')),
-	person('Fabian', 'Theis', NULL, 'fabian.theis@helmholtz-muenchen.de', 'ctb'),
-	person('Nir', 'Yosef', NULL, 'niryosef@berkeley.edu', 'ctb'))
+    person('David S', 'Fischer', NULL, 'david.fischer@helmholtz-muenchen.de', c('aut','cre')),
+    person('Fabian', 'Theis', NULL, 'fabian.theis@helmholtz-muenchen.de', 'ctb'),
+    person('Nir', 'Yosef', NULL, 'niryosef@berkeley.edu', 'ctb'))
 Author: David S Fischer [aut, cre], Fabian J Theis [ctb], Nir Yosef [ctb]
 Maintainer: David S Fischer <david.fischer@helmholtz-muenchen.de>
-Description: LineagePulse can perform longitudinal differential expression analysis based on pseudotime as a continuous covariate. Moreover, LineagePulse can perform differential expression analysis between discrete groups of cells and based on a mixture model (including responsive subset analysis, RSA).
+Description: LineagePulse can perform longitudinal differential expression analysis based on pseudotime as a continuous covariate. Moreover, LineagePulse can perform differential expression analysis between discrete groups of cells.
+License: Artistic-2.0
 Encoding: UTF-8
 Imports:
     BiocParallel,
-    ComplexHeatmap,
-    circlize,
     compiler,
-    cowplot,
     ggplot2,
     grDevices,
     knitr,
@@ -34,6 +32,26 @@ biocViews: Software,
     CellBiology,
     CellBasedAssays
 Collate:
+    'main_LineagePulse.R'
+    'srcLineagePulse_calcNormConst.R'
+    'srcLineagePulse_calcPostDrop.R'
+    'srcLineagePulse_classLineagePulseObject.R'
+    'srcLineagePulse_decompressParameters.R'
+    'srcLineagePulse_evalDropoutModel.R'
+    'srcLineagePulse_evalImpulseModel.R'
+    'srcLineagePulse_evalLogLikZINB.R'
+    'srcLineagePulse_fitZINB_cofitMeanDispersion.R'
+    'srcLineagePulse_fitZINB_fitDropout.R'
+    'srcLineagePulse_fitZINB_WrapperLP.R'
+    'srcLineagePulse_fitZINB.R'
+    'srcLineagePulse_getNormData.R'
+    'srcLineagePulse_initialiseImpulseParameters.R'
+    'srcLineagePulse_plotComparativeECDF.R'
+    'srcLineagePulse_plotGene.R'
+    'srcLineagePulse_processSCData.R'
+    'srcLineagePulse_runDEAnalysis.R'
+    'srcLineagePulse_simulateDataSet.R'
+    'srcLineagePulse_sortGeneTrajectories.R'
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
 BugReports: https://github.com/YosefLab/LineagePulse/issues

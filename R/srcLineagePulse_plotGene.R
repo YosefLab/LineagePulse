@@ -36,12 +36,8 @@
 #' @param strTitleSuffix (str) String to be added to title.
 #' @param boolColourByDropout (bool) Whether to colour scatter
 #' plot by posterior of drop-out.
-#' @param boolExpectedDistrPanel (bool) [Default FALSE]
-#' Whether to add a panel in which the expected density is scaled with the kernel 
-#' density estimate of the cell density in pseudotime to give a 
-#' confidence interval where cells are expected to be observed
-#' This aids interpretation of local maxima as low probability events
-#' in pseudotime intervals of dense sampling.
+#' @param boolLineageContour (bool) [Default FALSE]
+#' Whether to the "lineage contour" lines to the scatter plot.
 #' @param bwDensity (bandwith: numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in pseudotime (used if boolExpectedDistrPanel=TRUE).
@@ -61,7 +57,7 @@ plotGene <- function(
     boolLogPlot=TRUE,
     boolColourByDropout=TRUE,
     boolH1NormCounts=FALSE,
-    boolExpectedDistrPanel=FALSE,
+    boolLineageContour=FALSE,
     bwDensity = NULL){
     
     cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey", "red", "pink")

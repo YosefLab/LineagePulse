@@ -22,27 +22,20 @@ source("srcLineagePulse_calcPostDrop.R")
 source("srcLineagePulse_calcNormConst.R")
 source("srcLineagePulse_classLineagePulseObject.R")
 source("srcLineagePulse_decompressParameters.R")
-source("srcLineagePulse_estimateMMAssignments.R")
 source("srcLineagePulse_evalDropoutModel.R")
 source("srcLineagePulse_evalImpulseModel.R")
 source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
 source("srcLineagePulse_fitZINB.R")
-source("srcLineagePulse_fitZINB_WrapperMixture.R")
-source("srcLineagePulse_fitZINB_WrapperH0Mixture.R")
 source("srcLineagePulse_fitZINB_WrapperLP.R")
 source("srcLineagePulse_getNormData.R")
 source("srcLineagePulse_initialiseImpulseParameters.R")
-source("srcLineagePulse_initialiseCentroids.R")
 source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_processSCData.R")
-source("srcLineagePulse_processSCDataMixture.R")
 source("srcLineagePulse_runDEAnalysis.R")
 source("srcLineagePulse_simulateDataSet.R")
 source("srcLineagePulse_sortGeneTrajectories.R")
-source("srcLineagePulse_validateOutput.R")
-source("srcLineagePulse_validateOutputSimulation.R")
 
 ################################################################################
 ### Main function
@@ -211,6 +204,11 @@ runLineagePulse <- function(
     boolSuperVerbose=FALSE ){
     
     # 1. Data preprocessing
+    # Extract count matrix if handed SummarizedExperiment
+    if (class(matCounts) == "SummarizedExperiment"){ 
+        matCounts <- assay(matCounts)
+    }
+    
     vecAllGenes <- rownames(matCounts)
     lsProcessedSCData <- processSCData(
         matCounts=matCounts,
