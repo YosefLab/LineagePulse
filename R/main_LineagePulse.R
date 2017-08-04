@@ -9,6 +9,7 @@
 library(BiocParallel)
 library(compiler)
 library(ggplot2)
+library(gridExtra)
 library(Matrix)
 library(splines)
 
