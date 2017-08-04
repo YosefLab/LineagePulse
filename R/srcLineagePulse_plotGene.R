@@ -40,7 +40,7 @@
 #' Whether to the "lineage contour" lines to the scatter plot.
 #' @param bwDensity (bandwith: numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
-#' of cell density in pseudotime (used if boolExpectedDistrPanel=TRUE).
+#' of cell density in pseudotime (used if boolLineageContour=TRUE).
 #' If not set, defaults to stats:density() default.
 #' 
 #' @return gGenePlot: (ggplot object)
@@ -179,7 +179,7 @@ plotGene <- function(
         gGenePlot <- gGenePlot + ylab("counts")
     }
     
-    if(boolExpectedDistrPanel) {
+    if(boolLineageContour) {
         # decompress log free
         if(boolLogPlot) {
             vecMuParamH1_nonlog <- 10^(vecMuParamH1)
