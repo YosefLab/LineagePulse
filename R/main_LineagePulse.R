@@ -5,13 +5,15 @@
 ################################################################################
 ### Libraries and source code
 ################################################################################
+# this section is for building if the code is not used as package but just as a
+# collection of functions.
 
 library(BiocParallel)
 library(compiler)
 library(ggplot2)
-library(gridExtra)
 library(Matrix)
 library(splines)
+library(SummarizedExperiment)
 
 ### CHANGE THIS PATH TO THE PATH IN WHICH YOU HAVE LineagePulse/R ###
 setwd("~/gitDevelopment/LineagePulse/R")
