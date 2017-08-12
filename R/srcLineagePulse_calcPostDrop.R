@@ -102,12 +102,12 @@ calcPostDrop_Matrix <- function(
     scaNumCells <- dim(matCounts)[2]
     
     # Compute posterior of drop-out.
-    if(is.null(vecIDs)) {
+    if(!is.null(vecIDs)) {
         vecGenes <- vecIDs
     } else {
         vecGenes <- rownames(matCounts)
     }
-    matZ <- do.call(rbind, bplapply(vecGenes, function(i){
+    matZ <- do.call(rbind, lapply(vecGenes, function(i){
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],

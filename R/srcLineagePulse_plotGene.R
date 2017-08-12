@@ -43,7 +43,7 @@
 #' of cell density in pseudotime (used if boolLineageContour=TRUE).
 #' If not set, defaults to stats:density() default.
 #' 
-#' @return gGenePlot: (ggplot object)
+#' @return gplotGene: (ggplot object)
 #'    Model rajectories and scatter plot for given gene.
 #'    
 #' @author David Sebastian Fischer
@@ -58,7 +58,9 @@ plotGene <- function(
     boolColourByDropout=TRUE,
     boolH1NormCounts=FALSE,
     boolLineageContour=FALSE,
-    bwDensity = NULL){
+    bwDensity = NULL,
+    scaGgplot2Size = 0.5,
+    scaGgplot2Alpha = 0.5){
     
     cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey", "red", "pink")
     ### 1. Extract data and models
@@ -89,9 +91,9 @@ plotGene <- function(
         lsDropModel=objLP@lsDropModel,
         vecIDs=strGeneID))
     if(boolLogPlot){
-        vecCountsToPlot <- log(vecCountsToPlot)/log(10)
-        vecMuParamH0 <- log(vecMuParamH0)/log(10)
-        vecMuParamH1 <- log(vecMuParamH1)/log(10)
+        vecCountsToPlot <- log(vecCountsToPlot+1)/log(10)
+        vecMuParamH0 <- log(vecMuParamH0+1)/log(10)
+        vecMuParamH1 <- log(vecMuParamH1+1)/log(10)
     }
     
     ### 2. Data scatter plot
@@ -102,11 +104,13 @@ plotGene <- function(
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
-            gGenePlot <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(x=x, y=counts, colour=dropout_posterior), show.legend=TRUE)
+            gplotGene <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(
+                    x=x, y=counts, colour=dropout_posterior), size = scaGgplot2Size, alpha = scaGgplot2Alpha, show.legend=TRUE)
         } else {
-            gGenePlot <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(x=x, y=counts), show.legend=TRUE)
+            gplotGene <- ggplot() +
+                geom_point(data=dfScatterCounts, aes(
+                    x=x, y=counts), size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE)
         }
         
     } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
@@ -115,14 +119,16 @@ plotGene <- function(
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
-            gGenePlot <- ggplot() +
+            gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, colour=dropout_posterior, shape = groups), show.legend=TRUE) +
+                    x=x, y=counts, colour=dropout_posterior, shape = groups), 
+                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE) +
                 scale_colour_gradient(high="red",low="green",limits=c(0, 1)) 
         } else {
-            gGenePlot <- ggplot() +
+            gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, shape = groups), show.legend=TRUE)
+                    x=x, y=counts, shape = groups), 
+                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE)
         }
     }
     
@@ -169,14 +175,12 @@ plotGene <- function(
                         rep("Reference", length(vecReferenceMuParam))) )
         }
     }
-    gGenePlot <- gGenePlot + geom_line(
-        data=dfLineImpulse, 
-        aes(x=x, y=counts, linetype=model),
-        show.legend=TRUE)
+    gplotGene <- gplotGene + geom_line(data=dfLineImpulse, aes(
+        x=x, y=counts, linetype=model), size = 1, show.legend=TRUE)
     if(boolH1NormCounts) {
-        gGenePlot <- gGenePlot + ylab("normalised counts")
+        gplotGene <- gplotGene + ylab("normalised counts")
     } else {
-        gGenePlot <- gGenePlot + ylab("counts")
+        gplotGene <- gplotGene + ylab("counts")
     }
     
     if(boolLineageContour) {
@@ -217,35 +221,35 @@ plotGene <- function(
         if(boolLogPlot){
             dfExpectObsCI$contour <- log(dfExpectObsCI$contour)/log(10)
         }
-        gGenePlot <- gGenePlot + geom_line(data = dfExpectObsCI, aes(
+        gplotGene <- gplotGene + geom_line(data = dfExpectObsCI, aes(
             x = pseudotime, y = contour, colour = ncells)) +
             scale_colour_manual(values = cbbPalette, name = "contours")
         scale_alpha_continuous(guide=FALSE)
     } 
     
-    gGenePlot <- gGenePlot + 
+    gplotGene <- gplotGene + 
         labs(title=paste0(
             strGeneID, "\nlog10 q-value=", 
             round(log(objLP@dfResults[strGeneID,]$adj.p,2)/log(10)) )) +
-        xlab(paste0("x")) +
+        xlab(paste0("pseudotime")) +
         theme(axis.text=element_text(size=14),
               axis.title=element_text(size=14,face="bold"),
               title=element_text(size=14,face="bold"),
               legend.text=element_text(size=14))
     if(boolLogPlot) {
-        gGenePlot <- gGenePlot + ylab(paste0("log10 counts"))
+        gplotGene <- gplotGene + ylab(paste0("log10(counts+10)"))
     } else { 
-        gGenePlot <- gGenePlot + ylab(paste0("counts"))
+        gplotGene <- gplotGene + ylab(paste0("counts"))
     }
     
-    return(gGenePlot)
+    return(gplotGene)
 }
 
 #' Plot density of cells in pseudotime
 #' 
 #' @param objLP (LineagePulseObject) LineagePulseObject to base plot on.
 #'    
-#' @return gGenePlot: (ggplot object)
+#' @return gplotGene: (ggplot object)
 #' ggplot2 kernel density estimator plot. 
 #'    
 #' @author David Sebastian Fischer
