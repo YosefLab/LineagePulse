@@ -19,33 +19,33 @@
 #' @param scaNConst: (scalar) Number of constant genes in data set.
 #' @param scaNImp: (scalar) Number of impulse distributed genes in data set.
 #' @param scaPTmax: (scalar) [Default 100]
-#'    Maximum pseudotime coordinate of all cells. This doesnt
-#'    really matter as cells are uniformly distributed in the 
-#'    current implementation.
+#' Maximum pseudotime coordinate of all cells. This doesnt
+#' really matter as cells are uniformly distributed in the 
+#' current implementation.
 #' @param scaMumax: (scalar) [Default 1000]
-#'    Maximum expression mean parameter to be used.
+#' Maximum expression mean parameter to be used.
 #' @param scaSDImpulseAmplitude: (scalar) [Default 1]
-#'    Standard deviation of normal distribution form which the 
-#'    amplitude change within an impulse trace is drawn.
+#' Standard deviation of normal distribution form which the 
+#' amplitude change within an impulse trace is drawn.
 #' @param vecNormConstExternal: (numeric vector number of cells)
-#'    [Default NULL]
-#'    Size factors for data set. Size factors are set to 1 if this is
-#'    not specified (NULL).
+#' [Default NULL]
+#' Size factors for data set. Size factors are set to 1 if this is
+#' not specified (NULL).
 #' @param matDropoutModelExternal: (numeric matrix cells x 2) 
-#'    [Default NULL] External drop-out model, has to have
-#'    one row for each simulated cell.
+#' [Default NULL] External drop-out model, has to have
+#' one row for each simulated cell.
 #' @param dirOutSimulation: (str directory)
-#'    Directory to which simulated parameter objects are 
-#'    saved to.
+#' Directory to which simulated parameter objects are 
+#' saved to.
 #' 
 #' @return list: (length 2)
 #' \itemize{
-#'    \item vecPT: (numerical vector length number of cells)
-#'    Pseudotime coordinates (1D) of cells: One scalar per cell.
-#'    \item matSampledCountsObserved: (matrix genes x cells)
-#'    Sampled count data of all cells after drop-out.
+#' \item vecPT: (numerical vector length number of cells)
+#' Pseudotime coordinates (1D) of cells: One scalar per cell.
+#' \item matSampledCountsObserved: (matrix genes x cells)
+#' Sampled count data of all cells after drop-out.
 #' }
-#'    
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export

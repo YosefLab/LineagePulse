@@ -7,30 +7,27 @@
 #' Calculates posterior of observation being a drop-out for a vector. This posterior
 #' is zero if an observation is non-zero, therefore, the data is read in 
 #' as a boolean matrix indicating zero-observations, the actual values
-#' are not required. Neighbourhood smoothing can be included. Does not use
-#' parallelisation and takes vectors: As oppose to \code{calcProbNB_Vector}
-#' vectors do not produce format errors and usage within upstream parallelisation
-#' works.
+#' are not required.
 #' 
-#' @seealso Called by \code{fitZINB}. Same function as \code{calcPostDrop_Matrix}
+#' @seealso Same function as \code{calcPostDrop_Matrix}
 #' but for vectors (i.e. one gene) as oppose to matrices: no 
 #' parallelisation and no formatting errors.
 #' 
 #' @param vecMu: (numeric vector samples)
-#'    Negative binomial mean parameters of samples.
+#' Negative binomial mean parameters of samples.
 #' @param vecDisp: (numeric vector samples)
-#'    Negative binomial mean parameters of samples.
+#' Negative binomial mean parameters of samples.
 #' @param vecDrop: (numeric vector samples)
 #'   Drop out rates of samples.
 #' @param vecboolZero: (bool vector samples)
-#'    Whether observation is zero.
+#' Whether observation is zero.
 #' @param vecboolNotZero: (bool vector samples)
-#'    Whether observation is real and non-zero.
+#' Whether observation is real and non-zero.
 #' 
 #' @return vecZ:  (numeric vector samples)
-#'    Posterior probability of observation not being generated 
-#'    by drop-out.
-#'    
+#' Posterior probability of observation not being generated 
+#' by drop-out.
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
@@ -71,26 +68,24 @@ calcPostDrop_Vector <- function(
 #' as a boolean matrix indicating zero-observations, the actual values
 #' are not required. Neighbourhood smoothing can be included.
 #' 
-#' @seealso Called by \code{fitZINB}. Can be called by user.
+#' @seealso Called by \code{fitZINB}.
 #' 
-#' @param matMu: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#' @param matDisp: (vector number of genes) Gene-wise 
-#'    negative binomial dispersion coefficients.
-#' @param matDrop: (numeric matrix genes x cells)
-#'    Inferred zero inflated negative binomial drop out rates.
-#' @param matboolZero: (bool matrix genes x cells)
-#'    Whether observation is zero.
-#' @param matboolNotZeroObserved: (bool matrix genes x cells)
-#'    Whether observation is real and non-zero.
+#' @param matCounts (count matrix genes x cells)
+#' Observed read counts, not observed are NA.
+#' @param lsMuModel (list)
+#' Object containing description of gene-wise mean parameter models.
+#' @param lsDispModel (list)
+#' Object containing description of gene-wise dispersion parameter models.
+#' @param lsDropModel (list)
+#' Object containing description of cell-wise drop-out parameter models.
+#' @param vecIDs (vector of strings) [Default NULL]
+#' Gene IDs for which posteriors of drop-out are to be computed.
 #' 
 #' @return matZ: (numeric matrix genes x cells)
-#'    Posterior probability of observation not being generated 
-#'    by drop-out.
-#'    
-#' @author David Sebastian Fischer
+#' Posterior probability of observation not being generated 
+#' by drop-out.
 #' 
-#' @export
+#' @author David Sebastian Fischer
 calcPostDrop_Matrix <- function(
     matCounts,
     lsMuModel,

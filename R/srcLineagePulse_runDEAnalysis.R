@@ -19,8 +19,6 @@
 #' added.
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 runDEAnalysis <- function(objLP){
   
   # (I) Compute log likelihoods

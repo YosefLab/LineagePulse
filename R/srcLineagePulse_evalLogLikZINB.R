@@ -2,112 +2,6 @@
 #++++++++++++++++++++++++++    Likelihood ZINB    +++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Compute likelihood of zero-inflated negative binomial model
-#' for a vector of counts.
-#' 
-#' This liklihood function is appropriate for sequencing data with high drop 
-#' out rate, commonly observed in single cell data (e.g. scRNA-seq). This
-#' is the core function used for every likelihood evaluation 
-#' in LineagePulse, such as maximum likelihood-based estimation. 
-#' It operates on a vector of counts, such as observations of a gene. Note that
-#' for the sake of numerical stability, lower bounds on loglikelihood terms
-#' are implemented.
-#' 
-#' @seealso Called directly by likelihood wrappers 
-#' \code{evalLogLikSmoothZINB} and \code{evalLogLikGene}
-#' Called directly by \code{evalLogLikPiZINB},
-#' \code{evalLogLikDispConstMuClustersZINB}
-#' and \code{evalLogLikMuWindowZINB}
-#' Moreover called by \code{plotGene}.
-#' Compiled verison: \link{evalLikZINB_comp}
-#' Loglikelihood: \link{evalLogLikZINB}
-#'
-#' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
-#' @param vecMu (vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (scalar vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#'    
-#' @return vecLik: (vector number of samples) 
-#'    Likelihood under zero-inflated
-#' 	  negative binomial model of each sample.
-#'    
-#' @author David Sebastian Fischer
-#' 
-#' @export
-evalLikZINB <- function(
-    vecCounts,
-    vecMu,
-    vecDisp, 
-    vecPi, 
-    vecboolNotZero, 
-    vecboolZero){  
-    
-    # Note on handling very low probabilities: 
-    # This bounds below the bound on the loglikelihood
-    # scaLikPrecLim <- 10^(-323)
-    
-    vecLik <- array(NA, length(vecCounts))
-    # Likelihood of zero counts:
-    vecLik[vecboolZero] <- (1-vecPi[vecboolZero])*
-        (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
-                                   vecMu[vecboolZero]))^vecDisp[vecboolZero] +
-        vecPi[vecboolZero]
-    # Likelihood of non-zero counts:
-    vecLik[vecboolNotZero] <- (1-vecPi[vecboolNotZero])*dnbinom(
-        vecCounts[vecboolNotZero], 
-        mu=vecMu[vecboolNotZero], 
-        size=vecDisp[vecboolNotZero], 
-        log=FALSE)
-    
-    # Catch low likehood observations
-    # Do not need this as likelihood goes to zero in worst case,
-    # ie will not contribute to sum!
-    # vecLik[vecLik < scaLikPrecLim] <- scaLikPrecLim
-    
-    # Return vector of likelihoods for weighting.
-    return(vecLik)
-}
-
-#' Compiled function: evalLikZINB
-#' 
-#' Pre-compile heavily used functions.
-#' Refer to \link{evalLikZINB}.
-#' 
-#' @seealso \link{evalLikZINB}
-#' 
-#' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
-#' @param vecMu (vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (scalar vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#'    
-#' @return scaLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
-#' 
-#' @export
-evalLikZINB_comp <- cmpfun(evalLikZINB)
-
 #' Compute loglikelihood of zero-inflated negative binomial model
 #' for a vector of counts.
 #' 
@@ -119,42 +13,32 @@ evalLikZINB_comp <- cmpfun(evalLikZINB)
 #' for the sake of numerical stability, lower bounds on loglikelihood terms
 #' are implemented.
 #' 
-#' @seealso Called directly by likelihood wrappers 
-#' \code{evalLogLikSmoothZINB} and \code{evalLogLikGene}
-#' Called directly by \code{evalLogLikPiZINB},
-#' \code{evalLogLikDispConstMuClustersZINB}
-#' and \code{evalLogLikMuWindowZINB}
-#' Moreover called by \code{plotGene}.
-#' Compiled verison: \link{evalLogLikZINB_comp}
-#'
 #' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
+#' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (scalar vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#'    
-#' @return scaLogLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
+#' Negative binomial mean parameter.
+#' @param vecNormConst (numeric vector number of samples) 
+#' Model scaling factors, one per cell.
+#' @param vecDisp (scalar vector number of samples) 
+#' Negative binomial dispersion parameters.
+#' @param vecPi (probability vector number of samples) 
+#' Drop-out rate estimates.
+#' @param vecidxNotZero (bool vector number of samples)
+#' Whether observation is larger than zero.
+#' @param vecidxZero (bool vector number of samples)
+#' Whether observation is zero.
 #' 
-#' @export
+#' @return scaLogLik (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
+#' 
+#' @author David Sebastian Fischer
 evalLogLikZINB <- function(
     vecCounts,
     vecMu,
     vecDisp, 
     vecPi, 
-    vecboolNotZero, 
-    vecboolZero){  
+    vecidxNotZero, 
+    vecidxZero){  
     
     # Note on handling very low probabilities: vecLikZeros
     # typically does not have zero elements as it has the 
@@ -167,18 +51,18 @@ evalLogLikZINB <- function(
     scaLogLikPrecLim <- -700
     
     # Likelihood of zero counts:
-    vecLogLikZeros <- log((1-vecPi[vecboolZero])*
-                              (vecDisp[vecboolZero]/(vecDisp[vecboolZero] + 
-                                                         vecMu[vecboolZero]))^vecDisp[vecboolZero] +
-                              vecPi[vecboolZero])
+    vecLogLikZeros <- log((1-vecPi[vecidxZero])*
+                              (vecDisp[vecidxZero]/(vecDisp[vecidxZero] + 
+                                                        vecMu[vecidxZero]))^vecDisp[vecidxZero] +
+                              vecPi[vecidxZero])
     vecLogLikZeros[vecLogLikZeros < scaLogLikPrecLim] <- scaLogLikPrecLim
     scaLogLikZeros <- sum(vecLogLikZeros)
     # Likelihood of non-zero counts:
-    vecLogLikNonzeros <- log(1-vecPi[vecboolNotZero]) +
+    vecLogLikNonzeros <- log(1-vecPi[vecidxNotZero]) +
         dnbinom(
-            vecCounts[vecboolNotZero], 
-            mu=vecMu[vecboolNotZero], 
-            size=vecDisp[vecboolNotZero], 
+            vecCounts[vecidxNotZero], 
+            mu=vecMu[vecidxNotZero], 
+            size=vecDisp[vecidxNotZero], 
             log=TRUE)
     vecLogLikNonzeros[vecLogLikNonzeros < scaLogLikPrecLim] <- scaLogLikPrecLim
     scaLogLikNonzeros <- sum(vecLogLikNonzeros)
@@ -196,26 +80,24 @@ evalLogLikZINB <- function(
 #' @seealso \link{evalLogLikZINB}
 #'
 #' @param vecCounts (count vector number of samples)
-#'    Observed read counts, not observed are NA.
+#' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of samples) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of samples) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (scalar vector number of samples) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of samples) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of samples)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of samples)
-#'    Whether observation is zero.
-#'    
-#' @return scaLogLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
+#' Negative binomial mean parameter.
+#' @param vecNormConst (numeric vector number of samples) 
+#' Model scaling factors, one per cell.
+#' @param vecDisp (scalar vector number of samples) 
+#' Negative binomial dispersion parameters.
+#' @param vecPi (probability vector number of samples) 
+#' Drop-out rate estimates.
+#' @param vecidxNotZero (bool vector number of samples)
+#' Whether observation is larger than zero.
+#' @param vecidxZero (bool vector number of samples)
+#' Whether observation is zero.
 #' 
-#' @export
+#' @return scaLogLik (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
+#' 
+#' @author David Sebastian Fischer
 evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
 
 #' Wrapper for log likelihood of zero-inflated negative binomial model
@@ -241,106 +123,42 @@ evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
 #' \code{evalLogLikZINB} or \code{evalLogLikSmoothZINB}.
 #'
 #' @param vecCounts (count vector number of cells)
-#'    Observed read counts, not observed are NA.
+#' Observed read counts, not observed are NA.
 #' @param vecMu (numeric vector number of cells) 
-#'    Negative binomial mean parameter.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors, one per cell.
-#' @param vecDisp: (numeric vector number of cells) 
-#'    Negative binomial dispersion parameters.
-#' @param vecPi: (probability vector number of cells) 
-#'    Drop-out rate estimates.
-#' @param vecboolNotZero: (bool vector number of cells)
-#'    Whether observation is larger than zero.
-#' @param vecboolZero: (bool vector number of cells)
-#'    Whether observation is zero.
-#'    
-#' @return scaLogLik: (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
-#'    
-#' @author David Sebastian Fischer
+#' Negative binomial mean parameter.
+#' @param vecNormConst (numeric vector number of cells) 
+#' Model scaling factors, one per cell.
+#' @param vecDisp (numeric vector number of cells) 
+#' Negative binomial dispersion parameters.
+#' @param vecPi (probability vector number of cells) 
+#' Drop-out rate estimates.
+#' @param vecidxNotZero (bool vector number of cells)
+#' Whether observation is larger than zero.
+#' @param vecidxZero (bool vector number of cells)
+#' Whether observation is zero.
 #' 
-#' @export
+#' @return scaLogLik (scalar) Likelihood under zero-inflated
+#' 	  negative binomial model.
+#' 
+#' @author David Sebastian Fischer
 evalLogLikGene <- function(
     vecCounts,
     vecMu,
     vecNormConst,
     vecDisp, 
     vecPi,
-    vecboolNotZero, 
-    vecboolZero ){
+    vecidxNotZero, 
+    vecidxZero ){
     
     scaLogLik <- evalLogLikZINB_comp(
         vecCounts=vecCounts,
         vecMu=vecMu*vecNormConst,
         vecDisp=vecDisp, 
         vecPi=vecPi,
-        vecboolNotZero=vecboolNotZero, 
-        vecboolZero=vecboolZero )
+        vecidxNotZero=vecidxNotZero, 
+        vecidxZero=vecidxZero )
     return(scaLogLik)
 }
-
-evalLogLikGeneMM <- function(
-    vecCounts,
-    matMuParam,
-    vecNormConst,
-    matDispParam,
-    matDropParam,
-    matWeights,
-    vecboolNotZero, 
-    vecboolZero ){
-    
-    scaLogLikPrecLim <- -700
-    
-    # Loop over models:
-    matLik <- do.call(cbind, lapply(seq(1, dim(matWeights)[2]), function(m){
-        evalLikZINB_comp(
-            vecCounts=vecCounts,
-            vecMu=matMuParam[,m]*vecNormConst,
-            vecDisp=matDispParam[,m], 
-            vecPi=matDropParam[,m],
-            vecboolNotZero=vecboolNotZero, 
-            vecboolZero=vecboolZero ) *matWeights[,m]
-    }))
-    vecLogLikSum <- log(apply(matLik, 1, sum, na.rm=TRUE))
-    vecLogLikSum[vecLogLikSum < scaLogLikPrecLim] <- scaLogLikPrecLim
-    scaLogLik <- sum(vecLogLikSum, na.rm=TRUE)
-    
-    return(scaLogLik)
-}
-
-evalLogLikGeneMM_comp <- cmpfun(evalLogLikGeneMM)
-
-evalLogLikCellMM <- function(vecCounts,
-                             matMuParam,
-                             matDispParam,
-                             matDropParam,
-                             scaNormConst,
-                             vecWeights,
-                             vecboolNotZero, 
-                             vecboolZero ){
-    
-    scaLogLikPrecLim <- -700
-    
-    # Loop over models:
-    matLik <- do.call(cbind, lapply(seq(1, length(vecWeights)), function(m){
-        # Evaluate loglikelihood of observations of cell under current model
-        evalLikZINB_comp(
-            vecCounts=vecCounts,
-            vecMu=matMuParam[,m]*scaNormConst,
-            vecDisp=matDispParam[,m], 
-            vecPi=matDropParam[,m],
-            vecboolNotZero=vecboolNotZero, 
-            vecboolZero=vecboolZero )*vecWeights[m]
-    }))
-    vecLogLikSum <- log(apply(matLik,1,sum, na.rm=TRUE))
-    vecLogLikSum[vecLogLikSum < scaLogLikPrecLim] <- scaLogLikPrecLim
-    scaLogLik <- sum(vecLogLikSum, na.rm=TRUE)
-    
-    return(scaLogLik)
-}
-
-evalLogLikCellMM_comp <- cmpfun(evalLogLikCellMM)
 
 #' Wrapper for log likelihood of zero-inflated negative binomial model
 #' for a matrix of counts (parallelised).
@@ -352,78 +170,25 @@ evalLogLikCellMM_comp <- cmpfun(evalLogLikCellMM)
 #' @seealso Called directly by \code{fitZINB} to track
 #' convergence of estimation iteration on entire data set.
 #'
-#' @param matCountsProc: (matrix genes x cells)
-#'    Observed read counts, not observed are NA.
-#' @param vecNormConst: (numeric vector number of cells) 
-#'    Model scaling factors, one per cell.
-#' @param lsMuModel: (list length 2)
-#'    All objects necessary to compute mean parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matMuModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of mean model for each gene.
-#'      \item lsMuModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'        \itemize{
-#'          \item strMuModel: (str) {"constant", "impulse", "clusters", 
-#'        "windows"} Name of the mean model.
-#'          \item scaNumCells: (scalar) [Default NA] Number of cells
-#'        for which model is evaluated. Used for constant model.
-#'          \item vecPseudotime: (numerical vector number of cells)
-#'        [Default NA] Pseudotime coordinates of cells. Used for
-#'        impulse model.
-#'          \item vecindClusterAssign: (integer vector length number of
-#'        cells) [Default NA] Index of cluster assigned to each cell.
-#'        Used for clusters model.
-#'          \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-#'        for BFGS estimation of impulse model with optim (termination criterium).
-#'          \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-#'        change in objective function for BFGS estimation of impulse 
-#'        model with optim (termination criterium).
-#'      }
-#'    }
-#' @param lsDispModel: (list length 2)
-#'    All objects necessary to compute dispersion parameters for all
-#'    observations.
-#'    \itemize{
-#'      \item matDispModel: (numerical matrix genes x number of model parameters)
-#'    Parameters of dispersion model for each gene.
-#'      \item lsDispModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
-#'        \itemize{
-#'          \item strDispModel: (str) {"constant"} 
-#'        Name of the dispersion model.
-#'          \item scaNumCells: (scalar) [Default NA] Number of cells
-#'        for which model is evaluated. Used for constant model.
-#'          \item vecPseudotime: (numerical vector number of cells)
-#'        [Default NA] Pseudotime coordinates of cells. Used for
-#'        impulse model.
-#'          \item vecindClusterAssign: (integer vector length number of
-#'        cells) [Default NA] Index of cluster assigned to each cell.
-#'        Used for clusters model.
-#'      }
-#'    }
-#' @param lsDropModel: (list length 2)
-#'    All objects necessary to compute drop-out parameters for all
-#'    observations, omitting mean parameters (which are stored in lsMeanModel).
-#'    \itemize{
-#'      \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
-#'    {offset parameter, log(mu) parameter, parameters belonging to
-#'    constant predictors}
-#'    Parameters of drop-out model for each cell
-#'      \item matPiConstPredictors: (numeric matrix genes x number of constant
-#'    gene-wise drop-out predictors) Predictors for logistic drop-out 
-#'    fit other than offset and mean parameter (i.e. parameters which
-#'    are constant for all observations in a gene and externally supplied.)
-#'    Is null if no constant predictors are supplied.
-#'    }
+#' @param matCounts (count matrix genes x cells)
+#' Observed read counts, not observed are NA.
+#' @param lsMuModel (list)
+#' Object containing description of gene-wise mean parameter models.
+#' @param lsDispModel (list)
+#' Object containing description of gene-wise dispersion parameter models.
+#' @param lsDropModel (list)
+#' Object containing description of cell-wise drop-out parameter models.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param boolConstModelOnMMLL (bool) [Default FALSE]
+#' Whether to evaluate constant gene-wise mean model on mixture model likelihood.
+#' This is necessary for numeric stability when testing whether mixture model
+#' fits are worse than constant fits.
 #'
-#' @return vecLogLik: (vector length number of genes) 
+#' @return vecLogLik (vector length number of genes) 
 #' Loglikelihood of each gene under zero-inflated negative binomial model.
-#'    
-#' @author David Sebastian Fischer
 #' 
-#' @export
+#' @author David Sebastian Fischer
 evalLogLikMatrix <- function(
     matCounts,
     lsMuModel,
@@ -486,8 +251,9 @@ evalLogLikMatrix <- function(
                     matDispParam=matDispParam,
                     matDropParam=matDropParam,
                     matWeights=matWeights,
-                    vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-                    vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+                    vecidxNotZero= which(!is.na(vecCounts) & vecCounts>0), 
+                    vecidxZero= which(!is.na(vecCounts) & vecCounts==0),
+                    scaNCells=length(vecCounts) )
                 
             } else {
                 # Decompress parameters by gene
@@ -516,8 +282,9 @@ evalLogLikMatrix <- function(
                         matDispParam=do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecDispParam )),
                         matDropParam=do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m) vecPiParam )),
                         matWeights=matWeights,
-                        vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-                        vecboolZero= !is.na(vecCounts) & vecCounts==0 )
+                        vecidxNotZero= which(!is.na(vecCounts) & vecCounts>0), 
+                        vecidxZero= which(!is.na(vecCounts) & vecCounts==0),
+                        scaNCells=length(vecCounts) )
                 } else {
                     scaLL <- evalLogLikGene(
                         vecCounts=vecCounts,
@@ -525,8 +292,8 @@ evalLogLikMatrix <- function(
                         vecNormConst=lsMuModel$lsMuModelGlobal$vecNormConst,
                         vecDisp=vecDispParam, 
                         vecPi=vecPiParam,
-                        vecboolNotZero= !is.na(vecCounts) & vecCounts>0, 
-                        vecboolZero= !is.na(vecCounts) & vecCounts==0)
+                        vecidxNotZero= which(!is.na(vecCounts) & vecCounts>0), 
+                        vecidxZero= which(!is.na(vecCounts) & vecCounts==0) )
                 }
             }
             return(scaLL)

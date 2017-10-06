@@ -2,41 +2,6 @@
 #++++++++    Decompress parameters: Compute parameter values from model  ++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-# EXAMPLE CODE:
-
-# 1. How to extract parameteres gene-wise?
-# Use decompressMeansByGene, decompressDispByGene and 
-# decompressDropoutRateByGene. Note that decompressDropoutRateByGene
-# performs looping over cell-wise models for you.
-#vecMuParam <- decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[i,],
-#  lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-#  vecInterval=NULL )
-#vecDispParam <- decompressDispByGene( vecDispModel=lsDispModel$matDispModel[i,],
-#  lsDispModel=lsDispersionModel$lsDispModelGlobal,
-#  vecInterval=NULL )
-#vecPiParam <- decompressDropoutRateByGene( matDropModel=lsDropModel$matDropModel,
-#  vecMu=vecMuParam,
-#  vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,] )
-
-# 2. How to extract parameters cell-wise?
-# Use decompressMeansByGene and decompressDispByGene in loop over genes
-# for a single cell and use decompressDropoutRateByCell.
-#vecMuParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-#  decompressMeansByGene(vecMuModel=lsMuModel$matMuModel[i,],
-#    lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-#    vecInterval=cell)
-#}))
-#vecDispParam <- do.call(rbind, lapply(seq(1,scaNumGenes), function(i){
-#  decompressDispByGene(vecDispModel=lsDispModel$matDispModel[i,],
-#    lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-#    vecInterval=cell)
-#}))
-#vecDropParam <- decompressDropoutRateByCell(vecDropModel=lsDropModel$matDropoutLinModel[j,],
-#  vecMu=vecMuParam,
-#  matPiConstPredictors=lsDropModel$matPiConstPredictors )
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-
 #' Compute mean parameter estimates from mean parameter model for a gene
 #' 
 #' Takes the model type and computes one mean parameter for each cell for one
@@ -48,18 +13,6 @@
 #'    Parameters of mean model for given gene.
 #' @param lsMuModelGlobal: (list) Global variables for mean model,
 #'    common to all genes.
-#'    \itemize{
-#'      \item strMuModel: (str) {"constant", "impulse", "clusters", 
-#'          "windows"} Name of the mean model
-#'      \item scaNumCells: (scalar) [Default NA] Number of cells
-#'          for which model is evaluated. Used for constant model.
-#'      \item vecPseudotime: (numerical vector number of cells)
-#'          [Default NA] Pseudotime coordinates of cells. Used for
-#'          impulse model.
-#'      \item vecindClusterAssign: (integer vector length number of
-#'          cells) [Default NA] Index of cluster assigned to each cell.
-#'          Used for clusters model.
-#'    }
 #' @param vecInterval: (integer vector length target cells) [Default NULL]
 #'    Positions of cells in ordering, for which parameters are to be 
 #'    computed. Default: all cells.
@@ -68,18 +21,11 @@
 #'    Mean parameter estimates for given gene given the mean model.
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 decompressMeansByGene <- function(
     vecMuModel,
     lsvecBatchModel=NULL,
     lsMuModelGlobal,
     vecInterval=NULL ){
-    
-    # Set interval to entire gene if not given
-    # Dont do this to save time at the moment (dont reorder things
-    # that are already ordered correctly)
-    #if(is.null(vecInterval)){ vecInterval <- seq(1, lsMuModelGlobal$scaNumCells) }
     
     if(lsMuModelGlobal$strMuModel=="constant"){
         if(!is.null(vecInterval)){ 
@@ -154,16 +100,6 @@ decompressMeansByGene <- function(
 #'    Parameters of dispersion model for given gene.
 #' @param lsDispModelGlobal: (list) Global variables for dispersion model,
 #'    common to all genes.
-#'    \itemize{
-#'      \item strDispModel: (str) {"constant", "MM"} 
-#'    Name of the dispersion model
-#'      \item scaNumCells: (scalar) [Default NULL] Number of cells
-#'    for which model is evaluated. Used for constant model.
-#'      \item vecPseudotime: (numerical vector number of cells)
-#'    [Default NULL] Pseudotime coordinates of cells.
-#'      \item vecindClusterAssign: (integer vector length number of
-#'    cells) [Default NULL] Index of cluster assigned to each cell.
-#'    }
 #' @param vecInterval: (integer vector length target cells) [Default NULL]
 #'    Positions of cells in ordering, for which parameters are to be 
 #'    computed. Default: all cells.
@@ -173,8 +109,6 @@ decompressMeansByGene <- function(
 #'    (one per cell for given gene).
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 decompressDispByGene <- function(vecDispModel,
                                  lsvecBatchModel=NULL,
                                  lsDispModelGlobal,
@@ -301,8 +235,6 @@ decompressDropoutRateByGene <- function(
 #'    (one per cell for given gene).
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 decompressDropoutRateByCell <- function(
     vecDropModel,
     vecMu=NULL,
