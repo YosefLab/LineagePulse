@@ -57,7 +57,7 @@
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
-#'     vecGeneWiseDropoutRates = rep(0.3, 30))
+#'     vecGeneWiseDropoutRates = rep(0.1, 30))
 #' plot(lsSimulatedData$dfAnnot$pseudotime, lsSimulatedData$counts[1,])
 #' 
 #' @author David Sebastian Fischer

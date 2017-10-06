@@ -32,7 +32,7 @@
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
-#'     vecGeneWiseDropoutRates = rep(0.3, 30))
+#'     vecGeneWiseDropoutRates = rep(0.1, 30))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,

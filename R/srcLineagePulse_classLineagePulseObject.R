@@ -142,7 +142,7 @@ setClass(
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
@@ -303,7 +303,7 @@ get_strVersion <- function(objLP)
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
@@ -348,7 +348,7 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
@@ -392,7 +392,7 @@ setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, 
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
@@ -425,7 +425,7 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,

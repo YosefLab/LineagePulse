@@ -31,7 +31,7 @@
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
@@ -111,7 +111,7 @@ getNormData <- function(matCounts,
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
@@ -175,7 +175,7 @@ getFitsMean <- function(
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
@@ -240,7 +240,7 @@ getFitsDispersion <- function(
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
@@ -315,7 +315,7 @@ getFitsDropout <- function(
 #'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
-#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
