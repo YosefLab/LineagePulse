@@ -97,8 +97,11 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' 
 #' @aliases LineagePulse wrapper, main function
 #' 
-#' @param matCounts (matrix genes x cells)
-#' Count data of all cells, unobserved entries are NA.
+#' @param counts (matrix genes x cells (sparseMatrix or standard), 
+#' SummarizedExperiment or file)
+#' Matrix: Count data of all cells, unobserved entries are NA.
+#' SummarizedExperiment: Count data of all cells in assay(counts).
+#' file: .mtx file from which count matrix is to be read.
 #' @param dfAnnotation (data frame cells x meta characteristics)
 #' Annotation table which contains meta data on cells.
 #' May contain the following columns
@@ -202,7 +205,7 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' 
 #' @export
 runLineagePulse <- function(
-    matCounts,
+    counts,
     dfAnnotation,
     vecConfoundersMu=NULL,
     vecConfoundersDisp=NULL,
@@ -221,15 +224,17 @@ runLineagePulse <- function(
     boolVerbose=TRUE,
     boolSuperVerbose=FALSE ){
     
+    STRVERSION <- "0.99" #packageDescription("LineagePulse", fields = "Version"))
+    
     # 1. Data preprocessing
     # Extract count matrix if handed SummarizedExperiment
-    if (class(matCounts) == "SummarizedExperiment"){ 
-        matCounts <- assay(matCounts)
+    if (class(counts) == "SummarizedExperiment"){ 
+        counts <- assay(counts)
     }
     
-    vecAllGenes <- rownames(matCounts)
+    vecAllGenes <- rownames(counts)
     lsProcessedSCData <- processSCData(
-        matCounts=matCounts,
+        counts=counts,
         dfAnnotation=dfAnnotation,
         vecConfoundersMu=vecConfoundersMu,
         vecConfoundersDisp=vecConfoundersDisp,
@@ -248,7 +253,7 @@ runLineagePulse <- function(
     matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
     
     # Clear memory
-    rm(matCounts)
+    rm(counts)
     rm(matPiConstPredictors)
     rm(dfAnnotation)
     rm(lsProcessedSCData)

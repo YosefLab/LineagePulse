@@ -16,44 +16,45 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param matCounts: (matrix genes x samples)
+#' @param matCounts (matrix genes x samples)
 #' Count data of all cells, unobserved entries are NA.
-#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#' @param matPiConstPredictors (numeric matrix genes x number of constant
 #' gene-wise drop-out predictors) Predictors for logistic drop-out 
 #' fit other than offset and mean parameter (i.e. parameters which
 #' are constant for all observations in a gene and externally supplied.)
 #' Is null if no constant predictors are supplied.
-#' @param vecNormConstExternal: (numeric vector number of cells) 
+#' @param vecNormConstExternal (numeric vector number of cells) 
 #' Model scaling factors, one per cell. These factors will linearly 
 #' scale the mean model for evaluation of the loglikelihood. 
 #' Must be named according to the column names of matCounts.
 #' Supplied by user.
-#' @param vecPseudotime: (numerical vector length number of cells)
+#' @param vecPseudotime (numerical vector length number of cells)
 #' Pseudotime coordinates (1D) of cells: One scalar per cell.
 #' Has to be named: Names of elements are cell names.
-#' @param scaSmallRun: (integer) [Default NULL] Number of rows
+#' @param scaSmallRun (integer) [Default NULL] Number of rows
 #' on which ImpulseDE2 is supposed to be run, the full
 #' data set is only used for size factor estimation.
-#' @param strMuModel: (str) {"constant"}
+#' @param strMuModel (str) {"constant"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
-#' @param strDispModelFull: (str) {"constant"}
+#' @param strDispModelFull (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
-#' @param strDispModelRed: (str) {"constant"}
+#' @param strDispModelRed (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the null model (H0).
+#' @param STRVERSION (str) Version of LineagePulse that is run.
 #'
-#' @return list: (length 3)
+#' @return list (length 3)
 #' \itemize{
-#'     \item objLP: (LineagePulseObject)
+#'     \item objLP (LineagePulseObject)
 #'     Initialisation of LineagePulseObject.
-#'     \item matCountsProcFull: (matrix genes x samples)
+#'     \item matCountsProcFull (matrix genes x samples)
 #' Processed count data of all cells, unobserved entries are NA.
-#'     \item vecPseudotimeProc: (numerical vector length number of cells)
+#'     \item vecPseudotimeProc (numerical vector length number of cells)
 #' Names of elements are cell names.
 #' }
 #' 
@@ -62,7 +63,7 @@
 #' @export
 
 processSCData <- function(
-    matCounts,
+    counts,
     dfAnnotation,
     vecConfoundersDisp,
     vecConfoundersMu,
@@ -75,7 +76,21 @@ processSCData <- function(
     scaDFSplinesMu,
     scaMaxEstimationCycles,
     boolVerbose,
-    boolSuperVerbose){
+    boolSuperVerbose,
+    STRVERSION){
+    
+    # read count object from file if supplied as string
+    if(is(counts, "character")) {
+        # check that format is .mtx
+        strFormat <- unlist(strsplit(x = counts, split = "[.]"))
+        strFormat <- strFormat[length(strFormat)]
+        if(strFormat!="mtx"){
+            stop(paste0("ERROR IN INPUT DATA: ",
+                        "Input matrix file is not .mtx. ",
+                        "Supply counts as .mtx file or as R matrix object."))
+        }
+        counts <- readMM(counts)
+    }
     
     # Check whether object was supplied (is not NULL).
     checkNull <- function(objectInput,strObjectInput){
@@ -111,15 +126,15 @@ processSCData <- function(
     }
     
     # (I) Check input data
-    # 1. matCounts
-    checkNull(matCounts,"matCounts")
-    checkCounts(matCounts,"matCounts")
+    # 1. counts
+    checkNull(counts,"counts")
+    checkCounts(counts,"counts")
     
     # 2. dfAnnotation, vecConfounders
     if(!is.null(dfAnnotation)){
         # Check that all cells are mentioned in dfAnnotation
-        if(!all(colnames(matCounts) %in% rownames(dfAnnotation))){
-            stop(paste0("Not all cells given in matCounts (colnames) are given in dfAnnotation (rownames)."))
+        if(!all(colnames(counts) %in% rownames(dfAnnotation))){
+            stop(paste0("Not all cells given in counts (colnames) are given in dfAnnotation (rownames)."))
         }
         # Check structure
         if(strMuModel=="impulse"){
@@ -144,15 +159,15 @@ processSCData <- function(
     # 3. matPiConstPredictors
     if(!is.null(matPiConstPredictors)){
         checkNumeric(as.matrix(matPiConstPredictors),"matPiConstPredictors")
-        if(!is.null(rownames(matCounts))){
-            if(any(!rownames(matCounts) %in% rownames(matPiConstPredictors))){
-                stop(paste0("ERROR: Some genes named in rows of matCounts do not ",
+        if(!is.null(rownames(counts))){
+            if(any(!rownames(counts) %in% rownames(matPiConstPredictors))){
+                stop(paste0("ERROR: Some genes named in rows of counts do not ",
                             "occur in rows of matPiConstPredictors."))   
             }
         } else {
             if(!is.null(rownames(matPiConstPredictors))){
                 stop(paste0("ERROR: Named genes in matPiConstPredictors",
-                            " but not in matCounts."))
+                            " but not in counts."))
             }
         }
     }
@@ -160,9 +175,9 @@ processSCData <- function(
     # 4. vecNormConstExternal
     if(!is.null(vecNormConstExternal)){
         checkNumeric(vecNormConstExternal,"vecNormConstExternal")
-        if(!all(colnames(matCounts) %in% names(vecNormConstExternal))){
+        if(!all(colnames(counts) %in% names(vecNormConstExternal))){
             stop("ERROR IN INPUT DATA CHECK: ",
-                 "Not all cells in matCounts are given in vecNormConstExternal")
+                 "Not all cells in counts are given in vecNormConstExternal")
         }
     }
     
@@ -189,13 +204,24 @@ processSCData <- function(
     # (III) Process data
     strReport <- ""
     # Convert from data frame to matrix
-    if(is.list(matCounts)){
-        matCounts <- data.matrix(matCounts)
+    if(is.list(counts)){
+        counts <- data.matrix(counts)
+    }
+    # make sparse if is not sparse
+    if(!is(object = counts, class2 = "sparseMatrix")){
+        counts <- sparseMatrix(
+            i = (which(counts>0)-1) %% dim(counts)[1],
+            j = (which(counts>0)-1) %/% dim(counts)[1], 
+            x = counts[which(counts>0)], 
+            dims = dim(counts),
+            dimnames = dimnames(counts),
+            symmetric = FALSE,
+            index1 = FALSE)
     }
     # Name genes if names not given
-    if(is.null(rownames(matCounts))){
-        rownames(matCounts) <- paste0("Gene_", seq(1,nrow(matCounts)))
-        rownames(matPiConstPredictors) <- rownames(matCounts)
+    if(is.null(rownames(counts))){
+        rownames(counts) <- paste0("Gene_", seq(1,nrow(counts)))
+        rownames(matPiConstPredictors) <- rownames(counts)
     }
     # Take out cells with NA pseudotime coordinate
     if(strMuModel=="impulse"){
@@ -204,18 +230,17 @@ processSCData <- function(
         vecidxPTsort <- sort(dfAnnotationProc$pseudotime,
                              decreasing=FALSE, index.return=TRUE)$ix
         dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
-        matCountsProc <- matCounts[,dfAnnotationProc$cell]
+        counts <- counts[,dfAnnotationProc$cell]
     } else {
         dfAnnotationProc <- dfAnnotation
-        matCountsProc <- matCounts
     }
     # Remove all zero or NA genes/cells
-    vecidxGenes <- apply(matCountsProc, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
-    vecidxCells <- apply(matCountsProc, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
+    vecidxGenes <- apply(counts, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
+    vecidxCells <- apply(counts, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
     dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
-    matCountsProc <- matCountsProc[vecidxGenes,vecidxCells]
+    counts <- counts[as.double(vecidxGenes), as.double(vecidxCells)]
     # Keep target normalisation constants
-    if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[colnames(matCountsProc)]
+    if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[colnames(counts)]
     else vecNormConstExternalProc <- NULL
     
     # Print summary of processing
@@ -244,8 +269,8 @@ processSCData <- function(
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
-    # Reduce matPiConstPredictors to genes in matCountsProc
-    matPiConstPredictorsProc <- matPiConstPredictors[rownames(matCountsProc),,drop=FALSE]
+    # Reduce matPiConstPredictors to genes in counts
+    matPiConstPredictorsProc <- matPiConstPredictors[rownames(counts),,drop=FALSE]
     
     objLP <- new(
         'LineagePulseObject',
@@ -259,14 +284,7 @@ processSCData <- function(
         lsMuModelH1         = NULL,
         lsMuModelH0         = NULL,
         lsMuModelConst      = NULL,
-        matCountsProc       = sparseMatrix(
-            i = (which(matCountsProc>0)-1) %% dim(matCountsProc)[1],
-            j = (which(matCountsProc>0)-1) %/% dim(matCountsProc)[1], 
-            x = matCountsProc[which(matCountsProc>0)], 
-            dims = dim(matCountsProc),
-            dimnames = dimnames(matCountsProc),
-            symmetric = FALSE,
-            index1 = FALSE),
+        matCountsProc       = counts,
         matWeights          = NULL,
         scaDFSplinesDisp    = scaDFSplinesDisp,
         scaDFSplinesMu      = scaDFSplinesMu,
@@ -278,7 +296,7 @@ processSCData <- function(
         vecNCentroidsPerPop = NULL,
         vecH0Pop            = NULL,
         vecNormConst        = NULL,
-        strVersion          = "0.99")#packageDescription("LineagePulse", fields = "Version"))
+        strVersion          = STRVERSION)
     
     return(list(objLP=objLP,
                 vecNormConstExternalProc=vecNormConstExternalProc,
