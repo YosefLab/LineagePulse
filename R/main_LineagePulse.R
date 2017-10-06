@@ -1,12 +1,13 @@
 #' @import BiocParallel
 #' @importFrom compiler cmpfun
+#' @import gplots
 #' @import ggplot2
 #' @importFrom grDevices dev.off graphics.off pdf
 #' @import knitr
 #' @import Matrix
 #' @import methods
 #' @import splines
-#' @importFrom stats dnbinom median optim p.adjust pchisq rnbinom rnorm runif sd
+#' @importFrom stats dnbinom median optim p.adjust pchisq rnbinom rnorm runif sd lm qnbinom rbinom
 #' @import SummarizedExperiment
 #' @importFrom utils packageDescription
 NULL

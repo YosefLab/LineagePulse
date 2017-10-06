@@ -8,13 +8,13 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param objLP: (LineagePulse-object)
+#' @param objLP (LineagePulse-object)
 #' Object to fit normalization constants on.
-#' @param vecNormConstExternal: (numeric vector number of cells) 
+#' @param vecNormConstExternal (numeric vector number of cells) 
 #' Model scaling factors supplied by user, one per cell. 
 #' 
-#' @return vecNormConst: (numeric vector number of cells) 
-#' Model scaling factors to be used, one per cell.
+#' @return objLP: (LineagePulse-object)
+#' Object with fit normalization constants.
 #' 
 #' @author David Sebastian Fischer
 calcNormConst <- function(objLP,

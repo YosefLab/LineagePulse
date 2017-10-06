@@ -26,7 +26,7 @@
 #'
 #' @seealso Called by fitting wrapper: \code{fitPi_SingleCell}.
 #' Calls \code{evalLogLikZINB}.
-#' Compiled version: \link{evalLogLikPiZINB_comp}.
+#' Compiled version: \link{evalLogLikPiZINB_SingleCell_comp}.
 #' 
 #' @param vecTheta: (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.

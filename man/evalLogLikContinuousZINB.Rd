@@ -60,11 +60,6 @@ This function is designed to allow numerical optimisation
 of mean and dispersion paramater model on single gene given
 the drop-out model.
 }
-\seealso{
-Called by optim wrapper: \code{fitImpulseOneInitZINB}.
-Compiled function: \link{evalLogLikDispConstMuImpulseZINB_comp}.
-Calls ZINB model cost function: \link{evalLogLikGene}
-}
 \author{
 David Sebastian Fischer
 }

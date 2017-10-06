@@ -47,7 +47,7 @@ the negative binomial mean and dispersion parameters.
 \seealso{
 Called by fitting wrapper: \code{fitPi_SingleCell}.
 Calls \code{evalLogLikZINB}.
-Compiled version: \link{evalLogLikPiZINB_comp}.
+Compiled version: \link{evalLogLikPiZINB_SingleCell_comp}.
 }
 \author{
 David Sebastian Fischer

@@ -7,15 +7,15 @@
 calcNormConst(objLP, vecNormConstExternal)
 }
 \arguments{
-\item{objLP:}{(LineagePulse-object)
+\item{objLP}{(LineagePulse-object)
 Object to fit normalization constants on.}
 
-\item{vecNormConstExternal:}{(numeric vector number of cells) 
+\item{vecNormConstExternal}{(numeric vector number of cells) 
 Model scaling factors supplied by user, one per cell.}
 }
 \value{
-vecNormConst: (numeric vector number of cells) 
-Model scaling factors to be used, one per cell.
+objLP: (LineagePulse-object)
+Object with fit normalization constants.
 }
 \description{
 Either use externally supplied normalisation constants or set these to one.
