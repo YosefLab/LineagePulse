@@ -22,6 +22,26 @@
 #' @return vecSortedGenes: (string vector number of IDs)
 #' IDs sorted by peak time in pseudotime.
 #' 
+#' @example
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.3, 30))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' #sortGeneTrajectories(
+#' #    vecIDs = rownames(objLP$objLP@lsMuModelH1$matMuModel),
+#' #    lsMuModel = objLP@lsMuModelH1,
+#' #    dirHeatmap = "your_target_directory"))
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export

@@ -48,17 +48,19 @@
 #' 
 #' @example
 #' lsSimulatedData <- simulateContinuousDataSet(
-#'     scaNCells = 50,
-#'     scaNConst = 30,
-#'     scaNImp = 30,
-#'     scaMumax = 1000,
-#'     scaSDImpulseAmplitude = 1,
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
-#'     vecGeneWiseDropoutRates = rep(0.7, 60))
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.3, 30))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
-#'     strMuModel="impulse")
+#'     strMuModel = "impulse")
 #' gplotExprProfile <- plotGene(
 #'     objLP = objLP,
 #'     strGeneID = rownames(lsSimulatedData$counts)[1],

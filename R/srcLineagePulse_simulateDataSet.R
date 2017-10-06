@@ -18,25 +18,26 @@
 #' @seealso Called by separately by user.
 #' 
 #' @param scaNCells: (scalar) Number of cells in data set.
-#' @param scaNConst: (scalar) Number of constant genes in data set.
-#' @param scaNImp: (scalar) Number of impulse distributed genes in data set.
+#' @param scaNConst: (scalar) Number of constant expression profiles (genes) in data set.
+#' @param scaNLin: (scalar) Number of linear expression profiles (genes) in data set.
+#' @param scaNImp: (scalar) Number of impulse model expression profiles (genes) in data set.
 #' @param scaMumax: (scalar) [Default 1000]
 #' Maximum expression mean parameter to be used.
-#' @param scaSDImpulseAmplitude: (scalar) [Default 1]
+#' @param scaSDMuAmplitude: (scalar) [Default 1]
 #' Standard deviation of normal distribution form which the 
 #' amplitude change within an impulse trace is drawn.
 #' @param vecNormConstExternal: (numeric vector number of cells)
 #' [Default NULL]
 #' Size factors for data set. Size factors are set to 1 if this is
 #' not specified (NULL).
+#' @param vecDispExternal (numeric vector number of genes)
+#' [Default NULL]
+#' Dispersion parameters per gene supplied by user.s
 #' @param vecGeneWiseDropoutRates: (numeric vector number of cells) 
 #' [Default NULL] One drop-out rate per gene.
 #' @param matDropoutModelExternal: (numeric matrix cells x 2) 
 #' [Default NULL] External drop-out model, has to have
 #' one row for each simulated cell.
-#' @param dirOutSimulation: (str directory)
-#' Directory to which simulated parameter objects are 
-#' saved to.
 #' 
 #' @return list: (length 2)
 #' \itemize{
@@ -48,13 +49,15 @@
 #' 
 #' @example
 #' lsSimulatedData <- simulateContinuousDataSet(
-#'     scaNCells = 50,
-#'     scaNConst = 30,
-#'     scaNImp = 30,
-#'     scaMumax = 1000,
-#'     scaSDImpulseAmplitude = 1,
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
 #'     vecNormConstExternal=NULL,
-#'     vecGeneWiseDropoutRates = rep(0.7, 60))
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.3, 30))
 #' plot(lsSimulatedData$dfAnnot$pseudotime, lsSimulatedData$counts[1,])
 #' 
 #' @author David Sebastian Fischer
@@ -63,15 +66,16 @@
 simulateContinuousDataSet <- function(
     scaNCells,
     scaNConst,
+    scaNLin,
     scaNImp,
-    scaMumax=1000,
-    scaSDImpulseAmplitude=1,
+    scaMumax=100,
+    scaSDMuAmplitude=1,
     vecNormConstExternal=NULL,
+    vecDispExternal=NULL,
     vecGeneWiseDropoutRates=NULL,
     matDropoutModelExternal=NULL,
     strDropModel="logistic_ofMu",
-    strDropFitGroup="PerCell",
-    dirOutSimulation=NULL){
+    strDropFitGroup="PerCell"){
     
     ####
     # Internal functions
@@ -81,15 +85,22 @@ simulateContinuousDataSet <- function(
                    (h2+(h1-h2)*1/(1+exp(beta*(t-t2)))))
     }
     
+    SCA_MIN_MU <- 10^(-5)
+    
     ### 0. Check input
     if(!is.null(vecNormConstExternal)) {
-        if(scaNConst + scaNImp != length(vecNormConstExternal)){
-            stop("scaNConst + scaNImp has to be length(vecNormConstExternal)")
+        if(scaNConst + scaNLin + scaNImp != length(vecNormConstExternal)){
+            stop("scaNConst + scaNLin + scaNImp has to be length(vecNormConstExternal)")
+        }
+    }
+    if(!is.null(vecDispExternal)) {
+        if(scaNConst + scaNLin + scaNImp != length(vecDispExternal)){
+            stop("scaNConst + scaNLin + scaNImp has to be length(vecDispExternal)")
         }
     }
     if(!is.null(vecGeneWiseDropoutRates)) {
-        if(scaNConst + scaNImp != length(vecGeneWiseDropoutRates)){
-            stop("scaNConst + scaNImp has to be length(vecGeneWiseDropoutRates)")
+        if(scaNConst + scaNLin + scaNImp != length(vecGeneWiseDropoutRates)){
+            stop("scaNConst + scaNLin + scaNImp has to be length(vecGeneWiseDropoutRates)")
         }
     }
     if(!is.null(matDropoutModelExternal)) {
@@ -114,19 +125,29 @@ simulateContinuousDataSet <- function(
     ### 2. Create underlying count matrix
     print("Draw mean trajectories")
     if(scaNConst>0) {
-        vecConstIDs <- paste0(rep("gene_",scaNConst),c(1:scaNConst))
+        vecConstIDs <- paste0(rep("gene_", scaNConst),
+                              c(1:scaNConst))
     } else {
         vecConstIDs <- NULL
     }
     
+    if(scaNLin>0) {
+        vecLinIDs <- paste0(rep("gene_",scaNLin), 
+                            c((scaNConst+1):(scaNConst+scaNLin)))
+    } else {
+        vecLinIDs <- NULL
+    }
+    
     if(scaNImp>0) {
-        vecImpulseIDs <- paste0(rep("gene_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
+        vecImpulseIDs <- paste0(rep("gene_",scaNImp), 
+                                c((scaNConst+scaNLin+1):(scaNConst+scaNLin+scaNImp)))
     } else {
         vecImpulseIDs <- NULL
     }
     
-    ## a. Draw means from uniform (first half of genes): one mean per gene
+    ## Draw means from uniform (first half of genes): one mean per gene
     vecMuConstHidden <- runif(scaNConst)*scaMumax
+    vecMuConstHidden[vecMuConstHidden < SCA_MIN_MU] <- SCA_MIN_MU
     matMuConstHidden <- matrix(vecMuConstHidden,
                                nrow=scaNConst,
                                ncol=scaNCells,
@@ -134,7 +155,18 @@ simulateContinuousDataSet <- function(
     rownames(matMuConstHidden) <- vecConstIDs
     colnames(matMuConstHidden) <- names(vecPT)
     
-    ## b. Draw means from impulse model
+    ## Draw means from linear model
+    vecMuLinStart <- runif(scaNLin)*scaMumax
+    vecMuLinStart[vecMuLinStart < SCA_MIN_MU] <- SCA_MIN_MU
+    vecMuLinEnd <- vecMuLinStart * abs(1+rnorm(n=scaNLin, mean=1,sd=scaSDMuAmplitude))
+    vecMuLinEnd[vecMuLinEnd < SCA_MIN_MU] <- SCA_MIN_MU
+    matMuLinHidden <- do.call(rbind, lapply(seq(1, scaNLin), function(i) {
+        vecMuLinStart[i] + vecPT/max(vecPT)*(vecMuLinEnd[i] - vecMuLinStart[i])
+    }))
+    rownames(matMuLinHidden) <- vecLinIDs
+    colnames(matMuLinHidden) <- names(vecPT)
+    
+    ## Draw means from impulse model
     beta <- runif(scaNImp)*2+0.5
     ta <- runif(scaNImp)
     tb <- runif(scaNImp)
@@ -143,11 +175,11 @@ simulateContinuousDataSet <- function(
     t2 <- tb
     t2[tb < ta] <- ta[tb < ta]
     h0 <- runif(scaNImp)*scaMumax
-    h1 <- h0*abs(rnorm(n=scaNImp, mean=0,sd=scaSDImpulseAmplitude))
-    h2 <- h0*abs(rnorm(n=scaNImp, mean=0,sd=scaSDImpulseAmplitude))
-    h0[h0<0.00001] <-0.00001
-    h1[h1<0.00001] <-0.00001
-    h2[h2<0.00001] <-0.00001
+    h1 <- h0 * abs(1+rnorm(n=scaNImp, mean=0,sd=scaSDMuAmplitude))
+    h2 <- h0 * abs(1+rnorm(n=scaNImp, mean=0,sd=scaSDMuAmplitude))
+    h0[h0 < SCA_MIN_MU] <- SCA_MIN_MU
+    h1[h1 < SCA_MIN_MU] <- SCA_MIN_MU
+    h2[h2 < SCA_MIN_MU] <- SCA_MIN_MU
     if(scaNImp>0){
         lsMuImpulseHidden <- lapply(seq(1,scaNImp), function(gene){
             evalImpulse(t=vecPT,
@@ -165,8 +197,10 @@ simulateContinuousDataSet <- function(
     rownames(matMuImpulseHidden) <- vecImpulseIDs
     colnames(matMuImpulseHidden) <- names(vecPT)
     
-    ## c. Merge data
-    matMuHidden <- do.call(rbind, list(matMuConstHidden, matMuImpulseHidden))
+    ## Merge data
+    matMuHidden <- do.call(rbind, list(matMuConstHidden, 
+                                       matMuLinHidden,
+                                       matMuImpulseHidden))
     
     ## Add size factors
     if(is.null(vecNormConstExternal)){
@@ -185,16 +219,20 @@ simulateContinuousDataSet <- function(
                                       nrow=dim(matMuHidden)[1],
                                       ncol=dim(matMuHidden)[2], byrow=TRUE)
     
-    ## d. draw dispersions by gene
+    ## draw dispersions by gene
     print("Draw dispersion")
-    vecDispHidden <- 1 + rnorm(n = dim(matMuHidden)[1], mean = 0, sd = 0.05)
-    vecDispHidden[vecDispHidden < 0.05] <- 0.05
+    if(is.null(vecDispExternal)) {
+        vecDispHidden <- 3 + rnorm(n = dim(matMuHidden)[1], mean = 0, sd = 0.5)
+        vecDispHidden[vecDispHidden < 0.05] <- 0.05
+    } else {
+        vecDispHidden <- vecDispExternal
+    }
     matDispHidden <- matrix(vecDispHidden,nrow=dim(matMuHidden)[1],
                             ncol=dim(matMuHidden)[2], byrow=FALSE)
     rownames(matDispHidden) <- rownames(matMuHidden)
     colnames(matDispHidden) <- names(vecPT)
     
-    ## e. add noise - draw from negative binomial
+    ## add noise - draw from negative binomial
     print("Simulate negative binomial noise")
     matSampledDataHidden <- do.call(rbind, lapply(seq(1,dim(matMuHidden)[1]), function(gene){
         sapply(seq(1,scaNCells), function(cell){
@@ -206,7 +244,7 @@ simulateContinuousDataSet <- function(
     
     ### 3. Apply drop out
     print("Simulate drop-out")
-    ## a. Generate underlying drop-out rate matrix
+    ## Generate underlying drop-out rate matrix
     if(!is.null(matDropoutModelExternal) & !is.null(vecGeneWiseDropoutRates)) {
         stop("Supply either matDropoutModelExternal or vecGeneWiseDropoutRates.")
     }
@@ -228,7 +266,7 @@ simulateContinuousDataSet <- function(
     } else {
         stop("Supply either matDropoutModelExternal or vecGeneWiseDropoutRates.")
     } 
-    ## b. Draw drop-outs from rates: Bernoulli experiments
+    ## Draw drop-outs from rates: Bernoulli experiments
     lsDropoutsHidden <- lapply(seq(1,dim(matDropoutRatesHidden)[1]), function(i){
         rbinom(n=rep(1, dim(matDropoutRatesHidden)[2]), 
                size=rep(1, dim(matDropoutRatesHidden)[2]),
@@ -238,28 +276,12 @@ simulateContinuousDataSet <- function(
     rownames(matDropoutsHidden) <- rownames(matMuHidden)
     colnames(matDropoutsHidden) <- names(vecPT)
     
-    ## c. Create observed data: merge hidden data with drop-outs
+    ## Create observed data: merge hidden data with drop-outs
     matSampledDataObserved <- matSampledDataHidden
     matSampledDataObserved[matDropoutsHidden==1] <- 0
     
-    ## d. Round to counts
+    ## Round to counts
     matSampledCountsObserved <- round(matSampledDataObserved)
-    
-    # Save simulation
-    if(!is.null(dirOutSimulation)){
-        save(dfAnnot,file=file.path(dirOutSimulation,"Simulation_dfAnnot.RData"))
-        save(vecConstIDs,file=file.path(dirOutSimulation,"Simulation_vecConstIDs.RData"))
-        save(vecImpulseIDs,file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
-        save(matImpulseModelHidden,file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
-        save(matMuHidden,file=file.path(dirOutSimulation,"Simulation_matMuHidden.RData"))
-        save(vecNormConstHidden,file=file.path(dirOutSimulation,"Simulation_vecNormConstHidden.RData"))
-        save(matDispHidden,file=file.path(dirOutSimulation,"Simulation_matDispHidden.RData"))
-        save(matSampledDataHidden,file=file.path(dirOutSimulation,"Simulation_matSampledDataHidden.RData"))
-        save(matDropoutLinModelHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutLinModelHidden.RData"))
-        save(matDropoutRatesHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutRatesHidden.RData"))
-        save(matDropoutsHidden,file=file.path(dirOutSimulation,"Simulation_matDropoutsHidden.RData"))
-        save(matSampledCountsObserved,file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
-    }
     
     return(list( annot=dfAnnot,
                  counts=matSampledCountsObserved ))

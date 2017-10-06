@@ -26,7 +26,7 @@ source("srcLineagePulse_fitZINB_fitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
 source("srcLineagePulse_fitZINB.R")
 source("srcLineagePulse_fitZINB_WrapperLP.R")
-source("srcLineagePulse_getNormData.R")
+source("srcLineagePulse_getFits.R")
 source("srcLineagePulse_initialiseImpulseParameters.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_processSCData.R")
@@ -195,7 +195,21 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
 #' 
 #' @example
-#' 
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.3, 30))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$annot,
+#'     strMuModel = "impulse")
+#' tail(objLP$dfResults)
 #' 
 #' @author David Sebastian Fischer
 #' 

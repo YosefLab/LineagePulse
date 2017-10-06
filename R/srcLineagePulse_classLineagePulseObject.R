@@ -73,9 +73,9 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' @slot vecNormConst (numeric vector length number of cells)
 #' Normalisation constants (library size factors) for each cell.
 #' @slot strVersion (str) Version of LineagePulse that was run.
-#'    
+#' 
 #' @name LineagePulseObject-class
-#'      
+#'   
 #' @author David Sebastian Fischer
 setClass(
   'LineagePulseObject',
@@ -117,113 +117,160 @@ setClass(
 #' 
 #' @return The internal data object specified by the function.
 #' 
-#' @aliases get_lsMuModelH1,LineagePulseObject-method
-#'    get_lsDispModelH1,LineagePulseObject-method
-#'    get_lsMuModelH0,LineagePulseObject-method
-#'    get_lsDispModelH0,LineagePulseObject-method
-#'    get_DropModel,LineagePulseObject-method
-#'    get_lsFitZINBReporters
-#'    get_dfAnnotationProc,LineagePulseObject-method
-#'    get_vecNormConst,LineagePulseObject-method
-#'    get_scaNProc,LineagePulseObject-method
-#'    get_scaQThres,LineagePulseObject-method
-#'    get_strReport,LineagePulseObject-method
+#' @name get_accessors
+#' @rdname get_accessors
+#' @aliases 
+#' get_lsMuModelH1,LineagePulseObject-method
+#' get_lsDispModelH1,LineagePulseObject-method
+#' get_lsMuModelH0,LineagePulseObject-method
+#' get_lsDispModelH0,LineagePulseObject-method
+#' get_DropModel,LineagePulseObject-method
+#' get_lsFitZINBReporters
+#' get_dfAnnotationProc,LineagePulseObject-method
+#' get_vecNormConst,LineagePulseObject-method
+#' get_scaNProc,LineagePulseObject-method
+#' get_scaQThres,LineagePulseObject-method
+#' get_strReport,LineagePulseObject-method
 #' 
-#' @name LineagePulseObject_Accessors
+#' @examples    
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 10,
+#'     scaNConst = 2,
+#'     scaNLin = 2,
+#'     scaNImp = 2,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 6),
+#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' # get hidden objects within LineagePulse object
+#' dfAnnotationProc <- get_dfAnnotationProc(objLP)
+#' lsMuModelH0 <- get_lsMuModelH0(objLP)
+#' lsMuModelH1 <- get_lsMuModelH1(objLP)
+#' lsMuModelConst <- get_lsMuModelConst(objLP)
+#' lsDispModelH0 <- get_lsDispModelH0(objLP)
+#' lsDispModelH1 <- get_lsDispModelH1(objLP)
+#' lsDispModelConst <- get_lsDispModelConst(objLP)
+#' matCountDataProc <- get_matCountDataProc(objLP)
+#' matWeights <- get_matWeights(objLP)
+#' scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
+#' scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 
+#' strReport <- get_strReport <- function(objLP) 
+#' vecAllGenes <- get_vecAllGenes <- function(objLP) 
+#' vecConfoundersDisp <- get_vecConfoundersDisp <- function(objLP) 
+#' vecConfoundersMu <- get_vecConfoundersMu <- function(objLP) 
+#' scaOmega <- get_scaOmega <- function(objLP) 
+#' boolFixedPopulations <- get_boolFixedPopulations <- function(objLP)
+#' vecH0Pop <- get_vecH0Pop <- function(objLP) 
+#' vecNormConst <- get_vecNormConst <- function(objLP) 
+#' strVersion <- get_strVersion <- function(objLP)
+#' 
+#' @author David Sebastian Fischer
 NULL
 
-### I. Set generic function which defines string as a function:
-### setGeneric('funName', function(object) standardGeneric('funName'), valueClass = 'funOutputClass')
-### II. Define function on LineagePulseObject:
-### setMethod('funName', 'LineagePulseObject', function(object) object@funName)
+#' @rdname get_accessors
+#' @export
+get_dfAnnotationProc <- function(objLP) 
+    return(objLP@dfAnnotationProc)
 
-#' @return (list) lsMuModelH1
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_lsMuModelH1', function(object) standardGeneric('get_lsMuModelH1'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_lsMuModelH1', 'LineagePulseObject', function(object) object@lsMuModelH1)
+get_lsMuModelH0 <- function(objLP) 
+    return(objLP@lsMuModelH0)
 
-#' @return (list) lsDispModelH1
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_lsDispModelH1', function(object) standardGeneric('get_lsDispModelH1'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_lsDispModelH1', 'LineagePulseObject', function(object) object@lsDispModelH1)
+get_lsMuModelH1 <- function(objLP) 
+    return(objLP@lsMuModelH1)
 
-#' @return (list) lsMuModelH0
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_lsMuModelH0', function(object) standardGeneric('get_lsMuModelH0'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_lsMuModelH0', 'LineagePulseObject', function(object) object@lsMuModelH0)
+get_lsMuModelConst <- function(objLP) 
+    return(objLP@lsMuModelConst)
 
-#' @return (list) lsDispModelH0
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_lsDispModelH0', function(object) standardGeneric('get_lsDispModelH0'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_lsDispModelH0', 'LineagePulseObject', function(object) object@lsDispModelH0)
+get_lsDispModelH0 <- function(objLP) 
+    return(objLP@lsDispModelH0)
 
-#' @return (list) lsDropModel
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_DropModel', function(object) standardGeneric('get_DropModel'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_DropModel', 'LineagePulseObject', function(object) object@lsDropModel)
+get_lsDispModelH1 <- function(objLP) 
+    return(objLP@lsDispModelH1)
 
-#' @return (list) lsFitZINBReporters
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_lsFitZINBReporters', function(object) standardGeneric('get_lsFitZINBReporters'), valueClass = 'listORNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_lsFitZINBReporters', 'LineagePulseObject', function(object) object@lsFitZINBReporters)
+get_lsDispModelConst <- function(objLP) 
+    return(objLP@lsDispModelConst)
 
-#' @return (data frame size genes x reported characteristics) dfAnnotationProc
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_dfAnnotationProc', function(object) standardGeneric('get_dfAnnotationProc'), valueClass = 'data.frame')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_dfAnnotationProc', 'LineagePulseObject', function(object) object@dfAnnotationProc)
+get_matCountsProc <- function(objLP) 
+    return(objLP@matCountsProc)
 
-#' @return (numeric vector length number of samples) vecNormConst
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_vecNormConst', function(object) standardGeneric('get_vecNormConst'), valueClass = 'numeric')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_vecNormConst', 'LineagePulseObject', function(object) object@vecNormConst)
+get_matWeights <- function(objLP) 
+    return(objLP@matWeights)
 
-#' @return (scalar) scaNProc
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_scaNProc', function(object) standardGeneric('get_scaNProc'), valueClass = 'numeric')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_scaNProc', 'LineagePulseObject', function(object) object@scaNProc)
+get_scaDFSplinesDisp <- function(objLP) 
+    return(objLP@scaDFSplinesDisp)
 
-#' @return (scalar) scaQThres
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_scaQThres', function(object) standardGeneric('get_scaQThres'), valueClass = 'numericOrNULL')
-#' @name LineagePulseObject_Accessors
-#' @export
-setMethod('get_scaQThres', 'LineagePulseObject', function(object) object@scaQThres)
+get_scaDFSplinesMu <- function(objLP) 
+    return(objLP@scaDFSplinesMu)
 
-#' @return (str) strReport
-#' @name LineagePulseObject_Generics_Accessors
+#' @rdname get_accessors
 #' @export
-setGeneric('get_strReport', function(object) standardGeneric('get_strReport'), valueClass = 'characterORNULL')
-#' @name LineagePulseObject_Accessors
+get_strReport <- function(objLP) 
+    return(objLP@strReport)
+
+#' @rdname get_accessors
 #' @export
-setMethod('get_strReport', 'LineagePulseObject', function(object) object@strReport)
+get_vecAllGenes <- function(objLP) 
+    return(objLP@vecAllGenes)
+
+#' @rdname get_accessors
+#' @export
+get_vecConfoundersDisp <- function(objLP) 
+    return(objLP@vecConfoundersDisp)
+
+#' @rdname get_accessors
+#' @export
+get_vecConfoundersMu <- function(objLP) 
+    return(objLP@vecConfoundersMu)
+
+#' @rdname get_accessors
+#' @export
+get_scaOmega <- function(objLP) 
+    return(objLP@scaOmega)
+
+#' @rdname get_accessors
+#' @export
+get_boolFixedPopulations <- function(objLP) 
+    return(objLP@boolFixedPopulations)
+
+#' @rdname get_accessors
+#' @export
+get_vecH0Pop <- function(objLP) 
+    return(objLP@vecH0Pop)
+
+#' @rdname get_accessors
+#' @export
+get_vecNormConst <- function(objLP) 
+    return(objLP@vecNormConst)
+
+#' @rdname get_accessors
+#' @export
+get_strVersion <- function(objLP) 
+    return(objLP@strVersion)
 
 ### 2. Enable accession of public elements via list-like
 ### properties of LineagePulseObject.
@@ -245,6 +292,25 @@ setMethod('get_strReport', 'LineagePulseObject', function(object) object@strRepo
 #' @return Names of elements in x available via list-like accessors.
 #' 
 #' @name names,LineagePulseObject-method
+#' 
+#' @examples    
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 10,
+#'     scaNConst = 2,
+#'     scaNLin = 2,
+#'     scaNImp = 2,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 6),
+#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' names(objLP)
+#' 
+#' @author David Sebastian Fischer
 #' 
 #' @export
 setMethod('names', 'LineagePulseObject', function(x) {
@@ -272,6 +338,25 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #' 
 #' @name [[,LineagePulseObject,character,missing-method
 #' 
+#' @examples    
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 10,
+#'     scaNConst = 2,
+#'     scaNLin = 2,
+#'     scaNImp = 2,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 6),
+#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' head(objLP[["dfResults"]])
+#' 
+#' @author David Sebastian Fischer
+#' 
 #' @export
 setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, j, ...){
   if(identical(i, "dfResults")){ return(x@dfResults)
@@ -297,6 +382,25 @@ setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, 
 #' 
 #' @name $,LineagePulseObject-method
 #' 
+#' @examples    
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 10,
+#'     scaNConst = 2,
+#'     scaNLin = 2,
+#'     scaNImp = 2,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 6),
+#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' head(objLP$dfResults)
+#' 
+#' @author David Sebastian Fischer
+#' 
 #' @export
 setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 
@@ -311,5 +415,24 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #' @param object (LineagePulseObject) Output object of LineagePulse.
 #' @param file (file) [DEFAULT ""] File to print report to. Default is stdout.
 #'  
+#' @examples    
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 10,
+#'     scaNConst = 2,
+#'     scaNLin = 2,
+#'     scaNImp = 2,
+#'     scaMumax = 100,
+#'     scaSDImpulseAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 6),
+#'     vecGeneWiseDropoutRates = rep(0.3, 6))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel = "impulse")
+#' writeReport(objLP, file="")
+#'   
+#' @author David Sebastian Fischer  
+#' 
 #' @export
 writeReport <- function(object, file="") write(object@strReport, file=file, ncolumns=1)

@@ -4,71 +4,9 @@
 
 #' Calculate posterior of drop-out
 #' 
-#' Calculates posterior of observation being a drop-out for a vector. This posterior
-#' is zero if an observation is non-zero, therefore, the data is read in 
-#' as a boolean matrix indicating zero-observations, the actual values
-#' are not required.
+#' Calculates posterior of observation being a drop-out for a matrix.
 #' 
-#' @seealso Same function as \code{calcPostDrop_Matrix}
-#' but for vectors (i.e. one gene) as oppose to matrices: no 
-#' parallelisation and no formatting errors.
-#' 
-#' @param vecMu: (numeric vector samples)
-#' Negative binomial mean parameters of samples.
-#' @param vecDisp: (numeric vector samples)
-#' Negative binomial mean parameters of samples.
-#' @param vecDrop: (numeric vector samples)
-#'   Drop out rates of samples.
-#' @param vecboolZero: (bool vector samples)
-#' Whether observation is zero.
-#' @param vecboolNotZero: (bool vector samples)
-#' Whether observation is real and non-zero.
-#' 
-#' @return vecZ:  (numeric vector samples)
-#' Posterior probability of observation not being generated 
-#' by drop-out.
-#' 
-#' @author David Sebastian Fischer
-#' 
-#' @export
-calcPostDrop_Vector <- function( 
-    vecMu,
-    vecDisp,
-    vecDrop,
-    vecboolZero,
-    vecboolNotZero ){
-    
-    scaNumSamples <- length(vecMu)
-    
-    # Compute probability of zero counts under 
-    # negative binomial model.
-    vecNBZero <- (vecDisp/(vecDisp+vecMu))^vecDisp
-    # Compute posterior of drop-out.
-    vecZ <- sapply(seq(1,scaNumSamples), function(j){
-        if(vecboolNotZero[j]){
-            scaZ <- 0
-        } else if(vecboolZero[j]) {
-            scaZ <- sum(vecDrop[j]/(vecDrop[j] + 
-                                        (1-vecDrop[j])*vecNBZero[j])) *
-                1/length(j)
-        } else {
-            scaZ <- NA
-        }
-        return(scaZ)
-    })
-    
-    names(vecZ) <- names(vecMu)
-    return(vecZ)
-}
-
-#' Calculate posterior of drop-out
-#' 
-#' Calculates posterior of observation being a drop-out for a matrix. This posterior
-#' is zero if an observation is non-zero, therefore, the data is read in 
-#' as a boolean matrix indicating zero-observations, the actual values
-#' are not required. Neighbourhood smoothing can be included.
-#' 
-#' @seealso Called by \code{fitZINB}.
+#' @seealso Called by \code{plotGene}.
 #' 
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
@@ -81,7 +19,7 @@ calcPostDrop_Vector <- function(
 #' @param vecIDs (vector of strings) [Default NULL]
 #' Gene IDs for which posteriors of drop-out are to be computed.
 #' 
-#' @return matZ: (numeric matrix genes x cells)
+#' @return matZ (numeric matrix genes x cells)
 #' Posterior probability of observation not being generated 
 #' by drop-out.
 #' 
