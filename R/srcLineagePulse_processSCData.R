@@ -186,16 +186,22 @@ processSCData <- function(
     checkLogical(boolSuperVerbose, "boolSuperVerbose")
     
     # (II) Check settings
-    # 1. Check general mean estimation settings
-    
-    # 2. Check single mean-/dispersion estimation models
-    
-    # 3. Check co-estimation models
-    # Note: These functions are implemented separately from
-    # single mean and dispersion estimation.
+    # 1. Check gene-wise models
     if(!(strMuModel %in% c("groups","impulse","splines","constant"))){
         stop(paste0("strMuModel not recognised: ", strMuModel, 
                     " Must be one of: groups, splines, impulse, constant."))
+    }
+    if(!(strDispModelFull %in% c("groups","splines","constant"))){
+        stop(paste0("strDispModelFull not recognised: ", strDispModelFull, 
+                    " Must be one of: groups, splines, constant."))
+    }
+    if(!(strDispModelRed %in% c("groups","splines","constant"))){
+        stop(paste0("strDispModelRed not recognised: ", strDispModelRed, 
+                    " Must be one of: groups, splines, constant."))
+    }
+    if(!(strDispModelRed %in% c("groups","splines","constant"))){
+        stop(paste0("strDispModelRed not recognised: ", strDispModelRed, 
+                    " Must be one of: groups, splines, constant."))
     }
     
     # (III) Process data
@@ -217,7 +223,7 @@ processSCData <- function(
     }
     # Name genes if names not given
     if(is.null(rownames(counts))){
-        rownames(counts) <- paste0("Gene_", seq(1,nrow(counts)))
+        rownames(counts) <- paste0("Gene_", seq(1, nrow(counts)))
         rownames(matPiConstPredictors) <- rownames(counts)
     }
     # Take out cells with NA pseudotime coordinate
@@ -232,13 +238,18 @@ processSCData <- function(
         dfAnnotationProc <- dfAnnotation
     }
     # Remove all zero or NA genes/cells
-    vecidxGenes <- apply(counts, 1, function(gene){any(gene>0 & is.finite(gene) & !is.na(gene))})
-    vecidxCells <- apply(counts, 2, function(cell){any(cell>0 & is.finite(cell) & !is.na(cell))})
+    vecAllGenes <- rownames(counts)
+    vecidxGenes <- which(Matrix::rowSums(counts, na.rm = TRUE) > 0)
+    vecidxCells <- which(Matrix::colSums(counts, na.rm = TRUE) > 0)
     dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
     counts <- counts[as.double(vecidxGenes), as.double(vecidxCells)]
+    
     # Keep target normalisation constants
-    if(!is.null(vecNormConstExternal)) vecNormConstExternalProc <- vecNormConstExternal[colnames(counts)]
-    else vecNormConstExternalProc <- NULL
+    if(!is.null(vecNormConstExternal)) {
+        vecNormConstExternalProc <- vecNormConstExternal[colnames(counts)]
+    } else {
+        vecNormConstExternalProc <- NULL
+    }
     
     # Print summary of processing
     strMessage <- paste0("LineagePulse for count data: v0.99")#, packageDescription("LineagePulse", fields = "Version"))
@@ -286,7 +297,7 @@ processSCData <- function(
         scaDFSplinesDisp    = scaDFSplinesDisp,
         scaDFSplinesMu      = scaDFSplinesMu,
         strReport           = strReport,
-        vecAllGenes         = rownames(matCounts),
+        vecAllGenes         = vecAllGenes,
         vecConfoundersMu    = vecConfoundersMu,
         vecConfoundersDisp  = vecConfoundersDisp,
         boolFixedPopulations= FALSE,

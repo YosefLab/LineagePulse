@@ -103,19 +103,27 @@ simulateContinuousDataSet <- function(
     
     ### 1. Distribute cells across pseudotime
     vecPT <- seq(0, 1, by=1/(scaNCells-1))
-    names(vecPT) <- paste0("_",seq(1,scaNCells))
+    names(vecPT) <- paste0("cell_",seq(1,scaNCells))
     dfAnnot <- data.frame(
+        cell = names(vecPT),
         pseudotime = vecPT,
-        row.names = names(vecPT)
+        row.names = names(vecPT),
+        stringsAsFactors = FALSE
     )
     
     ### 2. Create underlying count matrix
     print("Draw mean trajectories")
-    if(scaNConst>0) vecConstIDs <- paste0(rep("_",scaNConst),c(1:scaNConst))
-    else vecConstIDs <- NULL
+    if(scaNConst>0) {
+        vecConstIDs <- paste0(rep("gene_",scaNConst),c(1:scaNConst))
+    } else {
+        vecConstIDs <- NULL
+    }
     
-    if(scaNImp>0) vecImpulseIDs <- paste0(rep("_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
-    else vecImpulseIDs <- NULL
+    if(scaNImp>0) {
+        vecImpulseIDs <- paste0(rep("gene_",scaNImp),c((scaNConst+1):(scaNConst+scaNImp)))
+    } else {
+        vecImpulseIDs <- NULL
+    }
     
     ## a. Draw means from uniform (first half of genes): one mean per gene
     vecMuConstHidden <- runif(scaNConst)*scaMumax
@@ -158,8 +166,6 @@ simulateContinuousDataSet <- function(
     colnames(matMuImpulseHidden) <- names(vecPT)
     
     ## c. Merge data
-    print(dim(matMuConstHidden))
-    print(dim(matMuImpulseHidden))
     matMuHidden <- do.call(rbind, list(matMuConstHidden, matMuImpulseHidden))
     
     ## Add size factors
@@ -181,7 +187,8 @@ simulateContinuousDataSet <- function(
     
     ## d. draw dispersions by gene
     print("Draw dispersion")
-    vecDispHidden <- runif(dim(matMuHidden)[1])*2+0.05
+    vecDispHidden <- 1 + rnorm(n = dim(matMuHidden)[1], mean = 0, sd = 0.05)
+    vecDispHidden[vecDispHidden < 0.05] <- 0.05
     matDispHidden <- matrix(vecDispHidden,nrow=dim(matMuHidden)[1],
                             ncol=dim(matMuHidden)[2], byrow=FALSE)
     rownames(matDispHidden) <- rownames(matMuHidden)
@@ -222,10 +229,10 @@ simulateContinuousDataSet <- function(
         stop("Supply either matDropoutModelExternal or vecGeneWiseDropoutRates.")
     } 
     ## b. Draw drop-outs from rates: Bernoulli experiments
-    lsDropoutsHidden <- lapply(seq(1,dim(matDropoutRatesHidden)[1]), function(gene){
+    lsDropoutsHidden <- lapply(seq(1,dim(matDropoutRatesHidden)[1]), function(i){
         rbinom(n=rep(1, dim(matDropoutRatesHidden)[2]), 
                size=rep(1, dim(matDropoutRatesHidden)[2]),
-               prob=matDropoutRatesHidden[gene,])
+               prob=matDropoutRatesHidden[i,])
     })
     matDropoutsHidden <- do.call(rbind, lsDropoutsHidden)
     rownames(matDropoutsHidden) <- rownames(matMuHidden)

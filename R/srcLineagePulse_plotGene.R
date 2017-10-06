@@ -59,14 +59,11 @@
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$dfAnnot,
 #'     strMuModel="impulse")
-#' plotGene(
+#' gplotExprProfile <- plotGene(
 #'     objLP = objLP,
 #'     strGeneID = rownames(lsSimulatedData$counts)[1],
 #'     boolLineageContour = FALSE)
-#' plotGene(
-#'     objLP = objLP,
-#'     strGeneID = rownames(lsSimulatedData$counts)[1],
-#'     boolLineageContour = TRUE)
+#' #print(gplotExprProfile)
 #' 
 #' @author David Sebastian Fischer
 #' 
@@ -85,6 +82,13 @@ plotGene <- function(
     scaGgplot2Alpha = 0.5){
     
     cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey", "red", "pink")
+    ### 0. Check input
+    ## Can only use one colour scale!
+    if(boolLineageContour & boolColourByDropout){
+        warning(paste0("Only one colour scale can be used. ",
+                       "Set either boolLineageContour or boolColourByDropout to FALSE"))
+        boolColourByDropout <- FALSE
+    }
     ### 1. Extract data and models
     vecCounts <- objLP@matCountsProc[strGeneID,,sparse=FALSE]
     matCountsGene <- t(as.matrix(vecCounts))

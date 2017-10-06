@@ -8,7 +8,7 @@
 # +++ - evalLogLikPiZINB_ManyCells memory efficient on many cells
 # ++ Optim wrappers for single fits
 # ++ - fitPi_SingleCell wrapper for fit on single cell
-# ++ - fitPi_SingleCell wrapper for fit on multiple cells
+# ++ - fitPi_ManyCells wrapper for fit on multiple cells
 # + Overall model fitting wrapper: Top level auxillary function called by fitZINB.
 # + - fitPi wrapper for all drop-out models to be fit
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#

@@ -211,7 +211,7 @@ fitZINB <- function(
             RELTOL_BFGS_MuDisp=RELTOL_BFGS_MuDisp) )
     # Initialise mean model parameters
     if(is.null(matMuModelInit)){
-        vecMuModelInit <- apply(matCounts, 1, function(gene) mean(gene[gene>0], na.rm=TRUE))
+        vecMuModelInit <- Matrix::rowMeans(matCounts, na.rm = TRUE) 
         vecMuModelInit[vecMuModelInit < 10^(-10)] <- 10^(-10)
         if(strMuModel=="constant"){
             lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=1, byrow=FALSE)
@@ -419,7 +419,7 @@ fitZINB <- function(
         lsDropModel=lsDropModel,
         matWeights=matWeights ))
     strMessage <- paste0("#  .   Initialisation: ",
-                         "ll          ", scaLogLikNew)
+                         "ll ", scaLogLikNew)
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     

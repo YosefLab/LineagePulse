@@ -22,13 +22,12 @@ source("srcLineagePulse_classLineagePulseObject.R")
 source("srcLineagePulse_decompressParameters.R")
 source("srcLineagePulse_evalDropoutModel.R")
 source("srcLineagePulse_evalImpulseModel.R")
-source("srcLineagePulse_fitZINB_cofitMeanDispersion.R")
+source("srcLineagePulse_fitZINB_fitMeanDispersion.R")
 source("srcLineagePulse_fitZINB_fitDropout.R")
 source("srcLineagePulse_fitZINB.R")
 source("srcLineagePulse_fitZINB_WrapperLP.R")
 source("srcLineagePulse_getNormData.R")
 source("srcLineagePulse_initialiseImpulseParameters.R")
-source("srcLineagePulse_plotComparativeECDF.R")
 source("srcLineagePulse_plotGene.R")
 source("srcLineagePulse_processSCData.R")
 source("srcLineagePulse_runDEAnalysis.R")
@@ -185,8 +184,8 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' convergence flags and step-by-step loglikelihood computation.
 #' 
 #' @return dfDEAnalysis (data frame genes x reported variables) 
-#' Summary of differential expression analysis, sorted by adj.p:
-#' {Gene: gene ID,
+#' Summary of differential expression analysis:
+#' gene: gene ID,
 #' p: raw p-value, 
 #' adj.p: BH corrected p-value, 
 #' loglik_full: loglikelihood of alternative model H1,
@@ -261,7 +260,7 @@ runLineagePulse <- function(
     # Set the parallelisation environment in BiocParallel:
     if(scaNProc > 1){
         register(MulticoreParam(workers=scaNProc)) 
-    } else(scaNProc == 1) {
+    } else if(scaNProc == 1) {
         # For debugging in serial mode
         register(SerialParam())
     }
