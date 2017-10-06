@@ -39,6 +39,7 @@
 #' # Get batch correction on alternative model:
 #' # Use H1 model fits.
 #' matNormData <- getNormData(
+#'      matCounts = lsSimulatedData$counts,
 #'      lsMuModel = objLP@lsMuModelH1,
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1],
 #'      boolDepth = TRUE, boolBatch = TRUE)
