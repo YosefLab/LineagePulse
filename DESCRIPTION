@@ -20,7 +20,6 @@ Imports:
     knitr,
     Matrix,
     methods,
-    S4Vectors,
     splines,
     stats,
     SummarizedExperiment,

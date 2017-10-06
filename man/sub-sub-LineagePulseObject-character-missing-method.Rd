@@ -43,7 +43,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecGeneWiseDropoutRates = rep(0.1, 6))
 objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
-    dfAnnotation = lsSimulatedData$dfAnnot,
+    dfAnnotation = lsSimulatedData$annot,
     strMuModel = "impulse")
 head(objLP[["dfResults"]])
 

@@ -40,7 +40,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecGeneWiseDropoutRates = rep(0.1, 30))
 objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
-    dfAnnotation = lsSimulatedData$dfAnnot,
+    dfAnnotation = lsSimulatedData$annot,
     strMuModel = "impulse")
 #sortGeneTrajectories(
 #    vecIDs = rownames(objLP$objLP@lsMuModelH1$matMuModel),
