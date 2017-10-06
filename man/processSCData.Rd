@@ -4,58 +4,60 @@
 \alias{processSCData}
 \title{Prepare single cell data for analysis}
 \usage{
-processSCData(matCounts, dfAnnotation, vecConfoundersDisp, vecConfoundersMu,
+processSCData(counts, dfAnnotation, vecConfoundersDisp, vecConfoundersMu,
   matPiConstPredictors, vecNormConstExternal, strDispModelFull, strDispModelRed,
   strMuModel, scaDFSplinesDisp, scaDFSplinesMu, scaMaxEstimationCycles,
-  boolVerbose, boolSuperVerbose)
+  boolVerbose, boolSuperVerbose, STRVERSION)
 }
 \arguments{
-\item{matCounts:}{(matrix genes x samples)
-Count data of all cells, unobserved entries are NA.}
-
-\item{matPiConstPredictors:}{(numeric matrix genes x number of constant
+\item{matPiConstPredictors}{(numeric matrix genes x number of constant
 gene-wise drop-out predictors) Predictors for logistic drop-out 
 fit other than offset and mean parameter (i.e. parameters which
 are constant for all observations in a gene and externally supplied.)
 Is null if no constant predictors are supplied.}
 
-\item{vecNormConstExternal:}{(numeric vector number of cells) 
+\item{vecNormConstExternal}{(numeric vector number of cells) 
 Model scaling factors, one per cell. These factors will linearly 
 scale the mean model for evaluation of the loglikelihood. 
 Must be named according to the column names of matCounts.
 Supplied by user.}
 
-\item{vecPseudotime:}{(numerical vector length number of cells)
+\item{strDispModelFull}{(str) {"constant"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+population structure in the alternative model (H1).}
+
+\item{strDispModelRed}{(str) {"constant"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+population structure in the null model (H0).}
+
+\item{strMuModel}{(str) {"constant"}
+[Default "impulse"] Model according to which the mean
+parameter is fit to each gene as a function of 
+population structure in the alternative model (H1).}
+
+\item{STRVERSION}{(str) Version of LineagePulse that is run.}
+
+\item{matCounts}{(matrix genes x samples)
+Count data of all cells, unobserved entries are NA.}
+
+\item{vecPseudotime}{(numerical vector length number of cells)
 Pseudotime coordinates (1D) of cells: One scalar per cell.
 Has to be named: Names of elements are cell names.}
 
-\item{scaSmallRun:}{(integer) [Default NULL] Number of rows
+\item{scaSmallRun}{(integer) [Default NULL] Number of rows
 on which ImpulseDE2 is supposed to be run, the full
 data set is only used for size factor estimation.}
-
-\item{strMuModel:}{(str) {"constant"}
-[Default "impulse"] Model according to which the mean
-parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
-
-\item{strDispModelFull:}{(str) {"constant"}
-[Default "constant"] Model according to which dispersion
-parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
-
-\item{strDispModelRed:}{(str) {"constant"}
-[Default "constant"] Model according to which dispersion
-parameter is fit to each gene as a function of 
-pseudotime in the null model (H0).}
 }
 \value{
-list: (length 3)
+list (length 3)
 \itemize{
-    \item objLP: (LineagePulseObject)
+    \item objLP (LineagePulseObject)
     Initialisation of LineagePulseObject.
-    \item matCountsProcFull: (matrix genes x samples)
+    \item matCountsProcFull (matrix genes x samples)
 Processed count data of all cells, unobserved entries are NA.
-    \item vecPseudotimeProc: (numerical vector length number of cells)
+    \item vecPseudotimeProc (numerical vector length number of cells)
 Names of elements are cell names.
 }
 }

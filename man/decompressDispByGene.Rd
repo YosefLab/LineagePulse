@@ -11,18 +11,11 @@ decompressDispByGene(vecDispModel, lsvecBatchModel = NULL, lsDispModelGlobal,
 \item{vecDispModel:}{(numerical vector number of model parameters)
 Parameters of dispersion model for given gene.}
 
-\item{lsDispModelGlobal:}{(list) Global variables for dispersion model,
-common to all genes.
-\itemize{
-  \item strDispModel: (str) {"constant", "MM"} 
-Name of the dispersion model
-  \item scaNumCells: (scalar) [Default NULL] Number of cells
-for which model is evaluated. Used for constant model.
-  \item vecPseudotime: (numerical vector number of cells)
-[Default NULL] Pseudotime coordinates of cells.
-  \item vecindClusterAssign: (integer vector length number of
-cells) [Default NULL] Index of cluster assigned to each cell.
-}}
+\item{lsvecBatchModel:}{(list) [Defaul NULL] 
+List of vectors of batch correction models for dispersion parameter.}
+
+\item{lsDispModelGlobal:}{(list) 
+Object containing meta-data of gene-wise dispersion parameter models.}
 
 \item{vecInterval:}{(integer vector length target cells) [Default NULL]
 Positions of cells in ordering, for which parameters are to be 
@@ -30,8 +23,8 @@ computed. Default: all cells.}
 }
 \value{
 vecDisp: (numerical vector number of cells)
-   Dispersion parameter estimates for given gene 
-   (one per cell for given gene).
+Dispersion parameter estimates for given gene 
+(one per cell for given gene).
 }
 \description{
 Takes the model type and computes one dispersion parameter for each cell for one

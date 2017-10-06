@@ -2,32 +2,23 @@
 % Please edit documentation in R/srcLineagePulse_calcNormConst.R
 \name{calcNormConst}
 \alias{calcNormConst}
-\title{Compute size factors for a scRNA-seq dataset}
+\title{Compute size factors for a LineagePulse-object}
 \usage{
 calcNormConst(objLP, vecNormConstExternal)
 }
 \arguments{
-\item{matCountsProc:}{(matrix genes x samples)
-Count data.}
+\item{objLP:}{(LineagePulse-object)
+Object to fit normalization constants on.}
 
 \item{vecNormConstExternal:}{(numeric vector number of cells) 
-Model scaling factors, one per cell. These factors will linearly 
-scale the mean model for evaluation of the loglikelihood. 
-Must be named according to the column names of matCounts.
-Supplied by user.}
+Model scaling factors supplied by user, one per cell.}
 }
 \value{
 vecNormConst: (numeric vector number of cells) 
-   Model scaling factors, one per cell.
+Model scaling factors to be used, one per cell.
 }
 \description{
 Either use externally supplied normalisation constants or set these to one.
-}
-\details{
-Size factors scale the negative binomial likelihood
-model of a gene to the sequencing depth of each sample.
-As of now, no stable normalisation constants are known for
-scRNAseq data and they are set to 1 here.
 }
 \seealso{
 Called by \code{runLineagePulse}.

@@ -8,13 +8,17 @@ plotCellDensity(objLP, bwDensity = NULL)
 }
 \arguments{
 \item{objLP}{(LineagePulseObject) LineagePulseObject to base plot on.}
+
+\item{bwDensity}{(scalar) [Default NULL]
+Bandwidth of kernel density estimate to be used. Chosen
+automatically if NULL (recommended).}
 }
 \value{
-gGenePlot: (ggplot object)
+gplotGene: (ggplot object)
 ggplot2 kernel density estimator plot.
 }
 \description{
-Plot density of cells in pseudotime
+Uses kernel density estimate.
 }
 \author{
 David Sebastian Fischer

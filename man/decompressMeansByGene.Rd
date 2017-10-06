@@ -11,20 +11,11 @@ decompressMeansByGene(vecMuModel, lsvecBatchModel = NULL, lsMuModelGlobal,
 \item{vecMuModel:}{(numerical vector number of model parameters)
 Parameters of mean model for given gene.}
 
-\item{lsMuModelGlobal:}{(list) Global variables for mean model,
-common to all genes.
-\itemize{
-  \item strMuModel: (str) {"constant", "impulse", "clusters", 
-      "windows"} Name of the mean model
-  \item scaNumCells: (scalar) [Default NA] Number of cells
-      for which model is evaluated. Used for constant model.
-  \item vecPseudotime: (numerical vector number of cells)
-      [Default NA] Pseudotime coordinates of cells. Used for
-      impulse model.
-  \item vecindClusterAssign: (integer vector length number of
-      cells) [Default NA] Index of cluster assigned to each cell.
-      Used for clusters model.
-}}
+\item{lsvecBatchModel:}{(list) 
+List of vectors of batch correction models for mean parameter.}
+
+\item{lsMuModelGlobal:}{(list) 
+Object containing meta-data of gene-wise mean parameter models.}
 
 \item{vecInterval:}{(integer vector length target cells) [Default NULL]
 Positions of cells in ordering, for which parameters are to be 
@@ -32,7 +23,7 @@ computed. Default: all cells.}
 }
 \value{
 vecMu: (numerical vector number of cells)
-   Mean parameter estimates for given gene given the mean model.
+Mean parameter estimates for given gene given the mean model.
 }
 \description{
 Takes the model type and computes one mean parameter for each cell for one

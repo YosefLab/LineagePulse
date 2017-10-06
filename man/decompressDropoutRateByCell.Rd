@@ -8,7 +8,7 @@ decompressDropoutRateByCell(vecDropModel, vecMu = NULL,
   matPiConstPredictors = NULL, lsDropModelGlobal)
 }
 \arguments{
-\item{vecPiModel:}{(numerical vector number of model parameters)
+\item{vecDropModel:}{(numerical vector number of model parameters)
 {offset parameter, log(mu) paramter, parameters belonging to
 constant predictors}
 Parameters of dropout rate model for given cell.}
@@ -25,8 +25,8 @@ function. Here those are not a list as there is only one object.}
 }
 \value{
 vecPi: (numerical vector number of cells)
-   Dispersion parameter estimates for given gene 
-   (one per cell for given gene).
+Dispersion parameter estimates for given gene 
+(one per cell for given gene).
 }
 \description{
 Compute dropout rate parameter estimates from dropout rate model for a cell.

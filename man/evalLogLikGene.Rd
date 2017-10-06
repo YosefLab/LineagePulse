@@ -5,8 +5,8 @@
 \title{Wrapper for log likelihood of zero-inflated negative binomial model
 for a vector of counts.}
 \usage{
-evalLogLikGene(vecCounts, vecMu, vecNormConst, vecDisp, vecPi, vecboolNotZero,
-  vecboolZero)
+evalLogLikGene(vecCounts, vecMu, vecNormConst, vecDisp, vecPi, vecidxNotZero,
+  vecidxZero)
 }
 \arguments{
 \item{vecCounts}{(count vector number of cells)
@@ -15,23 +15,23 @@ Observed read counts, not observed are NA.}
 \item{vecMu}{(numeric vector number of cells) 
 Negative binomial mean parameter.}
 
-\item{vecNormConst:}{(numeric vector number of cells) 
+\item{vecNormConst}{(numeric vector number of cells) 
 Model scaling factors, one per cell.}
 
-\item{vecDisp:}{(numeric vector number of cells) 
+\item{vecDisp}{(numeric vector number of cells) 
 Negative binomial dispersion parameters.}
 
-\item{vecPi:}{(probability vector number of cells) 
+\item{vecPi}{(probability vector number of cells) 
 Drop-out rate estimates.}
 
-\item{vecboolNotZero:}{(bool vector number of cells)
+\item{vecidxNotZero}{(bool vector number of cells)
 Whether observation is larger than zero.}
 
-\item{vecboolZero:}{(bool vector number of cells)
+\item{vecidxZero}{(bool vector number of cells)
 Whether observation is zero.}
 }
 \value{
-scaLogLik: (scalar) Likelihood under zero-inflated
+scaLogLik (scalar) Likelihood under zero-inflated
 	  negative binomial model.
 }
 \description{

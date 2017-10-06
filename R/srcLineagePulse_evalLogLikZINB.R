@@ -98,7 +98,7 @@ evalLogLikZINB <- function(
 #' 	  negative binomial model.
 #' 
 #' @author David Sebastian Fischer
-evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
+evalLogLikZINB_comp <- compiler::cmpfun(evalLogLikZINB)
 
 #' Wrapper for log likelihood of zero-inflated negative binomial model
 #' for a vector of counts.
@@ -107,20 +107,6 @@ evalLogLikZINB_comp <- cmpfun(evalLogLikZINB)
 #' compute smoothed or non-smoothed likelihood. Calling the 
 #' non-smoothed routing avoids the use of a for loop in the case
 #' of no smoothing.
-#' 
-#' 
-#' @seealso Called directly by \code{evalLogLikMatrix} and by
-#' loglikelihood wrappers for various models:
-#' \code{evalLogLikMuConstZINB},
-#' \code{evalLogLikDispConstZINB},
-#' \code{evalLogLikDispConstMuConstZINB},
-#' \code{evalLogLikMuImpulseZINB} and
-#' \code{evalLogLikDispConstMuImpulseZINB}.
-#' Called by fitting wrappers to ensure convergence:
-#' \code{fitMuImpulseZINB} and
-#' \code{fitDispConstMuImpulseZINB}.
-#' Additionally by \code[plotGene}. Calls either 
-#' \code{evalLogLikZINB} or \code{evalLogLikSmoothZINB}.
 #'
 #' @param vecCounts (count vector number of cells)
 #' Observed read counts, not observed are NA.

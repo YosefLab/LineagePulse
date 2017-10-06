@@ -9,78 +9,28 @@ evalLogLikMatrix(matCounts, lsMuModel, lsDispModel, lsDropModel,
   matWeights = NULL, boolConstModelOnMMLL = FALSE)
 }
 \arguments{
-\item{matCountsProc:}{(matrix genes x cells)
+\item{matCounts}{(count matrix genes x cells)
 Observed read counts, not observed are NA.}
 
-\item{vecNormConst:}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
+\item{lsMuModel}{(list)
+Object containing description of gene-wise mean parameter models.}
 
-\item{lsMuModel:}{(list length 2)
-All objects necessary to compute mean parameters for all
-observations.
-\itemize{
-  \item matMuModel: (numerical matrix genes x number of model parameters)
-Parameters of mean model for each gene.
-  \item lsMuModelGlobal: (list) Global variables for mean model,
-common to all genes.
-    \itemize{
-      \item strMuModel: (str) {"constant", "impulse", "clusters", 
-    "windows"} Name of the mean model.
-      \item scaNumCells: (scalar) [Default NA] Number of cells
-    for which model is evaluated. Used for constant model.
-      \item vecPseudotime: (numerical vector number of cells)
-    [Default NA] Pseudotime coordinates of cells. Used for
-    impulse model.
-      \item vecindClusterAssign: (integer vector length number of
-    cells) [Default NA] Index of cluster assigned to each cell.
-    Used for clusters model.
-      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-    for BFGS estimation of impulse model with optim (termination criterium).
-      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-    change in objective function for BFGS estimation of impulse 
-    model with optim (termination criterium).
-  }
-}}
+\item{lsDispModel}{(list)
+Object containing description of gene-wise dispersion parameter models.}
 
-\item{lsDispModel:}{(list length 2)
-All objects necessary to compute dispersion parameters for all
-observations.
-\itemize{
-  \item matDispModel: (numerical matrix genes x number of model parameters)
-Parameters of dispersion model for each gene.
-  \item lsDispModelGlobal: (list) Global variables for mean model,
-common to all genes.
-    \itemize{
-      \item strDispModel: (str) {"constant"} 
-    Name of the dispersion model.
-      \item scaNumCells: (scalar) [Default NA] Number of cells
-    for which model is evaluated. Used for constant model.
-      \item vecPseudotime: (numerical vector number of cells)
-    [Default NA] Pseudotime coordinates of cells. Used for
-    impulse model.
-      \item vecindClusterAssign: (integer vector length number of
-    cells) [Default NA] Index of cluster assigned to each cell.
-    Used for clusters model.
-  }
-}}
+\item{lsDropModel}{(list)
+Object containing description of cell-wise drop-out parameter models.}
 
-\item{lsDropModel:}{(list length 2)
-All objects necessary to compute drop-out parameters for all
-observations, omitting mean parameters (which are stored in lsMeanModel).
-\itemize{
-  \item matDropoutLinModel: (numeric matrix cells x number of model parameters)
-{offset parameter, log(mu) parameter, parameters belonging to
-constant predictors}
-Parameters of drop-out model for each cell
-  \item matPiConstPredictors: (numeric matrix genes x number of constant
-gene-wise drop-out predictors) Predictors for logistic drop-out 
-fit other than offset and mean parameter (i.e. parameters which
-are constant for all observations in a gene and externally supplied.)
-Is null if no constant predictors are supplied.
-}}
+\item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
+Assignments of cells to mixtures (for strMuModel="MM").}
+
+\item{boolConstModelOnMMLL}{(bool) [Default FALSE]
+Whether to evaluate constant gene-wise mean model on mixture model likelihood.
+This is necessary for numeric stability when testing whether mixture model
+fits are worse than constant fits.}
 }
 \value{
-vecLogLik: (vector length number of genes) 
+vecLogLik (vector length number of genes) 
 Loglikelihood of each gene under zero-inflated negative binomial model.
 }
 \description{

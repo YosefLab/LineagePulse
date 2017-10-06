@@ -1,5 +1,5 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++++     Evaluate logistic drop-out model    ++++++++++++++++#
+#++++++++++++++++++     Evaluate logistic drop-out model    +++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Compute value of logistic dropout function given with scale boundaries
@@ -47,6 +47,6 @@ evalDropoutModel <- function(vecPiModel,
 #' 
 #' @return scaDropoutRate (scalar): 
 #'    Drop-out rate estimate.
-#'    
+#' 
 #' @author David Sebastian Fischer
-evalDropoutModel_comp <- cmpfun(evalDropoutModel)
+evalDropoutModel_comp <- compiler::cmpfun(evalDropoutModel)

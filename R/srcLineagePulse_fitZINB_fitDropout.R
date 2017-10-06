@@ -123,7 +123,7 @@ evalLogLikPiZINB_SingleCell <- function(
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
-evalLogLikPiZINB_SingleCell_comp <- cmpfun(evalLogLikPiZINB_SingleCell)
+evalLogLikPiZINB_SingleCell_comp <- compiler::cmpfun(evalLogLikPiZINB_SingleCell)
 
 #' Cost function zero-inflated negative binomial model for drop-out fitting
 #' for many cells
@@ -196,10 +196,6 @@ evalLogLikPiZINB_ManyCells <- function(
     return(scaLogLik)
 }
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-# (II) Optin wrappers
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-
 #' Cost function zero-inflated negative binomial model for drop-out fitting
 #' 
 #' Refer to \link{evalLogLikPiZINB_ManyCells}.
@@ -221,7 +217,11 @@ evalLogLikPiZINB_ManyCells <- function(
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
-evalLogLikPiZINB_ManyCells_comp <- cmpfun(evalLogLikPiZINB_ManyCells)
+evalLogLikPiZINB_ManyCells_comp <- compiler::cmpfun(evalLogLikPiZINB_ManyCells)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+# (II) Optin wrappers
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Optim wrapper for drop-out model fitting on single cell
 #' 

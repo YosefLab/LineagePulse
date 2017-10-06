@@ -8,34 +8,31 @@ calcPostDrop_Matrix(matCounts, lsMuModel, lsDispModel, lsDropModel,
   vecIDs = NULL)
 }
 \arguments{
-\item{matMu:}{(numeric matrix genes x cells)
-Inferred zero inflated negative binomial drop out rates.}
+\item{matCounts}{(count matrix genes x cells)
+Observed read counts, not observed are NA.}
 
-\item{matDisp:}{(vector number of genes) Gene-wise 
-negative binomial dispersion coefficients.}
+\item{lsMuModel}{(list)
+Object containing description of gene-wise mean parameter models.}
 
-\item{matDrop:}{(numeric matrix genes x cells)
-Inferred zero inflated negative binomial drop out rates.}
+\item{lsDispModel}{(list)
+Object containing description of gene-wise dispersion parameter models.}
 
-\item{matboolZero:}{(bool matrix genes x cells)
-Whether observation is zero.}
+\item{lsDropModel}{(list)
+Object containing description of cell-wise drop-out parameter models.}
 
-\item{matboolNotZeroObserved:}{(bool matrix genes x cells)
-Whether observation is real and non-zero.}
+\item{vecIDs}{(vector of strings) [Default NULL]
+Gene IDs for which posteriors of drop-out are to be computed.}
 }
 \value{
-matZ: (numeric matrix genes x cells)
-   Posterior probability of observation not being generated 
-   by drop-out.
+matZ (numeric matrix genes x cells)
+Posterior probability of observation not being generated 
+by drop-out.
 }
 \description{
-Calculates posterior of observation being a drop-out for a matrix. This posterior
-is zero if an observation is non-zero, therefore, the data is read in 
-as a boolean matrix indicating zero-observations, the actual values
-are not required. Neighbourhood smoothing can be included.
+Calculates posterior of observation being a drop-out for a matrix.
 }
 \seealso{
-Called by \code{fitZINB}. Can be called by user.
+Called by \code{plotGene}.
 }
 \author{
 David Sebastian Fischer

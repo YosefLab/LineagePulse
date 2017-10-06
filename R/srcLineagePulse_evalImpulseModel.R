@@ -49,4 +49,4 @@ evalImpulseModel <- function(vecImpulseParam,
 #'  Model values for given time points.
 #' 
 #' @author David Sebastian Fischer
-evalImpulseModel_comp <- cmpfun(evalImpulseModel)
+evalImpulseModel_comp <- compiler::cmpfun(evalImpulseModel)

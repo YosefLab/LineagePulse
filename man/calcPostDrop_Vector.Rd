@@ -28,18 +28,10 @@ vecZ:  (numeric vector samples)
    by drop-out.
 }
 \description{
-Calculates posterior of observation being a drop-out for a vector. This posterior
-is zero if an observation is non-zero, therefore, the data is read in 
-as a boolean matrix indicating zero-observations, the actual values
-are not required. Neighbourhood smoothing can be included. Does not use
-parallelisation and takes vectors: As oppose to \code{calcProbNB_Vector}
-vectors do not produce format errors and usage within upstream parallelisation
-works.
+Calculates posterior of observation being a drop-out for a vector.
 }
 \seealso{
-Called by \code{fitZINB}. Same function as \code{calcPostDrop_Matrix}
-but for vectors (i.e. one gene) as oppose to matrices: no 
-parallelisation and no formatting errors.
+For matrices: \code{calcPostDrop_Matrix}.
 }
 \author{
 David Sebastian Fischer

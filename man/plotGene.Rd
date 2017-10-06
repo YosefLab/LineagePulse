@@ -6,7 +6,8 @@
 \usage{
 plotGene(objLP, strGeneID, vecReferenceMuParam = NULL,
   strTitleSuffix = NULL, boolLogPlot = TRUE, boolColourByDropout = TRUE,
-  boolH1NormCounts = FALSE, boolLineageContour = FALSE, bwDensity = NULL)
+  boolH1NormCounts = FALSE, boolLineageContour = FALSE, bwDensity = NULL,
+  scaGgplot2Size = 0.5, scaGgplot2Alpha = 0.5)
 }
 \arguments{
 \item{objLP}{(LineagePulseObject) LineagePulseObject
@@ -27,12 +28,12 @@ Whether to the "lineage contour" lines to the scatter plot.}
 
 \item{bwDensity}{(bandwith: numeric or string) [Default NULL]
 Bandwith to be used to kernel density smooting
-of cell density in pseudotime (used if boolExpectedDistrPanel=TRUE).
+of cell density in pseudotime (used if boolLineageContour=TRUE).
 If not set, defaults to stats:density() default.}
 }
 \value{
-gGenePlot: (ggplot object)
-   Model rajectories and scatter plot for given gene.
+gplotGene: (ggplot object)
+Model rajectories and scatter plot for given gene.
 }
 \description{
 Plot counts and model for one gene as a scatter plot with model trajectories:
@@ -58,6 +59,28 @@ quantify the increase in maximum observed counts in pseudotime intervals due to
 sampling density, which is not due to the expression model. Note that this effect
 is corrected for in the model fitting and that the contour plots just aids visual
 interpretation of the fit to the data!
+}
+\examples{
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 100,
+    scaNConst = 10,
+    scaNLin = 10,
+    scaNImp = 10,
+    scaMumax = 100,
+    scaSDMuAmplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 30),
+    vecGeneWiseDropoutRates = rep(0.1, 30))
+objLP <- runLineagePulse(
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$dfAnnot,
+    strMuModel = "impulse")
+gplotExprProfile <- plotGene(
+    objLP = objLP,
+    strGeneID = rownames(lsSimulatedData$counts)[1],
+    boolLineageContour = FALSE)
+#print(gplotExprProfile)
+
 }
 \author{
 David Sebastian Fischer

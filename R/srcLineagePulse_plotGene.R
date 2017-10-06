@@ -46,20 +46,20 @@
 #' @return gplotGene: (ggplot object)
 #' Model rajectories and scatter plot for given gene.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 100,
 #'     scaNConst = 10,
 #'     scaNLin = 10,
 #'     scaNImp = 10,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
 #'     vecGeneWiseDropoutRates = rep(0.1, 30))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' gplotExprProfile <- plotGene(
 #'     objLP = objLP,

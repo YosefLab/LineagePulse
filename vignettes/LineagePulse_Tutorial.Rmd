@@ -1,10 +1,10 @@
 ---
 title: "LineagePulse Tutorial"
-author: "David S. Fischer"
+author: "David Sebastian Fischer"
 date: "`r Sys.Date()`"
 output:
-  BiocStyle::html_document:
-    toc: true
+BiocStyle::html_document:
+toc: true
 vignette: >
   %\VignetteEncoding{UTF-8}
 ---
@@ -44,7 +44,7 @@ Note that LineagePulse does not infer a pseudotemporal ordering but is a downstr
 To run LineagPulse on scRNA-seq data, the user needs to use a minimal input parameter set for 
 the wrapper function runLineagePulse, which then performs all normalisation, model fitting and differential expression analysis steps without any more user interaction required:
 
-* matCounts the count matrix (genes x cells) which MUST NOT be normalised in any way. A valid input option is expected counts from an aligner. Note that TPM or depth normalised expected counts are NOT count data. The statistical framework of LineagePulse rests on the assumption that matCounts contain count data (similar to DESeq2 and other count-based differential expression methods).
+* counts the count matrix (genes x cells) which MUST NOT be normalised in any way. A valid input option is expected counts from an aligner. Note that TPM or depth normalised expected counts are NOT count data. The statistical framework of LineagePulse rests on the assumption that matCounts contain count data (similar to DESeq2 and other count-based differential expression methods).
 * dfAnnotation data frame that contains a column names "pseudotime" if a continuous model is fit and which contains columns that describe the batch structure (if any). The rownames of dfAnnotation must be equal to the column names of matCounts as both correspond to cells.
 * vecConfoundersMu a vector of strings which corresond to column names in dfAnnotation which describe the batch structure to be corrected for.
 * strMuModel the type of expression model to use as an alternative model for differential expression analysis: "impulse" for an impulse model and "splines" for a natural cubic spline model.
@@ -74,18 +74,21 @@ Here, we present a differential expression analysis scenario on a longitudinal o
 The differential expression results are in a data frame which can be accessed from the output object via list like properties ($)
 
 ```{r case-only}
-library(ImpulseDE2)
-matCounts <- my_counts
-dfAnnot <- my_annot
+library(LineagePulse)
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 100,
+    scaNConst = 10,
+    scaNLin = 10,
+    scaNImp = 10,
+    scaMumax = 100,
+    scaSDMuAmplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 30),
+    vecGeneWiseDropoutRates = rep(0.1, 30))
 objLP <- runLineagePulse(
-    matCounts=matCounts,
-    dfAnnotation=dfAnnot,
-    vecConfoundersMu=NULL,
-    strMuModel="impulse",
-    vecNormConstExternal=vecDepthFac,
-    scaNProc=2,
-    boolVerbose=TRUE,
-    boolSuperVerbose=TRUE )
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$annot,
+    strMuModel = "impulse")
 ```
 ```{r case-only-annotation, results='markdown'}
 head(objLP$dfResults)
@@ -104,11 +107,11 @@ In any case, the output object of the gene-wise expression trajectors plotting f
 is a ggplot2 object which can then be printed or modified.
 
 ```{r plot-genes}
-gplotGene <- plotGene(objLP = objLP,
-                      strGeneID=gene_of_interest,
-                      boolLogPlot=FALSE, boolH1NormCounts = TRUE,
-                      boolColourByDropout=TRUE)
-print(gplotGene)
+gplotExprProfile <- plotGene(
+    objLP = objLP, boolLogPlot = FALSE,
+    strGeneID = rownames(lsSimulatedData$counts)[1],
+    boolLineageContour = FALSE)
+gplotExprProfile
 ```
 
 # Session information

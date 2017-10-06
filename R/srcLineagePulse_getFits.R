@@ -21,14 +21,14 @@
 #' Posterior probability of observation not being generated 
 #' by drop-out.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 20,
 #'     scaNConst = 2,
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
@@ -101,14 +101,14 @@ getNormData <- function(matCounts,
 #' @return matMuParam (numeric matrix genes x cells)
 #' Mean parameter fits.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 20,
 #'     scaNConst = 2,
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
@@ -165,14 +165,14 @@ getFitsMean <- function(
 #' @return matDispParam (numeric matrix genes x cells)
 #' Dispersion parameter fits.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 20,
 #'     scaNConst = 2,
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
@@ -230,14 +230,14 @@ getFitsDispersion <- function(
 #' @return matPiParam (numeric matrix genes x cells)
 #' Drop-out rate fits.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 20,
 #'     scaNConst = 2,
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
@@ -305,14 +305,14 @@ getFitsDropout <- function(
 #' Posterior probability of observation not being generated 
 #' by drop-out.
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 20,
 #'     scaNConst = 2,
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))

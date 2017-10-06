@@ -7,35 +7,11 @@
 sortGeneTrajectories(vecIDs, lsMuModel, dirHeatmap)
 }
 \arguments{
+\item{lsMuModel}{(list)
+Object containing description of gene-wise mean parameter models.}
+
 \item{vecIDs:}{(vector of strings)
 Names of genes to cluster.}
-
-\item{lsMuModel:}{(list length 2)
-All objects necessary to compute mean parameters for all
-observations.
-\itemize{
-  \item matMuModel: (numerical matrix genes x number of model parameters)
-Parameters of mean model for each gene.
-  \item lsMuModelGlobal: (list) Global variables for mean model,
-common to all genes.
-    \itemize{
-      \item strMuModel: (str) {"constant", "impulse", "clusters", 
-    "windows"} Name of the mean model.
-      \item scaNumCells: (scalar) [Default NA] Number of cells
-    for which model is evaluated. Used for constant model.
-      \item vecPseudotime: (numerical vector number of cells)
-    [Default NA] Pseudotime coordinates of cells. Used for
-    impulse model.
-      \item vecindClusterAssign: (integer vector length number of
-    cells) [Default NA] Index of cluster assigned to each cell.
-    Used for clusters model.
-      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-    for BFGS estimation of impulse model with optim (termination criterium).
-      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-    change in objective function for BFGS estimation of impulse 
-    model with optim (termination criterium).
-  }
-}}
 
 \item{dirHeatmap:}{(str directory) [Default NULL]
 Directory to which heatmap is saved to. Not 
@@ -44,12 +20,33 @@ defined.}
 }
 \value{
 vecSortedGenes: (string vector number of IDs)
-   IDs sorted by peak time in pseudotime.
+IDs sorted by peak time in pseudotime.
 }
 \description{
 Sorts inferred gene trajectories by peak time in pseudotime. Optional: Can
 create a heatmap of the gene trajectories sorted according to peak time.
 The heatmap is based on z-scores.
+}
+\examples{
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 100,
+    scaNConst = 10,
+    scaNLin = 10,
+    scaNImp = 10,
+    scaMumax = 100,
+    scaSDMuAmplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 30),
+    vecGeneWiseDropoutRates = rep(0.1, 30))
+objLP <- runLineagePulse(
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$dfAnnot,
+    strMuModel = "impulse")
+#sortGeneTrajectories(
+#    vecIDs = rownames(objLP$objLP@lsMuModelH1$matMuModel),
+#    lsMuModel = objLP@lsMuModelH1,
+#    dirHeatmap = "your_target_directory"))
+
 }
 \seealso{
 Called by \code{LineagePulse_main} or by user.

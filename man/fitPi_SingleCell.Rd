@@ -2,7 +2,7 @@
 % Please edit documentation in R/srcLineagePulse_fitZINB_fitDropout.R
 \name{fitPi_SingleCell}
 \alias{fitPi_SingleCell}
-\title{Optimisation function for drop-out model fitting}
+\title{Optim wrapper for drop-out model fitting on single cell}
 \usage{
 fitPi_SingleCell(vecParamGuess, vecCounts, vecMuParam, scaNormConst,
   vecDispParam, matPiAllPredictors, lsDropModelGlobal)
@@ -11,27 +11,29 @@ fitPi_SingleCell(vecParamGuess, vecCounts, vecMuParam, scaNormConst,
 \item{vecCounts}{(count vector number of genes)
 Observed read counts, not observed are NA.}
 
-\item{vecDropoutLinModel:}{(numeric vector length linear model)
-Previous parameterisation of linear model for drop-out 
-rate in logit space for given cell.}
+\item{vecParamGuess:}{(numeric vector length linear model) 
+Parameter estimates for logit linear model for drop-out rate.}
 
-\item{matPiConstPredictors:}{(matrix genes x predictors) Predictors of
-the drop-out rate in the linear model. Minimum are a constant
-offset and log of the negative binomial mean parameter. 
-Other gene-specific predictors can be added.}
+\item{vecMuParam:}{(vector number of cells) Negative binomial
+mean parameter estimate.}
 
 \item{vecNormConst:}{(numeric vector number of cells) 
 Model scaling factors, one per cell.}
 
-\item{vecidxInterval:}{(integer vector neighbourhood)
-Positions of cells within smooting interval (neighbourhood)
-of target cell.}
+\item{vecDispParam:}{(vector number of cells) Negative binomial
+dispersion parameter estimate.}
 
-\item{scaTarget:}{(integer) Index of target cell in interval.}
+\item{matPiAllPredictors:}{(matrix genes x predictors) Predictors of
+the drop-out rate in the linear model. Minimum are a constant
+offset and log of the negative binomial mean parameter. 
+Other gene-specific predictors can be added.}
+
+\item{lsDropModelGlobal:}{(list)
+Object containing meta-data of cell-wise drop-out parameter models.}
 }
 \value{
 vecLinModel: (numeric vector length linear model) 
-   Linear model for drop-out rate in logit space for given cell.
+Linear model for drop-out rate in logit space for given cell.
 }
 \description{
 This function fits a logistic drop-out model to a cell based
@@ -40,9 +42,9 @@ Parameter estimation of the linear model is performed by maximum
 likelihood based on the overall likelihood.
 }
 \seealso{
-Called by drop-out estimation wrapper code in \code{fitZINB}.
-Calls loglikelihood wrapper inside of optim:
-\code{evalLogLikPiZINB}.
+Called by drop-out estimation wrapper code in \code{fitPi}.
+Calls fitting cost function:
+\code{evalLogLikPiZINB_SingleCell_comp}.
 }
 \author{
 David Sebastian Fischer

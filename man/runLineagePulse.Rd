@@ -8,20 +8,23 @@
 \alias{function}
 \title{LineagePulse wrapper: Differential expression analysis in pseudotime}
 \usage{
-runLineagePulse(matCounts, dfAnnotation, vecConfoundersMu = NULL,
+runLineagePulse(counts, dfAnnotation, vecConfoundersMu = NULL,
   vecConfoundersDisp = NULL, strMuModel = "impulse",
   strDispModelFull = "constant", strDispModelRed = "constant",
   strDropModel = "logistic_ofMu", strDropFitGroup = "PerCell",
   scaDFSplinesMu = 3, scaDFSplinesDisp = 3, matPiConstPredictors = NULL,
-  vecNormConstExternal = NULL, boolEstimateNoiseBasedOnH0 = FALSE,
+  vecNormConstExternal = NULL, boolEstimateNoiseBasedOnH0 = TRUE,
   scaMaxEstimationCycles = 20, scaNProc = 1, boolVerbose = TRUE,
   boolSuperVerbose = FALSE)
 }
 \arguments{
-\item{matCounts:}{(matrix genes x cells)
-Count data of all cells, unobserved entries are NA.}
+\item{counts}{(matrix genes x cells (sparseMatrix or standard), 
+SummarizedExperiment or file)
+Matrix: Count data of all cells, unobserved entries are NA.
+SummarizedExperiment: Count data of all cells in assay(counts).
+file: .mtx file from which count matrix is to be read.}
 
-\item{dfAnnotation:}{(data frame cells x meta characteristics)
+\item{dfAnnotation}{(data frame cells x meta characteristics)
 Annotation table which contains meta data on cells.
 May contain the following columns
 cell: Cell IDs.
@@ -35,47 +38,71 @@ variable.
 ... ConfounderX.
 population: Fixed population assignments (for
 strMuModel="MM"). Cells not assigned have to be NA.
-clusters: External clustering results assigning each cell
-to one cluster ID. Used if strMuModel=="clusters" and this
-column is given, otherwise clustering is internally generated.
+groups: Discrete grouping of cells (e.g. clusters or experimental
+conditions which are to be used as popuation structure if 
+strMuModel or strDispModel are "groups").
 rownames: Must be IDs from column cell.
 Remaining entries in table are ignored.}
 
-\item{vecConfounders:}{Confounders to correct for in mu batch
+\item{vecConfoundersMu}{(vector of strings number of confounders on  mean)
+[Default NULL] Confounders to correct for in mu batch
 correction model, must be subset of column names of
 dfAnnotation which describe condounding variables.}
 
-\item{vecConfoundersDisp:}{Confounders to correct for in dispersion batch
+\item{vecConfoundersDisp}{(vector of strings number of confounders on  dispersion)
+[Default NULL] Confounders to correct for in dispersion batch
 correction model, must be subset of column names of
 dfAnnotation which describe condounding variables.}
 
-\item{strMuModel:}{(str) {"constant", "cluster", "MM",
-"windows","impulse"}
+\item{strMuModel}{(str) {"constant", "groups", "MM",
+"splines","impulse"}
 [Default "impulse"] Model according to which the mean
 parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
+population structure in the alternative model (H1).}
 
-\item{strDispModel:}{(str) {"constant"}
+\item{strDispModelFull}{(str) {"constant", "groups", "splines"}
 [Default "constant"] Model according to which dispersion
 parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
+population structure in the alternative model (H1).}
 
-\item{matPiConstPredictors:}{(numeric matrix genes x number of constant
+\item{strDispModelRed}{(str) {"constant", "groups", "splines"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+population structure in the null model (H0).}
+
+\item{strDropModel}{(str) {"logistic_ofMu", "logistic"}
+[Default "logistic_ofMu"] Definition of drop-out model.
+"logistic_ofMu" - include the fitted mean in the linear model
+of the drop-out rate and use offset and matPiConstPredictors.
+"logistic" - only use offset and matPiConstPredictors.}
+
+\item{strDropFitGroup}{(str) {"PerCell", "AllCells"}
+[Defaul "PerCell"] Definition of groups on cells on which
+separate drop-out model parameterisations are fit.
+"PerCell" - one parametersiation (fit) per cell
+"ForAllCells" - one parametersiation (fit) for all cells}
+
+\item{scaDFSplinesMu}{(sca) [Default 3] 
+If strMuModel=="splines", the degrees of freedom of the natural
+cubic spline to be used as a mean parameter model.}
+
+\item{scaDFSplinesDisp}{(sca) [Default 3] 
+If strDispModelFull=="splines" or strDispModelRed=="splines", 
+the degrees of freedom of the natural
+cubic spline to be used as a dispersion parameter model.}
+
+\item{matPiConstPredictors}{(numeric matrix genes x number of constant
 gene-wise drop-out predictors) Predictors for logistic drop-out 
 fit other than offset and mean parameter (i.e. parameters which
 are constant for all observations in a gene and externally supplied.)
 Is null if no constant predictors are supplied}
 
-\item{vecNormConstExternal:}{(numeric vector number of cells) 
+\item{vecNormConstExternal}{(numeric vector number of cells) 
 Model scaling factors, one per cell. These factors will linearly 
 scale the mean model for evaluation of the loglikelihood. 
 Must be named according to the column names of matCounts.}
 
-\item{scaKCluster:}{(integer) [Default NULL] Forces number of centroids
-in K-means to be K: setting this to an integer (not NULL) skips model
-selection in clusterting.}
-
-\item{boolEstimateNoiseBasedOnH0:}{(bool) [Default: FALSE]
+\item{boolEstimateNoiseBasedOnH0}{(bool) [Default TRUE]
 Whether to co-estimate logistic drop-out model with the 
 constant null model or with the alternative model. The
 co-estimation with the noise model typically extends the
@@ -86,32 +113,32 @@ model), a trade-off for speed over accuracy can be taken
 and the dropout model can be chosen to be estimated based
 on the constant null expression model (set to TRUE).}
 
-\item{scaMaxEstimationCycles:}{(integer) [Default 20] Maximum number 
+\item{scaMaxEstimationCycles}{(integer) [Default 20] Maximum number 
 of estimation cycles performed in fitZINB(). One cycle
 contain one estimation of of each parameter of the 
 zero-inflated negative binomial model as coordinate ascent.}
 
-\item{scaNProc:}{(scalar) [Default 1] Number of processes for 
+\item{scaNProc}{(scalar) [Default 1] Number of processes for 
 parallelisation.}
 
-\item{verbose:}{(bool) Whether to follow convergence of the 
-iterative parameter estimation with one report per cycle.}
-
-\item{boolSuperVerbose:}{(bool) Whether to follow convergence of the 
+\item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
 iterative parameter estimation in high detail with local 
 convergence flags and step-by-step loglikelihood computation.}
+
+\item{verbose}{(bool) Whether to follow convergence of the 
+iterative parameter estimation with one report per cycle.}
 }
 \value{
-dfDEAnalysis: (data frame genes x reported variables) 
-   Summary of differential expression analysis, sorted by adj.p:
-   {Gene: gene ID,
-   p: raw p-value, 
-   adj.p: BH corrected p-value, 
-   loglik_full: loglikelihood of alternative model H1,
-   loglik_red: loglikelihood of null model H0,
-   deviance: loglikelihood ratio test statistic (the deviance),
-   mean_H0: inferred gene-wise mean parameter (constant null model),
-   dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
+dfDEAnalysis (data frame genes x reported variables) 
+Summary of differential expression analysis:
+gene: gene ID,
+p: raw p-value, 
+adj.p: BH corrected p-value, 
+loglik_full: loglikelihood of alternative model H1,
+loglik_red: loglikelihood of null model H0,
+deviance: loglikelihood ratio test statistic (the deviance),
+mean_H0: inferred gene-wise mean parameter (constant null model),
+dispersion_H0: inferred gene-wise dispersion parameter (constant null model)
 }
 \description{
 This function performs all steps of longitudinal differential
@@ -136,10 +163,7 @@ all cell ids (the colnames of matCounts) in a column "cell",
 and cell-wise pseudotime coordinates (scalar) in a a column "pseudpotime".
 Rownames must be the ids in column "cell".
 3. Chose the model constraining mean (strMuModel) and dispersion 
-parameters (strDispModel) for each gene. If you run clusters,
-you may decide to force the number of clusters (scaKCluster)
-rather than using internal model selection or use clusters
-based on true time (time of sampling) (boolClusterInPseudotime).
+parameters (strDispModel) for each gene.
 
 ADDITIONAL FACULTATIVE SETTINGS
 5. Supply gene-specific drop-out predictors if wanted 
@@ -149,8 +173,8 @@ scaMaxEstimationCycles).
 7. Chose the number of processes you want to use (scaNProc), LineagePulse
 is parallelised on all computation intensive steps. Note that
 the current parallelisation scheme runs on Unix (MacOS) and Linux but
-not on windows. Adjust the code section within this wrapper to
-parallelise on windows.
+not on Windows. Set scaNProc to NA and start a BiocParallel environment
+before the call to this function to use parallelisation on Windows.
 8. Set the level of detail with which you want to follow
 progress through text printed on the console during a run
 (verbose, boolSuperVerbose).
@@ -165,9 +189,24 @@ dropout with calcPostDrop.
 C) You can have a closer look at the global expression
 trajecotries of the genes with sortGeneTrajectories.
 D) You can look at gene-wise model fits with plotGene().
-E) If you use strMuModel=="clusters", you can plot the
-observed density of cells across pseudotime and the cluster 
-boundaries in this 1D space with plotPseudotimeClustering.
+}
+\examples{
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 100,
+    scaNConst = 10,
+    scaNLin = 10,
+    scaNImp = 10,
+    scaMumax = 100,
+    scaSDMumplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 30),
+    vecGeneWiseDropoutRates = rep(0.1, 30))
+objLP <- runLineagePulse(
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$annot,
+    strMuModel = "impulse")
+tail(objLP$dfResults)
+
 }
 \author{
 David Sebastian Fischer

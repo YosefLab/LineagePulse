@@ -258,7 +258,7 @@ evalLogLikContinuousZINB <- function(
 #' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
-evalLogLikContinuousZINB_comp <- cmpfun(evalLogLikContinuousZINB)
+evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (II) Optim wrappers

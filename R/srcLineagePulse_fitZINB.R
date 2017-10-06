@@ -121,13 +121,13 @@
 #' 
 #' @return list
 #' \itemize{
-#' @param lsMuModel (list)
+#' \item lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param lsDispModel (list)
+#' \item lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
-#' @param lsDropModel (list)
+#' \item lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
-#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' \item matWeights (numeric matrix cells x mixtures) [Default NULL]
 #' Assignments of cells to mixtures (for strMuModel="MM").
 #' \item boolConvergenceModel: (bool) 
 #' Convergence status of model estimation.

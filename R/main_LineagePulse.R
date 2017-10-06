@@ -1,38 +1,50 @@
+#' @import BiocParallel
+#' @importFrom compiler cmpfun
+#' @import ggplot2
+#' @importFrom grDevices dev.off graphics.off pdf
+#' @import knitr
+#' @import Matrix
+#' @import methods
+#' @import splines
+#' @importFrom stats dnbinom median optim p.adjust pchisq rnbinom rnorm runif sd
+#' @import SummarizedExperiment
+#' @importFrom utils packageDescription
+NULL
+
 ################################################################################
 ### Libraries and source code
 ################################################################################
 # this section is for building if the code is not used as package but just as a
-# collection of functions.
+# collection of functions. Used for development.
 
-library(BiocParallel)
-library(compiler)
-library(ggplot2)
-library(Matrix)
-library(splines)
-library(SummarizedExperiment)
+#library(BiocParallel)
+#library(compiler)
+#library(ggplot2)
+#library(Matrix)
+#library(splines)
+#library(SummarizedExperiment)
 
 ### CHANGE THIS PATH TO THE PATH IN WHICH YOU HAVE LineagePulse/R ###
-setwd("~/gitDevelopment/LineagePulse/R")
+#setwd("~/gitDevelopment/LineagePulse/R")
 
-source("srcLineagePulse_evalLogLikZINB.R")
-
-source("srcLineagePulse_calcPostDrop.R")
-source("srcLineagePulse_calcNormConst.R")
-source("srcLineagePulse_classLineagePulseObject.R")
-source("srcLineagePulse_decompressParameters.R")
-source("srcLineagePulse_evalDropoutModel.R")
-source("srcLineagePulse_evalImpulseModel.R")
-source("srcLineagePulse_fitZINB_fitMeanDispersion.R")
-source("srcLineagePulse_fitZINB_fitDropout.R")
-source("srcLineagePulse_fitZINB.R")
-source("srcLineagePulse_fitZINB_WrapperLP.R")
-source("srcLineagePulse_getFits.R")
-source("srcLineagePulse_initialiseImpulseParameters.R")
-source("srcLineagePulse_plotGene.R")
-source("srcLineagePulse_processSCData.R")
-source("srcLineagePulse_runDEAnalysis.R")
-source("srcLineagePulse_simulateDataSet.R")
-source("srcLineagePulse_sortGeneTrajectories.R")
+#source("srcLineagePulse_evalLogLikZINB.R")
+#source("srcLineagePulse_calcPostDrop.R")
+#source("srcLineagePulse_calcNormConst.R")
+#source("srcLineagePulse_classLineagePulseObject.R")
+#source("srcLineagePulse_decompressParameters.R")
+#source("srcLineagePulse_evalDropoutModel.R")
+#source("srcLineagePulse_evalImpulseModel.R")
+#source("srcLineagePulse_fitZINB_fitMeanDispersion.R")
+#source("srcLineagePulse_fitZINB_fitDropout.R")
+#source("srcLineagePulse_fitZINB.R")
+#source("srcLineagePulse_fitZINB_WrapperLP.R")
+#source("srcLineagePulse_getFits.R")
+#source("srcLineagePulse_initialiseImpulseParameters.R")
+#source("srcLineagePulse_plotGene.R")
+#source("srcLineagePulse_processSCData.R")
+#source("srcLineagePulse_runDEAnalysis.R")
+#source("srcLineagePulse_simulateDataSet.R")
+#source("srcLineagePulse_sortGeneTrajectories.R")
 
 ################################################################################
 ### Main function
@@ -192,16 +204,16 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' loglik_red: loglikelihood of null model H0,
 #' deviance: loglikelihood ratio test statistic (the deviance),
 #' mean_H0: inferred gene-wise mean parameter (constant null model),
-#' dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
+#' dispersion_H0: inferred gene-wise dispersion parameter (constant null model)
 #' 
-#' @example
+#' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
 #'     scaNCells = 100,
 #'     scaNConst = 10,
 #'     scaNLin = 10,
 #'     scaNImp = 10,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMumplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
 #'     vecGeneWiseDropoutRates = rep(0.1, 30))
@@ -234,7 +246,7 @@ runLineagePulse <- function(
     boolVerbose=TRUE,
     boolSuperVerbose=FALSE ){
     
-    STRVERSION <- "0.99" #packageDescription("LineagePulse", fields = "Version"))
+    STRVERSION <- packageDescription("LineagePulse", fields = "Version")
     
     # 1. Data preprocessing
     # Extract count matrix if handed SummarizedExperiment

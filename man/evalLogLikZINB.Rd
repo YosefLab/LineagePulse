@@ -5,7 +5,7 @@
 \title{Compute loglikelihood of zero-inflated negative binomial model
 for a vector of counts.}
 \usage{
-evalLogLikZINB(vecCounts, vecMu, vecDisp, vecPi, vecboolNotZero, vecboolZero)
+evalLogLikZINB(vecCounts, vecMu, vecDisp, vecPi, vecidxNotZero, vecidxZero)
 }
 \arguments{
 \item{vecCounts}{(count vector number of samples)
@@ -14,23 +14,23 @@ Observed read counts, not observed are NA.}
 \item{vecMu}{(vector number of samples) 
 Negative binomial mean parameter.}
 
-\item{vecNormConst:}{(numeric vector number of samples) 
-Model scaling factors, one per cell.}
-
-\item{vecDisp:}{(scalar vector number of samples) 
+\item{vecDisp}{(scalar vector number of samples) 
 Negative binomial dispersion parameters.}
 
-\item{vecPi:}{(probability vector number of samples) 
+\item{vecPi}{(probability vector number of samples) 
 Drop-out rate estimates.}
 
-\item{vecboolNotZero:}{(bool vector number of samples)
+\item{vecidxNotZero}{(bool vector number of samples)
 Whether observation is larger than zero.}
 
-\item{vecboolZero:}{(bool vector number of samples)
+\item{vecidxZero}{(bool vector number of samples)
 Whether observation is zero.}
+
+\item{vecNormConst}{(numeric vector number of samples) 
+Model scaling factors, one per cell.}
 }
 \value{
-scaLogLik: (scalar) Likelihood under zero-inflated
+scaLogLik (scalar) Likelihood under zero-inflated
 	  negative binomial model.
 }
 \description{
@@ -41,15 +41,6 @@ in LineagePulse, such as maximum likelihood-based estimation.
 It operates on a vector of counts, such as observations of a gene. Note that
 for the sake of numerical stability, lower bounds on loglikelihood terms
 are implemented.
-}
-\seealso{
-Called directly by likelihood wrappers 
-\code{evalLogLikSmoothZINB} and \code{evalLogLikGene}
-Called directly by \code{evalLogLikPiZINB},
-\code{evalLogLikDispConstMuClustersZINB}
-and \code{evalLogLikMuWindowZINB}
-Moreover called by \code{plotGene}.
-Compiled verison: \link{evalLogLikZINB_comp}
 }
 \author{
 David Sebastian Fischer

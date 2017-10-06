@@ -39,7 +39,7 @@ initialiseImpulseParameters <- function(
     vecDrop){
     
     # Compute posterior of drop-out
-    vecPostNB <- 1-calcPostDrop_Vector(
+    vecPostNB <- 1 - calcPostDrop_Vector(
         vecMu=vecMu,
         vecDisp=vecDisp,
         vecDrop=vecDrop,

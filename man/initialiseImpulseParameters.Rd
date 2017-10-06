@@ -7,46 +7,30 @@
 initialiseImpulseParameters(vecCounts, lsMuModelGlobal, vecMu, vecDisp, vecDrop)
 }
 \arguments{
-\item{vecCounts:}{(count vector number of samples) Count data.}
+\item{lsMuModelGlobal}{(list)
+Object containing meta-data of gene-wise mean parameter models.}
 
-\item{lsMuModelGlobal:}{(list) 
-Global variables for mean model, common to all genes.
-    \itemize{
-      \item strMuModel: (str) {"constant", "impulse", "clusters", 
-    "windows"} Name of the mean model.
-      \item scaNumCells: (scalar) [Default NA] Number of cells
-    for which model is evaluated. Used for constant model.
-      \item vecPseudotime: (numerical vector number of cells)
-    [Default NA] Pseudotime coordinates of cells. Used for
-    impulse model.
-      \item vecindClusterAssign: (integer vector length number of
-    cells) [Default NA] Index of cluster assigned to each cell.
-    Used for clusters model.
-      \item MAXIT_BFGS_Impulse: (int) Maximum number of iterations
-    for BFGS estimation of impulse model with optim (termination criterium).
-      \item RELTOL_BFGS_Impulse: (scalar) Relative tolerance of
-    change in objective function for BFGS estimation of impulse 
-    model with optim (termination criterium).
-  }}
+\item{vecCounts:}{(count vector number of samples) Count data.}
 
 \item{vecMu:}{(vector number of cells) Negative binomial
 mean parameter estimates.}
 
 \item{vecDisp:}{(vector number of cells) Negative binomial
-mean parameter estimated.}
+dispersion parameter estimates.}
 
-\item{vecDrop:}{(vector number of cells) Dropout estimates of cells.}
+\item{vecDrop:}{(vector number of cells) Dropout parameter
+estimates.}
 }
 \value{
 list (length 2)
-   \itemize{
-       \item peak: (numeric vector number of impulse
-   model parameters) Impulse model parameter initialisation 
-   corresponding to a peak.
-       \item valley: (numeric vector number of impulse
-   model parameters) Impulse model parameter initialisation 
-   corresponding to a valley.
-   }
+\itemize{
+    \item peak: (numeric vector number of impulse
+model parameters) Impulse model parameter initialisation 
+corresponding to a peak.
+    \item valley: (numeric vector number of impulse
+model parameters) Impulse model parameter initialisation 
+corresponding to a valley.
+}
 }
 \description{
 The initialisations reflect intuitive parameter choices corresponding
@@ -54,7 +38,7 @@ to a peak and to a valley model and are based on proximity binned data.
 }
 \seealso{
 Called by impulse model fitting wrappers:
-\code{fitMuImpulseZINB} and \code{fitDispConstMuImpulseZINB}.
+\code{fitImpulseZINB}.
 }
 \author{
 David Sebastian Fischer

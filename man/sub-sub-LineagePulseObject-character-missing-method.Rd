@@ -29,3 +29,25 @@ List of all available list-object like accessors:
 \link{[[,LineagePulseObject,character,missing-method},
 \link{$,LineagePulseObject-method}.
 }
+\examples{
+   
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 10,
+    scaNConst = 2,
+    scaNLin = 2,
+    scaNImp = 2,
+    scaMumax = 100,
+    scaSDMuAmplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 6),
+    vecGeneWiseDropoutRates = rep(0.1, 6))
+objLP <- runLineagePulse(
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$dfAnnot,
+    strMuModel = "impulse")
+head(objLP[["dfResults"]])
+
+}
+\author{
+David Sebastian Fischer
+}

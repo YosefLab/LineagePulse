@@ -15,7 +15,8 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' 
 #' LineagePulse output and intermediate results such as model fits.
 #' 
-#' @slot dfAnnotationProc
+#' @slot dfAnnotationProc  (data frame cells x meta characteristics)
+#' Annotation table which contains meta data on cells.
 #' @slot dfResults (data frame samples x reported characteristics) 
 #' Summary of fitting procedure and 
 #' differential expression results for each gene.
@@ -139,13 +140,13 @@ setClass(
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' # get hidden objects within LineagePulse object
 #' dfAnnotationProc <- get_dfAnnotationProc(objLP)
@@ -300,13 +301,13 @@ get_strVersion <- function(objLP)
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' names(objLP)
 #' 
@@ -345,13 +346,13 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' head(objLP[["dfResults"]])
 #' 
@@ -389,13 +390,13 @@ setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, 
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' head(objLP$dfResults)
 #' 
@@ -422,13 +423,13 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #'     scaNLin = 2,
 #'     scaNImp = 2,
 #'     scaMumax = 100,
-#'     scaSDImpulseAmplitude = 3,
+#'     scaSDMuAmplitude = 3,
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 6),
 #'     vecGeneWiseDropoutRates = rep(0.1, 6))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
-#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' writeReport(objLP, file="")
 #'   
