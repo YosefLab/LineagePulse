@@ -24,16 +24,16 @@
 #' fit other than offset and mean parameter (i.e. parameters which
 #' are constant for all observations in a gene and externally supplied.)
 #' Is null if no constant predictors are supplied.
-#' @param strMuModel: (str) {"constant", "cluster", "MM",
-#' "windows","impulse"}
+#' @param strMuModel: (str) {"constant", "groups", "MM",
+#' "splines","impulse"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' pseudotime in the alternative model (H1).
-#' @param strDispModelRed: (str) {"constant"}
+#' @param strDispModelRed: (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' pseudotime in the null model (H0).
-#' @param strDispModelFull: (str) {"constant"}
+#' @param strDispModelFull: (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' pseudotime in the alternative model (H1).
@@ -74,7 +74,7 @@
 fitContinuousModels <- function(
     objLP,
     matPiConstPredictors,
-    strMuModel="windows",
+    strMuModel="constant",
     strDispModelFull="constant",
     strDispModelRed="constant",
     strDropModel="logistic_ofMu",

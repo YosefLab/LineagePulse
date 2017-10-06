@@ -50,7 +50,7 @@ initialiseImpulseParameters <- function(
     # levels in local environment. The pooling are either the clusters
     # of cells (if the mean model is clusters) or cells grouped
     # by proximity in pseudotime.
-    if(lsMuModelGlobal$strMuModel=="clusters"){
+    if(lsMuModelGlobal$strMuModel=="groups"){
         vecidxGroups <- lsMuModelGlobal$vecindClusterAssign
     } else {
         scaGroups <- 10

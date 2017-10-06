@@ -59,9 +59,6 @@
 #' }
 #' 
 #' @author David Sebastian Fischer
-#' 
-#' @export
-
 processSCData <- function(
     counts,
     dfAnnotation,

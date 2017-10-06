@@ -10,16 +10,18 @@
 #' @seealso Called by \code{fitZINB}.
 #'
 #' @param vecMuModel: (numerical vector number of model parameters)
-#'    Parameters of mean model for given gene.
-#' @param lsMuModelGlobal: (list) Global variables for mean model,
-#'    common to all genes.
+#' Parameters of mean model for given gene.
+#' @param lsvecBatchModel: (list) 
+#' List of vectors of batch correction models for mean parameter.
+#' @param lsMuModelGlobal: (list) 
+#' Object containing meta-data of gene-wise mean parameter models.
 #' @param vecInterval: (integer vector length target cells) [Default NULL]
-#'    Positions of cells in ordering, for which parameters are to be 
-#'    computed. Default: all cells.
-#'    
+#' Positions of cells in ordering, for which parameters are to be 
+#' computed. Default: all cells.
+#' 
 #' @return vecMu: (numerical vector number of cells)
-#'    Mean parameter estimates for given gene given the mean model.
-#'    
+#' Mean parameter estimates for given gene given the mean model.
+#' 
 #' @author David Sebastian Fischer
 decompressMeansByGene <- function(
     vecMuModel,
@@ -56,13 +58,7 @@ decompressMeansByGene <- function(
         } else { 
             vecMu <- vecMuModel[lsMuModelGlobal$vecidxGroups]
         }
-    } else  if(lsMuModelGlobal$strMuModel=="windows"){
-        if(!is.null(vecInterval)){ 
-            vecMu <- vecMuModel[vecInterval]
-        } else { 
-            vecMu <- vecMuModel
-        }
-    } else if(lsMuModelGlobal$strMuModel=="MM"){
+    }  else if(lsMuModelGlobal$strMuModel=="MM"){
         # Expect mean of ONE MIXTURE component! vecMuModel is scalar
         if(!is.null(vecInterval)){ 
             vecMu <- rep(vecMuModel, length(vecInterval))
@@ -97,22 +93,25 @@ decompressMeansByGene <- function(
 #' @seealso Called by \code{fitZINB}.
 #' 
 #' @param vecDispModel: (numerical vector number of model parameters)
-#'    Parameters of dispersion model for given gene.
-#' @param lsDispModelGlobal: (list) Global variables for dispersion model,
-#'    common to all genes.
+#' Parameters of dispersion model for given gene.
+#' @param lsvecBatchModel: (list) [Defaul NULL] 
+#' List of vectors of batch correction models for dispersion parameter.
+#' @param lsDispModelGlobal: (list) 
+#' Object containing meta-data of gene-wise dispersion parameter models.
 #' @param vecInterval: (integer vector length target cells) [Default NULL]
-#'    Positions of cells in ordering, for which parameters are to be 
-#'    computed. Default: all cells.
-#'    
+#' Positions of cells in ordering, for which parameters are to be 
+#' computed. Default: all cells.
+#' 
 #' @return vecDisp: (numerical vector number of cells)
-#'    Dispersion parameter estimates for given gene 
-#'    (one per cell for given gene).
-#'    
+#' Dispersion parameter estimates for given gene 
+#' (one per cell for given gene).
+#' 
 #' @author David Sebastian Fischer
-decompressDispByGene <- function(vecDispModel,
-                                 lsvecBatchModel=NULL,
-                                 lsDispModelGlobal,
-                                 vecInterval=NULL ){
+decompressDispByGene <- function(
+    vecDispModel,
+    lsvecBatchModel=NULL,
+    lsDispModelGlobal,
+    vecInterval=NULL ){
     
     if(lsDispModelGlobal$strDispModel=="constant"){
         if(!is.null(vecInterval)) { 
@@ -165,26 +164,26 @@ decompressDispByGene <- function(vecDispModel,
 #' 
 #' @seealso Called by \code{fitZINB}.
 #'
-#' @param vecPiModel: (numerical matrix genes x number of model parameters)
-#'    {offset parameter, log(mu) parameter, parameters belonging to
-#'    constant predictors}
-#'    Parameters of dropout rate model for all cells.
+#' @param matDropModel: (numerical matrix cell x number of model parameters)
+#' {offset parameter, log(mu) parameter, parameters belonging to
+#' constant predictors}
+#' Parameters of dropout rate model for all cells.
 #' @param vecMu: (numerical vector number of genes)
-#'    Mean parameter estimates of all cells for given gene.
+#' Mean parameter estimates of all cells for given gene.
 #' @param vecPiConstPredictors: (numerical vector number of 
-#'    constant model predictors) Other model predictors than offset
-#'    and the dynamically changing mean parameter. Examples are GC-
-#'    content and other gene-specific properties. This would be the 
-#'    global parameters as listed in the other decompression
-#'    function. Here those are not a list as there is only one object.
-#'    
-#' @return vecPi: (numerical vector number of cells)
-#'    Dispersion parameter estimates for given gene 
-#'    (one per cell for given gene).
-#'    
-#' @author David Sebastian Fischer
+#' constant model predictors) Other model predictors than offset
+#' and the dynamically changing mean parameter. Examples are GC-
+#' content and other gene-specific properties. This would be the 
+#' global parameters as listed in the other decompression
+#' function. Here those are not a list as there is only one object.
+#' @param lsDropModelGlobal: (list) 
+#' Object containing meta-data of cell-wise dropout parameter models.
 #' 
-#' @export
+#' @return vecPi: (numerical vector number of cells)
+#' Dispersion parameter estimates for given gene 
+#' (one per cell for given gene).
+#' 
+#' @author David Sebastian Fischer
 decompressDropoutRateByGene <- function(
     matDropModel,
     vecMu=NULL,
@@ -217,23 +216,23 @@ decompressDropoutRateByGene <- function(
 #' 
 #' @seealso Called by \code{fitZINB}.
 #'
-#' @param vecPiModel: (numerical vector number of model parameters)
-#'    {offset parameter, log(mu) paramter, parameters belonging to
-#'    constant predictors}
-#'    Parameters of dropout rate model for given cell.
+#' @param vecDropModel: (numerical vector number of model parameters)
+#' {offset parameter, log(mu) paramter, parameters belonging to
+#' constant predictors}
+#' Parameters of dropout rate model for given cell.
 #' @param vecMu: (numerical vector number of genes)
-#'    Mean parameter estimates of all genes for given cell.
+#' Mean parameter estimates of all genes for given cell.
 #' @param matPiConstPredictors: (numerical matrix genes x number of 
-#'    constant model predictors) Other model predictors than offset
-#'    and the dynamically changing mean parameter. Examples are GC-
-#'    content and other gene-specific properties. This would be the 
-#'    global parameters as listed in the other decompression
-#'    function. Here those are not a list as there is only one object.
-#'    
+#' constant model predictors) Other model predictors than offset
+#' and the dynamically changing mean parameter. Examples are GC-
+#' content and other gene-specific properties. This would be the 
+#' global parameters as listed in the other decompression
+#' function. Here those are not a list as there is only one object.
+#' 
 #' @return vecPi: (numerical vector number of cells)
-#'    Dispersion parameter estimates for given gene 
-#'    (one per cell for given gene).
-#'    
+#' Dispersion parameter estimates for given gene 
+#' (one per cell for given gene).
+#' 
 #' @author David Sebastian Fischer
 decompressDropoutRateByCell <- function(
     vecDropModel,

@@ -46,6 +46,28 @@
 #' @return gplotGene: (ggplot object)
 #' Model rajectories and scatter plot for given gene.
 #' 
+#' @example
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 50,
+#'     scaNConst = 30,
+#'     scaNImp = 30,
+#'     scaMumax = 1000,
+#'     scaSDImpulseAmplitude = 1,
+#'     vecNormConstExternal=NULL,
+#'     vecGeneWiseDropoutRates = rep(0.7, 60))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$dfAnnot,
+#'     strMuModel="impulse")
+#' plotGene(
+#'     objLP = objLP,
+#'     strGeneID = rownames(lsSimulatedData$counts)[1],
+#'     boolLineageContour = FALSE)
+#' plotGene(
+#'     objLP = objLP,
+#'     strGeneID = rownames(lsSimulatedData$counts)[1],
+#'     boolLineageContour = TRUE)
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export

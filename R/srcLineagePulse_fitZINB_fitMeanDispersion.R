@@ -715,10 +715,8 @@ fitImpulseZINB <- function(
 #' models.
 #' 
 #' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
-#' \code{fitDispConstMuConstZINB},
-#' \code{fitDispConstMuClustersZINB},
-#' \code{fitDispConstMuVecWindowsZINB} and
-#' \code{fitDispConstMuImpulseZINB}.
+#' \code{fitImpulseZINB},
+#' \code{fitContinuousZINB}.
 #' 
 #' @param matCountsProc: (matrix genes x cells)
 #'Observed read counts, not observed are NA.

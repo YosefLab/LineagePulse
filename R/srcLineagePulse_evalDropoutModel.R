@@ -21,8 +21,6 @@
 #'    Drop-out rate estimate.
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 evalDropoutModel <- function(vecPiModel, 
   vecPiPredictors){
   
@@ -51,6 +49,4 @@ evalDropoutModel <- function(vecPiModel,
 #'    Drop-out rate estimate.
 #'    
 #' @author David Sebastian Fischer
-#' 
-#' @export
 evalDropoutModel_comp <- cmpfun(evalDropoutModel)

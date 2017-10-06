@@ -62,10 +62,7 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' and cell-wise pseudotime coordinates (scalar) in a a column "pseudpotime".
 #' Rownames must be the ids in column "cell".
 #' 3. Chose the model constraining mean (strMuModel) and dispersion 
-#' parameters (strDispModel) for each gene. If you run clusters,
-#' you may decide to force the number of clusters (scaKCluster)
-#' rather than using internal model selection or use clusters
-#' based on true time (time of sampling) (boolClusterInPseudotime).
+#' parameters (strDispModel) for each gene. 
 #' 
 #' ADDITIONAL FACULTATIVE SETTINGS
 #' 5. Supply gene-specific drop-out predictors if wanted 
@@ -75,8 +72,8 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' 7. Chose the number of processes you want to use (scaNProc), LineagePulse
 #' is parallelised on all computation intensive steps. Note that
 #' the current parallelisation scheme runs on Unix (MacOS) and Linux but
-#' not on windows. Adjust the code section within this wrapper to
-#' parallelise on windows.
+#' not on Windows. Set scaNProc to NA and start a BiocParallel environment
+#' before the call to this function to use parallelisation on Windows.
 #' 8. Set the level of detail with which you want to follow
 #' progress through text printed on the console during a run
 #' (verbose, boolSuperVerbose).
@@ -91,9 +88,6 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' C) You can have a closer look at the global expression
 #' trajecotries of the genes with sortGeneTrajectories.
 #' D) You can look at gene-wise model fits with plotGene().
-#' E) If you use strMuModel=="clusters", you can plot the
-#' observed density of cells across pseudotime and the cluster 
-#' boundaries in this 1D space with plotPseudotimeClustering.
 #' 
 #' @aliases LineagePulse wrapper, main function
 #' 
@@ -116,9 +110,9 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' ... ConfounderX.
 #' population: Fixed population assignments (for
 #' strMuModel="MM"). Cells not assigned have to be NA.
-#' clusters: External clustering results assigning each cell
-#' to one cluster ID. Used if strMuModel=="clusters" and this
-#' column is given, otherwise clustering is internally generated.
+#' groups: Discrete grouping of cells (e.g. clusters or experimental
+#' conditions which are to be used as popuation structure if 
+#' strMuModel or strDispModel are "groups").
 #' rownames: Must be IDs from column cell.
 #' Remaining entries in table are ignored.
 #' @param vecConfoundersMu (vector of strings number of confounders on  mean)
@@ -129,16 +123,16 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' [Default NULL] Confounders to correct for in dispersion batch
 #' correction model, must be subset of column names of
 #' dfAnnotation which describe condounding variables.
-#' @param strMuModel (str) {"constant", "cluster", "MM",
-#' "windows","impulse"}
+#' @param strMuModel (str) {"constant", "groups", "MM",
+#' "splines","impulse"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
-#' @param strDispModelRed (str) {"constant"}
+#' @param strDispModelRed (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the null model (H0).
-#' @param strDispModelFull (str) {"constant"}
+#' @param strDispModelFull (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
@@ -168,7 +162,7 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' Model scaling factors, one per cell. These factors will linearly 
 #' scale the mean model for evaluation of the loglikelihood. 
 #' Must be named according to the column names of matCounts.
-#' @param boolEstimateNoiseBasedOnH0 (bool) [Default FALSE]
+#' @param boolEstimateNoiseBasedOnH0 (bool) [Default TRUE]
 #' Whether to co-estimate logistic drop-out model with the 
 #' constant null model or with the alternative model. The
 #' co-estimation with the noise model typically extends the
@@ -201,6 +195,9 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' mean_H0: inferred gene-wise mean parameter (constant null model),
 #' dispersion_H0: inferred gene-wise dispersion parameter (constant null model)}
 #' 
+#' @example
+#' 
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
@@ -218,7 +215,7 @@ runLineagePulse <- function(
     scaDFSplinesDisp=3,
     matPiConstPredictors=NULL,
     vecNormConstExternal=NULL,
-    boolEstimateNoiseBasedOnH0=FALSE,
+    boolEstimateNoiseBasedOnH0=TRUE,
     scaMaxEstimationCycles=20,
     scaNProc=1,
     boolVerbose=TRUE,
@@ -264,7 +261,7 @@ runLineagePulse <- function(
     # Set the parallelisation environment in BiocParallel:
     if(scaNProc > 1){
         register(MulticoreParam(workers=scaNProc)) 
-    } else {
+    } else(scaNProc == 1) {
         # For debugging in serial mode
         register(SerialParam())
     }

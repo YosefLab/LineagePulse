@@ -22,25 +22,14 @@
 #' allow so. 
 #' 
 #' Convergence can be followed with verbose=TRUE (at each 
-#' iteration) or at each step (boolSuperVerbose=TRUE). Variables for the
-#' logistic drop-out model are a constant and the estimated mean parameter
-#' and other constant gene-specific variables (such as GC-conten) in 
-#' matPiConstPredictors. Three modes are available for modelling the mean
-#' parameter: As a gene-wise constant (the default null model), by cluster 
-#' (this is fast as neighbourhoods don't have to be evaluated), 
-#' sliding windows (using neighbourhood smoothing), and as an impulse model.
+#' iteration) or at each step (boolSuperVerbose=TRUE).
 #' 
 #' To save memory, not the entire parameter matrix (genes x cells) but
 #' the parmater models are stored in the objects lsMuModel, lsDispModel
-#' and lsDropModel. These objects are described in detail in the annotation
-#' of the return values of the function. In short, these object contain
+#' and lsDropModel. In short, these object contain
 #' the gene/cell-wise parameters of the model used to constrain the parameter
 #' in question and the predictors necessary to evaluate the parameter model
-#' to receive the observation-wise paramter values. Example: Impulse model
-#' for the mean parameter: lsMuModel contains the parameter estimates for an
-#' impulse model for each gene and pseudotime coordinates. Therefore, the
-#' mean parameter for each observation can be computed as the value of the
-#' impulse model evaluated at the pseudotime points for each gene.
+#' to receive the observation-wise paramter values.
 #' 
 #' @seealso Called by \code{fitContinuousModels}. 
 #' Calls parameter estimation wrappers:
@@ -51,23 +40,6 @@
 #' Count data of all cells, unobserved entries are NA.
 #' @param dfAnnotation (data frame cells x meta characteristics)
 #' Annotation table which contains meta data on cells.
-#' May contain the following columns
-#' cell: Cell IDs.
-#' pseudotime: Pseudotemporal coordinates of cells.
-#' Confounder1: Batch labels of cells with respect 
-#' to first confounder. Name is arbitrary: Could
-#' for example be "patient" with batch labels
-#' patientA, patientB, patientC.
-#' Confounder2: As Confounder1 for another confounding
-#' variable.
-#' ... ConfounderX.
-#' population: Fixed population assignments (for
-#' strMuModel="MM"). Cells not assigned have to be NA.
-#' clusters: External clustering results assigning each cell
-#' to one cluster ID. Used if strMuModel=="clusters" and this
-#' column is given, otherwise clustering is internally generated.
-#' rownames: Must be IDs from column cell.
-#' Remaining entries in table are ignored.
 #' @param vecConfoundersMu (vector of strings number of confounders on  mean)
 #' [Default NULL] Confounders to correct for in mu batch
 #' correction model, must be subset of column names of
@@ -106,12 +78,12 @@
 #' Contains initialisation of dispersion model parameters according to the used model.
 #' @param lsmatBatchModelInitDisp: (list) [Default NULL]
 #' Initialisation of batch correction models for dispersion parameter.
-#' @param strMuModel: (str) {"constant", "cluster", "MM",
-#' "windows","impulse"}
+#' @param strMuModel: (str) {"constant", "groups", "MM",
+#' "splines","impulse"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
-#' @param strDispModel: (str) {"constant"}
+#' @param strDispModel: (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the given model.
@@ -261,8 +233,6 @@ fitZINB <- function(
             lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=length(unique(dfAnnotation$groups)), byrow=FALSE)
         } else if(strMuModel=="MM"){
             lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=dim(matWeights)[2], byrow=FALSE)
-        } else  if(strMuModel=="windows"){
-            lsMuModel$matMuModel <- matrix(vecMuModelInit, nrow=scaNumGenes, ncol=scaNumCells, byrow=FALSE)
         } else {
             stop(paste0("ERROR fitZINB(): strMuModel=", strMuModel, " not recognised."))
         }
@@ -580,11 +550,15 @@ fitZINB <- function(
     if(!is.null(lsDispModel$lsmatBatchModel)) {
         for(i in seq(1, length(lsDispModel$lsmatBatchModel))) rownames(lsDispModel$lsmatBatchModel[[i]]) <- rownames(matCounts)
     }
-    if(!boolExternalDropModel) rownames(lsDropModel$matDropoutLinModel) <- colnames(matCounts)
+    if(!boolExternalDropModel) {
+        rownames(lsDropModel$matDropoutLinModel) <- colnames(matCounts)
+    }
     # Name model matrix columns
-    if(strMuModel=="clusters") colnames(lsMuModel$matMuModel) <- unique(dfAnnotation$clusters)
-    else if(strMuModel=="windows") colnames(lsMuModel$matMuModel) <- colnames(matCounts)
-    else if(strMuModel=="impulse") colnames(lsMuModel$matMuModel) <- c("beta1", "beta2", "h0", "h1", "h2", "t1", "t2")
+    if(strMuModel=="groups") {
+        colnames(lsMuModel$matMuModel) <- unique(dfAnnotation$groups)
+    } else if(strMuModel=="impulse") {
+        colnames(lsMuModel$matMuModel) <- c("beta1", "beta2", "h0", "h1", "h2", "t1", "t2")
+    }
     
     # Evaluate convergence
     if(all(as.logical(vecboolDispEstConverged)) &

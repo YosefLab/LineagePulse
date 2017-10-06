@@ -40,11 +40,22 @@
 #' 
 #' @return list: (length 2)
 #' \itemize{
-#' \item vecPT: (numerical vector length number of cells)
+#' \item pseudotime: (numerical vector length number of cells)
 #' Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' \item matSampledCountsObserved: (matrix genes x cells)
+#' \item counts: (matrix genes x cells)
 #' Sampled count data of all cells after drop-out.
 #' }
+#' 
+#' @example
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 50,
+#'     scaNConst = 30,
+#'     scaNImp = 30,
+#'     scaMumax = 1000,
+#'     scaSDImpulseAmplitude = 1,
+#'     vecNormConstExternal=NULL,
+#'     vecGeneWiseDropoutRates = rep(0.7, 60))
+#' plot(lsSimulatedData$dfAnnot$pseudotime, lsSimulatedData$counts[1,])
 #' 
 #' @author David Sebastian Fischer
 #' 
@@ -93,6 +104,10 @@ simulateContinuousDataSet <- function(
     ### 1. Distribute cells across pseudotime
     vecPT <- seq(0, 1, by=1/(scaNCells-1))
     names(vecPT) <- paste0("_",seq(1,scaNCells))
+    dfAnnot <- data.frame(
+        pseudotime = vecPT,
+        row.names = names(vecPT)
+    )
     
     ### 2. Create underlying count matrix
     print("Draw mean trajectories")
@@ -216,16 +231,16 @@ simulateContinuousDataSet <- function(
     rownames(matDropoutsHidden) <- rownames(matMuHidden)
     colnames(matDropoutsHidden) <- names(vecPT)
     
-    # d. Create observed data: merge hidden data with drop-outs
+    ## c. Create observed data: merge hidden data with drop-outs
     matSampledDataObserved <- matSampledDataHidden
     matSampledDataObserved[matDropoutsHidden==1] <- 0
     
-    #  Counts
+    ## d. Round to counts
     matSampledCountsObserved <- round(matSampledDataObserved)
     
     # Save simulation
     if(!is.null(dirOutSimulation)){
-        save(vecPT,file=file.path(dirOutSimulation,"Simulation_vecPT.RData"))
+        save(dfAnnot,file=file.path(dirOutSimulation,"Simulation_dfAnnot.RData"))
         save(vecConstIDs,file=file.path(dirOutSimulation,"Simulation_vecConstIDs.RData"))
         save(vecImpulseIDs,file=file.path(dirOutSimulation,"Simulation_vecImpulseIDs.RData"))
         save(matImpulseModelHidden,file=file.path(dirOutSimulation,"Simulation_matImpulseModelHidden.RData"))
@@ -239,6 +254,6 @@ simulateContinuousDataSet <- function(
         save(matSampledCountsObserved,file=file.path(dirOutSimulation,"Simulation_matSampledCountsObserved.RData"))
     }
     
-    return(list( vecPT=vecPT,
-                 matSampledCountsObserved=matSampledCountsObserved ))
+    return(list( annot=dfAnnot,
+                 counts=matSampledCountsObserved ))
 }
