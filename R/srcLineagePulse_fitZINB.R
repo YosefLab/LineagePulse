@@ -1,5 +1,169 @@
-### Fit ZINB model
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++     Fit ZINB model to a data set    ++++++++++++++++++++++++#
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
+#' Fit zero-inflated negative binomial model to data
+#' 
+#' This function fits a ZINB model with variable input. It is the wrapper for
+#' the individual fits of the full and alternative models in LineagePulse.
+#' 
+#' The estimation is iterative coordinate ascent over gene-wise and cell-wise
+#' model if the drop-out model is not set a priori. If the drop-out model
+#' is given, the estimation is a single M-like step of the iterative 
+#' coordinate ascent. 
+#' 
+#' Convergence of iterative coordinate ascent is tracked with the the 
+#' loglikelihood of the entire data matrix. 
+#' Every step is a maximum likelihood estimation of the 
+#' target parameters conditioned on the remaining parameter estimates. 
+#' Therefore, convergence to a local optimum is guaranteed if the algorithm
+#' is run until convergence. Parallelisation of each estimation step 
+#' is implemented where conditional independences of parameter estimations
+#' allow so. 
+#' 
+#' Convergence can be followed with verbose=TRUE (at each 
+#' iteration) or at each step (boolSuperVerbose=TRUE). Variables for the
+#' logistic drop-out model are a constant and the estimated mean parameter
+#' and other constant gene-specific variables (such as GC-conten) in 
+#' matPiConstPredictors. Three modes are available for modelling the mean
+#' parameter: As a gene-wise constant (the default null model), by cluster 
+#' (this is fast as neighbourhoods don't have to be evaluated), 
+#' sliding windows (using neighbourhood smoothing), and as an impulse model.
+#' 
+#' To save memory, not the entire parameter matrix (genes x cells) but
+#' the parmater models are stored in the objects lsMuModel, lsDispModel
+#' and lsDropModel. These objects are described in detail in the annotation
+#' of the return values of the function. In short, these object contain
+#' the gene/cell-wise parameters of the model used to constrain the parameter
+#' in question and the predictors necessary to evaluate the parameter model
+#' to receive the observation-wise paramter values. Example: Impulse model
+#' for the mean parameter: lsMuModel contains the parameter estimates for an
+#' impulse model for each gene and pseudotime coordinates. Therefore, the
+#' mean parameter for each observation can be computed as the value of the
+#' impulse model evaluated at the pseudotime points for each gene.
+#' 
+#' @seealso Called by \code{fitContinuousModels}. 
+#' Calls parameter estimation wrappers:
+#' \code{fitPiZINB}, \code{fitZINBMuDisp}.
+#' Calls \code{evalLogLikMatrix} to follow convergence.
+#' 
+#' @param matCounts (matrix genes x cells)
+#' Count data of all cells, unobserved entries are NA.
+#' @param dfAnnotation (data frame cells x meta characteristics)
+#' Annotation table which contains meta data on cells.
+#' May contain the following columns
+#' cell: Cell IDs.
+#' pseudotime: Pseudotemporal coordinates of cells.
+#' Confounder1: Batch labels of cells with respect 
+#' to first confounder. Name is arbitrary: Could
+#' for example be "patient" with batch labels
+#' patientA, patientB, patientC.
+#' Confounder2: As Confounder1 for another confounding
+#' variable.
+#' ... ConfounderX.
+#' population: Fixed population assignments (for
+#' strMuModel="MM"). Cells not assigned have to be NA.
+#' clusters: External clustering results assigning each cell
+#' to one cluster ID. Used if strMuModel=="clusters" and this
+#' column is given, otherwise clustering is internally generated.
+#' rownames: Must be IDs from column cell.
+#' Remaining entries in table are ignored.
+#' @param vecConfoundersMu (vector of strings number of confounders on  mean)
+#' [Default NULL] Confounders to correct for in mu batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @param vecConfoundersDisp (vector of strings number of confounders on dispersion)
+#' [Default NULL] Confounders to correct for in dispersion batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @param vecNormConst (numeric vector number of cells) 
+#' Model scaling factors, one per cell. These factors linearly 
+#' scale the mean model for evaluation of the loglikelihood.
+#' @param scaDFSplinesMu (sca) [Default NULL] 
+#' If strMuModel=="splines", the degrees of freedom of the natural
+#' cubic spline to be used as a mean parameter model.
+#' @param scaDFSplinesDisp (sca) [Default NULL] 
+#' If strDispModelFull=="splines" or strDispModelRed=="splines", 
+#' the degrees of freedom of the natural
+#' cubic spline to be used as a dispersion parameter model.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#' gene-wise drop-out predictors) [Default NULL]
+#' Predictors for logistic drop-out 
+#' fit other than offset and mean parameter (i.e. parameters which
+#' are constant for all observations in a gene and externally supplied.)
+#' Is null if no constant predictors are supplied.
+#' @param lsDropModel (list) [Default NULL]
+#' Object containing description of cell-wise drop-out parameter models.
+#' @param matMuModelInit: (numeric matrix genes x mu model parameters)
+#' [Default NULL]
+#' Contains initialisation of mean model parameters according to the used model.
+#' @param lsmatBatchModelInitMu: (list) [Default NULL]
+#' Initialisation of batch correction models for mean parameter.
+#' @param matDispModelInit: (numeric matrix genes x disp model parameters)
+#' [Default NULL]
+#' Contains initialisation of dispersion model parameters according to the used model.
+#' @param lsmatBatchModelInitDisp: (list) [Default NULL]
+#' Initialisation of batch correction models for dispersion parameter.
+#' @param strMuModel: (str) {"constant", "cluster", "MM",
+#' "windows","impulse"}
+#' [Default "impulse"] Model according to which the mean
+#' parameter is fit to each gene as a function of 
+#' population structure in the alternative model (H1).
+#' @param strDispModel: (str) {"constant"}
+#' [Default "constant"] Model according to which dispersion
+#' parameter is fit to each gene as a function of 
+#' population structure in the given model.
+#' @param strDropModel: (str) {"logistic_ofMu", "logistic"}
+#' [Default "logistic_ofMu"] Definition of drop-out model.
+#' "logistic_ofMu" - include the fitted mean in the linear model
+#' of the drop-out rate and use offset and matPiConstPredictors.
+#' "logistic" - only use offset and matPiConstPredictors.
+#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
+#' [Defaul "PerCell"] Definition of groups on cells on which
+#' separate drop-out model parameterisations are fit.
+#' "PerCell" - one parametersiation (fit) per cell
+#' "ForAllCells" - one parametersiation (fit) for all cells
+#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#' Whether to co-estimate logistic drop-out model with the 
+#' constant null model or with the alternative model. The
+#' co-estimation with the noise model typically extends the
+#' run-time of this model-estimation step strongly. While
+#' the drop-out model is more accurate if estimated based on
+#' a more realistic model expression model (the alternative
+#' model), a trade-off for speed over accuracy can be taken
+#' and the dropout model can be chosen to be estimated based
+#' on the constant null expression model (set to TRUE).
+#' @param scaMaxEstimationCycles (integer) [Default 20] Maximum number 
+#' of estimation cycles performed in fitZINB(). One cycle
+#' contain one estimation of of each parameter of the 
+#' zero-inflated negative binomial model as coordinate ascent.
+#' @param verbose (bool) [Default TRUE]
+#' Whether to follow convergence of the 
+#' iterative parameter estimation with one report per cycle.
+#' @param boolSuperVerbose (bool) [Default TRUE]
+#' Whether to follow convergence of the 
+#' iterative parameter estimation in high detail with local 
+#' convergence flags and step-by-step loglikelihood computation.
+#' 
+#' @return list
+#' \itemize{
+#' @param lsMuModel (list)
+#' Object containing description of gene-wise mean parameter models.
+#' @param lsDispModel (list)
+#' Object containing description of gene-wise dispersion parameter models.
+#' @param lsDropModel (list)
+#' Object containing description of cell-wise drop-out parameter models.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' \item boolConvergenceModel: (bool) 
+#' Convergence status of model estimation.
+#' \item vecEMLogLikModel: (numeric vector number of genes) 
+#' Likelihood of model fits by iterative coordinate ascent iteration.
+#' \item strReport: (str) Log of model estimation to be added to 
+#' overall log.
+#' }
 fitZINB <- function(
     matCounts,
     dfAnnotation,
@@ -17,7 +181,7 @@ fitZINB <- function(
     lsmatBatchModelInitDisp=NULL,
     strMuModel,
     strDispModel,
-    strDropModel,
+    strDropModel="logistic_ofMu",
     strDropFitGroup="PerCell",
     scaMaxEstimationCycles=20,
     boolVerbose=TRUE,

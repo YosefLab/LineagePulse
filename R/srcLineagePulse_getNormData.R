@@ -10,15 +10,15 @@
 #' @seealso Called by \code{fitZINB}. Can be called by user.
 #' 
 #' @param matCounts: (numeric matrix genes x cells)
-#'    Count data.
+#' Count data.
 #' @param lsMuModel: (list) Mean parameter model parameters.
 #' @param boolDepth: (bool) [Default TRUE] Whether to normalize for sequencing depth.
 #' @param boolBatch: (bool) [Default TRUE] Whether to normalize for batch.
 #' 
 #' @return matZ: (numeric matrix genes x cells)
-#'    Posterior probability of observation not being generated 
-#'    by drop-out.
-#'    
+#' Posterior probability of observation not being generated 
+#' by drop-out.
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
@@ -45,7 +45,7 @@ getNormData <- function(matCounts,
         # Normalise counts by depth and/or batch factors as required
         vecNormData <- matCounts[id,]
         if(boolDepth) {
-            vecNormData <-vecNormData/lsMuModel$lsMuModelGlobal$vecNormConst
+            vecNormData <- vecNormData/lsMuModel$lsMuModelGlobal$vecNormConst
         }
         if(boolBatch) {
             vecNormData <- vecNormData/vecBatchParam

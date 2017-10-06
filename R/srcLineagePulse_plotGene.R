@@ -29,10 +29,10 @@
 #' interpretation of the fit to the data!
 #' 
 #' @param objLP (LineagePulseObject) LineagePulseObject
-#'    base plot on.
+#' base plot on.
 #' @param strGeneID (str) Name of gene, used for title of plot.
 #' @param vecReferenceMuParam (numeric vector length number of cells)
-#'    [Default NULL] Reference mean trajectory which can be plotted
+#' [Default NULL] Reference mean trajectory which can be plotted
 #' @param strTitleSuffix (str) String to be added to title.
 #' @param boolColourByDropout (bool) Whether to colour scatter
 #' plot by posterior of drop-out.
@@ -44,8 +44,8 @@
 #' If not set, defaults to stats:density() default.
 #' 
 #' @return gplotGene: (ggplot object)
-#'    Model rajectories and scatter plot for given gene.
-#'    
+#' Model rajectories and scatter plot for given gene.
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
@@ -247,11 +247,16 @@ plotGene <- function(
 
 #' Plot density of cells in pseudotime
 #' 
+#' Uses kernel density estimate.
+#' 
 #' @param objLP (LineagePulseObject) LineagePulseObject to base plot on.
-#'    
+#' @param bwDensity (scalar) [Default NULL]
+#' Bandwidth of kernel density estimate to be used. Chosen
+#' automatically if NULL (recommended).
+#' 
 #' @return gplotGene: (ggplot object)
 #' ggplot2 kernel density estimator plot. 
-#'    
+#' 
 #' @author David Sebastian Fischer
 #' 
 #' @export

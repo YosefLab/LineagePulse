@@ -97,9 +97,9 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' 
 #' @aliases LineagePulse wrapper, main function
 #' 
-#' @param matCounts: (matrix genes x cells)
+#' @param matCounts (matrix genes x cells)
 #' Count data of all cells, unobserved entries are NA.
-#' @param dfAnnotation: (data frame cells x meta characteristics)
+#' @param dfAnnotation (data frame cells x meta characteristics)
 #' Annotation table which contains meta data on cells.
 #' May contain the following columns
 #' cell: Cell IDs.
@@ -118,47 +118,54 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' column is given, otherwise clustering is internally generated.
 #' rownames: Must be IDs from column cell.
 #' Remaining entries in table are ignored.
-#' @param vecConfoundersMu: Confounders to correct for in mu batch
+#' @param vecConfoundersMu (vector of strings number of confounders on  mean)
+#' [Default NULL] Confounders to correct for in mu batch
 #' correction model, must be subset of column names of
 #' dfAnnotation which describe condounding variables.
-#' @param vecConfoundersDisp: Confounders to correct for in dispersion batch
+#' @param vecConfoundersDisp (vector of strings number of confounders on  dispersion)
+#' [Default NULL] Confounders to correct for in dispersion batch
 #' correction model, must be subset of column names of
 #' dfAnnotation which describe condounding variables.
-#' @param strMuModel: (str) {"constant", "cluster", "MM",
+#' @param strMuModel (str) {"constant", "cluster", "MM",
 #' "windows","impulse"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
-#' @param strDispModelRed: (str) {"constant"}
+#' population structure in the alternative model (H1).
+#' @param strDispModelRed (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the null model (H0).
-#' @param strDispModelFull: (str) {"constant"}
+#' population structure in the null model (H0).
+#' @param strDispModelFull (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
-#' @param strDropModel: (str) {"logistic_ofMu", "logistic"}
+#' population structure in the alternative model (H1).
+#' @param strDropModel (str) {"logistic_ofMu", "logistic"}
 #' [Default "logistic_ofMu"] Definition of drop-out model.
 #' "logistic_ofMu" - include the fitted mean in the linear model
 #' of the drop-out rate and use offset and matPiConstPredictors.
 #' "logistic" - only use offset and matPiConstPredictors.
-#' @param scaDFSplinesMu: (sca) [Default 3] 
+#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
+#' [Defaul "PerCell"] Definition of groups on cells on which
+#' separate drop-out model parameterisations are fit.
+#' "PerCell" - one parametersiation (fit) per cell
+#' "ForAllCells" - one parametersiation (fit) for all cells
+#' @param scaDFSplinesMu (sca) [Default 3] 
 #' If strMuModel=="splines", the degrees of freedom of the natural
 #' cubic spline to be used as a mean parameter model.
-#' @param scaDFSplinesDisp: (sca) [Default 3] 
+#' @param scaDFSplinesDisp (sca) [Default 3] 
 #' If strDispModelFull=="splines" or strDispModelRed=="splines", 
 #' the degrees of freedom of the natural
 #' cubic spline to be used as a dispersion parameter model.
-#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#' @param matPiConstPredictors (numeric matrix genes x number of constant
 #' gene-wise drop-out predictors) Predictors for logistic drop-out 
 #' fit other than offset and mean parameter (i.e. parameters which
 #' are constant for all observations in a gene and externally supplied.)
 #' Is null if no constant predictors are supplied
-#' @param vecNormConstExternal: (numeric vector number of cells) 
+#' @param vecNormConstExternal (numeric vector number of cells) 
 #' Model scaling factors, one per cell. These factors will linearly 
 #' scale the mean model for evaluation of the loglikelihood. 
 #' Must be named according to the column names of matCounts.
-#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#' @param boolEstimateNoiseBasedOnH0 (bool) [Default FALSE]
 #' Whether to co-estimate logistic drop-out model with the 
 #' constant null model or with the alternative model. The
 #' co-estimation with the noise model typically extends the
@@ -168,19 +175,19 @@ source("srcLineagePulse_sortGeneTrajectories.R")
 #' model), a trade-off for speed over accuracy can be taken
 #' and the dropout model can be chosen to be estimated based
 #' on the constant null expression model (set to TRUE).
-#' @param scaMaxEstimationCycles: (integer) [Default 20] Maximum number 
+#' @param scaMaxEstimationCycles (integer) [Default 20] Maximum number 
 #' of estimation cycles performed in fitZINB(). One cycle
 #' contain one estimation of of each parameter of the 
 #' zero-inflated negative binomial model as coordinate ascent.
-#' @param scaNProc: (scalar) [Default 1] Number of processes for 
+#' @param scaNProc (scalar) [Default 1] Number of processes for 
 #' parallelisation.
-#' @param verbose: (bool) Whether to follow convergence of the 
+#' @param verbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation with one report per cycle.
-#' @param boolSuperVerbose: (bool) Whether to follow convergence of the 
+#' @param boolSuperVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation in high detail with local 
 #' convergence flags and step-by-step loglikelihood computation.
 #' 
-#' @return dfDEAnalysis: (data frame genes x reported variables) 
+#' @return dfDEAnalysis (data frame genes x reported variables) 
 #' Summary of differential expression analysis, sorted by adj.p:
 #' {Gene: gene ID,
 #' p: raw p-value, 

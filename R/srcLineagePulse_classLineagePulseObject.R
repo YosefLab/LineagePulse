@@ -15,64 +15,64 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' 
 #' LineagePulse output and intermediate results such as model fits.
 #' 
-#' @slot dfDEAnalysis (data frame samples x reported characteristics) 
-#'    Summary of fitting procedure and 
-#'    differential expression results for each gene.
-#'    \itemize{
-#'      \item Gene: Gene ID.
-#'      \item p: P-value for differential expression.
-#'      \item padj: Benjamini-Hochberg false-discovery rate corrected p-value
-#'      for differential expression analysis.
-#'      \item loglik_full: Loglikelihood of full model.
-#'      \item loglik_red: Loglikelihood of reduced model.
-#'      \item df_full: Degrees of freedom of full model.
-#'      \item df_red: Degrees of freedom of reduced model
-#'      \item mean: Inferred mean parameter of constant model of first batch.
-#'      From combined samples in case-ctrl. 
-#'      \item allZero (bool) Whether there were no observed non-zero observations of this gene.
-#'      If TRUE, fitting and DE analsysis were skipped and entry is NA.
-#'    }
-#'    Entries only present in case-only DE analysis:
-#'    \itemize{
-#'      \item converge_impulse: Convergence status of optim for 
-#'      impulse model fit (full model).
-#'      \item converge_const: Convergence status of optim for 
-#'      constant model fit (reduced model).
-#'    }
-#'    Entries only present in mixture model DE analysis:
-#'    \itemize{
-#'      \item converge_mixture: Convergence status of optim for 
-#'      mixture model fit (full model).
-#'      \item converge_const: Convergence status of optim for 
-#'      constant model fit (reduced model).
-#'    }
-#'    Entries only present if boolIdentifyTransients is TRUE:
-#'    \itemize{
-#'      \item converge_sigmoid: Convergence status of optim for 
-#'      sigmoid model fit to samples of case condition.
-#'      \item impulseTOsigmoid_p: P-value of loglikelihood ratio test
-#'      impulse model fit versus sigmoidal model on samples of case condition.
-#'      \item impulseTOsigmoid_padj: Benjamini-Hochberg 
-#'      false-discovery rate corrected p-value of loglikelihood ratio test
-#'      impulse model fit versus sigmoid model on samples of case condition.
-#'      \item sigmoidTOconst_p: P-value of loglikelihood ratio test
-#'      sigmoidal model fit versus constant model on samples of case condition.
-#'      \item sigmoidTOconst_padj: Benjamini-Hochberg 
-#'      false-discovery rate corrected p-value of loglikelihood ratio test
-#'      sigmoidal model fit versus constant model on samples of case condition.
-#'      \item isTransient (bool) Whether gene is transiently
-#'      activated or deactivated and differentially expressed.
-#'      \item isMonotonous (bool) Whether gene is not transiently
-#'      activated or deactivated and differentially expressed. This scenario
-#'      corresponds to a montonous expression level increase or decrease.
-#'    }
-#' @slot lsMuModelH1
-#' @slot lsDispModelH1
-#' @slot lsMuModelH0
-#' @slot lsDispModelH0
-#' @slot lsDropModel
 #' @slot dfAnnotationProc
-#' @slot strReport (str) LineagePulse stdout report.
+#' @slot dfResults (data frame samples x reported characteristics) 
+#' Summary of fitting procedure and 
+#' differential expression results for each gene.
+#' @slot lsDispModelH1 (list)
+#' Object containing description of gene-wise dispersion parameter models of H1.
+#' @slot lsDispModelH0 (list)
+#' Object containing description of gene-wise dispersion parameter models of H0.
+#' @slot lsDispModelConst (list)
+#' Object containing description of gene-wise dispersion parameter models of
+#' constant model (necessary if H0 is not constant (mixture models)).
+#' @slot lsDropModel (list)
+#' @slot lsMuModelH0 (list)
+#' Object containing description of gene-wise mean parameter models of H0.
+#' @slot lsMuModelH1 (list)
+#' Object containing description of gene-wise mean parameter models of H1.
+#' @slot lsMuModelConst (list)
+#' Object containing description of gene-wise means parameter models of
+#' constant model (necessary if H0 is not constant (mixture models)).
+#' @slot lsFitZINBReporters (list)
+#' Fitting reporter summary.
+#' @slot matCountsProc (count matrix genes x cells)
+#' Sparse matrix of counts, non-observed values are NA.
+#' @slot matWeights (numeric matrix cells x mixtures)
+#' Assignments of cells to mixtures.
+#' @slot scaDFSplinesDisp (scalar) 
+#' If strDispModelFull=="splines" or strDispModelRed=="splines", 
+#' the degrees of freedom of the natural
+#' cubic spline to be used as a dispersion parameter model.
+#' @slot scaDFSplinesMu (scalar) 
+#' If strMuModel=="splines", the degrees of freedom of the natural
+#' cubic spline to be used as a mean parameter model.
+#' @slot strReport (str) LineagePulse stdout report (log).
+#' @slot vecAllGenes  (vector of strings) 
+#' All genes originally supplied, including all zero genes.
+#' @slot vecConfoundersDisp (vector of strings number of confounders on  dispersion)
+#' Confounders to correct for in dispersion batch
+#' correction model, are subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @slot vecConfoundersMu (vector of strings number of confounders on  mean)
+#' Confounders to correct for in mu batch
+#' correction model, are subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @slot scaOmega (scalar)
+#' Regularisation parameter on entropy penalty on mixture weights.
+#' Needed for mixture model mode only.
+#' @slot boolFixedPopulations
+#' Whether a population of cells is to be fixed to be 
+#' assigned to a subset of centroids (RSA scenario).
+#' Needed for mixture model mode only.
+#' @slot vecNCentroidsPerPop
+#' Number of centroids per population (RSA scenario).
+#' Needed for mixture model mode only.
+#' @slot vecH0Pop (integer vector)
+#' Needed for mixture model mode only.
+#' @slot vecNormConst (numeric vector length number of cells)
+#' Normalisation constants (library size factors) for each cell.
+#' @slot strVersion (str) Version of LineagePulse that was run.
 #'    
 #' @name LineagePulseObject-class
 #'      
@@ -98,6 +98,7 @@ setClass(
     vecAllGenes         = "characterORNULL",
     vecConfoundersDisp  = "characterORNULL",
     vecConfoundersMu    = "characterORNULL",
+    scaOmega            = "numericORNULL",
     boolFixedPopulations= "logical",
     vecNCentroidsPerPop = "numericORNULL",
     vecH0Pop            = "characterORNULL",

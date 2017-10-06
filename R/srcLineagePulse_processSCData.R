@@ -37,15 +37,15 @@
 #' @param strMuModel: (str) {"constant"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
+#' population structure in the alternative model (H1).
 #' @param strDispModelFull: (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
+#' population structure in the alternative model (H1).
 #' @param strDispModelRed: (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
-#' pseudotime in the null model (H0).
+#' population structure in the null model (H0).
 #'
 #' @return list: (length 3)
 #' \itemize{
