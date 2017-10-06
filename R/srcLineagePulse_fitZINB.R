@@ -481,7 +481,7 @@ fitZINB <- function(
             # Estimate mean and dispersion parameters simultaneously.
             # a/b) Negative binomial mean AND dispersion parameter.
             tm_mudisp <- system.time({
-                lsFitMuDisp <- fitZINBMuDisp(matCounts=matCounts,
+                lsFitMuDisp <- fitZINBMuDisp(matCountsProc=matCounts,
                                              lsMuModel=lsMuModel,
                                              lsDispModel=lsDispModel,
                                              lsDropModel=lsDropModel,

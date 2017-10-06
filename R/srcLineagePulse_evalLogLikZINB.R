@@ -219,7 +219,8 @@ evalLogLikMatrix <- function(
                             vecInterval=NULL)
                     }))
                 } else {
-                    stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", strDispModel, " not recognised."))
+                    stop(paste0("ERROR evalLogLikMatrix(): strDispModel=", 
+                                lsDispModel$lsDispModelGlobal$strDispModel, " not recognised."))
                 }
                 
                 matDropParam <- do.call(cbind, lapply(seq(1,dim(matWeights)[2]), function(m){

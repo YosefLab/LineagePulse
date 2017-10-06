@@ -56,14 +56,14 @@ getNormData <- function(matCounts,
         warning("No normalisation chosen")
     }
     
-    if(!all(vecGenes %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getNormData(): Not all vecGenes were ",
+    if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
+        stop(paste0("ERROR getNormData(): Not all vecGeneIDs were ",
                     "rownames of lsMuModel$matMuModel"))
     }
     
     scaNumCells <- dim(matCounts)[2]
     scaNumConfounders <- length(lsMuModel$lsmatBatchModel)
-    matNormData <- do.call(rbind, bplapply(rownames(matCounts), function(id){
+    matNormData <- do.call(rbind, bplapply(vecGeneIDs, function(id){
         # Extract batch parameters
         vecBatchParam <- array(1, scaNumCells)
         if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)){
@@ -84,7 +84,7 @@ getNormData <- function(matCounts,
         return(vecNormData)
     }))
     
-    rownames(matNormData) <- rownames(matCounts)
+    rownames(matNormData) <- vecGeneIDs
     colnames(matNormData) <- colnames(matCounts)
     return(matNormData)
 }
@@ -131,13 +131,13 @@ getFitsMean <- function(
     vecGeneIDs=NULL){
     
     ### Check input
-    if(!all(vecGenes %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGenes ",
+    if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
+        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs ",
                     "were rownames of lsMuModel$matMuModel"))
     }
     
     ### Decompress models into parameter estimates
-    matMuParam <- do.call(rbind, lapply(vecGenes, function(i){
+    matMuParam <- do.call(rbind, lapply(vecGeneIDs, function(i){
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],
@@ -147,7 +147,7 @@ getFitsMean <- function(
         return(vecMuParam)
     }))
     
-    rownames(matMuParam) <- vecGenes
+    rownames(matMuParam) <- vecGeneIDs
     return(matMuParam)
 }
 
@@ -194,13 +194,13 @@ getFitsDispersion <- function(
     vecGeneIDs=NULL){
     
     ### Check input
-    if(!all(vecGenes %in% rownames(lsDispModel$matDispModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGenes were ",
+    if(!all(vecGeneIDs %in% rownames(lsDispModel$matDispModel))) {
+        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
                     "rownames of lsDispModel$matDispModel"))
     }
     
     ### Decompress models into parameter estimates
-    matDispParam <- do.call(rbind, lapply(vecGenes, function(i){
+    matDispParam <- do.call(rbind, lapply(vecGeneIDs, function(i){
         # Decompress parameters by gene
         vecDispParam <- decompressDispByGene(
             vecDispModel=lsDispModel$matDispModel[i,],
@@ -210,7 +210,7 @@ getFitsDispersion <- function(
         return(vecDispParam)
     }))
     
-    rownames(matDispParam) <- vecGenes
+    rownames(matDispParam) <- vecGeneIDs
     return(matDispParam)
 }
 
@@ -261,8 +261,8 @@ getFitsDropout <- function(
     vecGeneIDs=NULL){
     
     ### Check input
-    if(!all(vecGenes %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGenes were ",
+    if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
+        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
                     "rownames of lsMuModel$matMuModel"))
     }
     
@@ -282,7 +282,7 @@ getFitsDropout <- function(
         return(vecPiParam)
     }))
     
-    rownames(matPiParam) <- vecGenes
+    rownames(matPiParam) <- vecGeneIDs
     return(matPiParam)
 }
 
@@ -339,16 +339,19 @@ getPostDrop <- function(
     vecGeneIDs){
     
     ### Check input
-    if(!all(vecGenes %in% rownames(matCounts))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGenes were ",
+    if(!all(vecGeneIDs %in% rownames(matCounts))) {
+        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
                     "rownames of matCounts."))
     }
     
     ### Decompress models into parameter estimates
-    calcPostDrop_Matrix(
+    matPostDrop <- calcPostDrop_Matrix(
         matCounts = matCounts,
         lsMuModel = lsMuModel,
         lsDispModel = lsDispModel, 
         lsDropModel = lsDropModel,
         vecIDs = vecGeneIDs)
+    
+    rownames(matPostDrop) <- vecGeneIDs
+    return(matPostDrop)
 }
