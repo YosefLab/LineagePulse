@@ -1,10 +1,7 @@
-Current status
-===================================
-	
-	* Initial public release together with bioRxiv publication.
-	* Installable R package, not yet on bioconductor.
+### 0.92	
+	* Initial public release.
+	* Installable R package.
 	* Includes a vignette for basic functionalities.
-	* Function annotation not yet complete.
 	* Usable for: 
 		- Differential expression analysis (between groups of cells and across pseudotime)
 		- Model fitting (e.g. continuous expression models as smooth model-based expression trajectories)

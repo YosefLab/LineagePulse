@@ -267,7 +267,7 @@ getFitsDropout <- function(
     }
     
     ### Decompress models into parameter estimates
-    matPiParam <- do.call(rbind, lapply(vecGenes, function(i){
+    matPiParam <- do.call(rbind, lapply(vecGeneIDs, function(i){
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],

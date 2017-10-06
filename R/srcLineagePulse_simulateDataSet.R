@@ -254,7 +254,8 @@ simulateContinuousDataSet <- function(
                 vecDropModel=matDropoutModelExternal[cell,],
                 vecMu=matMuHidden[,cell],
                 matPiConstPredictors=NULL,
-                lsDropModelGlobal=lsDropModelGlobal)
+                lsDropModelGlobal=list(strDropModel = "logistic_ofMu",
+                                       scaNumCells = scaNCells))
         })
         matDropoutRatesHidden <- do.call(cbind, lsDropoutRatesHidden)
         rownames(matDropoutRatesHidden) <- rownames(matMuHidden)

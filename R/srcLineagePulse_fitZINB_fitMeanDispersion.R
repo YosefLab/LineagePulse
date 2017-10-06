@@ -565,7 +565,7 @@ fitImpulseZINB <- function(
     # Decompress parameters for initialisation
     vecMuParam <- decompressMeansByGene(
         vecMuModel=vecImpulseParamGuess,
-        lsvecBatchModel=lsvecBatchParamGuess,
+        lsvecBatchModel=lsvecBatchParamGuessMu,
         lsMuModelGlobal=lsMuModelGlobal,
         vecInterval=NULL )
     vecDispParam <- decompressDispByGene(
@@ -653,14 +653,14 @@ fitImpulseZINB <- function(
             # Make sure new value is better than previous
             scaLLGuess <- evalLogLikGene(
                 vecCounts=vecCounts,
-                vecMu=vecMuParam*vecNormConst,
+                vecMu=vecMuParam*lsMuModelGlobal$vecNormConst,
                 vecDisp=vecDispParam, 
                 vecPi=vecPiParam,
                 vecidxNotZero= !is.na(vecCounts) & vecCounts>0, 
                 vecidxZero= !is.na(vecCounts) &vecCounts==0)
             indMaxLL <- match(max(vecLL, na.rm=TRUE), vecLL)
             if(vecLL[indMaxLL] < scaLLGuess){
-                lsFitBest <- list(scaDisp=scaDispGuess,
+                lsFitBest <- list(vecDispGuess=vecDispGuess,
                                   vecImpulseParam=vecImpulseParamGuess,
                                   scaConvergence=1002)
             } else {
@@ -669,7 +669,7 @@ fitImpulseZINB <- function(
         } else {
             # If none of the three initilisations was successful:
             # Use prior paramter values
-            lsFitBest <- list(scaDisp=scaDispGuess,
+            lsFitBest <- list(vecDispGuess=vecDispGuess,
                               vecImpulseParam=vecImpulseParamGuess,
                               scaConvergence=1001)
         }
@@ -678,7 +678,7 @@ fitImpulseZINB <- function(
         scaLLGuess <- evalLogLikGene(
             vecCounts=vecCounts,
             vecMu=vecMuParam*lsMuModelGlobal$vecNormConst,
-            vecDisp=rep(scaDispGuess, length(vecCounts)), 
+            vecDisp=vecDispParam, 
             vecPi=vecPiParam,
             vecidxNotZero= !is.na(vecCounts) & vecCounts>0, 
             vecidxZero= !is.na(vecCounts) &vecCounts==0)
