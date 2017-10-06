@@ -215,12 +215,12 @@ evalLogLikContinuousZINB <- function(
     return(scaLogLik)
 }
 
-#' Compiled function: evalLogLikDispConstMuImpulseZINB
+#' Compiled function: evalLogLikContinuousZINB
 #' 
 #' Pre-compile heavily used functions.
-#' Refer to \link{evalLogLikDispConstMuImpulseZINB}.
+#' Refer to \link{evalLogLikContinuousZINB}.
 #' 
-#' @seealso \link{evalLogLikDispConstMuImpulseZINB}
+#' @seealso \link{evalLogLikContinuousZINB}
 #' 
 #' @param vecTheta: (numeric vector dispersion (1) and impulse parameters (6)) 
 #' Dispersion and mean parameter estimates.
@@ -683,7 +683,7 @@ fitImpulseZINB <- function(
             vecidxNotZero= !is.na(vecCounts) & vecCounts>0, 
             vecidxZero= !is.na(vecCounts) &vecCounts==0)
         if(lsFitPrior$scaLL < scaLLGuess){
-            lsFitBest <- list(scaDisp=scaDispGuess,
+            lsFitBest <- list(vecDispGuess=vecDispGuess,
                               vecImpulseParam=vecImpulseParamGuess,
                               scaConvergence=1002)
         } else {

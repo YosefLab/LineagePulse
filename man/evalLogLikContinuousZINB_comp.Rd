@@ -2,7 +2,7 @@
 % Please edit documentation in R/srcLineagePulse_fitZINB_fitMeanDispersion.R
 \name{evalLogLikContinuousZINB_comp}
 \alias{evalLogLikContinuousZINB_comp}
-\title{Compiled function: evalLogLikDispConstMuImpulseZINB}
+\title{Compiled function: evalLogLikContinuousZINB}
 \usage{
 evalLogLikContinuousZINB_comp(vecTheta, vecCounts, lsMuModelGlobal,
   lsDispModelGlobal, vecTimepoints, vecindTimepointAssign, matDropoutLinModel,
@@ -55,10 +55,10 @@ scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
 }
 \description{
 Pre-compile heavily used functions.
-Refer to \link{evalLogLikDispConstMuImpulseZINB}.
+Refer to \link{evalLogLikContinuousZINB}.
 }
 \seealso{
-\link{evalLogLikDispConstMuImpulseZINB}
+\link{evalLogLikContinuousZINB}
 }
 \author{
 David Sebastian Fischer

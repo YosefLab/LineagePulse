@@ -88,7 +88,7 @@ NULL
 #' before the call to this function to use parallelisation on Windows.
 #' 8. Set the level of detail with which you want to follow
 #' progress through text printed on the console during a run
-#' (verbose, boolSuperVerbose).
+#' (boolVerbose, boolSuperVerbose).
 #' 
 #' Finally, after running LineagePulse, you may continue to work
 #' on your data set by:
@@ -190,7 +190,7 @@ NULL
 #' zero-inflated negative binomial model as coordinate ascent.
 #' @param scaNProc (scalar) [Default 1] Number of processes for 
 #' parallelisation.
-#' @param verbose (bool) Whether to follow convergence of the 
+#' @param boolVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation with one report per cycle.
 #' @param boolSuperVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation in high detail with local 
