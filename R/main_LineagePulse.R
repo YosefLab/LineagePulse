@@ -247,7 +247,8 @@ runLineagePulse <- function(
         scaDFSplinesDisp=scaDFSplinesDisp,
         scaMaxEstimationCycles=scaMaxEstimationCycles,
         boolVerbose=boolVerbose,
-        boolSuperVerbose=boolSuperVerbose)
+        boolSuperVerbose=boolSuperVerbose,
+        STRVERSION=STRVERSION)
     objLP <- lsProcessedSCData$objLP
     vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
     matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
