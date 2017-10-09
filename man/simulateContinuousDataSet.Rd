@@ -72,7 +72,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecNormConstExternal=NULL,
     vecDispExternal=rep(20, 30),
     vecGeneWiseDropoutRates = rep(0.1, 30))
-plot(lsSimulatedData$dfAnnot$pseudotime, lsSimulatedData$counts[1,])
+plot(lsSimulatedData$annot$pseudotime, lsSimulatedData$counts[1,])
 
 }
 \seealso{
