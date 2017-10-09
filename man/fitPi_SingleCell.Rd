@@ -17,6 +17,9 @@ Observed read counts, not observed are NA.}
 \item{vecMuParam}{(vector number of cells) Negative binomial
 mean parameter estimate.}
 
+\item{scaNormConst}{(scalar) 
+Model scaling factors, one per cell.}
+
 \item{vecDispParam}{(vector number of cells) Negative binomial
 dispersion parameter estimate.}
 
@@ -27,9 +30,6 @@ Other gene-specific predictors can be added.}
 
 \item{lsDropModelGlobal}{(list)
 Object containing meta-data of cell-wise drop-out parameter models.}
-
-\item{vecNormConst}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
 }
 \value{
 vecLinModel (numeric vector length linear model) 

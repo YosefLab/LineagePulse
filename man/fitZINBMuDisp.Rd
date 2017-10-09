@@ -25,9 +25,6 @@ Object containing description of cell-wise drop-out parameter models.}
 
 \item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
 Assignments of cells to mixtures (for strMuModel="MM").}
-
-\item{matCounts}{(count matrix genes x cells)
-Observed read counts, not observed are NA.}
 }
 \value{
 list

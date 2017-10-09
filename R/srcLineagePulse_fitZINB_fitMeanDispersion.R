@@ -717,9 +717,7 @@ fitImpulseZINB <- function(
 #' @param matCountsProc (matrix genes x cells)
 #'Observed read counts, not observed are NA.
 #' @param vecNormConst (numeric vector number of cells) 
-#'Model scaling factors, one per cell.
-#' @param matCounts (count matrix genes x cells)
-#' Observed read counts, not observed are NA.
+#' Model scaling factors, one per cell.
 #' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
 #' @param lsDispModel (list)

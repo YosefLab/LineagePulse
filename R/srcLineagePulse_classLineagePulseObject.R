@@ -174,7 +174,7 @@ setClass(
 #' vecConfoundersDisp <- get_vecConfoundersDisp(objLP) 
 #' vecConfoundersMu <- get_vecConfoundersMu(objLP) 
 #' scaOmega <- get_scaOmega(objLP) 
-#' boolFixedPopulations <- get_boolFixedPopulation(objLP)
+#' boolFixedPopulations <- get_boolFixedPopulations(objLP)
 #' vecH0Pop <- get_vecH0Pop(objLP) 
 #' vecNormConst <- get_vecNormConst(objLP) 
 #' strVersion <- get_strVersion(objLP)

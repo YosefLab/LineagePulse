@@ -39,8 +39,6 @@ Whether observation is larger than zero.}
 
 \item{vecidxZero}{(bool vector number of cells)
 Whether observation is zero.}
-
-\item{strDropFitGroup}{(str) {"PerCell", "AllCells"}}
 }
 \value{
 scaLogLik (scalar) Value of cost function:

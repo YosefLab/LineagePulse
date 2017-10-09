@@ -124,7 +124,6 @@ evalLogLikPiZINB_SingleCell <- function(
 #' "logistic_ofMu" - include the fitted mean in the linear model
 #' of the drop-out rate and use offset and matPiConstPredictors.
 #' "logistic" - only use offset and matPiConstPredictors.
-#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
 #' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
 #' @param vecidxZero (bool vector number of cells)
@@ -251,7 +250,7 @@ evalLogLikPiZINB_ManyCells_comp <- compiler::cmpfun(evalLogLikPiZINB_ManyCells)
 #' Observed read counts, not observed are NA.
 #' @param vecMuParam (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst (numeric vector number of cells) 
+#' @param scaNormConst (scalar) 
 #' Model scaling factors, one per cell.
 #' @param vecDispParam (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
