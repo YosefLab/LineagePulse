@@ -197,7 +197,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     scaNLin = 10,
     scaNImp = 10,
     scaMumax = 100,
-    scaSDMumplitude = 3,
+    scaSDMuAmplitude = 3,
     vecNormConstExternal=NULL,
     vecDispExternal=rep(20, 30),
     vecGeneWiseDropoutRates = rep(0.1, 30))
