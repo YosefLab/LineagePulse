@@ -12,9 +12,6 @@ Object containing description of gene-wise dispersion parameter models.}
 
 \item{vecGeneIDs}{(vector of strings) 
 Gene IDs for which dispersion model fits are to be extracted.}
-
-\item{matCounts}{(count matrix genes x cells)
-Observed read counts, not observed are NA.}
 }
 \value{
 (numeric matrix genes x cells)

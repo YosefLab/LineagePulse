@@ -8,7 +8,7 @@
 \alias{get_lsDispModelH0}
 \alias{get_lsDispModelH1}
 \alias{get_lsDispModelConst}
-\alias{get_matCountDataProc}
+\alias{get_matCountsProc}
 \alias{get_matWeights}
 \alias{get_scaDFSplinesDisp}
 \alias{get_scaDFSplinesMu}
@@ -84,7 +84,7 @@ get_vecNormConst(objLP)
 get_strVersion(objLP)
 }
 \arguments{
-\item{object}{(objLP)  A LineagePulse output object to extract
+\item{objLP}{(LineagePulse-Object)  A LineagePulse output object to extract
 object from.}
 }
 \value{
@@ -117,7 +117,7 @@ lsMuModelConst <- get_lsMuModelConst(objLP)
 lsDispModelH0 <- get_lsDispModelH0(objLP)
 lsDispModelH1 <- get_lsDispModelH1(objLP)
 lsDispModelConst <- get_lsDispModelConst(objLP)
-matCountDataProc <- get_matCountDataProc(objLP)
+matCountDataProc <- get_matCountsProc(objLP)
 matWeights <- get_matWeights(objLP)
 scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
 scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 

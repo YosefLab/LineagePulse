@@ -63,8 +63,18 @@ Contains initialisation of mean model parameters according to the used model.}
 \item{lsmatBatchModelInitMu}{(list) [Default NULL]
 Initialisation of batch correction models for mean parameter.}
 
+\item{matDispModelInit}{(numeric matrix genes x disp model parameters)
+[Default NULL]
+Contains initialisation of dispersion model parameters according to the used model.}
+
 \item{lsmatBatchModelInitDisp}{(list) [Default NULL]
 Initialisation of batch correction models for dispersion parameter.}
+
+\item{strMuModel}{(str) {"constant", "groups", "MM",
+"splines","impulse"}
+[Default "impulse"] Model according to which the mean
+parameter is fit to each gene as a function of 
+population structure in the alternative model (H1).}
 
 \item{strDispModel}{(str) {"constant", "groups", "splines"}
 [Default "constant"] Model according to which dispersion
@@ -88,35 +98,14 @@ of estimation cycles performed in fitZINB(). One cycle
 contain one estimation of of each parameter of the 
 zero-inflated negative binomial model as coordinate ascent.}
 
+\item{boolVerbose}{(bool) [Default TRUE]
+Whether to follow convergence of the 
+iterative parameter estimation with one report per cycle.}
+
 \item{boolSuperVerbose}{(bool) [Default TRUE]
 Whether to follow convergence of the 
 iterative parameter estimation in high detail with local 
 convergence flags and step-by-step loglikelihood computation.}
-
-\item{matDispModelInit:}{(numeric matrix genes x disp model parameters)
-[Default NULL]
-Contains initialisation of dispersion model parameters according to the used model.}
-
-\item{strMuModel:}{(str) {"constant", "groups", "MM",
-"splines","impulse"}
-[Default "impulse"] Model according to which the mean
-parameter is fit to each gene as a function of 
-population structure in the alternative model (H1).}
-
-\item{boolEstimateNoiseBasedOnH0}{(bool) [Default FALSE]
-Whether to co-estimate logistic drop-out model with the 
-constant null model or with the alternative model. The
-co-estimation with the noise model typically extends the
-run-time of this model-estimation step strongly. While
-the drop-out model is more accurate if estimated based on
-a more realistic model expression model (the alternative
-model), a trade-off for speed over accuracy can be taken
-and the dropout model can be chosen to be estimated based
-on the constant null expression model (set to TRUE).}
-
-\item{verbose}{(bool) [Default TRUE]
-Whether to follow convergence of the 
-iterative parameter estimation with one report per cycle.}
 }
 \value{
 list

@@ -114,7 +114,7 @@ setClass(
 #' 
 #' Get internal data of LineagePulse output object.
 #' 
-#' @param object (objLP)  A LineagePulse output object to extract
+#' @param objLP (LineagePulse-Object)  A LineagePulse output object to extract
 #' object from.
 #' 
 #' @return The internal data object specified by the function.
@@ -128,7 +128,7 @@ setClass(
 #' get_lsDispModelH0
 #' get_lsDispModelH1
 #' get_lsDispModelConst
-#' get_matCountDataProc
+#' get_matCountsProc
 #' get_matWeights
 #' get_scaDFSplinesDisp
 #' get_scaDFSplinesMu
@@ -165,7 +165,7 @@ setClass(
 #' lsDispModelH0 <- get_lsDispModelH0(objLP)
 #' lsDispModelH1 <- get_lsDispModelH1(objLP)
 #' lsDispModelConst <- get_lsDispModelConst(objLP)
-#' matCountDataProc <- get_matCountDataProc(objLP)
+#' matCountDataProc <- get_matCountsProc(objLP)
 #' matWeights <- get_matWeights(objLP)
 #' scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
 #' scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 

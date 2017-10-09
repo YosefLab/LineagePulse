@@ -47,7 +47,6 @@
 #' "logistic_ofMu" - include the fitted mean in the linear model
 #' of the drop-out rate and use offset and matPiConstPredictors.
 #' "logistic" - only use offset and matPiConstPredictors.
-#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
 #' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
 #' @param vecidxZero (bool vector number of cells)

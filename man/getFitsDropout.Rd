@@ -13,10 +13,7 @@ Object containing description of gene-wise mean parameter models.}
 \item{lsDropModel}{(list)
 Object containing description of cell-wise drop-out parameter models.}
 
-\item{matCounts}{(count matrix genes x cells)
-Observed read counts, not observed are NA.}
-
-\item{vecIDs}{(vector of strings) [Default NULL]
+\item{vecGeneIDs}{(vector of strings) [Default NULL]
 Gene IDs for which posteriors of drop-out are to be computed.}
 }
 \value{

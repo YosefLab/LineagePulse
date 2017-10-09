@@ -157,8 +157,6 @@ getFitsMean <- function(
 #' 
 #' Return dispersion model fits per gene and cell as matrix for chosen model.
 #' 
-#' @param matCounts (count matrix genes x cells)
-#' Observed read counts, not observed are NA.
 #' @param lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
 #' @param vecGeneIDs (vector of strings) 
@@ -220,13 +218,11 @@ getFitsDispersion <- function(
 #' 
 #' Return drop-out model fits per gene and cell as matrix for chosen models.
 #' 
-#' @param matCounts (count matrix genes x cells)
-#' Observed read counts, not observed are NA.
 #' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
 #' @param lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
-#' @param vecIDs (vector of strings) [Default NULL]
+#' @param vecGeneIDs (vector of strings) [Default NULL]
 #' Gene IDs for which posteriors of drop-out are to be computed.
 #' 
 #' @return (numeric matrix genes x cells)
