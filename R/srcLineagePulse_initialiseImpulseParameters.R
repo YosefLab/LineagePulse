@@ -10,14 +10,14 @@
 #' @seealso Called by impulse model fitting wrappers:
 #' \code{fitImpulseZINB}.
 #' 
-#' @param vecCounts: (count vector number of samples) Count data.
+#' @param vecCounts (count vector number of samples) Count data.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecMu: (vector number of cells) Negative binomial
+#' @param vecMu (vector number of cells) Negative binomial
 #' mean parameter estimates.
-#' @param vecDisp: (vector number of cells) Negative binomial
+#' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimates.
-#' @param vecDrop: (vector number of cells) Dropout parameter
+#' @param vecDrop (vector number of cells) Dropout parameter
 #' estimates. 
 #' 
 #' @return list (length 2)

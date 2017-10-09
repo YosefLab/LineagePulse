@@ -14,12 +14,12 @@
 #' Names of genes to cluster.
 #' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param dirHeatmap: (str directory) [Default NULL]
+#' @param dirHeatmap (str directory) [Default NULL]
 #' Directory to which heatmap is saved to. Not 
 #' created if NULL. Need to have lsMuModel$lsMuModelGlobal$vecPseudotime
 #' defined.
 #' 
-#' @return vecSortedGenes: (string vector number of IDs)
+#' @return vecSortedGenes (string vector number of IDs)
 #' IDs sorted by peak time in pseudotime.
 #' 
 #' @examples

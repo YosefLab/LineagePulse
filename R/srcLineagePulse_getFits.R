@@ -9,15 +9,15 @@
 #' 
 #' @seealso Called by \code{fitZINB}. Can be called by user.
 #' 
-#' @param matCounts: (numeric matrix genes x cells)
+#' @param matCounts (numeric matrix genes x cells)
 #' Count data.
-#' @param lsMuModel: (list) Mean parameter model parameters.
+#' @param lsMuModel (list) Mean parameter model parameters.
 #' @param vecGeneIDs (vector of strings) 
 #' Gene IDs for which mean model fits are to be extracted.
-#' @param boolDepth: (bool) [Default TRUE] Whether to normalize for sequencing depth.
-#' @param boolBatch: (bool) [Default TRUE] Whether to normalize for batch.
+#' @param boolDepth (bool) [Default TRUE] Whether to normalize for sequencing depth.
+#' @param boolBatch (bool) [Default TRUE] Whether to normalize for batch.
 #' 
-#' @return matZ: (numeric matrix genes x cells)
+#' @return matZ (numeric matrix genes x cells)
 #' Posterior probability of observation not being generated 
 #' by drop-out.
 #' 

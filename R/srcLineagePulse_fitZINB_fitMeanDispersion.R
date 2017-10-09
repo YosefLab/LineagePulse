@@ -24,7 +24,7 @@
 #' of mean and dispersion paramater model on single gene given
 #' the drop-out model.
 #' 
-#' @param vecTheta: (numeric vector dispersion (1) and impulse parameters (6)) 
+#' @param vecTheta (numeric vector dispersion (1) and impulse parameters (6)) 
 #' Dispersion and mean parameter estimates.
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
@@ -32,15 +32,15 @@
 #' Object containing meta-data of gene-wise mean parameter models.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param vecTimepoints: (numerical vector number of unique time coordinates)
+#' @param vecTimepoints (numerical vector number of unique time coordinates)
 #'Unique (pseudo)time coordinates of cells.
 #' @param vecindTimepointAssign (numeric vector number samples) 
 #'Index of time point assigned to cell in list of sorted
 #'time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
-#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -48,12 +48,12 @@
 #' @param vecPiParam (numeric vector number of observations)
 #' Pre-evaluated drop-out model if model is not a function on the mean
 #' parameter to be fit.
-#' @param vecidxNotZero: (index vector vector number of cells)
+#' @param vecidxNotZero (index vector vector number of cells)
 #' Observation which are larger than zero.
-#' @param vecidxZero: (index vector number of cells)
+#' @param vecidxZero (index vector number of cells)
 #' Observation which are zero.
 #'
-#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik (scalar) Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
 evalLogLikContinuousZINB <- function(
@@ -222,7 +222,7 @@ evalLogLikContinuousZINB <- function(
 #' 
 #' @seealso \link{evalLogLikContinuousZINB}
 #' 
-#' @param vecTheta: (numeric vector dispersion (1) and impulse parameters (6)) 
+#' @param vecTheta (numeric vector dispersion (1) and impulse parameters (6)) 
 #' Dispersion and mean parameter estimates.
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
@@ -230,15 +230,15 @@ evalLogLikContinuousZINB <- function(
 #' Object containing meta-data of gene-wise mean parameter models.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param vecTimepoints: (numerical vector number of unique time coordinates)
+#' @param vecTimepoints (numerical vector number of unique time coordinates)
 #'Unique (pseudo)time coordinates of cells.
 #' @param vecindTimepointAssign (numeric vector number samples) 
 #'Index of time point assigned to cell in list of sorted
 #'time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
-#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -246,12 +246,12 @@ evalLogLikContinuousZINB <- function(
 #' @param vecPiParam (numeric vector number of observations)
 #' Pre-evaluated drop-out model if model is not a function on the mean
 #' parameter to be fit.
-#' @param vecidxNotZero: (index vector vector number of cells)
+#' @param vecidxNotZero (index vector vector number of cells)
 #' Observation which are larger than zero.
-#' @param vecidxZero: (index vector number of cells)
+#' @param vecidxZero (index vector number of cells)
 #' Observation which are zero.
 #'
-#' @return scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik (scalar) Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
 evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
@@ -277,22 +277,22 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
-#' @param vecMuModelGuess: (numeric vector number of mean model parameters) 
+#' @param vecMuModelGuess (numeric vector number of mean model parameters) 
 #' Initialisation for impulse model.
 #' @param lsvecBatchParamGuessMu (list) 
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess: (numeric vector number of dispersion model parameters) 
+#' @param vecDispGuess (numeric vector number of dispersion model parameters) 
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
 #' Object containing initialisation for dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -303,17 +303,17 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' 
 #' @return list
 #'\itemize{
-#' \item vecMuModel: (numeric vector number of mu model parameters)
+#' \item vecMuModel (numeric vector number of mu model parameters)
 #' Contains the mean model parameters according to the used model.
-#' \item lsvecBatchModelMu: (list) 
+#' \item lsvecBatchModelMu (list) 
 #' Fit of batch correction models for mean parameter to given gene.
-#' \item vecDispModel: (numeric vector number of dispersion model parameters)
+#' \item vecDispModel (numeric vector number of dispersion model parameters)
 #' Contains the dispersion model parameters according to the used model.
-#' \item lsvecBatchModelDisp: (list) 
+#' \item lsvecBatchModelDisp (list) 
 #' Fit of batch correction models for dispersion parameter to given gene.
-#' \item scaConvergence: (numeric vector number of genes) 
+#' \item scaConvergence (numeric vector number of genes) 
 #' Convergence status of optim for given gene.
-#' \item scaLL: (numeric vector number of genes) 
+#' \item scaLL (numeric vector number of genes) 
 #' Likelihood of model fit for given gene.
 #'}
 #'
@@ -502,22 +502,22 @@ fitContinuousZINB <- function(
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
-#' @param vecImpulseParamGuess: (numeric vector number of impulse model parameters) 
+#' @param vecImpulseParamGuess (numeric vector number of impulse model parameters) 
 #' Initialisation for impulse model.
 #' @param lsvecBatchParamGuessMu (list) 
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess: (numeric vector number of dispersion model parameters) 
+#' @param vecDispGuess (numeric vector number of dispersion model parameters) 
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
 #' Object containing initialisation for dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param matDropoutLinModel: (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors: (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -528,17 +528,17 @@ fitContinuousZINB <- function(
 #' 
 #' @return list
 #'\itemize{
-#' \item vecMuModel: (numeric vector number of mu model parameters)
+#' \item vecMuModel (numeric vector number of mu model parameters)
 #' Contains the mean model parameters according to the used model.
-#' \item lsvecBatchModelMu: (list) 
+#' \item lsvecBatchModelMu (list) 
 #' Fit of batch correction models for mean parameter to given gene.
-#' \item vecDispModel: (numeric vector number of dispersion model parameters)
+#' \item vecDispModel (numeric vector number of dispersion model parameters)
 #' Contains the dispersion model parameters according to the used model.
-#' \item lsvecBatchModelDisp: (list) 
+#' \item lsvecBatchModelDisp (list) 
 #' Fit of batch correction models for dispersion parameter to given gene.
-#' \item scaConvergence: (numeric vector number of genes) 
+#' \item scaConvergence (numeric vector number of genes) 
 #' Convergence status of optim for given gene.
-#' \item scaLL: (numeric vector number of genes) 
+#' \item scaLL (numeric vector number of genes) 
 #' Likelihood of model fit for given gene.
 #'}
 #'
@@ -714,9 +714,9 @@ fitImpulseZINB <- function(
 #' \code{fitImpulseZINB},
 #' \code{fitContinuousZINB}.
 #' 
-#' @param matCountsProc: (matrix genes x cells)
+#' @param matCountsProc (matrix genes x cells)
 #'Observed read counts, not observed are NA.
-#' @param vecNormConst: (numeric vector number of cells) 
+#' @param vecNormConst (numeric vector number of cells) 
 #'Model scaling factors, one per cell.
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
@@ -731,17 +731,17 @@ fitImpulseZINB <- function(
 #' 
 #' @return list
 #'\itemize{
-#' \item matMuModel: (numeric matrix genes x mu model parameters)
+#' \item matMuModel (numeric matrix genes x mu model parameters)
 #' Contains the mean model parameters according to the used model.
-#' \item lsmatBatchModelMu: (list) 
+#' \item lsmatBatchModelMu (list) 
 #' Fit of batch correction models for mean parameter.
-#' \item matDispModel: (numeric matrix genes x disp model parameters)
+#' \item matDispModel (numeric matrix genes x disp model parameters)
 #' Contains the dispersion model parameters according to the used model.
-#' \item lsmatBatchModelDisp: (list) 
+#' \item lsmatBatchModelDisp (list) 
 #' Fit of batch correction models for dispersion parameter.
-#' \item vecConvergence: (numeric vector number of genes) 
+#' \item vecConvergence (numeric vector number of genes) 
 #' Convergence status of optim for each gene.
-#' \item vecLL: (numeric vector number of genes) Likelihood of model fit.
+#' \item vecLL (numeric vector number of genes) Likelihood of model fit.
 #'}
 #'
 #' @author David Sebastian Fischer

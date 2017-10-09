@@ -38,12 +38,12 @@
 #' plot by posterior of drop-out.
 #' @param boolLineageContour (bool) [Default FALSE]
 #' Whether to the "lineage contour" lines to the scatter plot.
-#' @param bwDensity (bandwith: numeric or string) [Default NULL]
+#' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in pseudotime (used if boolLineageContour=TRUE).
 #' If not set, defaults to stats:density() default.
 #' 
-#' @return gplotGene: (ggplot object)
+#' @return gplotGene (ggplot object)
 #' Model rajectories and scatter plot for given gene.
 #' 
 #' @examples
@@ -282,7 +282,7 @@ plotGene <- function(
 #' Bandwidth of kernel density estimate to be used. Chosen
 #' automatically if NULL (recommended).
 #' 
-#' @return gplotGene: (ggplot object)
+#' @return gplotGene (ggplot object)
 #' ggplot2 kernel density estimator plot. 
 #' 
 #' @author David Sebastian Fischer

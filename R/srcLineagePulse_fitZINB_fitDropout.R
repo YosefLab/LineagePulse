@@ -28,26 +28,26 @@
 #' Calls \code{evalLogLikZINB}.
 #' Compiled version: \link{evalLogLikPiZINB_SingleCell_comp}.
 #' 
-#' @param vecTheta: (numeric vector length linear model) 
+#' @param vecTheta (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.
 #' @param vecCounts (count vector number of genes)
 #' Observed read counts, not observed are NA.
-#' @param vecMu: (vector number of cells) Negative binomial
+#' @param vecMu (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst: (numeric vector number of cells) 
+#' @param vecNormConst (numeric vector number of cells) 
 #' Model scaling factors, one per cell.
-#' @param vecDisp: (vector number of cells) Negative binomial
+#' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
-#' @param matPiAllPredictors: (matrix genes x predictors) Predictors of
+#' @param matPiAllPredictors (matrix genes x predictors) Predictors of
 #' the drop-out rate in the linear model. Minimum are a constant
 #' offset and log of the negative binomial mean parameter. 
 #' Other gene-specific predictors can be added.
-#' @param vecidxNotZero: (bool vector number of cells)
+#' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
-#' @param vecidxZero: (bool vector number of cells)
+#' @param vecidxZero (bool vector number of cells)
 #' Whether observation is zero.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
+#' @return scaLogLik (scalar) Value of cost function:
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
@@ -100,26 +100,26 @@ evalLogLikPiZINB_SingleCell <- function(
 #'
 #' @seealso Compiled version of \code{evalLogLikPiZINB_SingleCell}.
 #' 
-#' @param vecTheta: (numeric vector length linear model) 
+#' @param vecTheta (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.
 #' @param vecCounts (count vector number of genes)
 #' Observed read counts, not observed are NA.
-#' @param vecMu: (vector number of cells) Negative binomial
+#' @param vecMu (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst: (numeric vector number of cells) 
+#' @param vecNormConst (numeric vector number of cells) 
 #' Model scaling factors, one per cell.
-#' @param vecDisp: (vector number of cells) Negative binomial
+#' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
-#' @param matPiPredictors: (matrix genes x predictors) Predictors of
+#' @param matPiPredictors (matrix genes x predictors) Predictors of
 #' the drop-out rate in the linear model. Minimum are a constant
 #' offset and log of the negative binomial mean parameter. 
 #' Other gene-specific predictors can be added.
-#' @param vecidxNotZero: (bool vector number of cells)
+#' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
-#' @param vecidxZero: (bool vector number of cells)
+#' @param vecidxZero (bool vector number of cells)
 #' Whether observation is zero.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
+#' @return scaLogLik (scalar) Value of cost function:
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
@@ -141,18 +141,18 @@ evalLogLikPiZINB_SingleCell_comp <- compiler::cmpfun(evalLogLikPiZINB_SingleCell
 #' Calls \code{evalLogLikMatrix}.
 #' Compiled version: \link{evalLogLikPiZINB_ManyCells_comp}.
 #' 
-#' @param vecTheta: (numeric vector length linear model) 
+#' @param vecTheta (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
-#' @param lsMuModel: (list)
+#' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param lsDispModel: (list)
+#' @param lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
-#' @param lsDropModel: (list)
+#' @param lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
+#' @return scaLogLik (scalar) Value of cost function:
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
@@ -202,18 +202,18 @@ evalLogLikPiZINB_ManyCells <- function(
 #' 
 #' @seealso Compiled version of \link{evalLogLikPiZINB_ManyCells}
 #' 
-#' @param vecTheta: (numeric vector length linear model) 
+#' @param vecTheta (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
-#' @param lsMuModel: (list)
+#' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param lsDispModel: (list)
+#' @param lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
-#' @param lsDropModel: (list)
+#' @param lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
 #' 
-#' @return scaLogLik: (scalar) Value of cost function:
+#' @return scaLogLik (scalar) Value of cost function:
 #' zero-inflated negative binomial likelihood.
 #' 
 #' @author David Sebastian Fischer
@@ -234,24 +234,24 @@ evalLogLikPiZINB_ManyCells_comp <- compiler::cmpfun(evalLogLikPiZINB_ManyCells)
 #' Calls fitting cost function:
 #' \code{evalLogLikPiZINB_SingleCell_comp}.
 #' 
-#' @param vecParamGuess: (numeric vector length linear model) 
+#' @param vecParamGuess (numeric vector length linear model) 
 #' Parameter estimates for logit linear model for drop-out rate.
 #' @param vecCounts (count vector number of genes)
 #' Observed read counts, not observed are NA.
-#' @param vecMuParam: (vector number of cells) Negative binomial
+#' @param vecMuParam (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst: (numeric vector number of cells) 
+#' @param vecNormConst (numeric vector number of cells) 
 #' Model scaling factors, one per cell.
-#' @param vecDispParam: (vector number of cells) Negative binomial
+#' @param vecDispParam (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
-#' @param matPiAllPredictors: (matrix genes x predictors) Predictors of
+#' @param matPiAllPredictors (matrix genes x predictors) Predictors of
 #' the drop-out rate in the linear model. Minimum are a constant
 #' offset and log of the negative binomial mean parameter. 
 #' Other gene-specific predictors can be added.
-#' @param lsDropModelGlobal: (list)
+#' @param lsDropModelGlobal (list)
 #' Object containing meta-data of cell-wise drop-out parameter models.
 #' 
-#' @return vecLinModel: (numeric vector length linear model) 
+#' @return vecLinModel (numeric vector length linear model) 
 #' Linear model for drop-out rate in logit space for given cell.
 #' 
 #' @author David Sebastian Fischer
@@ -319,18 +319,18 @@ fitPi_SingleCell <- function(
 #' Calls fitting cost function:
 #' \code{evalLogLikPiZINB_ManyCells_comp}.
 #' 
-#' @param vecParamGuess: (numeric vector length linear model) 
+#' @param vecParamGuess (numeric vector length linear model) 
 #' Initial parameter estimates for logit linear model for drop-out rate.
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
-#' @param lsMuModel: (list)
+#' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param lsDispModel: (list)
+#' @param lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
-#' @param lsDropModel: (list)
+#' @param lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
 #' 
-#' @return vecLinModel: (numeric vector length linear model) 
+#' @return vecLinModel (numeric vector length linear model) 
 #' Linear model for drop-out rate in logit space for given cell.
 #' 
 #' @author David Sebastian Fischer
@@ -394,14 +394,14 @@ fitPi_ManyCells <- function(
 #' 
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.
-#' @param lsMuModel: (list)
+#' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
-#' @param lsDispModel: (list)
+#' @param lsDispModel (list)
 #' Object containing description of gene-wise dispersion parameter models.
-#' @param lsDropModel: (list)
+#' @param lsDropModel (list)
 #' Object containing description of cell-wise drop-out parameter models.
 #' 
-#' @return vecLinModel: (numeric vector length linear model) 
+#' @return vecLinModel (numeric vector length linear model) 
 #' Linear model for drop-out rate in logit space for given cell.
 #' 
 #' @author David Sebastian Fischer

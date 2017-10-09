@@ -10,14 +10,14 @@
 #' 
 #' @seealso \link{evalDropoutModel_comp}
 #' 
-#' @param vecPiModel: (numeric vector length linear model) Linear model
+#' @param vecPiModel (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
-#' @param vecPiPredictors: (vector length of predictors) Predictors of
+#' @param vecPiPredictors (vector length of predictors) Predictors of
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
 #' 
-#' @return scaDropoutRate (scalar): 
+#' @return scaDropoutRate (scalar) 
 #'    Drop-out rate estimate.
 #'    
 #' @author David Sebastian Fischer
@@ -38,14 +38,14 @@ evalDropoutModel <- function(vecPiModel,
 #' 
 #' @seealso \link{evalDropoutModel_comp}
 #' 
-#' @param vecPiModel: (numeric vector length linear model) Linear model
+#' @param vecPiModel (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
-#' @param vecPiPredictors: (vector length of predictors) Predictors of
+#' @param vecPiPredictors (vector length of predictors) Predictors of
 #'    the drop-out rate in the linear model. Minimum are a constant
 #'    offset and log of the negative binomial mean parameter. 
 #'    Other gene-specific predictors can be added.
 #' 
-#' @return scaDropoutRate (scalar): 
+#' @return scaDropoutRate (scalar) 
 #'    Drop-out rate estimate.
 #' 
 #' @author David Sebastian Fischer

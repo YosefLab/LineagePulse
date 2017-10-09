@@ -17,33 +17,33 @@
 #' 
 #' @seealso Called by separately by user.
 #' 
-#' @param scaNCells: (scalar) Number of cells in data set.
-#' @param scaNConst: (scalar) Number of constant expression profiles (genes) in data set.
-#' @param scaNLin: (scalar) Number of linear expression profiles (genes) in data set.
-#' @param scaNImp: (scalar) Number of impulse model expression profiles (genes) in data set.
-#' @param scaMumax: (scalar) [Default 1000]
+#' @param scaNCells (scalar) Number of cells in data set.
+#' @param scaNConst (scalar) Number of constant expression profiles (genes) in data set.
+#' @param scaNLin (scalar) Number of linear expression profiles (genes) in data set.
+#' @param scaNImp (scalar) Number of impulse model expression profiles (genes) in data set.
+#' @param scaMumax (scalar) [Default 1000]
 #' Maximum expression mean parameter to be used.
-#' @param scaSDMuAmplitude: (scalar) [Default 1]
+#' @param scaSDMuAmplitude (scalar) [Default 1]
 #' Standard deviation of normal distribution form which the 
 #' amplitude change within an impulse trace is drawn.
-#' @param vecNormConstExternal: (numeric vector number of cells)
+#' @param vecNormConstExternal (numeric vector number of cells)
 #' [Default NULL]
 #' Size factors for data set. Size factors are set to 1 if this is
 #' not specified (NULL).
 #' @param vecDispExternal (numeric vector number of genes)
 #' [Default NULL]
 #' Dispersion parameters per gene supplied by user.s
-#' @param vecGeneWiseDropoutRates: (numeric vector number of cells) 
+#' @param vecGeneWiseDropoutRates (numeric vector number of cells) 
 #' [Default NULL] One drop-out rate per gene.
-#' @param matDropoutModelExternal: (numeric matrix cells x 2) 
+#' @param matDropoutModelExternal (numeric matrix cells x 2) 
 #' [Default NULL] External drop-out model, has to have
 #' one row for each simulated cell.
 #' 
-#' @return list: (length 2)
+#' @return list (length 2)
 #' \itemize{
-#' \item pseudotime: (numerical vector length number of cells)
-#' Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' \item counts: (matrix genes x cells)
+#' \item pseudotime (numerical vector length number of cells)
+#' Pseudotime coordinates (1D) of cells. One scalar per cell.
+#' \item counts (matrix genes x cells)
 #' Sampled count data of all cells after drop-out.
 #' }
 #' 

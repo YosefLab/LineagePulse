@@ -60,7 +60,7 @@
 #' cubic spline to be used as a dispersion parameter model.
 #' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
 #' Assignments of cells to mixtures (for strMuModel="MM").
-#' @param matPiConstPredictors: (numeric matrix genes x number of constant
+#' @param matPiConstPredictors (numeric matrix genes x number of constant
 #' gene-wise drop-out predictors) [Default NULL]
 #' Predictors for logistic drop-out 
 #' fit other than offset and mean parameter (i.e. parameters which
@@ -68,26 +68,26 @@
 #' Is null if no constant predictors are supplied.
 #' @param lsDropModel (list) [Default NULL]
 #' Object containing description of cell-wise drop-out parameter models.
-#' @param matMuModelInit: (numeric matrix genes x mu model parameters)
+#' @param matMuModelInit (numeric matrix genes x mu model parameters)
 #' [Default NULL]
 #' Contains initialisation of mean model parameters according to the used model.
-#' @param lsmatBatchModelInitMu: (list) [Default NULL]
+#' @param lsmatBatchModelInitMu (list) [Default NULL]
 #' Initialisation of batch correction models for mean parameter.
 #' @param matDispModelInit: (numeric matrix genes x disp model parameters)
 #' [Default NULL]
 #' Contains initialisation of dispersion model parameters according to the used model.
-#' @param lsmatBatchModelInitDisp: (list) [Default NULL]
+#' @param lsmatBatchModelInitDisp (list) [Default NULL]
 #' Initialisation of batch correction models for dispersion parameter.
 #' @param strMuModel: (str) {"constant", "groups", "MM",
 #' "splines","impulse"}
 #' [Default "impulse"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
-#' @param strDispModel: (str) {"constant", "groups", "splines"}
+#' @param strDispModel (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the given model.
-#' @param strDropModel: (str) {"logistic_ofMu", "logistic"}
+#' @param strDropModel (str) {"logistic_ofMu", "logistic"}
 #' [Default "logistic_ofMu"] Definition of drop-out model.
 #' "logistic_ofMu" - include the fitted mean in the linear model
 #' of the drop-out rate and use offset and matPiConstPredictors.
@@ -97,7 +97,7 @@
 #' separate drop-out model parameterisations are fit.
 #' "PerCell" - one parametersiation (fit) per cell
 #' "ForAllCells" - one parametersiation (fit) for all cells
-#' @param boolEstimateNoiseBasedOnH0: (bool) [Default: FALSE]
+#' @param boolEstimateNoiseBasedOnH0 (bool) [Default FALSE]
 #' Whether to co-estimate logistic drop-out model with the 
 #' constant null model or with the alternative model. The
 #' co-estimation with the noise model typically extends the

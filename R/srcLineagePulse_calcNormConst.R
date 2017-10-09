@@ -13,7 +13,7 @@
 #' @param vecNormConstExternal (numeric vector number of cells) 
 #' Model scaling factors supplied by user, one per cell. 
 #' 
-#' @return objLP: (LineagePulse-object)
+#' @return objLP (LineagePulse-object)
 #' Object with fit normalization constants.
 #' 
 #' @author David Sebastian Fischer
