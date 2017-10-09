@@ -20,7 +20,7 @@ Observed read counts, not observed are NA.}
 Gene IDs for which posteriors of drop-out are to be computed.}
 }
 \value{
-matPiParam (numeric matrix genes x cells)
+(numeric matrix genes x cells)
 Drop-out rate fits.
 }
 \description{

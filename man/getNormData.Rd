@@ -21,9 +21,9 @@ Gene IDs for which mean model fits are to be extracted.}
 \item{boolBatch}{(bool) [Default TRUE] Whether to normalize for batch.}
 }
 \value{
-matZ (numeric matrix genes x cells)
-Posterior probability of observation not being generated 
-by drop-out.
+(numeric matrix genes x cells)
+Input data normalized by library size factors (optional) and
+by inferred batch factors (optional).
 }
 \description{
 The data normalisation is based on the model normalisation used by and inferred

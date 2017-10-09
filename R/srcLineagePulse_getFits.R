@@ -17,9 +17,9 @@
 #' @param boolDepth (bool) [Default TRUE] Whether to normalize for sequencing depth.
 #' @param boolBatch (bool) [Default TRUE] Whether to normalize for batch.
 #' 
-#' @return matZ (numeric matrix genes x cells)
-#' Posterior probability of observation not being generated 
-#' by drop-out.
+#' @return (numeric matrix genes x cells)
+#' Input data normalized by library size factors (optional) and
+#' by inferred batch factors (optional).
 #' 
 #' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -100,7 +100,7 @@ getNormData <- function(matCounts,
 #' @param vecGeneIDs (vector of strings) 
 #' Gene IDs for which mean model fits are to be extracted.
 #' 
-#' @return matMuParam (numeric matrix genes x cells)
+#' @return (numeric matrix genes x cells)
 #' Mean parameter fits.
 #' 
 #' @examples
@@ -164,7 +164,7 @@ getFitsMean <- function(
 #' @param vecGeneIDs (vector of strings) 
 #' Gene IDs for which dispersion model fits are to be extracted.
 #' 
-#' @return matDispParam (numeric matrix genes x cells)
+#' @return (numeric matrix genes x cells)
 #' Dispersion parameter fits.
 #' 
 #' @examples
@@ -229,7 +229,7 @@ getFitsDispersion <- function(
 #' @param vecIDs (vector of strings) [Default NULL]
 #' Gene IDs for which posteriors of drop-out are to be computed.
 #' 
-#' @return matPiParam (numeric matrix genes x cells)
+#' @return (numeric matrix genes x cells)
 #' Drop-out rate fits.
 #' 
 #' @examples
@@ -303,7 +303,7 @@ getFitsDropout <- function(
 #' @param vecGeneIDs (vector of strings) [Default NULL]
 #' Gene IDs for which posteriors of drop-out are to be computed.
 #' 
-#' @return matZ (numeric matrix genes x cells)
+#' @return (numeric matrix genes x cells)
 #' Posterior probability of observation not being generated 
 #' by drop-out.
 #' 

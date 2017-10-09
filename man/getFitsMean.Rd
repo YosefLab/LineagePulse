@@ -14,7 +14,7 @@ Object containing description of gene-wise mean parameter models.}
 Gene IDs for which mean model fits are to be extracted.}
 }
 \value{
-matMuParam (numeric matrix genes x cells)
+(numeric matrix genes x cells)
 Mean parameter fits.
 }
 \description{

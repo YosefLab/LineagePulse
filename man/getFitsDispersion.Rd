@@ -17,7 +17,7 @@ Gene IDs for which dispersion model fits are to be extracted.}
 Observed read counts, not observed are NA.}
 }
 \value{
-matDispParam (numeric matrix genes x cells)
+(numeric matrix genes x cells)
 Dispersion parameter fits.
 }
 \description{

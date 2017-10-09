@@ -23,7 +23,7 @@ Object containing description of cell-wise drop-out parameter models.}
 Gene IDs for which posteriors of drop-out are to be computed.}
 }
 \value{
-matZ (numeric matrix genes x cells)
+(numeric matrix genes x cells)
 Posterior probability of observation not being generated 
 by drop-out.
 }
