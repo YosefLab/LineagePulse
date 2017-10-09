@@ -1,7 +1,7 @@
 Package: LineagePulse
 Type: Package
 Title: Differential expression analysis and model fitting for single-cell RNA-seq data
-Version: 0.99.4
+Version: 0.99.5
 Date: 2017-10-09
 Authors@R: c(
     person('David S', 'Fischer', NULL, 'david.fischer@helmholtz-muenchen.de', c('aut','cre')),
