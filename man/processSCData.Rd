@@ -10,6 +10,24 @@ processSCData(counts, dfAnnotation, vecConfoundersDisp, vecConfoundersMu,
   boolVerbose, boolSuperVerbose, STRVERSION)
 }
 \arguments{
+\item{counts}{(matrix genes x samples)
+(matrix genes x cells (sparseMatrix or standard) or file)
+Matrix: Count data of all cells, unobserved entries are NA.
+file: .mtx file from which count matrix is to be read.}
+
+\item{dfAnnotation}{(data frame cells x meta characteristics)
+Annotation table which contains meta data on cells.}
+
+\item{vecConfoundersDisp}{(vector of strings number of confounders on  dispersion)
+[Default NULL] Confounders to correct for in dispersion batch
+correction model, must be subset of column names of
+dfAnnotation which describe condounding variables.}
+
+\item{vecConfoundersMu}{(vector of strings number of confounders on  mean)
+[Default NULL] Confounders to correct for in mu batch
+correction model, must be subset of column names of
+dfAnnotation which describe condounding variables.}
+
 \item{matPiConstPredictors}{(numeric matrix genes x number of constant
 gene-wise drop-out predictors) Predictors for logistic drop-out 
 fit other than offset and mean parameter (i.e. parameters which
@@ -37,18 +55,28 @@ population structure in the null model (H0).}
 parameter is fit to each gene as a function of 
 population structure in the alternative model (H1).}
 
+\item{scaDFSplinesDisp}{(sca) [Default 3] 
+If strDispModelFull=="splines" or strDispModelRed=="splines", 
+the degrees of freedom of the natural
+cubic spline to be used as a dispersion parameter model.}
+
+\item{scaDFSplinesMu}{(sca) [Default 3] 
+If strMuModel=="splines", the degrees of freedom of the natural
+cubic spline to be used as a mean parameter model.}
+
+\item{scaMaxEstimationCycles}{(integer) [Default 20] Maximum number 
+of estimation cycles performed in fitZINB(). One cycle
+contain one estimation of of each parameter of the 
+zero-inflated negative binomial model as coordinate ascent.}
+
+\item{boolVerbose}{(bool) Whether to follow convergence of the 
+iterative parameter estimation with one report per cycle.}
+
+\item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
+iterative parameter estimation in high detail with local 
+convergence flags and step-by-step loglikelihood computation.}
+
 \item{STRVERSION}{(str) Version of LineagePulse that is run.}
-
-\item{matCounts}{(matrix genes x samples)
-Count data of all cells, unobserved entries are NA.}
-
-\item{vecPseudotime}{(numerical vector length number of cells)
-Pseudotime coordinates (1D) of cells: One scalar per cell.
-Has to be named: Names of elements are cell names.}
-
-\item{scaSmallRun}{(integer) [Default NULL] Number of rows
-on which ImpulseDE2 is supposed to be run, the full
-data set is only used for size factor estimation.}
 }
 \value{
 list (length 3)

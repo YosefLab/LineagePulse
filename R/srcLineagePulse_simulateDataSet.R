@@ -73,9 +73,7 @@ simulateContinuousDataSet <- function(
     vecNormConstExternal=NULL,
     vecDispExternal=NULL,
     vecGeneWiseDropoutRates=NULL,
-    matDropoutModelExternal=NULL,
-    strDropModel="logistic_ofMu",
-    strDropFitGroup="PerCell"){
+    matDropoutModelExternal=NULL){
     
     ####
     # Internal functions

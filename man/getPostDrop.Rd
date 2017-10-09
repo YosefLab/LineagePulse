@@ -48,6 +48,7 @@ objLP <- runLineagePulse(
 # Get posterior of drop-out on alternative model:
 # Use H1 model fits.
 vecPosteriorDropoutFits <- getPostDrop(
+     matCounts = lsSimulatedData$counts,
      lsMuModel = objLP@lsMuModelH1,
      lsDispModel = objLP@lsDispModelH1,
      lsDropModel = objLP@lsDropModel,

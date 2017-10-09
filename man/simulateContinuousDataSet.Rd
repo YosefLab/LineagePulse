@@ -15,8 +15,7 @@ are distributed uniformly in pseudotime.}
 simulateContinuousDataSet(scaNCells, scaNConst, scaNLin, scaNImp,
   scaMumax = 100, scaSDMuAmplitude = 1, vecNormConstExternal = NULL,
   vecDispExternal = NULL, vecGeneWiseDropoutRates = NULL,
-  matDropoutModelExternal = NULL, strDropModel = "logistic_ofMu",
-  strDropFitGroup = "PerCell")
+  matDropoutModelExternal = NULL)
 }
 \arguments{
 \item{scaNCells}{(scalar) Number of cells in data set.}

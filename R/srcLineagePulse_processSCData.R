@@ -16,8 +16,20 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param matCounts (matrix genes x samples)
-#' Count data of all cells, unobserved entries are NA.
+#' @param counts (matrix genes x samples)
+#' (matrix genes x cells (sparseMatrix or standard) or file)
+#' Matrix: Count data of all cells, unobserved entries are NA.
+#' file: .mtx file from which count matrix is to be read.
+#' @param dfAnnotation (data frame cells x meta characteristics)
+#' Annotation table which contains meta data on cells.
+#' @param vecConfoundersMu (vector of strings number of confounders on  mean)
+#' [Default NULL] Confounders to correct for in mu batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @param vecConfoundersDisp (vector of strings number of confounders on  dispersion)
+#' [Default NULL] Confounders to correct for in dispersion batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
 #' @param matPiConstPredictors (numeric matrix genes x number of constant
 #' gene-wise drop-out predictors) Predictors for logistic drop-out 
 #' fit other than offset and mean parameter (i.e. parameters which
@@ -28,16 +40,6 @@
 #' scale the mean model for evaluation of the loglikelihood. 
 #' Must be named according to the column names of matCounts.
 #' Supplied by user.
-#' @param vecPseudotime (numerical vector length number of cells)
-#' Pseudotime coordinates (1D) of cells: One scalar per cell.
-#' Has to be named: Names of elements are cell names.
-#' @param scaSmallRun (integer) [Default NULL] Number of rows
-#' on which ImpulseDE2 is supposed to be run, the full
-#' data set is only used for size factor estimation.
-#' @param strMuModel (str) {"constant"}
-#' [Default "impulse"] Model according to which the mean
-#' parameter is fit to each gene as a function of 
-#' population structure in the alternative model (H1).
 #' @param strDispModelFull (str) {"constant"}
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
@@ -46,6 +48,26 @@
 #' [Default "constant"] Model according to which dispersion
 #' parameter is fit to each gene as a function of 
 #' population structure in the null model (H0).
+#' @param strMuModel (str) {"constant"}
+#' [Default "impulse"] Model according to which the mean
+#' parameter is fit to each gene as a function of 
+#' population structure in the alternative model (H1).
+#' @param scaDFSplinesDisp (sca) [Default 3] 
+#' If strDispModelFull=="splines" or strDispModelRed=="splines", 
+#' the degrees of freedom of the natural
+#' cubic spline to be used as a dispersion parameter model.
+#' @param scaDFSplinesMu (sca) [Default 3] 
+#' If strMuModel=="splines", the degrees of freedom of the natural
+#' cubic spline to be used as a mean parameter model.
+#' @param scaMaxEstimationCycles (integer) [Default 20] Maximum number 
+#' of estimation cycles performed in fitZINB(). One cycle
+#' contain one estimation of of each parameter of the 
+#' zero-inflated negative binomial model as coordinate ascent.
+#' @param boolVerbose (bool) Whether to follow convergence of the 
+#' iterative parameter estimation with one report per cycle.
+#' @param boolSuperVerbose (bool) Whether to follow convergence of the 
+#' iterative parameter estimation in high detail with local 
+#' convergence flags and step-by-step loglikelihood computation.
 #' @param STRVERSION (str) Version of LineagePulse that is run.
 #'
 #' @return list (length 3)

@@ -65,12 +65,12 @@ of estimation cycles performed in fitZINB(). One cycle
 contain one estimation of of each parameter of the 
 zero-inflated negative binomial model as coordinate ascent.}
 
+\item{boolVerbose}{(bool) Whether to follow convergence of the 
+iterative parameter estimation with one report per cycle.}
+
 \item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
 iterative parameter estimation in high detail with local 
 convergence flags and step-by-step loglikelihood computation.}
-
-\item{verbose}{(bool) Whether to follow convergence of the 
-iterative parameter estimation with one report per cycle.}
 }
 \value{
 objLP (LineagePulseObject)

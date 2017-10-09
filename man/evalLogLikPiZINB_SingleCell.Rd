@@ -17,6 +17,9 @@ Observed read counts, not observed are NA.}
 \item{vecMu}{(vector number of cells) Negative binomial
 mean parameter estimate.}
 
+\item{scaNormConst}{(scalar) 
+Model scaling factors, one per cell.}
+
 \item{vecDisp}{(vector number of cells) Negative binomial
 dispersion parameter estimate.}
 
@@ -25,14 +28,19 @@ the drop-out rate in the linear model. Minimum are a constant
 offset and log of the negative binomial mean parameter. 
 Other gene-specific predictors can be added.}
 
+\item{strDropModel}{(str) {"logistic_ofMu", "logistic"}
+[Default "logistic_ofMu"] Definition of drop-out model.
+"logistic_ofMu" - include the fitted mean in the linear model
+of the drop-out rate and use offset and matPiConstPredictors.
+"logistic" - only use offset and matPiConstPredictors.}
+
 \item{vecidxNotZero}{(bool vector number of cells)
 Whether observation is larger than zero.}
 
 \item{vecidxZero}{(bool vector number of cells)
 Whether observation is zero.}
 
-\item{vecNormConst}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
+\item{strDropFitGroup}{(str) {"PerCell", "AllCells"}}
 }
 \value{
 scaLogLik (scalar) Value of cost function:

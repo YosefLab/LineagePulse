@@ -114,24 +114,33 @@ setClass(
 #' 
 #' Get internal data of LineagePulse output object.
 #' 
-#' @param object (objectLineagePulse)  A LineagePulse output object.
+#' @param object (objLP)  A LineagePulse output object to extract
+#' object from.
 #' 
 #' @return The internal data object specified by the function.
 #' 
 #' @name get_accessors
 #' @rdname get_accessors
-#' @aliases 
-#' get_lsMuModelH1,LineagePulseObject-method
-#' get_lsDispModelH1,LineagePulseObject-method
-#' get_lsMuModelH0,LineagePulseObject-method
-#' get_lsDispModelH0,LineagePulseObject-method
-#' get_DropModel,LineagePulseObject-method
-#' get_lsFitZINBReporters
-#' get_dfAnnotationProc,LineagePulseObject-method
-#' get_vecNormConst,LineagePulseObject-method
-#' get_scaNProc,LineagePulseObject-method
-#' get_scaQThres,LineagePulseObject-method
-#' get_strReport,LineagePulseObject-method
+#' @aliases
+#' get_lsMuModelH0
+#' get_lsMuModelH1
+#' get_lsMuModelConst
+#' get_lsDispModelH0
+#' get_lsDispModelH1
+#' get_lsDispModelConst
+#' get_matCountDataProc
+#' get_matWeights
+#' get_scaDFSplinesDisp
+#' get_scaDFSplinesMu
+#' get_strReport
+#' get_vecAllGenes
+#' get_vecConfoundersDisp
+#' get_vecConfoundersMu
+#' get_scaOmega
+#' get_boolFixedPopulation
+#' get_vecH0Pop
+#' get_vecNormConst
+#' get_strVersion
 #' 
 #' @examples    
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -160,15 +169,15 @@ setClass(
 #' matWeights <- get_matWeights(objLP)
 #' scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
 #' scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 
-#' strReport <- get_strReport <- function(objLP) 
-#' vecAllGenes <- get_vecAllGenes <- function(objLP) 
-#' vecConfoundersDisp <- get_vecConfoundersDisp <- function(objLP) 
-#' vecConfoundersMu <- get_vecConfoundersMu <- function(objLP) 
-#' scaOmega <- get_scaOmega <- function(objLP) 
-#' boolFixedPopulations <- get_boolFixedPopulations <- function(objLP)
-#' vecH0Pop <- get_vecH0Pop <- function(objLP) 
-#' vecNormConst <- get_vecNormConst <- function(objLP) 
-#' strVersion <- get_strVersion <- function(objLP)
+#' strReport <- get_strReport(objLP) 
+#' vecAllGenes <- get_vecAllGenes(objLP) 
+#' vecConfoundersDisp <- get_vecConfoundersDisp(objLP) 
+#' vecConfoundersMu <- get_vecConfoundersMu(objLP) 
+#' scaOmega <- get_scaOmega(objLP) 
+#' boolFixedPopulations <- get_boolFixedPopulation(objLP)
+#' vecH0Pop <- get_vecH0Pop(objLP) 
+#' vecNormConst <- get_vecNormConst(objLP) 
+#' strVersion <- get_strVersion(objLP)
 #' 
 #' @author David Sebastian Fischer
 NULL

@@ -11,7 +11,7 @@
 #' 
 #' @seealso Called by \code{runLineagePulse}.
 #' 
-#' @param: objLP (LineagePulseObject)
+#' @param objLP (LineagePulseObject)
 #' LineagePulseObject with fitted null and alternative models.
 #' 
 #' @return objLP (LineagePulseObject)

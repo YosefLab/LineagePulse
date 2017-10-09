@@ -61,7 +61,7 @@
 #' of estimation cycles performed in fitZINB(). One cycle
 #' contain one estimation of of each parameter of the 
 #' zero-inflated negative binomial model as coordinate ascent.
-#' @param verbose (bool) Whether to follow convergence of the 
+#' @param boolVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation with one report per cycle.
 #' @param boolSuperVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation in high detail with local 

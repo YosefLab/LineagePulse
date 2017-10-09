@@ -228,6 +228,8 @@ decompressDropoutRateByGene <- function(
 #' content and other gene-specific properties. This would be the 
 #' global parameters as listed in the other decompression
 #' function. Here those are not a list as there is only one object.
+#' @param lsDropModelGlobal (list) 
+#' Object containing meta-data of cell-wise dropout parameter models.
 #' 
 #' @return vecPi (numerical vector number of cells)
 #' Dispersion parameter estimates for given gene 

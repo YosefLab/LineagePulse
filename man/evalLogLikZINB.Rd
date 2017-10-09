@@ -25,9 +25,6 @@ Whether observation is larger than zero.}
 
 \item{vecidxZero}{(bool vector number of samples)
 Whether observation is zero.}
-
-\item{vecNormConst}{(numeric vector number of samples) 
-Model scaling factors, one per cell.}
 }
 \value{
 scaLogLik (scalar) Likelihood under zero-inflated

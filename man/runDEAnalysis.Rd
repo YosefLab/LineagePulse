@@ -7,7 +7,7 @@
 runDEAnalysis(objLP)
 }
 \arguments{
-\item{:}{objLP (LineagePulseObject)
+\item{objLP}{(LineagePulseObject)
 LineagePulseObject with fitted null and alternative models.}
 }
 \value{

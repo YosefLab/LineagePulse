@@ -2,17 +2,25 @@
 % Please edit documentation in R/srcLineagePulse_classLineagePulseObject.R
 \name{get_accessors}
 \alias{get_accessors}
-\alias{get_lsMuModelH1,LineagePulseObject-method}
-\alias{get_lsDispModelH1,LineagePulseObject-method}
-\alias{get_lsMuModelH0,LineagePulseObject-method}
-\alias{get_lsDispModelH0,LineagePulseObject-method}
-\alias{get_DropModel,LineagePulseObject-method}
-\alias{get_lsFitZINBReporters}
-\alias{get_dfAnnotationProc,LineagePulseObject-method}
-\alias{get_vecNormConst,LineagePulseObject-method}
-\alias{get_scaNProc,LineagePulseObject-method}
-\alias{get_scaQThres,LineagePulseObject-method}
-\alias{get_strReport,LineagePulseObject-method}
+\alias{get_lsMuModelH0}
+\alias{get_lsMuModelH1}
+\alias{get_lsMuModelConst}
+\alias{get_lsDispModelH0}
+\alias{get_lsDispModelH1}
+\alias{get_lsDispModelConst}
+\alias{get_matCountDataProc}
+\alias{get_matWeights}
+\alias{get_scaDFSplinesDisp}
+\alias{get_scaDFSplinesMu}
+\alias{get_strReport}
+\alias{get_vecAllGenes}
+\alias{get_vecConfoundersDisp}
+\alias{get_vecConfoundersMu}
+\alias{get_scaOmega}
+\alias{get_boolFixedPopulation}
+\alias{get_vecH0Pop}
+\alias{get_vecNormConst}
+\alias{get_strVersion}
 \alias{get_dfAnnotationProc}
 \alias{get_lsMuModelH0}
 \alias{get_lsMuModelH1}
@@ -76,7 +84,8 @@ get_vecNormConst(objLP)
 get_strVersion(objLP)
 }
 \arguments{
-\item{object}{(objectLineagePulse)  A LineagePulse output object.}
+\item{object}{(objLP)  A LineagePulse output object to extract
+object from.}
 }
 \value{
 The internal data object specified by the function.
@@ -112,15 +121,15 @@ matCountDataProc <- get_matCountDataProc(objLP)
 matWeights <- get_matWeights(objLP)
 scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
 scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 
-strReport <- get_strReport <- function(objLP) 
-vecAllGenes <- get_vecAllGenes <- function(objLP) 
-vecConfoundersDisp <- get_vecConfoundersDisp <- function(objLP) 
-vecConfoundersMu <- get_vecConfoundersMu <- function(objLP) 
-scaOmega <- get_scaOmega <- function(objLP) 
-boolFixedPopulations <- get_boolFixedPopulations <- function(objLP)
-vecH0Pop <- get_vecH0Pop <- function(objLP) 
-vecNormConst <- get_vecNormConst <- function(objLP) 
-strVersion <- get_strVersion <- function(objLP)
+strReport <- get_strReport(objLP) 
+vecAllGenes <- get_vecAllGenes(objLP) 
+vecConfoundersDisp <- get_vecConfoundersDisp(objLP) 
+vecConfoundersMu <- get_vecConfoundersMu(objLP) 
+scaOmega <- get_scaOmega(objLP) 
+boolFixedPopulations <- get_boolFixedPopulation(objLP)
+vecH0Pop <- get_vecH0Pop(objLP) 
+vecNormConst <- get_vecNormConst(objLP) 
+strVersion <- get_strVersion(objLP)
 
 }
 \author{

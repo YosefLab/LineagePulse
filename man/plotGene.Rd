@@ -20,8 +20,13 @@ base plot on.}
 
 \item{strTitleSuffix}{(str) String to be added to title.}
 
+\item{boolLogPlot}{(bool) Whether to log transform y-axis.}
+
 \item{boolColourByDropout}{(bool) Whether to colour scatter
 plot by posterior of drop-out.}
+
+\item{boolH1NormCounts}{(bool) Whether to show normalised counts
+(size factors and H1 batch factor estimates) as oppose to raw counts.}
 
 \item{boolLineageContour}{(bool) [Default FALSE]
 Whether to the "lineage contour" lines to the scatter plot.}
@@ -30,6 +35,10 @@ Whether to the "lineage contour" lines to the scatter plot.}
 Bandwith to be used to kernel density smooting
 of cell density in pseudotime (used if boolLineageContour=TRUE).
 If not set, defaults to stats:density() default.}
+
+\item{scaGgplot2Size}{(scalar) size in ggplot2 scatter}
+
+\item{scaGgplot2Alpha}{(scalar) alpha in ggplot2 scatter}
 }
 \value{
 gplotGene (ggplot object)

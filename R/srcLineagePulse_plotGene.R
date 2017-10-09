@@ -34,14 +34,19 @@
 #' @param vecReferenceMuParam (numeric vector length number of cells)
 #' [Default NULL] Reference mean trajectory which can be plotted
 #' @param strTitleSuffix (str) String to be added to title.
+#' @param boolLogPlot (bool) Whether to log transform y-axis.
 #' @param boolColourByDropout (bool) Whether to colour scatter
 #' plot by posterior of drop-out.
+#' @param boolH1NormCounts (bool) Whether to show normalised counts
+#' (size factors and H1 batch factor estimates) as oppose to raw counts.
 #' @param boolLineageContour (bool) [Default FALSE]
 #' Whether to the "lineage contour" lines to the scatter plot.
 #' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in pseudotime (used if boolLineageContour=TRUE).
 #' If not set, defaults to stats:density() default.
+#' @param scaGgplot2Size (scalar) size in ggplot2 scatter
+#' @param scaGgplot2Alpha (scalar) alpha in ggplot2 scatter
 #' 
 #' @return gplotGene (ggplot object)
 #' Model rajectories and scatter plot for given gene.

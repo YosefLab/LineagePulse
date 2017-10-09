@@ -34,7 +34,7 @@
 #' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst (numeric vector number of cells) 
+#' @param scaNormConst (scalar) 
 #' Model scaling factors, one per cell.
 #' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
@@ -42,6 +42,12 @@
 #' the drop-out rate in the linear model. Minimum are a constant
 #' offset and log of the negative binomial mean parameter. 
 #' Other gene-specific predictors can be added.
+#' @param strDropModel (str) {"logistic_ofMu", "logistic"}
+#' [Default "logistic_ofMu"] Definition of drop-out model.
+#' "logistic_ofMu" - include the fitted mean in the linear model
+#' of the drop-out rate and use offset and matPiConstPredictors.
+#' "logistic" - only use offset and matPiConstPredictors.
+#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
 #' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
 #' @param vecidxZero (bool vector number of cells)
@@ -106,14 +112,20 @@ evalLogLikPiZINB_SingleCell <- function(
 #' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of cells) Negative binomial
 #' mean parameter estimate.
-#' @param vecNormConst (numeric vector number of cells) 
+#' @param scaNormConst (scalar) 
 #' Model scaling factors, one per cell.
 #' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimate.
-#' @param matPiPredictors (matrix genes x predictors) Predictors of
+#' @param matPiAllPredictors (matrix genes x predictors) Predictors of
 #' the drop-out rate in the linear model. Minimum are a constant
 #' offset and log of the negative binomial mean parameter. 
 #' Other gene-specific predictors can be added.
+#' @param strDropModel (str) {"logistic_ofMu", "logistic"}
+#' [Default "logistic_ofMu"] Definition of drop-out model.
+#' "logistic_ofMu" - include the fitted mean in the linear model
+#' of the drop-out rate and use offset and matPiConstPredictors.
+#' "logistic" - only use offset and matPiConstPredictors.
+#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
 #' @param vecidxNotZero (bool vector number of cells)
 #' Whether observation is larger than zero.
 #' @param vecidxZero (bool vector number of cells)

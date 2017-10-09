@@ -7,6 +7,9 @@
 sortGeneTrajectories(vecIDs, lsMuModel, dirHeatmap)
 }
 \arguments{
+\item{vecIDs}{(vector of strings)
+Names of genes to cluster.}
+
 \item{lsMuModel}{(list)
 Object containing description of gene-wise mean parameter models.}
 
@@ -14,9 +17,6 @@ Object containing description of gene-wise mean parameter models.}
 Directory to which heatmap is saved to. Not 
 created if NULL. Need to have lsMuModel$lsMuModelGlobal$vecPseudotime
 defined.}
-
-\item{vecIDs:}{(vector of strings)
-Names of genes to cluster.}
 }
 \value{
 vecSortedGenes (string vector number of IDs)

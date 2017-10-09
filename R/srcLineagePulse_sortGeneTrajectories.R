@@ -10,7 +10,7 @@
 #' 
 #' @seealso Called by \code{LineagePulse_main} or by user.
 #'
-#' @param vecIDs: (vector of strings)
+#' @param vecIDs (vector of strings)
 #' Names of genes to cluster.
 #' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.

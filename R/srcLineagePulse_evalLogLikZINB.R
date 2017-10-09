@@ -17,8 +17,6 @@
 #' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of samples) 
 #' Negative binomial mean parameter.
-#' @param vecNormConst (numeric vector number of samples) 
-#' Model scaling factors, one per cell.
 #' @param vecDisp (scalar vector number of samples) 
 #' Negative binomial dispersion parameters.
 #' @param vecPi (probability vector number of samples) 
@@ -83,8 +81,6 @@ evalLogLikZINB <- function(
 #' Observed read counts, not observed are NA.
 #' @param vecMu (vector number of samples) 
 #' Negative binomial mean parameter.
-#' @param vecNormConst (numeric vector number of samples) 
-#' Model scaling factors, one per cell.
 #' @param vecDisp (scalar vector number of samples) 
 #' Negative binomial dispersion parameters.
 #' @param vecPi (probability vector number of samples) 
