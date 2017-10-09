@@ -12,53 +12,44 @@ fitContinuousModels(objLP, matPiConstPredictors, strMuModel = "constant",
   boolVerbose = FALSE, boolSuperVerbose = FALSE)
 }
 \arguments{
+\item{objLP}{(LineagePulseObject)
+LineagePulseObject to which null and alternative model are to be fitted.}
+
+\item{matPiConstPredictors}{(numeric matrix genes x number of constant
+gene-wise drop-out predictors) Predictors for logistic drop-out 
+fit other than offset and mean parameter (i.e. parameters which
+are constant for all observations in a gene and externally supplied.)
+Is null if no constant predictors are supplied.}
+
+\item{strMuModel}{(str) {"constant", "groups", "MM",
+"splines","impulse"}
+[Default "impulse"] Model according to which the mean
+parameter is fit to each gene as a function of 
+pseudotime in the alternative model (H1).}
+
+\item{strDispModelFull}{(str) {"constant", "groups", "splines"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+pseudotime in the alternative model (H1).}
+
+\item{strDispModelRed}{(str) {"constant", "groups", "splines"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+pseudotime in the null model (H0).}
+
+\item{strDropModel}{(str) {"logistic_ofMu", "logistic"}
+[Default "logistic_ofMu"] Definition of drop-out model.
+"logistic_ofMu" - include the fitted mean in the linear model
+of the drop-out rate and use offset and matPiConstPredictors.
+"logistic" - only use offset and matPiConstPredictors.}
+
 \item{strDropFitGroup}{(str) {"PerCell", "AllCells"}
 [Defaul "PerCell"] Definition of groups on cells on which
 separate drop-out model parameterisations are fit.
 "PerCell" - one parametersiation (fit) per cell
 "ForAllCells" - one parametersiation (fit) for all cells}
 
-\item{scaMaxEstimationCycles}{(integer) [Default 20] Maximum number 
-of estimation cycles performed in fitZINB(). One cycle
-contain one estimation of of each parameter of the 
-zero-inflated negative binomial model as coordinate ascent.}
-
-\item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
-iterative parameter estimation in high detail with local 
-convergence flags and step-by-step loglikelihood computation.}
-
-\item{objLP:}{(LineagePulseObject)
-LineagePulseObject to which null and alternative model are to be fitted.}
-
-\item{matPiConstPredictors:}{(numeric matrix genes x number of constant
-gene-wise drop-out predictors) Predictors for logistic drop-out 
-fit other than offset and mean parameter (i.e. parameters which
-are constant for all observations in a gene and externally supplied.)
-Is null if no constant predictors are supplied.}
-
-\item{strMuModel:}{(str) {"constant", "groups", "MM",
-"splines","impulse"}
-[Default "impulse"] Model according to which the mean
-parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
-
-\item{strDispModelRed:}{(str) {"constant", "groups", "splines"}
-[Default "constant"] Model according to which dispersion
-parameter is fit to each gene as a function of 
-pseudotime in the null model (H0).}
-
-\item{strDispModelFull:}{(str) {"constant", "groups", "splines"}
-[Default "constant"] Model according to which dispersion
-parameter is fit to each gene as a function of 
-pseudotime in the alternative model (H1).}
-
-\item{strDropModel:}{(str) {"logistic_ofMu", "logistic"}
-[Default "logistic_ofMu"] Definition of drop-out model.
-"logistic_ofMu" - include the fitted mean in the linear model
-of the drop-out rate and use offset and matPiConstPredictors.
-"logistic" - only use offset and matPiConstPredictors.}
-
-\item{boolEstimateNoiseBasedOnH0:}{(bool) [Default: FALSE]
+\item{boolEstimateNoiseBasedOnH0}{(bool) [Default FALSE]
 Whether to co-estimate logistic drop-out model with the 
 constant null model or with the alternative model. The
 co-estimation with the noise model typically extends the
@@ -69,11 +60,20 @@ model), a trade-off for speed over accuracy can be taken
 and the dropout model can be chosen to be estimated based
 on the constant null expression model (set to TRUE).}
 
+\item{scaMaxEstimationCycles}{(integer) [Default 20] Maximum number 
+of estimation cycles performed in fitZINB(). One cycle
+contain one estimation of of each parameter of the 
+zero-inflated negative binomial model as coordinate ascent.}
+
+\item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
+iterative parameter estimation in high detail with local 
+convergence flags and step-by-step loglikelihood computation.}
+
 \item{verbose}{(bool) Whether to follow convergence of the 
 iterative parameter estimation with one report per cycle.}
 }
 \value{
-objLP: (LineagePulseObject)
+objLP (LineagePulseObject)
 LineagePulseObject with models with and fitting reporters added.
 }
 \description{

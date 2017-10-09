@@ -8,26 +8,26 @@ decompressDropoutRateByGene(matDropModel, vecMu = NULL,
   vecPiConstPredictors = NULL, lsDropModelGlobal)
 }
 \arguments{
-\item{matDropModel:}{(numerical matrix cell x number of model parameters)
+\item{matDropModel}{(numerical matrix cell x number of model parameters)
 {offset parameter, log(mu) parameter, parameters belonging to
 constant predictors}
 Parameters of dropout rate model for all cells.}
 
-\item{vecMu:}{(numerical vector number of genes)
+\item{vecMu}{(numerical vector number of genes)
 Mean parameter estimates of all cells for given gene.}
 
-\item{vecPiConstPredictors:}{(numerical vector number of 
+\item{vecPiConstPredictors}{(numerical vector number of 
 constant model predictors) Other model predictors than offset
 and the dynamically changing mean parameter. Examples are GC-
 content and other gene-specific properties. This would be the 
 global parameters as listed in the other decompression
 function. Here those are not a list as there is only one object.}
 
-\item{lsDropModelGlobal:}{(list) 
+\item{lsDropModelGlobal}{(list) 
 Object containing meta-data of cell-wise dropout parameter models.}
 }
 \value{
-vecPi: (numerical vector number of cells)
+vecPi (numerical vector number of cells)
 Dispersion parameter estimates for given gene 
 (one per cell for given gene).
 }

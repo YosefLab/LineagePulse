@@ -8,31 +8,31 @@ fitPi_SingleCell(vecParamGuess, vecCounts, vecMuParam, scaNormConst,
   vecDispParam, matPiAllPredictors, lsDropModelGlobal)
 }
 \arguments{
+\item{vecParamGuess}{(numeric vector length linear model) 
+Parameter estimates for logit linear model for drop-out rate.}
+
 \item{vecCounts}{(count vector number of genes)
 Observed read counts, not observed are NA.}
 
-\item{vecParamGuess:}{(numeric vector length linear model) 
-Parameter estimates for logit linear model for drop-out rate.}
-
-\item{vecMuParam:}{(vector number of cells) Negative binomial
+\item{vecMuParam}{(vector number of cells) Negative binomial
 mean parameter estimate.}
 
-\item{vecNormConst:}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
-
-\item{vecDispParam:}{(vector number of cells) Negative binomial
+\item{vecDispParam}{(vector number of cells) Negative binomial
 dispersion parameter estimate.}
 
-\item{matPiAllPredictors:}{(matrix genes x predictors) Predictors of
+\item{matPiAllPredictors}{(matrix genes x predictors) Predictors of
 the drop-out rate in the linear model. Minimum are a constant
 offset and log of the negative binomial mean parameter. 
 Other gene-specific predictors can be added.}
 
-\item{lsDropModelGlobal:}{(list)
+\item{lsDropModelGlobal}{(list)
 Object containing meta-data of cell-wise drop-out parameter models.}
+
+\item{vecNormConst}{(numeric vector number of cells) 
+Model scaling factors, one per cell.}
 }
 \value{
-vecLinModel: (numeric vector length linear model) 
+vecLinModel (numeric vector length linear model) 
 Linear model for drop-out rate in logit space for given cell.
 }
 \description{

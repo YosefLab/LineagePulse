@@ -14,7 +14,7 @@ Object to fit normalization constants on.}
 Model scaling factors supplied by user, one per cell.}
 }
 \value{
-objLP: (LineagePulse-object)
+objLP (LineagePulse-object)
 Object with fit normalization constants.
 }
 \description{

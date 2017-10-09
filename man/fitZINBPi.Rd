@@ -10,17 +10,17 @@ fitZINBPi(matCounts, lsMuModel, lsDispModel, lsDropModel)
 \item{matCounts}{(count matrix genes x cells)
 Observed read counts, not observed are NA.}
 
-\item{lsMuModel:}{(list)
+\item{lsMuModel}{(list)
 Object containing description of gene-wise mean parameter models.}
 
-\item{lsDispModel:}{(list)
+\item{lsDispModel}{(list)
 Object containing description of gene-wise dispersion parameter models.}
 
-\item{lsDropModel:}{(list)
+\item{lsDropModel}{(list)
 Object containing description of cell-wise drop-out parameter models.}
 }
 \value{
-vecLinModel: (numeric vector length linear model) 
+vecLinModel (numeric vector length linear model) 
 Linear model for drop-out rate in logit space for given cell.
 }
 \description{

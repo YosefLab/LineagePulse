@@ -8,34 +8,34 @@ evalLogLikPiZINB_SingleCell(vecTheta, vecCounts, vecMu, scaNormConst, vecDisp,
   matPiAllPredictors, strDropModel, vecidxNotZero, vecidxZero)
 }
 \arguments{
+\item{vecTheta}{(numeric vector length linear model) 
+Parameter estimates for logit linear model for drop-out rate.}
+
 \item{vecCounts}{(count vector number of genes)
 Observed read counts, not observed are NA.}
 
-\item{vecTheta:}{(numeric vector length linear model) 
-Parameter estimates for logit linear model for drop-out rate.}
-
-\item{vecMu:}{(vector number of cells) Negative binomial
+\item{vecMu}{(vector number of cells) Negative binomial
 mean parameter estimate.}
 
-\item{vecNormConst:}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
-
-\item{vecDisp:}{(vector number of cells) Negative binomial
+\item{vecDisp}{(vector number of cells) Negative binomial
 dispersion parameter estimate.}
 
-\item{matPiAllPredictors:}{(matrix genes x predictors) Predictors of
+\item{matPiAllPredictors}{(matrix genes x predictors) Predictors of
 the drop-out rate in the linear model. Minimum are a constant
 offset and log of the negative binomial mean parameter. 
 Other gene-specific predictors can be added.}
 
-\item{vecidxNotZero:}{(bool vector number of cells)
+\item{vecidxNotZero}{(bool vector number of cells)
 Whether observation is larger than zero.}
 
-\item{vecidxZero:}{(bool vector number of cells)
+\item{vecidxZero}{(bool vector number of cells)
 Whether observation is zero.}
+
+\item{vecNormConst}{(numeric vector number of cells) 
+Model scaling factors, one per cell.}
 }
 \value{
-scaLogLik: (scalar) Value of cost function:
+scaLogLik (scalar) Value of cost function:
 zero-inflated negative binomial likelihood.
 }
 \description{

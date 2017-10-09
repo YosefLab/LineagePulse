@@ -8,21 +8,21 @@ decompressMeansByGene(vecMuModel, lsvecBatchModel = NULL, lsMuModelGlobal,
   vecInterval = NULL)
 }
 \arguments{
-\item{vecMuModel:}{(numerical vector number of model parameters)
+\item{vecMuModel}{(numerical vector number of model parameters)
 Parameters of mean model for given gene.}
 
-\item{lsvecBatchModel:}{(list) 
+\item{lsvecBatchModel}{(list) 
 List of vectors of batch correction models for mean parameter.}
 
-\item{lsMuModelGlobal:}{(list) 
+\item{lsMuModelGlobal}{(list) 
 Object containing meta-data of gene-wise mean parameter models.}
 
-\item{vecInterval:}{(integer vector length target cells) [Default NULL]
+\item{vecInterval}{(integer vector length target cells) [Default NULL]
 Positions of cells in ordering, for which parameters are to be 
-computed. Default: all cells.}
+computed. Default all cells.}
 }
 \value{
-vecMu: (numerical vector number of cells)
+vecMu (numerical vector number of cells)
 Mean parameter estimates for given gene given the mean model.
 }
 \description{

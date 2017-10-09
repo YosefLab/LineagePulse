@@ -10,6 +10,9 @@ evalLogLikContinuousZINB_comp(vecTheta, vecCounts, lsMuModelGlobal,
   vecidxZero)
 }
 \arguments{
+\item{vecTheta}{(numeric vector dispersion (1) and impulse parameters (6)) 
+Dispersion and mean parameter estimates.}
+
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
 
@@ -19,9 +22,20 @@ Object containing meta-data of gene-wise mean parameter models.}
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
+\item{vecTimepoints}{(numerical vector number of unique time coordinates)
+Unique (pseudo)time coordinates of cells.}
+
 \item{vecindTimepointAssign}{(numeric vector number samples) 
 Index of time point assigned to cell in list of sorted
 time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime}
+
+\item{matDropoutLinModel}{(matrix number of cells x number of predictors)
+Logistic linear model parameters of the dropout rate 
+as a function of the mean and constant gene-wise coefficients.}
+
+\item{vecPiConstPredictors}{(numeric vector constant gene-wise coefficients)
+Constant gene-wise coeffiecients, i.e. predictors which are not
+the offset and not the mean parameter.}
 
 \item{lsDropModelGlobal}{(list)
 Object containing meta-data of cell-wise drop-out parameter models.}
@@ -30,28 +44,14 @@ Object containing meta-data of cell-wise drop-out parameter models.}
 Pre-evaluated drop-out model if model is not a function on the mean
 parameter to be fit.}
 
-\item{vecTheta:}{(numeric vector dispersion (1) and impulse parameters (6)) 
-Dispersion and mean parameter estimates.}
-
-\item{vecTimepoints:}{(numerical vector number of unique time coordinates)
-Unique (pseudo)time coordinates of cells.}
-
-\item{matDropoutLinModel:}{(matrix number of cells x number of predictors)
-Logistic linear model parameters of the dropout rate 
-as a function of the mean and constant gene-wise coefficients.}
-
-\item{vecPiConstPredictors:}{(numeric vector constant gene-wise coefficients)
-Constant gene-wise coeffiecients, i.e. predictors which are not
-the offset and not the mean parameter.}
-
-\item{vecidxNotZero:}{(index vector vector number of cells)
+\item{vecidxNotZero}{(index vector vector number of cells)
 Observation which are larger than zero.}
 
-\item{vecidxZero:}{(index vector number of cells)
+\item{vecidxZero}{(index vector number of cells)
 Observation which are zero.}
 }
 \value{
-scaLogLik: (scalar) Value of cost function (likelihood) for given gene.
+scaLogLik (scalar) Value of cost function (likelihood) for given gene.
 }
 \description{
 Pre-compile heavily used functions.

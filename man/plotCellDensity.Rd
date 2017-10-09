@@ -14,7 +14,7 @@ Bandwidth of kernel density estimate to be used. Chosen
 automatically if NULL (recommended).}
 }
 \value{
-gplotGene: (ggplot object)
+gplotGene (ggplot object)
 ggplot2 kernel density estimator plot.
 }
 \description{

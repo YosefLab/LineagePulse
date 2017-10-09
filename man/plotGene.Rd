@@ -26,13 +26,13 @@ plot by posterior of drop-out.}
 \item{boolLineageContour}{(bool) [Default FALSE]
 Whether to the "lineage contour" lines to the scatter plot.}
 
-\item{bwDensity}{(bandwith: numeric or string) [Default NULL]
+\item{bwDensity}{(bandwith numeric or string) [Default NULL]
 Bandwith to be used to kernel density smooting
 of cell density in pseudotime (used if boolLineageContour=TRUE).
 If not set, defaults to stats:density() default.}
 }
 \value{
-gplotGene: (ggplot object)
+gplotGene (ggplot object)
 Model rajectories and scatter plot for given gene.
 }
 \description{

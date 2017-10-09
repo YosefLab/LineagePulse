@@ -12,11 +12,17 @@ fitImpulseZINB(vecCounts, vecImpulseParamGuess, lsvecBatchParamGuessMu,
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
 
+\item{vecImpulseParamGuess}{(numeric vector number of impulse model parameters) 
+Initialisation for impulse model.}
+
 \item{lsvecBatchParamGuessMu}{(list) 
 Object containing initialisation for mean parameter batch correction model.}
 
 \item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
+
+\item{vecDispGuess}{(numeric vector number of dispersion model parameters) 
+Initialisation for dispersion model.}
 
 \item{lsvecBatchParamGuessDisp}{(list) 
 Object containing initialisation for dispersion parameter batch correction model.}
@@ -24,41 +30,35 @@ Object containing initialisation for dispersion parameter batch correction model
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
+\item{matDropoutLinModel}{(matrix number of cells x number of predictors)
+Logistic linear model parameters of the dropout rate 
+as a function of the mean and constant gene-wise coefficients.}
+
+\item{vecPiConstPredictors}{(numeric vector constant gene-wise coefficients)
+Constant gene-wise coeffiecients, i.e. predictors which are not
+the offset and not the mean parameter.}
+
 \item{lsDropModelGlobal}{(list)
 Object containing meta-data of cell-wise drop-out parameter models.}
 
 \item{vecPiParam}{(numeric vector number of observations)
 Pre-evaluated drop-out model if model is not a function on the mean
 parameter to be fit.}
-
-\item{vecImpulseParamGuess:}{(numeric vector number of impulse model parameters) 
-Initialisation for impulse model.}
-
-\item{vecDispGuess:}{(numeric vector number of dispersion model parameters) 
-Initialisation for dispersion model.}
-
-\item{matDropoutLinModel:}{(matrix number of cells x number of predictors)
-Logistic linear model parameters of the dropout rate 
-as a function of the mean and constant gene-wise coefficients.}
-
-\item{vecPiConstPredictors:}{(numeric vector constant gene-wise coefficients)
-Constant gene-wise coeffiecients, i.e. predictors which are not
-the offset and not the mean parameter.}
 }
 \value{
 list
 \itemize{
-\item vecMuModel: (numeric vector number of mu model parameters)
+\item vecMuModel (numeric vector number of mu model parameters)
 Contains the mean model parameters according to the used model.
-\item lsvecBatchModelMu: (list) 
+\item lsvecBatchModelMu (list) 
 Fit of batch correction models for mean parameter to given gene.
-\item vecDispModel: (numeric vector number of dispersion model parameters)
+\item vecDispModel (numeric vector number of dispersion model parameters)
 Contains the dispersion model parameters according to the used model.
-\item lsvecBatchModelDisp: (list) 
+\item lsvecBatchModelDisp (list) 
 Fit of batch correction models for dispersion parameter to given gene.
-\item scaConvergence: (numeric vector number of genes) 
+\item scaConvergence (numeric vector number of genes) 
 Convergence status of optim for given gene.
-\item scaLL: (numeric vector number of genes) 
+\item scaLL (numeric vector number of genes) 
 Likelihood of model fit for given gene.
 }
 }

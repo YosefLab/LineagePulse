@@ -8,20 +8,20 @@ getNormData(matCounts, lsMuModel, vecGeneIDs, boolDepth = TRUE,
   boolBatch = TRUE)
 }
 \arguments{
+\item{matCounts}{(numeric matrix genes x cells)
+Count data.}
+
+\item{lsMuModel}{(list) Mean parameter model parameters.}
+
 \item{vecGeneIDs}{(vector of strings) 
 Gene IDs for which mean model fits are to be extracted.}
 
-\item{matCounts:}{(numeric matrix genes x cells)
-Count data.}
+\item{boolDepth}{(bool) [Default TRUE] Whether to normalize for sequencing depth.}
 
-\item{lsMuModel:}{(list) Mean parameter model parameters.}
-
-\item{boolDepth:}{(bool) [Default TRUE] Whether to normalize for sequencing depth.}
-
-\item{boolBatch:}{(bool) [Default TRUE] Whether to normalize for batch.}
+\item{boolBatch}{(bool) [Default TRUE] Whether to normalize for batch.}
 }
 \value{
-matZ: (numeric matrix genes x cells)
+matZ (numeric matrix genes x cells)
 Posterior probability of observation not being generated 
 by drop-out.
 }
@@ -47,6 +47,7 @@ objLP <- runLineagePulse(
 # Get batch correction on alternative model:
 # Use H1 model fits.
 matNormData <- getNormData(
+     matCounts = lsSimulatedData$counts,
      lsMuModel = objLP@lsMuModelH1,
      vecGeneIDs = rownames(lsSimulatedData$counts)[1],
      boolDepth = TRUE, boolBatch = TRUE)

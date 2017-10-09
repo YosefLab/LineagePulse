@@ -19,43 +19,43 @@ simulateContinuousDataSet(scaNCells, scaNConst, scaNLin, scaNImp,
   strDropFitGroup = "PerCell")
 }
 \arguments{
-\item{vecDispExternal}{(numeric vector number of genes)
-[Default NULL]
-Dispersion parameters per gene supplied by user.s}
+\item{scaNCells}{(scalar) Number of cells in data set.}
 
-\item{scaNCells:}{(scalar) Number of cells in data set.}
+\item{scaNConst}{(scalar) Number of constant expression profiles (genes) in data set.}
 
-\item{scaNConst:}{(scalar) Number of constant expression profiles (genes) in data set.}
+\item{scaNLin}{(scalar) Number of linear expression profiles (genes) in data set.}
 
-\item{scaNLin:}{(scalar) Number of linear expression profiles (genes) in data set.}
+\item{scaNImp}{(scalar) Number of impulse model expression profiles (genes) in data set.}
 
-\item{scaNImp:}{(scalar) Number of impulse model expression profiles (genes) in data set.}
-
-\item{scaMumax:}{(scalar) [Default 1000]
+\item{scaMumax}{(scalar) [Default 1000]
 Maximum expression mean parameter to be used.}
 
-\item{scaSDMuAmplitude:}{(scalar) [Default 1]
+\item{scaSDMuAmplitude}{(scalar) [Default 1]
 Standard deviation of normal distribution form which the 
 amplitude change within an impulse trace is drawn.}
 
-\item{vecNormConstExternal:}{(numeric vector number of cells)
+\item{vecNormConstExternal}{(numeric vector number of cells)
 [Default NULL]
 Size factors for data set. Size factors are set to 1 if this is
 not specified (NULL).}
 
-\item{vecGeneWiseDropoutRates:}{(numeric vector number of cells) 
+\item{vecDispExternal}{(numeric vector number of genes)
+[Default NULL]
+Dispersion parameters per gene supplied by user.s}
+
+\item{vecGeneWiseDropoutRates}{(numeric vector number of cells) 
 [Default NULL] One drop-out rate per gene.}
 
-\item{matDropoutModelExternal:}{(numeric matrix cells x 2) 
+\item{matDropoutModelExternal}{(numeric matrix cells x 2) 
 [Default NULL] External drop-out model, has to have
 one row for each simulated cell.}
 }
 \value{
-list: (length 2)
+list (length 2)
 \itemize{
-\item pseudotime: (numerical vector length number of cells)
-Pseudotime coordinates (1D) of cells: One scalar per cell.
-\item counts: (matrix genes x cells)
+\item pseudotime (numerical vector length number of cells)
+Pseudotime coordinates (1D) of cells. One scalar per cell.
+\item counts (matrix genes x cells)
 Sampled count data of all cells after drop-out.
 }
 }

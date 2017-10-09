@@ -8,6 +8,12 @@ fitZINBMuDisp(matCountsProc, vecNormConst, lsMuModel, lsDispModel, lsDropModel,
   matWeights)
 }
 \arguments{
+\item{matCountsProc}{(matrix genes x cells)
+Observed read counts, not observed are NA.}
+
+\item{vecNormConst}{(numeric vector number of cells) 
+Model scaling factors, one per cell.}
+
 \item{lsMuModel}{(list)
 Object containing description of gene-wise mean parameter models.}
 
@@ -20,29 +26,23 @@ Object containing description of cell-wise drop-out parameter models.}
 \item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
 Assignments of cells to mixtures (for strMuModel="MM").}
 
-\item{matCountsProc:}{(matrix genes x cells)
-Observed read counts, not observed are NA.}
-
-\item{vecNormConst:}{(numeric vector number of cells) 
-Model scaling factors, one per cell.}
-
 \item{matCounts}{(count matrix genes x cells)
 Observed read counts, not observed are NA.}
 }
 \value{
 list
 \itemize{
-\item matMuModel: (numeric matrix genes x mu model parameters)
+\item matMuModel (numeric matrix genes x mu model parameters)
 Contains the mean model parameters according to the used model.
-\item lsmatBatchModelMu: (list) 
+\item lsmatBatchModelMu (list) 
 Fit of batch correction models for mean parameter.
-\item matDispModel: (numeric matrix genes x disp model parameters)
+\item matDispModel (numeric matrix genes x disp model parameters)
 Contains the dispersion model parameters according to the used model.
-\item lsmatBatchModelDisp: (list) 
+\item lsmatBatchModelDisp (list) 
 Fit of batch correction models for dispersion parameter.
-\item vecConvergence: (numeric vector number of genes) 
+\item vecConvergence (numeric vector number of genes) 
 Convergence status of optim for each gene.
-\item vecLL: (numeric vector number of genes) Likelihood of model fit.
+\item vecLL (numeric vector number of genes) Likelihood of model fit.
 }
 }
 \description{

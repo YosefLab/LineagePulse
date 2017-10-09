@@ -7,23 +7,23 @@
 calcPostDrop_Vector(vecMu, vecDisp, vecDrop, vecboolZero, vecboolNotZero)
 }
 \arguments{
-\item{vecMu:}{(numeric vector samples)
+\item{vecMu}{(numeric vector samples)
 Negative binomial mean parameters of samples.}
 
-\item{vecDisp:}{(numeric vector samples)
+\item{vecDisp}{(numeric vector samples)
 Negative binomial mean parameters of samples.}
 
-\item{vecDrop:}{(numeric vector samples)
+\item{vecDrop}{(numeric vector samples)
 Drop out rates of samples.}
 
-\item{vecboolZero:}{(bool vector samples)
+\item{vecboolZero}{(bool vector samples)
 Whether observation is zero.}
 
-\item{vecboolNotZero:}{(bool vector samples)
+\item{vecboolNotZero}{(bool vector samples)
 Whether observation is real and non-zero.}
 }
 \value{
-vecZ:  (numeric vector samples)
+vecZ  (numeric vector samples)
    Posterior probability of observation not being generated 
    by drop-out.
 }
@@ -31,7 +31,7 @@ vecZ:  (numeric vector samples)
 Calculates posterior of observation being a drop-out for a vector.
 }
 \seealso{
-For matrices: \code{calcPostDrop_Matrix}.
+For matrices \code{calcPostDrop_Matrix}.
 }
 \author{
 David Sebastian Fischer

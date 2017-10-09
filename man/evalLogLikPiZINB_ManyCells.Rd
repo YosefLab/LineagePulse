@@ -9,23 +9,23 @@ evalLogLikPiZINB_ManyCells(vecTheta, matCounts, lsMuModel, lsDispModel,
   lsDropModel)
 }
 \arguments{
+\item{vecTheta}{(numeric vector length linear model) 
+Parameter estimates for logit linear model for drop-out rate.}
+
 \item{matCounts}{(count matrix genes x cells)
 Observed read counts, not observed are NA.}
 
-\item{vecTheta:}{(numeric vector length linear model) 
-Parameter estimates for logit linear model for drop-out rate.}
-
-\item{lsMuModel:}{(list)
+\item{lsMuModel}{(list)
 Object containing description of gene-wise mean parameter models.}
 
-\item{lsDispModel:}{(list)
+\item{lsDispModel}{(list)
 Object containing description of gene-wise dispersion parameter models.}
 
-\item{lsDropModel:}{(list)
+\item{lsDropModel}{(list)
 Object containing description of cell-wise drop-out parameter models.}
 }
 \value{
-scaLogLik: (scalar) Value of cost function:
+scaLogLik (scalar) Value of cost function:
 zero-inflated negative binomial likelihood.
 }
 \description{

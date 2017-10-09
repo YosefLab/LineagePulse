@@ -46,8 +46,36 @@ cubic spline to be used as a dispersion parameter model.}
 \item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
 Assignments of cells to mixtures (for strMuModel="MM").}
 
+\item{matPiConstPredictors}{(numeric matrix genes x number of constant
+gene-wise drop-out predictors) [Default NULL]
+Predictors for logistic drop-out 
+fit other than offset and mean parameter (i.e. parameters which
+are constant for all observations in a gene and externally supplied.)
+Is null if no constant predictors are supplied.}
+
 \item{lsDropModel}{(list) [Default NULL]
 Object containing description of cell-wise drop-out parameter models.}
+
+\item{matMuModelInit}{(numeric matrix genes x mu model parameters)
+[Default NULL]
+Contains initialisation of mean model parameters according to the used model.}
+
+\item{lsmatBatchModelInitMu}{(list) [Default NULL]
+Initialisation of batch correction models for mean parameter.}
+
+\item{lsmatBatchModelInitDisp}{(list) [Default NULL]
+Initialisation of batch correction models for dispersion parameter.}
+
+\item{strDispModel}{(str) {"constant", "groups", "splines"}
+[Default "constant"] Model according to which dispersion
+parameter is fit to each gene as a function of 
+population structure in the given model.}
+
+\item{strDropModel}{(str) {"logistic_ofMu", "logistic"}
+[Default "logistic_ofMu"] Definition of drop-out model.
+"logistic_ofMu" - include the fitted mean in the linear model
+of the drop-out rate and use offset and matPiConstPredictors.
+"logistic" - only use offset and matPiConstPredictors.}
 
 \item{strDropFitGroup}{(str) {"PerCell", "AllCells"}
 [Defaul "PerCell"] Definition of groups on cells on which
@@ -65,26 +93,9 @@ Whether to follow convergence of the
 iterative parameter estimation in high detail with local 
 convergence flags and step-by-step loglikelihood computation.}
 
-\item{matPiConstPredictors:}{(numeric matrix genes x number of constant
-gene-wise drop-out predictors) [Default NULL]
-Predictors for logistic drop-out 
-fit other than offset and mean parameter (i.e. parameters which
-are constant for all observations in a gene and externally supplied.)
-Is null if no constant predictors are supplied.}
-
-\item{matMuModelInit:}{(numeric matrix genes x mu model parameters)
-[Default NULL]
-Contains initialisation of mean model parameters according to the used model.}
-
-\item{lsmatBatchModelInitMu:}{(list) [Default NULL]
-Initialisation of batch correction models for mean parameter.}
-
 \item{matDispModelInit:}{(numeric matrix genes x disp model parameters)
 [Default NULL]
 Contains initialisation of dispersion model parameters according to the used model.}
-
-\item{lsmatBatchModelInitDisp:}{(list) [Default NULL]
-Initialisation of batch correction models for dispersion parameter.}
 
 \item{strMuModel:}{(str) {"constant", "groups", "MM",
 "splines","impulse"}
@@ -92,18 +103,7 @@ Initialisation of batch correction models for dispersion parameter.}
 parameter is fit to each gene as a function of 
 population structure in the alternative model (H1).}
 
-\item{strDispModel:}{(str) {"constant", "groups", "splines"}
-[Default "constant"] Model according to which dispersion
-parameter is fit to each gene as a function of 
-population structure in the given model.}
-
-\item{strDropModel:}{(str) {"logistic_ofMu", "logistic"}
-[Default "logistic_ofMu"] Definition of drop-out model.
-"logistic_ofMu" - include the fitted mean in the linear model
-of the drop-out rate and use offset and matPiConstPredictors.
-"logistic" - only use offset and matPiConstPredictors.}
-
-\item{boolEstimateNoiseBasedOnH0:}{(bool) [Default: FALSE]
+\item{boolEstimateNoiseBasedOnH0}{(bool) [Default FALSE]
 Whether to co-estimate logistic drop-out model with the 
 constant null model or with the alternative model. The
 co-estimation with the noise model typically extends the

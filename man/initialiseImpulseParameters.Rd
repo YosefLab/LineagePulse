@@ -7,18 +7,18 @@
 initialiseImpulseParameters(vecCounts, lsMuModelGlobal, vecMu, vecDisp, vecDrop)
 }
 \arguments{
+\item{vecCounts}{(count vector number of samples) Count data.}
+
 \item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
 
-\item{vecCounts:}{(count vector number of samples) Count data.}
-
-\item{vecMu:}{(vector number of cells) Negative binomial
+\item{vecMu}{(vector number of cells) Negative binomial
 mean parameter estimates.}
 
-\item{vecDisp:}{(vector number of cells) Negative binomial
+\item{vecDisp}{(vector number of cells) Negative binomial
 dispersion parameter estimates.}
 
-\item{vecDrop:}{(vector number of cells) Dropout parameter
+\item{vecDrop}{(vector number of cells) Dropout parameter
 estimates.}
 }
 \value{
