@@ -221,8 +221,8 @@ get_lsDispModelConst <- function(objLP)
 
 #' @rdname get_accessors
 #' @export
-get_lsDropModelConst <- function(objLP) 
-    return(objLP@lsDropModelConst)
+get_lsDropModel <- function(objLP) 
+    return(objLP@lsDropModel)
 
 #' @rdname get_accessors
 #' @export
