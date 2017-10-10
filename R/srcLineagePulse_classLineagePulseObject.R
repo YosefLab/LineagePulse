@@ -128,6 +128,7 @@ setClass(
 #' get_lsDispModelH0
 #' get_lsDispModelH1
 #' get_lsDispModelConst
+#' get_lsDropModel
 #' get_matCountsProc
 #' get_matWeights
 #' get_scaDFSplinesDisp
@@ -165,6 +166,7 @@ setClass(
 #' lsDispModelH0 <- get_lsDispModelH0(objLP)
 #' lsDispModelH1 <- get_lsDispModelH1(objLP)
 #' lsDispModelConst <- get_lsDispModelConst(objLP)
+#' lsDropModel <- get_lsDropModel(objLP)
 #' matCountDataProc <- get_matCountsProc(objLP)
 #' matWeights <- get_matWeights(objLP)
 #' scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
@@ -216,6 +218,11 @@ get_lsDispModelH1 <- function(objLP)
 #' @export
 get_lsDispModelConst <- function(objLP) 
     return(objLP@lsDispModelConst)
+
+#' @rdname get_accessors
+#' @export
+get_lsDropModelConst <- function(objLP) 
+    return(objLP@lsDropModelConst)
 
 #' @rdname get_accessors
 #' @export

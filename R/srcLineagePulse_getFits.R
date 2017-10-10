@@ -40,7 +40,7 @@
 #' # Use H1 model fits.
 #' matNormData <- getNormData(
 #'      matCounts = lsSimulatedData$counts,
-#'      lsMuModel = objLP@lsMuModelH1,
+#'      lsMuModel = get_lsMuModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1],
 #'      boolDepth = TRUE, boolBatch = TRUE)
 #' 
@@ -121,7 +121,7 @@ getNormData <- function(matCounts,
 #' # Get mean parameter fits on alternative model:
 #' # Use H1 model fits.
 #' vecMeanFits <- getFitsMean(
-#'      lsMuModel = objLP@lsMuModelH1,
+#'      lsMuModel = get_lsMuModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' #plot(lsSimulatedData$annot$pseudotime, vecMeanFits)     
 #' 
@@ -183,7 +183,7 @@ getFitsMean <- function(
 #' # Get dispersion parameter fits on alternative model:
 #' # Use H1 model fits.
 #' vecDispersionFits <- getFitsDispersion(
-#'      lsDispModel = objLP@lsDispModelH1,
+#'      lsDispModel = get_lsDispModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
@@ -246,8 +246,8 @@ getFitsDispersion <- function(
 #' # Get drop-out rate fits on alternative model:
 #' # Use H1 model fits.
 #' vecDropoutFits <- getFitsDropout(
-#'      lsMuModel = objLP@lsMuModelH1,
-#'      lsDropModel = objLP@lsDropModel,
+#'      lsMuModel = get_lsMuModelH1(objLP),
+#'      lsDropModel = get_lsDropModel(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
@@ -322,9 +322,9 @@ getFitsDropout <- function(
 #' # Use H1 model fits.
 #' vecPosteriorDropoutFits <- getPostDrop(
 #'      matCounts = lsSimulatedData$counts,
-#'      lsMuModel = objLP@lsMuModelH1,
-#'      lsDispModel = objLP@lsDispModelH1,
-#'      lsDropModel = objLP@lsDropModel,
+#'      lsMuModel = get_lsMuModelH1(objLP),
+#'      lsDispModel = get_lsDispModelH1(objLP),
+#'      lsDropModel = get_lsDropModel(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
