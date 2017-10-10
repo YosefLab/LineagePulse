@@ -283,22 +283,35 @@ plotGene <- function(
 #' Uses kernel density estimate.
 #' 
 #' @param objLP (LineagePulseObject) LineagePulseObject to base plot on.
-#' @param bwDensity (scalar) [Default NULL]
-#' Bandwidth of kernel density estimate to be used. Chosen
-#' automatically if NULL (recommended).
 #' 
-#' @return gplotGene (ggplot object)
+#' @return gplotKDE (ggplot object)
 #' ggplot2 kernel density estimator plot. 
+#' 
+#' @examples
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDMuAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.1, 30))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$annot,
+#'     strMuModel = "impulse")
+#' gplotCellDensity <- plotCellDensity(objLP = objLP)
+#' #print(gplotCellDensity)
 #' 
 #' @author David Sebastian Fischer
 #' 
 #' @export
-plotCellDensity <- function(
-    objLP,
-    bwDensity = NULL){
+plotCellDensity <- function(objLP){
     
-    gplotKSD <- ggplot() + geom_density(data = objLP@dfAnnotationProc, aes(
+    gplotKDE <- ggplot() + geom_density(data = objLP@dfAnnotationProc, aes(
         x = pseudotime))
     
-    return(gplotKSD)
+    return(gplotKDE)
 }
