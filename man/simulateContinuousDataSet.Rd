@@ -20,11 +20,14 @@ simulateContinuousDataSet(scaNCells, scaNConst, scaNLin, scaNImp,
 \arguments{
 \item{scaNCells}{(scalar) Number of cells in data set.}
 
-\item{scaNConst}{(scalar) Number of constant expression profiles (genes) in data set.}
+\item{scaNConst}{(scalar) Number of constant expression 
+profiles (genes) in data set.}
 
-\item{scaNLin}{(scalar) Number of linear expression profiles (genes) in data set.}
+\item{scaNLin}{(scalar) Number of linear expression 
+profiles (genes) in data set.}
 
-\item{scaNImp}{(scalar) Number of impulse model expression profiles (genes) in data set.}
+\item{scaNImp}{(scalar) Number of impulse model expression 
+profiles (genes) in data set.}
 
 \item{scaMumax}{(scalar) [Default 1000]
 Maximum expression mean parameter to be used.}

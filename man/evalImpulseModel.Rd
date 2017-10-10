@@ -7,7 +7,7 @@
 evalImpulseModel(vecImpulseParam, vecTimepoints)
 }
 \arguments{
-\item{vecImpulseParam}{(numeric vector number of impulse model parameters: 7)
+\item{vecImpulseParam}{(numeric vector number of impulse model parameters 7)
 \{beta1, beta2, h0, h1, h2, t1, t2\}
 Vector of impulse model parameters.}
 

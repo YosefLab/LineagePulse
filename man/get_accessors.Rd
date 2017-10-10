@@ -29,7 +29,7 @@
 \alias{get_lsDispModelH0}
 \alias{get_lsDispModelH1}
 \alias{get_lsDispModelConst}
-\alias{get_lsDropModelConst}
+\alias{get_lsDropModel}
 \alias{get_matCountsProc}
 \alias{get_matWeights}
 \alias{get_scaDFSplinesDisp}
@@ -59,7 +59,7 @@ get_lsDispModelH1(objLP)
 
 get_lsDispModelConst(objLP)
 
-get_lsDropModelConst(objLP)
+get_lsDropModel(objLP)
 
 get_matCountsProc(objLP)
 

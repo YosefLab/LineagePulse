@@ -25,7 +25,8 @@ Object containing description of cell-wise drop-out parameter models.}
 Assignments of cells to mixtures (for strMuModel="MM").}
 
 \item{boolConstModelOnMMLL}{(bool) [Default FALSE]
-Whether to evaluate constant gene-wise mean model on mixture model likelihood.
+Whether to evaluate constant gene-wise mean model 
+on mixture model likelihood.
 This is necessary for numeric stability when testing whether mixture model
 fits are worse than constant fits.}
 }

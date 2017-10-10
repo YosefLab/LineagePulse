@@ -21,11 +21,12 @@ Object containing initialisation for mean parameter batch correction model.}
 \item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
 
-\item{vecDispGuess}{(numeric vector number of dispersion model parameters) 
+\item{vecDispGuess}{(numeric vector number of dispersion model parameters)
 Initialisation for dispersion model.}
 
 \item{lsvecBatchParamGuessDisp}{(list) 
-Object containing initialisation for dispersion parameter batch correction model.}
+Object containing initialisation for 
+dispersion parameter batch correction model.}
 
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
@@ -52,7 +53,8 @@ list
 Contains the mean model parameters according to the used model.
 \item lsvecBatchModelMu (list) 
 Fit of batch correction models for mean parameter to given gene.
-\item vecDispModel (numeric vector number of dispersion model parameters)
+\item vecDispModel 
+(numeric vector number of dispersion model parameters)
 Contains the dispersion model parameters according to the used model.
 \item lsvecBatchModelDisp (list) 
 Fit of batch correction models for dispersion parameter to given gene.
@@ -75,8 +77,10 @@ cost function.
 }
 \seealso{
 Called once for each gene by \code{fitZINBMuDisp}
-or within wrapper \code{fitZINBImpulse} once for each initalisation of each gene.
-Calls fitting likelihood functions: \code{evalLogLikContinuousZINB_comp}.
+or within wrapper \code{fitZINBImpulse} 
+once for each initalisation of each gene.
+Calls fitting likelihood functions: 
+\code{evalLogLikContinuousZINB_comp}.
 }
 \author{
 David Sebastian Fischer

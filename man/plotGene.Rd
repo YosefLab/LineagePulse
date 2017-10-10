@@ -50,24 +50,32 @@ Both as counts or log10 counts vs pseudotime.
 Dropout rates can be given and are visualised as the colour of the observation
 points.
 A reference model trajectory can be added.
-Contour plots: A contour plot aids the interpretation of the model trajectory
-in context of the observed data if local overplotting occurs because of a
-non-uniform distribution of cells in pseudotime (a very common scenario).
+Contour plots: 
+A contour plot aids the interpretation of the model trajectory
+in context of the observed data if local overplotting occurs 
+because of a non-uniform distribution of cells in pseudotime 
+(a very common scenario).
 In such a case, one might mistake cells with high counts from a pseudotime
-interval with high cellular intensity as a indication of increased expression
-in this interval. Instead, one can explain such local maxima based on the 
-simple phenomenom that more samples were taken from the underyling distribution
-in that pseudotime interval which increases the probability of sampling
-far in the tail of the distribution. To migitate this visually, we added the
-option to add "contours": A contour is an alternative to a confidence interval
-which includes information on the local sampling density. The contour is specific
-to a number of cells n. It is an expression trajectory in pseudotime which lies
-at the line above which n cells are expected within a local pseudotime bin given
-its sampling density and the H1 non-constant expression model. Contours therefore
-quantify the increase in maximum observed counts in pseudotime intervals due to
-sampling density, which is not due to the expression model. Note that this effect
-is corrected for in the model fitting and that the contour plots just aids visual
-interpretation of the fit to the data!
+interval with high cellular intensity as a indication of increased
+expression in this interval. 
+Instead, one can explain such local maxima based on the 
+simple phenomenom that more samples were taken from the underyling 
+distribution in that pseudotime interval which increases the 
+probability of sampling far in the tail of the distribution. 
+To migitate this visually, we added the option to add "contours": 
+A contour is an alternative to a confidence interval
+which includes information on the local sampling density. 
+The contour is specific to a number of cells n. 
+It is an expression trajectory in pseudotime which lies
+at the line above which n cells are expected within 
+a local pseudotime bin given its sampling density and 
+the H1 non-constant expression model. 
+Contours therefore quantify the increase in maximum observed 
+counts in pseudotime intervals due to sampling density, 
+which is not due to the expression model. 
+Note that this effect is corrected for in the model fitting and 
+that the contour plots just aids visual interpretation of 
+the fit to the data!
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(

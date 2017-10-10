@@ -11,7 +11,7 @@ evalLogLikContinuousZINB(vecTheta, vecCounts, lsMuModelGlobal,
   vecidxZero)
 }
 \arguments{
-\item{vecTheta}{(numeric vector dispersion (1) and impulse parameters (6)) 
+\item{vecTheta}{(numeric vector dispersion (1) and impulse parameters (6))
 Dispersion and mean parameter estimates.}
 
 \item{vecCounts}{(count vector number of cells)
@@ -52,7 +52,8 @@ Observation which are larger than zero.}
 Observation which are zero.}
 }
 \value{
-scaLogLik (scalar) Value of cost function (likelihood) for given gene.
+scaLogLik (scalar) 
+Value of cost function (likelihood) for given gene.
 }
 \description{
 Log likelihood of zero inflated  negative binomial model. 

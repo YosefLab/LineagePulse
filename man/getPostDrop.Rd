@@ -28,7 +28,8 @@ Posterior probability of observation not being generated
 by drop-out.
 }
 \description{
-Return posteriors of drop-out per gene and cell as matrix for chosen models.
+Return posteriors of drop-out per gene and cell 
+as matrix for chosen models.
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(

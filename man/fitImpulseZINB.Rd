@@ -21,11 +21,12 @@ Object containing initialisation for mean parameter batch correction model.}
 \item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
 
-\item{vecDispGuess}{(numeric vector number of dispersion model parameters) 
+\item{vecDispGuess}{(numeric vector number of dispersion model parameters)
 Initialisation for dispersion model.}
 
 \item{lsvecBatchParamGuessDisp}{(list) 
-Object containing initialisation for dispersion parameter batch correction model.}
+Object containing initialisation for 
+dispersion parameter batch correction model.}
 
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
@@ -68,8 +69,10 @@ this wrapper sits ontop of fitContinuousZINB() in the fitting hierarchy
 and wraps multiple initialisations at the level of one gene.
 }
 \seealso{
-Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
-Calls optimisation wrapper \code{fitContinuousZINB} for each initialisation.
+Called by mean-dispersion co-estimation wrapper 
+\code{fitZINBMuDisp}.
+Calls optimisation wrapper \code{fitContinuousZINB} 
+for each initialisation.
 }
 \author{
 David Sebastian Fischer

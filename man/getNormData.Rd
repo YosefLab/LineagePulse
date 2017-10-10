@@ -16,9 +16,11 @@ Count data.}
 \item{vecGeneIDs}{(vector of strings) 
 Gene IDs for which mean model fits are to be extracted.}
 
-\item{boolDepth}{(bool) [Default TRUE] Whether to normalize for sequencing depth.}
+\item{boolDepth}{(bool) [Default TRUE] 
+Whether to normalize for sequencing depth.}
 
-\item{boolBatch}{(bool) [Default TRUE] Whether to normalize for batch.}
+\item{boolBatch}{(bool) [Default TRUE] 
+Whether to normalize for batch.}
 }
 \value{
 (numeric matrix genes x cells)
@@ -26,8 +28,8 @@ Input data normalized by library size factors (optional) and
 by inferred batch factors (optional).
 }
 \description{
-The data normalisation is based on the model normalisation used by and inferred
-by LineagePulse, e.g. for data visualisation.
+The data normalisation is based on the model normalisation used by 
+and inferred by LineagePulse, e.g. for data visualisation.
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(

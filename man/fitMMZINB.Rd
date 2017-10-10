@@ -23,7 +23,8 @@ Object containing meta-data of gene-wise mean parameter models.}
 Initialisation for dispersion model.}
 
 \item{lsvecBatchParamGuessDisp}{(list) 
-Object containing initialisation for dispersion parameter batch correction model.}
+Object containing initialisation for 
+dispersion parameter batch correction model.}
 
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
@@ -46,9 +47,11 @@ parameter to be fit.}
 \item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
 Assignments of cells to mixtures (for strMuModel="MM").}
 
-\item{MAXIT}{(scalar) maximum number of BFGS iterations handed to optim().}
+\item{MAXIT}{(scalar) 
+Maximum number of BFGS iterations handed to optim().}
 
-\item{RELTOL}{(scalar) cost function convergence criterium handed to optim().}
+\item{RELTOL}{(scalar) 
+Cost function convergence criterium handed to optim().}
 
 \item{vecMuModelGuess}{(numeric vector number of mean model parameters) 
 Initialisation for impulse model.}

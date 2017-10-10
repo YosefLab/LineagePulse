@@ -58,14 +58,16 @@ Object containing description of cell-wise drop-out parameter models.}
 
 \item{matMuModelInit}{(numeric matrix genes x mu model parameters)
 [Default NULL]
-Contains initialisation of mean model parameters according to the used model.}
+Contains initialisation of mean model parameters 
+according to the used model.}
 
 \item{lsmatBatchModelInitMu}{(list) [Default NULL]
 Initialisation of batch correction models for mean parameter.}
 
 \item{matDispModelInit}{(numeric matrix genes x disp model parameters)
 [Default NULL]
-Contains initialisation of dispersion model parameters according to the used model.}
+Contains initialisation of dispersion model parameters 
+according to the used model.}
 
 \item{lsmatBatchModelInitDisp}{(list) [Default NULL]
 Initialisation of batch correction models for dispersion parameter.}

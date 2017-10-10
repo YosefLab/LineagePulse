@@ -35,9 +35,9 @@ This liklihood function is appropriate for sequencing data with high drop
 out rate, commonly observed in single cell data (e.g. scRNA-seq). This
 is the core function used for every likelihood evaluation 
 in LineagePulse, such as maximum likelihood-based estimation. 
-It operates on a vector of counts, such as observations of a gene. Note that
-for the sake of numerical stability, lower bounds on loglikelihood terms
-are implemented.
+It operates on a vector of counts, such as observations of a gene. 
+Note that for the sake of numerical stability, 
+lower bounds on loglikelihood terms are implemented.
 }
 \author{
 David Sebastian Fischer

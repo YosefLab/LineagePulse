@@ -138,7 +138,8 @@ loglik_full: loglikelihood of alternative model H1,
 loglik_red: loglikelihood of null model H0,
 deviance: loglikelihood ratio test statistic (the deviance),
 mean_H0: inferred gene-wise mean parameter (constant null model),
-dispersion_H0: inferred gene-wise dispersion parameter (constant null model)
+dispersion_H0: inferred gene-wise dispersion parameter 
+(constant null model)
 }
 \description{
 This function performs all steps of longitudinal differential
@@ -183,12 +184,15 @@ Finally, after running LineagePulse, you may continue to work
 on your data set by:
 A) Regenerating observation-wise parameters,
 such as the mean parameter matrix which represents the hidden
-expression states, with the functions in srcLineagePulse_decompressParameters.R.
+expression states, with the functions
+\link{getFitsMean}, \link{getFitsDispersion}, \link{getFitsDropout}.
 B) You can also compute the observation-wise probability of 
-dropout with calcPostDrop.
-C) You can have a closer look at the global expression
-trajecotries of the genes with sortGeneTrajectories.
-D) You can look at gene-wise model fits with plotGene().
+dropout with \link{getPostDrop}.
+C) You can extract LineagePulse model normalised and/or
+batch corrected data with \link{getNormData}, 
+D) You can have a closer look at the global expression
+trajecotries of the genes with \link{sortGeneTrajectories}.
+E) You can look at gene-wise model fits with \link{plotGene}.
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(
