@@ -699,6 +699,87 @@ fitImpulseZINB <- function(
                 scaLL=lsFitBest$scaLL))
 }
 
+#' Optim wrapper for gene-wise models other than mixture model.
+#' 
+#' NOT YET SUPPORTED.
+#' LINEAGEPULSE CODE WILL BE EXTENDED BY MODULAR FUNCTIONALITIES
+#' AND THIS IS ONE INSTANCE OF A PLACEHOLDER USED FOR DEVELOPING.
+#' Given a parameter initialisation, this function
+#' performs numerical optimisation using BFGS of the 
+#' likelihood function given the supplied mean and dispersion model.
+#' This is the wrapper that calls optim.
+#' 
+#' This function performs error handling of the numerical fitting procedure.
+#' This function corrects for the likelihood sensitivity bounds used in the 
+#' cost function.
+#' 
+#' @param vecCounts (count vector number of cells)
+#'Observed read counts, not observed are NA.
+#' @param vecMuModelGuess (numeric vector number of mean model parameters) 
+#' Initialisation for impulse model.
+#' @param lsvecBatchParamGuessMu (list) 
+#' Object containing initialisation for mean parameter batch correction model.
+#' @param lsMuModelGlobal (list)
+#' Object containing meta-data of gene-wise mean parameter models.
+#' @param vecDispGuess (numeric vector number of dispersion model parameters) 
+#' Initialisation for dispersion model.
+#' @param lsvecBatchParamGuessDisp (list) 
+#' Object containing initialisation for dispersion parameter batch correction model.
+#' @param lsDispModelGlobal (list)
+#' Object containing meta-data of gene-wise dispersion parameter models.
+#' @param matDropoutLinModel (matrix number of cells x number of predictors)
+#' Logistic linear model parameters of the dropout rate 
+#' as a function of the mean and constant gene-wise coefficients.
+#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' Constant gene-wise coeffiecients, i.e. predictors which are not
+#' the offset and not the mean parameter.
+#' @param lsDropModelGlobal (list)
+#' Object containing meta-data of cell-wise drop-out parameter models.
+#' @param vecPiParam (numeric vector number of observations)
+#' Pre-evaluated drop-out model if model is not a function on the mean
+#' parameter to be fit.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param MAXIT (scalar) maximum number of BFGS iterations handed to optim().
+#' @param RELTOL (scalar) cost function convergence criterium handed to optim().
+#' 
+#' @return list
+#'\itemize{
+#' \item vecMuModel (numeric vector number of mu model parameters)
+#' Contains the mean model parameters according to the used model.
+#' \item lsvecBatchModelMu (list) 
+#' Fit of batch correction models for mean parameter to given gene.
+#' \item vecDispModel (numeric vector number of dispersion model parameters)
+#' Contains the dispersion model parameters according to the used model.
+#' \item lsvecBatchModelDisp (list) 
+#' Fit of batch correction models for dispersion parameter to given gene.
+#' \item scaConvergence (numeric vector number of genes) 
+#' Convergence status of optim for given gene.
+#' \item scaLL (numeric vector number of genes) 
+#' Likelihood of model fit for given gene.
+#'}
+#'
+#' @author David Sebastian Fischer
+fitMMZINB <- function(
+    vecCounts,
+    vecMuGuess,
+    lsvecBatchParamGuessMu,
+    lsMuModelGlobal,
+    vecDispGuess,
+    lsvecBatchParamGuessDisp,
+    lsDispModelGlobal,
+    matDropoutLinModel,
+    vecPiConstPredictors,
+    lsDropModelGlobal,
+    vecPiParam,
+    matWeights,
+    MAXIT,
+    RELTOL) {
+    
+    stop("LineagePulse ERROR: fitMMZINB() not yet supported. Contact developer.")
+    return(NULL)
+}
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (III) Overall model fitting wrapper
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#

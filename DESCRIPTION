@@ -32,7 +32,8 @@ biocViews: Software,
     DifferentialExpression,
     GeneExpression,
     CellBiology,
-    CellBasedAssays
+    CellBasedAssays,
+    SingleCell
 Collate:
     'main_LineagePulse.R'
     'srcLineagePulse_calcNormConst.R'

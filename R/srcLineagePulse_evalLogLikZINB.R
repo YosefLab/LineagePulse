@@ -27,7 +27,7 @@
 #' Whether observation is zero.
 #' 
 #' @return scaLogLik (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
+#' negative binomial model.
 #' 
 #' @author David Sebastian Fischer
 evalLogLikZINB <- function(
@@ -91,7 +91,7 @@ evalLogLikZINB <- function(
 #' Whether observation is zero.
 #' 
 #' @return scaLogLik (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
+#' negative binomial model.
 #' 
 #' @author David Sebastian Fischer
 evalLogLikZINB_comp <- compiler::cmpfun(evalLogLikZINB)
@@ -120,7 +120,7 @@ evalLogLikZINB_comp <- compiler::cmpfun(evalLogLikZINB)
 #' Whether observation is zero.
 #' 
 #' @return scaLogLik (scalar) Likelihood under zero-inflated
-#' 	  negative binomial model.
+#' negative binomial model.
 #' 
 #' @author David Sebastian Fischer
 evalLogLikGene <- function(
@@ -140,6 +140,54 @@ evalLogLikGene <- function(
         vecidxNotZero=vecidxNotZero, 
         vecidxZero=vecidxZero )
     return(scaLogLik)
+}
+
+#' Wrapper for log likelihood of zero-inflated negative binomial model
+#' for a vector of counts.
+#' 
+#' NOT YET SUPPORTED.
+#' LINEAGEPULSE CODE WILL BE EXTENDED BY MODULAR FUNCTIONALITIES
+#' AND THIS IS ONE INSTANCE OF A PLACEHOLDER USED FOR DEVELOPING.
+#' This likelihood function is a wrapper which choses whether to 
+#' compute smoothed or non-smoothed likelihood. Calling the 
+#' non-smoothed routing avoids the use of a for loop in the case
+#' of no smoothing.
+#'
+#' @param vecCounts (count vector number of cells)
+#' Observed read counts, not observed are NA.
+#' @param matMuParam (numeric matrix number of cells x number of mixtures) 
+#' Negative binomial mean parameter matrix with one mean per
+#' cell and per mixture.
+#' @param vecNormConst (numeric vector number of cells) 
+#' Model scaling factors, one per cell.
+#' @param vecDisp (numeric vector number of cells) 
+#' Negative binomial dispersion parameters.
+#' @param vecPi (probability vector number of cells) 
+#' Drop-out rate estimates.
+#' @param vecidxNotZero (bool vector number of cells)
+#' Whether observation is larger than zero.
+#' @param vecidxZero (bool vector number of cells)
+#' Whether observation is zero.
+#' @param scaNCells (scalar)
+#' Number of cells (auxillary parameter, this is length of vecCounts).
+#' 
+#' @return NULL
+#' This will be: scaLogLik (scalar) Likelihood under zero-inflated
+#' negative binomial model.
+#' 
+#' @author David Sebastian Fischer
+evalLogLikGeneMM <- function(
+    vecCounts,
+    vecMu,
+    vecNormConst,
+    vecDisp, 
+    vecPi,
+    vecidxNotZero, 
+    vecidxZero,
+    scaNCells){
+    
+    stop("LineagePulse ERROR: evalLogLikGeneMM() not yet supported. Contact developer.")
+    return(NULL)
 }
 
 #' Wrapper for log likelihood of zero-inflated negative binomial model
