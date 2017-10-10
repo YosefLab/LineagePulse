@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++++++++     Compute Size factors    ++++++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++     Compute Size factors    +++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Compute size factors for a LineagePulse-object
 #' 
@@ -29,7 +29,8 @@ calcNormConst <- function(objLP,
   }
   
   if(any(vecNormConst==0)){
-    warning("WARNING IN LINEAGEPULSE: Found size factors==0, setting these to 1.")
+    warning(paste0("WARNING IN LINEAGEPULSE: Found size factors==0.",
+                   " Setting these to 1."))
     vecNormConst[vecNormConst==0] <- 1
   }
   

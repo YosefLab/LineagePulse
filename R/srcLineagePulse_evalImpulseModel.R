@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++++++    Compute value of impulse model   +++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++++++++++++++    Compute value of impulse model   ++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Compute value of impulse function given parameters.
 #' 
@@ -10,7 +10,7 @@
 #' 
 #' @seealso Compiled version: \link{evalImpulseModel_comp}
 #' 
-#' @param vecImpulseParam (numeric vector number of impulse model parameters: 7)
+#' @param vecImpulseParam (numeric vector number of impulse model parameters 7)
 #' \{beta1, beta2, h0, h1, h2, t1, t2\}
 #' Vector of impulse model parameters.
 #' @param vecTimepoints (numeric vector length number of time points) 

@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++    Cluster expression mean trajectories  ++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++++++++++    Cluster expression mean trajectories  +++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Cluster expression mean trajectories
 #' 
@@ -52,14 +52,16 @@ sortGeneTrajectories <- function(
     
     # Check IDs are in model matrix
     if(any(!(vecIDs %in% rownames(lsMuModel$matMuModel)))){
-        print("ERROR: Some IDs in vecIDs are not given in model lsMuModel$matMuModel.")
+        print(paste0("ERROR: Some IDs in vecIDs are not given",
+                     " in model lsMuModel$matMuModel."))
         return(NULL)
     }
     
     # (I) Decompress mean parameters in a memory saving way:
     # Round to integer counts.
     matMuParam <- do.call(rbind, bplapply(vecIDs, function(id){
-        round( decompressMeansByGene( vecMuModel=lsMuModel$matMuModel[id,],
+        round( decompressMeansByGene(
+            vecMuModel=lsMuModel$matMuModel[id,],
                                       lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
                                       vecInterval=NULL ) )
     }))
@@ -88,14 +90,16 @@ sortGeneTrajectories <- function(
         scaDistBetweenCells <- round(scaCells/10)
         vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
         vecindTicks[10] <- scaCells
-        vecTicks[vecindTicks] <- round(lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
+        vecTicks[vecindTicks] <- round(
+            lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
         colnames(matMuNorm) <- vecTicks
         # Set upper bounds of z-scores to visualise
         scaMuNormLowBound <- max(min(matMuNorm, na.rm=TRUE), -5)
         scaMuNormUpperBound <- min(max(matMuNorm, na.rm=TRUE), 5)
         scaBreaks <- 50
         breaks <- seq(scaMuNormLowBound,scaMuNormUpperBound,
-                      by=(scaMuNormUpperBound-scaMuNormLowBound)/(scaBreaks-1))
+                      by=(scaMuNormUpperBound - scaMuNormLowBound) /
+                          (scaBreaks-1))
         hm.colors <- colorpanel( length(breaks)-1, "red", "blue" )
         
         # Plot genes sorted by peak time
@@ -117,7 +121,8 @@ sortGeneTrajectories <- function(
         
         # Plot clusters by gene
         graphics.off()
-        pdf(paste0(dirHeatmap, "/LineagePulse_GenesClusteredByTrajectory.pdf"))
+        pdf(paste0(dirHeatmap, 
+                   "/LineagePulse_GenesClusteredByTrajectory.pdf"))
         heatmap.2(matMuNorm, 
                   dendrogram="row", Rowv=TRUE, Colv=FALSE, 
                   xlab = "pseudotime", ylab =  "genes",

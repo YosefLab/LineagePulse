@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++  Plot counts and model for one gene  +++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++  Plot counts and model for one gene  ++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Plot counts and model for one gene
 #' 
@@ -9,24 +9,32 @@
 #' Dropout rates can be given and are visualised as the colour of the observation
 #' points.
 #' A reference model trajectory can be added.
-#' Contour plots: A contour plot aids the interpretation of the model trajectory
-#' in context of the observed data if local overplotting occurs because of a
-#' non-uniform distribution of cells in pseudotime (a very common scenario).
+#' Contour plots: 
+#' A contour plot aids the interpretation of the model trajectory
+#' in context of the observed data if local overplotting occurs 
+#' because of a non-uniform distribution of cells in pseudotime 
+#' (a very common scenario).
 #' In such a case, one might mistake cells with high counts from a pseudotime
-#' interval with high cellular intensity as a indication of increased expression
-#' in this interval. Instead, one can explain such local maxima based on the 
-#' simple phenomenom that more samples were taken from the underyling distribution
-#' in that pseudotime interval which increases the probability of sampling
-#' far in the tail of the distribution. To migitate this visually, we added the
-#' option to add "contours": A contour is an alternative to a confidence interval
-#' which includes information on the local sampling density. The contour is specific
-#' to a number of cells n. It is an expression trajectory in pseudotime which lies
-#' at the line above which n cells are expected within a local pseudotime bin given
-#' its sampling density and the H1 non-constant expression model. Contours therefore
-#' quantify the increase in maximum observed counts in pseudotime intervals due to
-#' sampling density, which is not due to the expression model. Note that this effect
-#' is corrected for in the model fitting and that the contour plots just aids visual
-#' interpretation of the fit to the data!
+#' interval with high cellular intensity as a indication of increased
+#' expression in this interval. 
+#' Instead, one can explain such local maxima based on the 
+#' simple phenomenom that more samples were taken from the underyling 
+#' distribution in that pseudotime interval which increases the 
+#' probability of sampling far in the tail of the distribution. 
+#' To migitate this visually, we added the option to add "contours": 
+#' A contour is an alternative to a confidence interval
+#' which includes information on the local sampling density. 
+#' The contour is specific to a number of cells n. 
+#' It is an expression trajectory in pseudotime which lies
+#' at the line above which n cells are expected within 
+#' a local pseudotime bin given its sampling density and 
+#' the H1 non-constant expression model. 
+#' Contours therefore quantify the increase in maximum observed 
+#' counts in pseudotime intervals due to sampling density, 
+#' which is not due to the expression model. 
+#' Note that this effect is corrected for in the model fitting and 
+#' that the contour plots just aids visual interpretation of 
+#' the fit to the data!
 #' 
 #' @param objLP (LineagePulseObject) LineagePulseObject
 #' base plot on.
@@ -88,12 +96,14 @@ plotGene <- function(
     scaGgplot2Size = 0.5,
     scaGgplot2Alpha = 0.5){
     
-    cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey", "red", "pink")
+    cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+                    "#D55E00", "#CC79A7", "grey", "red", "pink")
     ### 0. Check input
     ## Can only use one colour scale!
     if(boolLineageContour & boolColourByDropout){
         warning(paste0("Only one colour scale can be used. ",
-                       "Set either boolLineageContour or boolColourByDropout to FALSE"))
+                       "Set either boolLineageContour or",
+                       " boolColourByDropout to FALSE"))
         boolColourByDropout <- FALSE
     }
     ### 1. Extract data and models
@@ -132,22 +142,27 @@ plotGene <- function(
     ### 2. Data scatter plot
     # Set drop-out rates as constant for visualistion if not given.
     dfScatterCounts <- data.frame( counts=vecCountsToPlot )
-    if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+    if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+       c("splines", "impulse")){
         dfScatterCounts$x <- objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
             gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, colour=dropout_posterior), size = scaGgplot2Size, alpha = scaGgplot2Alpha, show.legend=TRUE)
+                    x=x, y=counts, colour=dropout_posterior), 
+                    size = scaGgplot2Size, alpha = scaGgplot2Alpha, 
+                    show.legend=TRUE)
         } else {
             gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts), size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE)
+                    x=x, y=counts), size = scaGgplot2Size,  
+                    alpha = scaGgplot2Alpha, show.legend=TRUE)
         }
         
     } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
-        dfScatterCounts$x <- seq(1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells, by=1)
+        dfScatterCounts$x <- seq(
+            1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells, by=1)
         dfScatterCounts$groups <- objLP@dfAnnotationProc$groups
         
         if(boolColourByDropout){
@@ -155,13 +170,15 @@ plotGene <- function(
             gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
                     x=x, y=counts, colour=dropout_posterior, shape = groups), 
-                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE) +
+                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
+                    show.legend=TRUE) +
                 scale_colour_gradient(high="red",low="green",limits=c(0, 1)) 
         } else {
             gplotGene <- ggplot() +
                 geom_point(data=dfScatterCounts, aes(
                     x=x, y=counts, shape = groups), 
-                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, show.legend=TRUE)
+                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
+                    show.legend=TRUE)
         }
     }
     
@@ -172,23 +189,27 @@ plotGene <- function(
     vecMuParamH0[vecMuParamH0 > scaMaxPlot] <- NA
     vecMuParamH1[vecMuParamH1 > scaMaxPlot] <- NA
     if(is.null(vecReferenceMuParam)){
-        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+           c("splines", "impulse")){
             dfLineImpulse <- data.frame(
                 x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 2),
                 counts=c(vecMuParamH0,
                          vecMuParamH1),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1))) )
-        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
+        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+                  c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq(1,objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 2),
+                x=rep(seq(
+                    1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 2),
                 counts=c(vecMuParamH0,
                          vecMuParamH1),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1))) )
         }
     } else {
-        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("splines", "impulse")){
+        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+           c("splines", "impulse")){
             dfLineImpulse <- data.frame(
                 x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 3),
                 counts=c(vecMuParamH0,
@@ -197,9 +218,11 @@ plotGene <- function(
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1)),
                         rep("Reference", length(vecReferenceMuParam))) )
-        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
+        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+                  c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq(1,objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 3),
+                x=rep(seq(
+                    1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecReferenceMuParam),
@@ -235,16 +258,25 @@ plotGene <- function(
         lsDensity <- density(x = objLP@dfAnnotationProc$pseudotime, bw=bwDensity, 
                              n = length(objLP@dfAnnotationProc$pseudotime))
         scaNKDEbin <- 10
-        scaWindowRadPT <- (max(objLP@dfAnnotationProc$pseudotime, na.rm = TRUE) - 
-                               min(objLP@dfAnnotationProc$pseudotime, na.rm = TRUE))/(2*scaNKDEbin)
+        scaWindowRadPT <- (max(objLP@dfAnnotationProc$pseudotime, 
+                               na.rm = TRUE) - 
+                               min(objLP@dfAnnotationProc$pseudotime, 
+                                   na.rm = TRUE)) / (2*scaNKDEbin)
         vecObsInBin <- sapply(objLP@dfAnnotationProc$pseudotime, function(pt) {
             sum(abs(pt-objLP@dfAnnotationProc$pseudotime) <= scaWindowRadPT)
         })
         dfExpectObsCI <- data.frame(
             pseudotime = rep(objLP@dfAnnotationProc$pseudotime,3), 
-            contour = c(qnbinom(p = 1-sapply(vecObsInBin, function(x) min(x,1) )/vecObsInBin, size=vecDispParamH1, mu = vecMuParamH1_nonlog),
-                        qnbinom(p = 1-sapply(vecObsInBin, function(x) min(x,5) )/vecObsInBin, size=vecDispParamH1, mu = vecMuParamH1_nonlog),
-                        qnbinom(p = 1-sapply(vecObsInBin, function(x) min(x,10) )/vecObsInBin, size=vecDispParamH1, mu = vecMuParamH1_nonlog)),
+            contour = c(
+                qnbinom(p = 1 - sapply(
+                    vecObsInBin, function(x) min(x,1) ) / vecObsInBin,
+                    size=vecDispParamH1, mu = vecMuParamH1_nonlog),
+                qnbinom(p = 1 - sapply(
+                    vecObsInBin, function(x) min(x,5) ) / vecObsInBin, 
+                    size=vecDispParamH1, mu = vecMuParamH1_nonlog),
+                qnbinom(p = 1 - sapply(
+                    vecObsInBin, function(x) min(x,10) ) / vecObsInBin, 
+                    size=vecDispParamH1, mu = vecMuParamH1_nonlog)),
             ncells = factor(c(rep("1 cell", length(vecMuParamH1_nonlog)),
                               rep("5 cells", length(vecMuParamH1_nonlog)),
                               rep("10 cells", length(vecMuParamH1_nonlog))),

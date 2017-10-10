@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++     Estimate impulse parameters for initialisation    ++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++     Estimate impulse parameters for initialisation    +++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Estimate impulse model parameter initialisations
 #' 
@@ -77,7 +77,8 @@ initialiseImpulseParameters <- function(
                                        lsMuModelGlobal$vecNormConst[vecidxK]*
                                        vecPostNB[vecidxK], na.rm=TRUE)/
             sum(vecPostNB[vecidxK], na.rm=TRUE)
-        vecGroupTimeCoord[k] <- mean(lsMuModelGlobal$vecPseudotime[vecidxK], na.rm=TRUE)  
+        vecGroupTimeCoord[k] <- mean(lsMuModelGlobal$vecPseudotime[vecidxK],
+                                     na.rm=TRUE)  
     }
     # Catch exception: sum(vecPostNB[vecTimepointAssign==tp])==0
     vecGroupExprMean[is.na(vecGroupExprMean)] <- 0
@@ -86,9 +87,12 @@ initialiseImpulseParameters <- function(
     nTimepts <- length(vecGroupTimeCoord)
     scaMaxMiddleMean <- max(vecGroupExprMean[2:(nTimepts-1)], na.rm=TRUE)
     scaMinMiddleMean <- min(vecGroupExprMean[2:(nTimepts-1)], na.rm=TRUE)
-    # +1 to push indicices up from middle stretch to entire window (first is omitted here)
-    indMaxMiddleMean <- match(scaMaxMiddleMean,vecGroupExprMean[2:(nTimepts-1)]) + 1
-    indMinMiddleMean <- match(scaMinMiddleMean,vecGroupExprMean[2:(nTimepts-1)]) + 1
+    # +1 to push indicices up from middle stretch to entire window 
+    # (first is omitted here)
+    indMaxMiddleMean <- match(scaMaxMiddleMean,
+                              vecGroupExprMean[2:(nTimepts-1)]) + 1
+    indMinMiddleMean <- match(scaMinMiddleMean,
+                              vecGroupExprMean[2:(nTimepts-1)]) + 1
     # Gradients between neighbouring points
     vecGradients <- unlist( lapply(c(1:(nTimepts-1)),function(x){
         (vecGroupExprMean[x+1]-vecGroupExprMean[x]) / 
@@ -97,12 +101,13 @@ initialiseImpulseParameters <- function(
     
     # Compute peak initialisation
     # Beta: Has to be negative, Theta1: Low, Theta2: High, Theta3: Low
-    # t1: Around first observed inflexion point, t2: Around second observed inflexion point
+    # t1: Around first observed inflexion point, t2: 
+    # Around second observed inflexion point
     indLowerInflexionPoint <- match(
         max(vecGradients[1:(indMaxMiddleMean-1)], na.rm=TRUE), 
         vecGradients[1:(indMaxMiddleMean-1)])
     indUpperInflexionPoint <- indMaxMiddleMean - 1 + match(
-        min(vecGradients[indMaxMiddleMean:length(vecGradients)], na.rm=TRUE), 
+        min(vecGradients[indMaxMiddleMean:length(vecGradients)], na.rm=TRUE),
         vecGradients[indMaxMiddleMean:length(vecGradients)])
     vecParamGuessPeak <- c(
         1,
@@ -117,7 +122,8 @@ initialiseImpulseParameters <- function(
     
     # Compute valley initialisation
     # Beta: Has to be negative, Theta1: High, Theta2: Low, Theta3: High
-    # t1: Around first observed inflexion point, t2: Around second observed inflexion point
+    # t1: Around first observed inflexion point, t2: 
+    # Around second observed inflexion point
     indLowerInflexionPoint <- match(
         min(vecGradients[1:(indMinMiddleMean-1)], na.rm=TRUE), 
         vecGradients[1:(indMinMiddleMean-1)])

@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++++++++++++     Process single cell data    +++++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++++++++++++++     Process single cell data    ++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Prepare single cell data for analysis
 #' 
@@ -26,7 +26,8 @@
 #' [Default NULL] Confounders to correct for in mu batch
 #' correction model, must be subset of column names of
 #' dfAnnotation which describe condounding variables.
-#' @param vecConfoundersDisp (vector of strings number of confounders on  dispersion)
+#' @param vecConfoundersDisp 
+#' (vector of strings number of confounders on  dispersion)
 #' [Default NULL] Confounders to correct for in dispersion batch
 #' correction model, must be subset of column names of
 #' dfAnnotation which describe condounding variables.
@@ -114,33 +115,44 @@ processSCData <- function(
     # Check whether object was supplied (is not NULL).
     checkNull <- function(objectInput,strObjectInput){
         if(is.null(objectInput)){
-            stop(paste0( "ERROR: ", strObjectInput," was not given as input." ))
+            stop(paste0( "ERROR: ", strObjectInput,
+                         " was not given as input." ))
         }
     }
     # Checks whether elements are numeric
     checkNumeric <- function(matInput, strMatInput){
         if(any(!is.numeric(matInput))){
-            stop(paste0( "ERROR: ", strMatInput, " contains non-numeric elements." ))
+            stop(paste0( "ERROR: ", strMatInput, 
+                         " contains non-numeric elements." ))
         }
     }
-    # Checks whether elements are count data: non-negative integer finite numeric elements.
+    # Checks whether elements are count data: 
+    # non-negative integer finite numeric elements.
     # Note that NA are allowed.
     checkCounts <- function(matInput, strMatInput){
         checkNumeric(matInput, strMatInput)
         if(any(matInput[!is.na(matInput)] %% 1 != 0)){
-            stop(paste0( "ERROR: ", strMatInput, " contains non-integer elements. Requires count data." ))
+            stop(paste0( "ERROR: ", strMatInput, 
+                         " contains non-integer elements.",
+                         " Requires count data." ))
         }
         if(any(!is.finite(matInput[!is.na(matInput)]))){
-            stop(paste0( "ERROR: ", strMatInput, " contains infinite elements. Requires count data." ))
+            stop(paste0( "ERROR: ", strMatInput, 
+                         " contains infinite elements.",
+                         " Requires count data." ))
         }
         if(any(matInput[!is.na(matInput)]<0)){
-            stop(paste0( "ERROR: ", strMatInput, " contains negative elements. Requires count data." ))
+            stop(paste0( "ERROR: ", strMatInput, 
+                         " contains negative elements.",
+                         " Requires count data." ))
         }
     }
     # Checks whether elements are logical
     checkLogical <- function(boolElement, strBoolElement){
         if(!is.logical(boolElement)){
-            stop(paste0( "ERROR IN INPUT DATA CHECK: ", strBoolElement, " must be logical (TRUE or FALSE)." ))
+            stop(paste0( "ERROR IN INPUT DATA CHECK: ", 
+                         strBoolElement, 
+                         " must be logical (TRUE or FALSE)." ))
         }
     }
     
@@ -153,7 +165,8 @@ processSCData <- function(
     if(!is.null(dfAnnotation)){
         # Check that all cells are mentioned in dfAnnotation
         if(!all(colnames(counts) %in% rownames(dfAnnotation))){
-            stop(paste0("Not all cells given in counts (colnames) are given in dfAnnotation (rownames)."))
+            stop(paste0("Not all cells given in counts (colnames)",
+                        " are given in dfAnnotation (rownames)."))
         }
         # Check structure
         if(strMuModel=="impulse"){
@@ -161,14 +174,21 @@ processSCData <- function(
             checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
         }
         if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
-            stop(paste0("Cell IDs in rownames(dfAnnotation) are not the same as cell IDs in dfAnnotation$Samples."))
+            stop(paste0("Cell IDs in rownames(dfAnnotation)",
+                        " are not the same as cell IDs",
+                        " in dfAnnotation$Samples."))
         }
         if(!is.null(vecConfoundersMu)){
             if(!all(vecConfoundersMu %in% colnames(dfAnnotation))){
-                stop(paste0("Not all confounders given in vecConfoundersMu given in dfAnnotation (columns)."))
+                stop(paste0("Not all confounders given in",
+                            " vecConfoundersMu given in",
+                            " dfAnnotation (columns)."))
             }
-            if(any(is.null(dfAnnotation[,vecConfoundersMu]) | is.na(dfAnnotation[,vecConfoundersMu]))){
-                stop(paste0("Supply batch assignments for all cells and all confounders given in vecConfoundersMu"))
+            if(any(is.null(dfAnnotation[,vecConfoundersMu]) | 
+                   is.na(dfAnnotation[,vecConfoundersMu]))){
+                stop(paste0("Supply batch assignments for",
+                            " all cells and all confounders given",
+                            " in vecConfoundersMu"))
             }
         }
     } else {
@@ -274,7 +294,8 @@ processSCData <- function(
     }
     
     # Print summary of processing
-    strMessage <- paste0("LineagePulse for count data: v0.99")#, packageDescription("LineagePulse", fields = "Version"))
+    strMessage <- paste0("LineagePulse for count data: v", 
+                         STRVERSION)
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
@@ -283,24 +304,31 @@ processSCData <- function(
     if(boolVerbose) print(strMessage)
     
     if(strMuModel=="impulse"){
-        strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", length(vecidxPTnotNA), 
-                             " cells did not have a pseudotime coordinate and were excluded.")
+        strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", 
+                             length(vecidxPTnotNA), 
+                             " cells did not have a pseudotime coordinate",
+                             " and were excluded.")
         strReport <- paste0(strReport, strMessage, "\n")
         if(boolVerbose) print(strMessage)
     }
     
-    strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", length(vecidxGenes), 
-                         " genes did not contain non-zero observations and are excluded from analysis.")
+    strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", 
+                         length(vecidxGenes), 
+                         " genes did not contain non-zero observations",
+                         " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
-    strMessage <- paste0("# ", sum(!vecidxCells), " out of ", length(vecidxCells), 
-                         " cells did not contain non-zero observations and are excluded from analysis.")
+    strMessage <- paste0("# ", sum(!vecidxCells), " out of ", 
+                         length(vecidxCells), 
+                         " cells did not contain non-zero observations",
+                         " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
     # Reduce matPiConstPredictors to genes in counts
-    matPiConstPredictorsProc <- matPiConstPredictors[rownames(counts),,drop=FALSE]
+    matPiConstPredictorsProc <- 
+        matPiConstPredictors[rownames(counts),,drop=FALSE]
     
     objLP <- new(
         'LineagePulseObject',

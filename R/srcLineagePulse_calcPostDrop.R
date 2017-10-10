@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++++    Calculate posterior of drop-out  ++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++    Calculate posterior of drop-out  +++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Calculate posterior of drop-out
 #' 
@@ -96,12 +96,14 @@ calcPostDrop_Matrix <- function(
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],
-            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, 
+                                   function(mat) mat[i,] ),
             lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
             vecInterval=NULL )
         vecDispParam <- decompressDispByGene(
             vecDispModel=lsDispModel$matDispModel[i,],
-            lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,] ),
+            lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, 
+                                   function(mat) mat[i,] ),
             lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
             vecInterval=NULL )
         vecPiParam <- decompressDropoutRateByGene(
@@ -121,7 +123,9 @@ calcPostDrop_Matrix <- function(
             if(!is.na(vecCounts[j]) & vecCounts[j]>0){
                 scaZ <- 0
             } else if(!is.na(vecCounts[j]) & vecCounts[j]==0) {
-                scaZ <- sum(vecPiParam[j]/(vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[j])) *
+                scaZ <- sum(
+                    vecPiParam[j] / 
+                        (vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[j])) *
                     1/length(j)
             } else {
                 scaZ <- NA

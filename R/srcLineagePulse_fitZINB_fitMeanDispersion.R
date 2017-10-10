@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++     Co-Fit mean and dispersion parameters of ZINB model    ++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++     Co-Fit mean and dispersion parameters of ZINB model    +++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # File divided into:
 # ++++ Model cost functions -evalLogLikZINB (not in this file)
 # +++ Fitting cost functions: return loglik of proposed parameters
@@ -8,13 +8,14 @@
 # ++ Optim wrappers for single fits
 # ++ - fitContinuousZINB wrapper for single initialisation on one gene
 # ++ - fitImpulseZINB wrapper for multiple initialisation of impulse model
-# + Overall model fitting wrapper: Top level auxillary function called by fitZINB.
+# + Overall model fitting wrapper: 
+# + Top level auxillary function called by fitZINB.
 # + - fitMeanDisp wrapper for all mean and dispersion models to be fit
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (I) Fitting cost function
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Cost function zero-inflated negative binomial model for mean and
 #' dispersion model fitting
@@ -24,7 +25,7 @@
 #' of mean and dispersion paramater model on single gene given
 #' the drop-out model.
 #' 
-#' @param vecTheta (numeric vector dispersion (1) and impulse parameters (6)) 
+#' @param vecTheta (numeric vector dispersion (1) and impulse parameters (6))
 #' Dispersion and mean parameter estimates.
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
@@ -40,7 +41,8 @@
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors 
+#' (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -53,7 +55,8 @@
 #' @param vecidxZero (index vector number of cells)
 #' Observation which are zero.
 #'
-#' @return scaLogLik (scalar) Value of cost function (likelihood) for given gene.
+#' @return scaLogLik (scalar) 
+#' Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
 evalLogLikContinuousZINB <- function(
@@ -114,7 +117,8 @@ evalLogLikContinuousZINB <- function(
                 seq(from = scaNParamUsed+1, 
                     to = scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1, 
                     by = 1)]) )[ lsDispModelGlobal$lsvecidxBatchAssign[[b]] ]
-            scaNParamUsed <- scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1
+            scaNParamUsed <- scaNParamUsed + 
+                lsDispModelGlobal$vecNBatches[b] - 1
             # Prevent batch factor shrinkage and explosion:
             vecBatchParamDisp[vecBatchParamDisp < 10^(-10)] <- 10^(-10)
             vecBatchParamDisp[vecBatchParamDisp > 10^(10)] <- 10^(10)
@@ -160,7 +164,8 @@ evalLogLikContinuousZINB <- function(
             seq(from = scaNParamUsed + 1,
                 to = scaNParamUsed + 7,
                 by = 1)]
-        vecImpulseParam[3:5] <- exp(vecImpulseParam[3:5]) # Log linker for amplitudes
+        vecImpulseParam[3:5] <- exp(vecImpulseParam[3:5]) 
+        # Log linker for amplitudes
         scaNParamUsed <- scaNParamUsed + length(vecImpulseParam)
         
         vecImpulseParam[1:2][vecImpulseParam[1:2] < 10^(-10)] <- 10^(-10)
@@ -177,7 +182,8 @@ evalLogLikContinuousZINB <- function(
     # Extract batch factors
     if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
         for(vecidxBatchAssign in lsMuModelGlobal$lsvecidxBatchAssign){
-            scaNBatchFactors <- max(vecidxBatchAssign)-1 # Batches are counted from 1
+            scaNBatchFactors <- max(vecidxBatchAssign)-1 
+            # Batches are counted from 1
             # Factor of first batch is one (constant), the remaining
             # factors scale based on the first batch.
             vecBatchParam <- c(1, exp(vecTheta[
@@ -238,7 +244,8 @@ evalLogLikContinuousZINB <- function(
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors 
+#' (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -256,9 +263,9 @@ evalLogLikContinuousZINB <- function(
 #' @author David Sebastian Fischer
 evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (II) Optim wrappers
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Optim wrapper for gene-wise models other than mixture model.
 #' 
@@ -272,8 +279,10 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' cost function.
 #' 
 #' @seealso Called once for each gene by \code{fitZINBMuDisp}
-#' or within wrapper \code{fitZINBImpulse} once for each initalisation of each gene.
-#' Calls fitting likelihood functions: \code{evalLogLikContinuousZINB_comp}.
+#' or within wrapper \code{fitZINBImpulse} 
+#' once for each initalisation of each gene.
+#' Calls fitting likelihood functions: 
+#' \code{evalLogLikContinuousZINB_comp}.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
@@ -283,16 +292,18 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess (numeric vector number of dispersion model parameters) 
+#' @param vecDispGuess (numeric vector number of dispersion model parameters)
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
-#' Object containing initialisation for dispersion parameter batch correction model.
+#' Object containing initialisation for 
+#' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors 
+#' (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -307,7 +318,8 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' Contains the mean model parameters according to the used model.
 #' \item lsvecBatchModelMu (list) 
 #' Fit of batch correction models for mean parameter to given gene.
-#' \item vecDispModel (numeric vector number of dispersion model parameters)
+#' \item vecDispModel 
+#' (numeric vector number of dispersion model parameters)
 #' Contains the dispersion model parameters according to the used model.
 #' \item lsvecBatchModelDisp (list) 
 #' Fit of batch correction models for dispersion parameter to given gene.
@@ -410,9 +422,10 @@ fitContinuousZINB <- function(
         for(b in seq(1, lsDispModelGlobal$scaNConfounders, by=1)){
             vecBatchFactors <- c( 1, exp(fitDispMu[
                 seq(from = scaNParamUsed+1, 
-                    to = scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1, 
+                    to = scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1,
                     by = 1)]) )
-            scaNParamUsed <- scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1
+            scaNParamUsed <- scaNParamUsed + 
+                lsDispModelGlobal$vecNBatches[b] - 1
             # Prevent batch factor shrinkage and explosion:
             vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
             vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
@@ -467,9 +480,10 @@ fitContinuousZINB <- function(
         for(b in seq(1, lsMuModelGlobal$scaNConfounders, by=1)){
             vecBatchFactors <- c( 1, exp(fitDispMu[
                 seq(from = scaNParamUsed+1, 
-                    to = scaNParamUsed + lsMuModelGlobal$vecNBatches[b] - 1, 
+                    to = scaNParamUsed + lsMuModelGlobal$vecNBatches[b] - 1,
                     by = 1)]) )
-            scaNParamUsed <- scaNParamUsed + lsMuModelGlobal$vecNBatches[b] - 1
+            scaNParamUsed <- scaNParamUsed + 
+                lsMuModelGlobal$vecNBatches[b] - 1
             # Prevent batch factor shrinkage and explosion:
             vecBatchFactors[vecBatchFactors < 10^(-10)] <- 10^(-10)
             vecBatchFactors[vecBatchFactors > 10^(10)] <- 10^(10)
@@ -497,21 +511,25 @@ fitContinuousZINB <- function(
 #' this wrapper sits ontop of fitContinuousZINB() in the fitting hierarchy
 #' and wraps multiple initialisations at the level of one gene.
 #' 
-#' @seealso Called by mean-dispersion co-estimation wrapper \code{fitZINBMuDisp}.
-#' Calls optimisation wrapper \code{fitContinuousZINB} for each initialisation.
+#' @seealso Called by mean-dispersion co-estimation wrapper 
+#' \code{fitZINBMuDisp}.
+#' Calls optimisation wrapper \code{fitContinuousZINB} 
+#' for each initialisation.
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
-#' @param vecImpulseParamGuess (numeric vector number of impulse model parameters) 
+#' @param vecImpulseParamGuess 
+#' (numeric vector number of impulse model parameters) 
 #' Initialisation for impulse model.
 #' @param lsvecBatchParamGuessMu (list) 
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess (numeric vector number of dispersion model parameters) 
+#' @param vecDispGuess (numeric vector number of dispersion model parameters)
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
-#' Object containing initialisation for dispersion parameter batch correction model.
+#' Object containing initialisation for 
+#' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
@@ -724,13 +742,15 @@ fitImpulseZINB <- function(
 #' @param vecDispGuess (numeric vector number of dispersion model parameters) 
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
-#' Object containing initialisation for dispersion parameter batch correction model.
+#' Object containing initialisation for 
+#' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors 
+#' (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)
@@ -740,8 +760,10 @@ fitImpulseZINB <- function(
 #' parameter to be fit.
 #' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
 #' Assignments of cells to mixtures (for strMuModel="MM").
-#' @param MAXIT (scalar) maximum number of BFGS iterations handed to optim().
-#' @param RELTOL (scalar) cost function convergence criterium handed to optim().
+#' @param MAXIT (scalar) 
+#' Maximum number of BFGS iterations handed to optim().
+#' @param RELTOL (scalar) 
+#' Cost function convergence criterium handed to optim().
 #' 
 #' @return list
 #'\itemize{
@@ -776,13 +798,14 @@ fitMMZINB <- function(
     MAXIT,
     RELTOL) {
     
-    stop("LineagePulse ERROR: fitMMZINB() not yet supported. Contact developer.")
+    stop(paste0("LineagePulse ERROR: fitMMZINB() not yet supported.",
+                " Contact developer."))
     return(NULL)
 }
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (III) Overall model fitting wrapper
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Coordinate mean and dispersion parameter co-estimation step
 #' 
@@ -837,12 +860,18 @@ fitZINBMuDisp <- function(
     
     lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
         if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)) {
-            lsvecBatchParamGuessMu <- lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2],drop=FALSE] )
+            lsvecBatchParamGuessMu <- 
+                lapply(lsMuModel$lsmatBatchModel, function(mat) {
+                    mat[i,2:dim(mat)[2],drop=FALSE] 
+                })
         } else {
             lsvecBatchParamGuessMu <- NULL
         }
         if(!is.null(lsDispModel$lsDispModelGlobal$vecConfounders)) {
-            lsvecBatchParamGuessDisp <- lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,2:dim(mat)[2],drop=FALSE] )
+            lsvecBatchParamGuessDisp <- 
+                lapply(lsDispModel$lsmatBatchModel, function(mat) {
+                    mat[i,2:dim(mat)[2],drop=FALSE] 
+                })
         } else {
             lsvecBatchParamGuessDisp <- NULL
         }
@@ -860,14 +889,14 @@ fitZINBMuDisp <- function(
         
         if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
             fitDispMu <- fitMMZINB(
-                vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
-                vecMuGuess=lsMuModel$matMuModel[i,], # Mu model
+                vecCounts=matCountsProc[as.double(i),], 
+                vecMuGuess=lsMuModel$matMuModel[i,], 
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
                 lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-                vecDispGuess=lsDispModel$matDispModel[i,], # Disp model
+                vecDispGuess=lsDispModel$matDispModel[i,], 
                 lsvecBatchParamGuessDisp=lsvecBatchParamGuessDisp,
                 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-                matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+                matDropoutLinModel=lsDropModel$matDropoutLinModel, 
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
                 lsDropModelGlobal=lsDropModel$lsDropModelGlobal,
                 vecPiParam=vecPiParam,
@@ -879,59 +908,76 @@ fitZINBMuDisp <- function(
         } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){      
             # Estimate mean parameters
             fitDispMu <- fitImpulseZINB(
-                vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
-                vecImpulseParamGuess=lsMuModel$matMuModel[i,], # Mu model
+                vecCounts=matCountsProc[as.double(i),], 
+                vecImpulseParamGuess=lsMuModel$matMuModel[i,], 
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
                 lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-                vecDispGuess=lsDispModel$matDispModel[i,], # Disp model
+                vecDispGuess=lsDispModel$matDispModel[i,],
                 lsvecBatchParamGuessDisp=lsvecBatchParamGuessDisp,
                 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-                matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+                matDropoutLinModel=lsDropModel$matDropoutLinModel, 
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
                 lsDropModelGlobal=lsDropModel$lsDropModelGlobal,
                 vecPiParam=vecPiParam )
             return(fitDispMu)
-        } else if(lsMuModel$lsMuModelGlobal$strMuModel %in% c("splines", "groups", "constant")){      
+        } else if(lsMuModel$lsMuModelGlobal$strMuModel %in% 
+                  c("splines", "groups", "constant")){      
             # Estimate mean parameters
             fitDispMu <- fitContinuousZINB(
-                vecCounts=matCountsProc[as.double(i),], # sparseMatrix index must be double
-                vecMuModelGuess=lsMuModel$matMuModel[i,], # Mu model
+                vecCounts=matCountsProc[as.double(i),], 
+                vecMuModelGuess=lsMuModel$matMuModel[i,],
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
                 lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-                vecDispGuess=lsDispModel$matDispModel[i,], # Disp model
+                vecDispGuess=lsDispModel$matDispModel[i,], 
                 lsvecBatchParamGuessDisp=lsvecBatchParamGuessDisp,
                 lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
-                matDropoutLinModel=lsDropModel$matDropoutLinModel, # Pi model
+                matDropoutLinModel=lsDropModel$matDropoutLinModel, 
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
                 lsDropModelGlobal=lsDropModel$lsDropModelGlobal,
                 vecPiParam=vecPiParam )
             return(fitDispMu)
         } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-            print(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
-                         lsMuModel$lsMuModelGlobal$strMuModel, 
-                         ". Only constant and impulse model implemented. ",
-                         "Use sequential estimation."))
-            stop(paste0("Mean parameter model not recognised for co-estimation with dispersion: ", 
-                        lsMuModel$lsMuModelGlobal$strMuModel, 
-                        ". Only constant and impulse model implemented. ",
-                        "Use sequential estimation."))
+            print(paste0(
+                "Mean parameter model not recognised for ",
+                "co-estimation with dispersion: ",
+                lsMuModel$lsMuModelGlobal$strMuModel, 
+                ". Only constant and impulse model implemented. ",
+                "Use sequential estimation."))
+            stop(paste0(
+                "Mean parameter model not recognised for ",
+                " co-estimation with dispersion: ", 
+                lsMuModel$lsMuModelGlobal$strMuModel, 
+                ". Only constant and impulse model implemented. ",
+                "Use sequential estimation."))
         }  
     })
     
-    matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecDispModel))
-    matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) i$vecMuModel))
+    matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) { 
+        i$vecDispModel 
+    }))
+    matMuModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) {
+        i$vecMuModel 
+    }))
     if(!is.null(lsMuModel$lsMuModelGlobal$scaNConfounders)) {
-        lsmatBatchModelMu <- lapply(seq(1, lsMuModel$lsMuModelGlobal$scaNConfounders, by=1), function(confounder){
-            do.call(rbind, lapply(lsFitDispMu,  function(i) i$lsvecBatchFactorsMu[[confounder]] ))
-        })
+        lsmatBatchModelMu <- 
+            lapply(seq(1, lsMuModel$lsMuModelGlobal$scaNConfounders, by=1), 
+                   function(confounder){
+                       do.call(rbind, lapply(lsFitDispMu,  function(i) {
+                           i$lsvecBatchFactorsMu[[confounder]] 
+                       }))
+                   })
     } else {
         lsmatBatchModelMu <- NULL
     }
     if(!is.null(lsDispModel$lsDispModelGlobal$scaNConfounders)) {
-        lsmatBatchModelDisp <- lapply(seq(1, lsDispModel$lsDispModelGlobal$scaNConfounders, by=1), function(confounder){
-            do.call(rbind, lapply(lsFitDispMu,  function(i) i$lsvecBatchFactorsDisp[[confounder]] ))
-        })
+        lsmatBatchModelDisp <- 
+            lapply(seq(1, lsDispModel$lsDispModelGlobal$scaNConfounders, by=1),
+                   function(confounder){
+                       do.call(rbind, lapply(lsFitDispMu,  function(i) {
+                           i$lsvecBatchFactorsDisp[[confounder]] 
+                       }))
+                   })
     } else {
         lsmatBatchModelDisp <- NULL
     }

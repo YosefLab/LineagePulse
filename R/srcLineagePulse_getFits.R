@@ -1,11 +1,11 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++++  Extract model fits and transformed data from fits  +++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++++  Extract model fits and transformed data from fits  ++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Return depth and batch corrected data
 #' 
-#' The data normalisation is based on the model normalisation used by and inferred
-#' by LineagePulse, e.g. for data visualisation.
+#' The data normalisation is based on the model normalisation used by 
+#' and inferred by LineagePulse, e.g. for data visualisation.
 #' 
 #' @seealso Called by \code{fitZINB}. Can be called by user.
 #' 
@@ -14,8 +14,10 @@
 #' @param lsMuModel (list) Mean parameter model parameters.
 #' @param vecGeneIDs (vector of strings) 
 #' Gene IDs for which mean model fits are to be extracted.
-#' @param boolDepth (bool) [Default TRUE] Whether to normalize for sequencing depth.
-#' @param boolBatch (bool) [Default TRUE] Whether to normalize for batch.
+#' @param boolDepth (bool) [Default TRUE] 
+#' Whether to normalize for sequencing depth.
+#' @param boolBatch (bool) [Default TRUE] 
+#' Whether to normalize for batch.
 #' 
 #' @return (numeric matrix genes x cells)
 #' Input data normalized by library size factors (optional) and
@@ -72,7 +74,8 @@ getNormData <- function(matCounts,
             for(confounder in seq(1,scaNumConfounders)){
                 vecBatchParam <- vecBatchParam * 
                     (lsMuModel$lsmatBatchModel[[confounder]][id,][
-                    lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[confounder]]])
+                    lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[
+                        confounder]]])
             }
         }
         # Normalise counts by depth and/or batch factors as required
@@ -143,7 +146,8 @@ getFitsMean <- function(
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],
-            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, 
+                                   function(mat) mat[i,] ),
             lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
             vecInterval=NULL )
         return(vecMuParam)
@@ -204,7 +208,8 @@ getFitsDispersion <- function(
         # Decompress parameters by gene
         vecDispParam <- decompressDispByGene(
             vecDispModel=lsDispModel$matDispModel[i,],
-            lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,] ),
+            lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, 
+                                   function(mat) mat[i,] ),
             lsDispModelGlobal=lsDispModel$lsDispModelGlobal,
             vecInterval=NULL )
         return(vecDispParam)
@@ -269,7 +274,8 @@ getFitsDropout <- function(
         # Decompress parameters by gene
         vecMuParam <- decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[i,],
-            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
+            lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, 
+                                   function(mat) mat[i,] ),
             lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
             vecInterval=NULL )
         vecPiParam <- decompressDropoutRateByGene(
@@ -286,7 +292,8 @@ getFitsDropout <- function(
 
 #' Get posteriors of drop-out
 #' 
-#' Return posteriors of drop-out per gene and cell as matrix for chosen models.
+#' Return posteriors of drop-out per gene and cell 
+#' as matrix for chosen models.
 #' 
 #' @param matCounts (count matrix genes x cells)
 #' Observed read counts, not observed are NA.

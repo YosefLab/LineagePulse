@@ -11,7 +11,7 @@ vignette: >
 
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{ImpulseDE2 Vignette}
+%\VignetteIndexEntry{LineagePulse Vignette}
 -->
 
 ```{r options, cache=FALSE, include=FALSE, results='hide', message=FALSE, warning=FALSE}

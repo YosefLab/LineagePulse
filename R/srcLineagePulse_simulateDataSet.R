@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++++++++++++++   Simulate a data set  +++++++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++   Simulate a data set  ++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Simulate a data set for LinagePulse
 
@@ -18,9 +18,12 @@
 #' @seealso Called by separately by user.
 #' 
 #' @param scaNCells (scalar) Number of cells in data set.
-#' @param scaNConst (scalar) Number of constant expression profiles (genes) in data set.
-#' @param scaNLin (scalar) Number of linear expression profiles (genes) in data set.
-#' @param scaNImp (scalar) Number of impulse model expression profiles (genes) in data set.
+#' @param scaNConst (scalar) Number of constant expression 
+#' profiles (genes) in data set.
+#' @param scaNLin (scalar) Number of linear expression 
+#' profiles (genes) in data set.
+#' @param scaNImp (scalar) Number of impulse model expression 
+#' profiles (genes) in data set.
 #' @param scaMumax (scalar) [Default 1000]
 #' Maximum expression mean parameter to be used.
 #' @param scaSDMuAmplitude (scalar) [Default 1]
@@ -88,25 +91,30 @@ simulateContinuousDataSet <- function(
     ### 0. Check input
     if(!is.null(vecNormConstExternal)) {
         if(scaNConst + scaNLin + scaNImp != length(vecNormConstExternal)){
-            stop("scaNConst + scaNLin + scaNImp has to be length(vecNormConstExternal)")
+            stop(paste0("scaNConst + scaNLin + scaNImp has to be",
+                        " length(vecNormConstExternal)"))
         }
     }
     if(!is.null(vecDispExternal)) {
         if(scaNConst + scaNLin + scaNImp != length(vecDispExternal)){
-            stop("scaNConst + scaNLin + scaNImp has to be length(vecDispExternal)")
+            stop(paste0("scaNConst + scaNLin + scaNImp has to be",
+                 " length(vecDispExternal)"))
         }
     }
     if(!is.null(vecGeneWiseDropoutRates)) {
         if(scaNConst + scaNLin + scaNImp != length(vecGeneWiseDropoutRates)){
-            stop("scaNConst + scaNLin + scaNImp has to be length(vecGeneWiseDropoutRates)")
+            stop(paste0("scaNConst + scaNLin + scaNImp has to be",
+                        " length(vecGeneWiseDropoutRates)"))
         }
     }
     if(!is.null(matDropoutModelExternal)) {
         if(scaNCells != dim(matDropoutModelExternal)[1]){
-            stop("scaNCells has to be dim(matDropoutModelExternal)[1]")
+            stop(paste0("scaNCells has to be",
+                        " dim(matDropoutModelExternal)[1]"))
         }
         if(dim(matDropoutModelExternal)[1] != 2){
-            stop("dim(matDropoutModelExternal)[1] has to be 2 (offsets and mean).")
+            stop(paste0("dim(matDropoutModelExternal)[1] has to be",
+                        " 2 (offsets and mean)."))
         }
     }
     
@@ -138,7 +146,8 @@ simulateContinuousDataSet <- function(
     
     if(scaNImp>0) {
         vecImpulseIDs <- paste0(rep("gene_",scaNImp), 
-                                c((scaNConst+scaNLin+1):(scaNConst+scaNLin+scaNImp)))
+                                c((scaNConst+scaNLin+1):
+                                      (scaNConst+scaNLin+scaNImp)))
     } else {
         vecImpulseIDs <- NULL
     }
@@ -156,7 +165,8 @@ simulateContinuousDataSet <- function(
     ## Draw means from linear model
     vecMuLinStart <- runif(scaNLin)*scaMumax
     vecMuLinStart[vecMuLinStart < SCA_MIN_MU] <- SCA_MIN_MU
-    vecMuLinEnd <- vecMuLinStart * abs(1+rnorm(n=scaNLin, mean=1,sd=scaSDMuAmplitude))
+    vecMuLinEnd <- vecMuLinStart * abs(1+rnorm(n=scaNLin, 
+                                               mean=1,sd=scaSDMuAmplitude))
     vecMuLinEnd[vecMuLinEnd < SCA_MIN_MU] <- SCA_MIN_MU
     matMuLinHidden <- do.call(rbind, lapply(seq(1, scaNLin), function(i) {
         vecMuLinStart[i] + vecPT/max(vecPT)*(vecMuLinEnd[i] - vecMuLinStart[i])
@@ -207,7 +217,8 @@ simulateContinuousDataSet <- function(
     } else {
         print("Use externally supplied size factors.")
         if(length(vecNormConstExternal) != scaNCells){
-            stop("vecNormConstExternal has to be of the length of the number of cells scaNCells.")
+            stop(paste0("vecNormConstExternal has to be",
+                        " of the length of the number of cells scaNCells."))
         }
         vecNormConstHidden <- vecNormConstExternal
     }
@@ -232,11 +243,12 @@ simulateContinuousDataSet <- function(
     
     ## add noise - draw from negative binomial
     print("Simulate negative binomial noise")
-    matSampledDataHidden <- do.call(rbind, lapply(seq(1,dim(matMuHidden)[1]), function(gene){
-        sapply(seq(1,scaNCells), function(cell){
-            rnbinom(n=1, mu=matMuHidden[gene,cell], size=vecDispHidden[gene])
-        })
-    }))
+    matSampledDataHidden <- do.call(rbind, lapply(
+        seq(1,dim(matMuHidden)[1]), function(gene){
+            sapply(seq(1,scaNCells), function(cell){
+                rnbinom(n=1, mu=matMuHidden[gene,cell], size=vecDispHidden[gene])
+            })
+        }))
     rownames(matSampledDataHidden) <- rownames(matMuHidden)
     colnames(matSampledDataHidden) <- names(vecPT)
     
@@ -244,7 +256,8 @@ simulateContinuousDataSet <- function(
     print("Simulate drop-out")
     ## Generate underlying drop-out rate matrix
     if(!is.null(matDropoutModelExternal) & !is.null(vecGeneWiseDropoutRates)) {
-        stop("Supply either matDropoutModelExternal or vecGeneWiseDropoutRates.")
+        stop(paste0("Supply either matDropoutModelExternal",
+                    " or vecGeneWiseDropoutRates."))
     }
     if(!is.null(matDropoutModelExternal)){
         lsDropoutRatesHidden <- lapply(seq(1,scaNCells), function(cell){
@@ -261,16 +274,19 @@ simulateContinuousDataSet <- function(
     } else if(!is.null(vecGeneWiseDropoutRates)) {
         matDropoutRatesHidden <- matrix(
             vecGeneWiseDropoutRates, 
-            nrow = length(vecGeneWiseDropoutRates), ncol = dim(matMuHidden)[2], byrow = FALSE)
+            nrow = length(vecGeneWiseDropoutRates), 
+            ncol = dim(matMuHidden)[2], byrow = FALSE)
     } else {
-        stop("Supply either matDropoutModelExternal or vecGeneWiseDropoutRates.")
+        stop(paste0("Supply either matDropoutModelExternal",
+                    " or vecGeneWiseDropoutRates."))
     } 
     ## Draw drop-outs from rates: Bernoulli experiments
-    lsDropoutsHidden <- lapply(seq(1,dim(matDropoutRatesHidden)[1]), function(i){
-        rbinom(n=rep(1, dim(matDropoutRatesHidden)[2]), 
-               size=rep(1, dim(matDropoutRatesHidden)[2]),
-               prob=matDropoutRatesHidden[i,])
-    })
+    lsDropoutsHidden <- lapply(
+        seq(1,dim(matDropoutRatesHidden)[1]), function(i){
+            rbinom(n=rep(1, dim(matDropoutRatesHidden)[2]), 
+                   size=rep(1, dim(matDropoutRatesHidden)[2]),
+                   prob=matDropoutRatesHidden[i,])
+        })
     matDropoutsHidden <- do.call(rbind, lsDropoutsHidden)
     rownames(matDropoutsHidden) <- rownames(matMuHidden)
     colnames(matDropoutsHidden) <- names(vecPT)

@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#+++++++++++++++     Fit full and alternative model    ++++++++++++++++++++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++     Fit full and alternative model    +++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Fit zero-inflated negative binomial models necessary for LineagePulse
 #' hypothesis test to data
@@ -138,8 +138,10 @@ fitContinuousModels <- function(
                               lsFitsModelA$strReport)
     rm(lsFitsModelA)
     
-    strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
-                         "model A with noise model in ", round(tm_cycle["elapsed"]/60,2)," min.")
+    strMessage <- paste0(
+        "Finished fitting zero-inflated negative binomial ",
+        "model A with noise model in ", 
+        round(tm_cycle["elapsed"]/60,2)," min.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
@@ -175,8 +177,9 @@ fitContinuousModels <- function(
                               lsFitsModelB$strReport)
     rm(lsFitsModelB)
     
-    strMessage <- paste0("Finished fitting zero-inflated negative binomial ",
-                         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
+    strMessage <- paste0(
+        "Finished fitting zero-inflated negative binomial ",
+        "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) print(strMessage)
     
