@@ -41,8 +41,8 @@ objLP <- runLineagePulse(
 # Get drop-out rate fits on alternative model:
 # Use H1 model fits.
 vecDropoutFits <- getFitsDropout(
-     lsMuModel = objLP@lsMuModelH1,
-     lsDropModel = objLP@lsDropModel,
+     lsMuModel = get_lsMuModelH1(objLP),
+     lsDropModel = get_lsDropModel(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 
 }

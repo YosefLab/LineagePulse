@@ -28,7 +28,7 @@ Whether observation is zero.}
 }
 \value{
 scaLogLik (scalar) Likelihood under zero-inflated
-	  negative binomial model.
+negative binomial model.
 }
 \description{
 This liklihood function is appropriate for sequencing data with high drop 

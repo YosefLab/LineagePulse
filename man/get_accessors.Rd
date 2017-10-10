@@ -8,6 +8,7 @@
 \alias{get_lsDispModelH0}
 \alias{get_lsDispModelH1}
 \alias{get_lsDispModelConst}
+\alias{get_lsDropModel}
 \alias{get_matCountsProc}
 \alias{get_matWeights}
 \alias{get_scaDFSplinesDisp}
@@ -28,6 +29,7 @@
 \alias{get_lsDispModelH0}
 \alias{get_lsDispModelH1}
 \alias{get_lsDispModelConst}
+\alias{get_lsDropModelConst}
 \alias{get_matCountsProc}
 \alias{get_matWeights}
 \alias{get_scaDFSplinesDisp}
@@ -56,6 +58,8 @@ get_lsDispModelH0(objLP)
 get_lsDispModelH1(objLP)
 
 get_lsDispModelConst(objLP)
+
+get_lsDropModelConst(objLP)
 
 get_matCountsProc(objLP)
 
@@ -117,6 +121,7 @@ lsMuModelConst <- get_lsMuModelConst(objLP)
 lsDispModelH0 <- get_lsDispModelH0(objLP)
 lsDispModelH1 <- get_lsDispModelH1(objLP)
 lsDispModelConst <- get_lsDispModelConst(objLP)
+lsDropModel <- get_lsDropModel(objLP)
 matCountDataProc <- get_matCountsProc(objLP)
 matWeights <- get_matWeights(objLP)
 scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 

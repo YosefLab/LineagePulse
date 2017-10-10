@@ -27,7 +27,7 @@ Whether observation is zero.}
 }
 \value{
 scaLogLik (scalar) Likelihood under zero-inflated
-	  negative binomial model.
+negative binomial model.
 }
 \description{
 Pre-compile heavily used functions.

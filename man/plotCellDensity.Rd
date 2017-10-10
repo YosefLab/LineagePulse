@@ -4,21 +4,36 @@
 \alias{plotCellDensity}
 \title{Plot density of cells in pseudotime}
 \usage{
-plotCellDensity(objLP, bwDensity = NULL)
+plotCellDensity(objLP)
 }
 \arguments{
 \item{objLP}{(LineagePulseObject) LineagePulseObject to base plot on.}
-
-\item{bwDensity}{(scalar) [Default NULL]
-Bandwidth of kernel density estimate to be used. Chosen
-automatically if NULL (recommended).}
 }
 \value{
-gplotGene (ggplot object)
+gplotKDE (ggplot object)
 ggplot2 kernel density estimator plot.
 }
 \description{
 Uses kernel density estimate.
+}
+\examples{
+lsSimulatedData <- simulateContinuousDataSet(
+    scaNCells = 100,
+    scaNConst = 10,
+    scaNLin = 10,
+    scaNImp = 10,
+    scaMumax = 100,
+    scaSDMuAmplitude = 3,
+    vecNormConstExternal=NULL,
+    vecDispExternal=rep(20, 30),
+    vecGeneWiseDropoutRates = rep(0.1, 30))
+objLP <- runLineagePulse(
+    counts = lsSimulatedData$counts,
+    dfAnnotation = lsSimulatedData$annot,
+    strMuModel = "impulse")
+gplotCellDensity <- plotCellDensity(objLP = objLP)
+#print(gplotCellDensity)
+
 }
 \author{
 David Sebastian Fischer
