@@ -431,6 +431,8 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #'
 #' @param object (LineagePulseObject) Output object of LineagePulse.
 #' @param file (file) [DEFAULT ""] File to print report to. Default is stdout.
+#' 
+#' @return NULL
 #'  
 #' @examples    
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -452,4 +454,7 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #' @author David Sebastian Fischer  
 #' 
 #' @export
-writeReport <- function(object, file="") write(object@strReport, file=file, ncolumns=1)
+writeReport <- function(object, file="") {
+    write(object@strReport, file=file, ncolumns=1)
+    return(NULL)
+}
