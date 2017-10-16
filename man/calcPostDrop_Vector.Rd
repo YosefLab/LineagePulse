@@ -24,8 +24,8 @@ Whether observation is real and non-zero.}
 }
 \value{
 vecZ  (numeric vector samples)
-   Posterior probability of observation not being generated 
-   by drop-out.
+Posterior probability of observation not being generated 
+by drop-out.
 }
 \description{
 Calculates posterior of observation being a drop-out for a vector.

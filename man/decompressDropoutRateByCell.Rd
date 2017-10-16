@@ -32,7 +32,8 @@ Dispersion parameter estimates for given gene
 (one per cell for given gene).
 }
 \description{
-Compute dropout rate parameter estimates from dropout rate model for a cell.
+Compute dropout rate parameter estimates 
+from dropout rate model for a cell.
 }
 \seealso{
 Called by \code{fitZINB}.

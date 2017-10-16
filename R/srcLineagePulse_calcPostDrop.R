@@ -9,20 +9,20 @@
 #' @seealso For matrices \code{calcPostDrop_Matrix}.
 #' 
 #' @param vecMu (numeric vector samples)
-#'    Negative binomial mean parameters of samples.
+#' Negative binomial mean parameters of samples.
 #' @param vecDisp (numeric vector samples)
-#'    Negative binomial mean parameters of samples.
+#' Negative binomial mean parameters of samples.
 #' @param vecDrop (numeric vector samples)
 #'   Drop out rates of samples.
 #' @param vecboolZero (bool vector samples)
-#'    Whether observation is zero.
+#' Whether observation is zero.
 #' @param vecboolNotZero (bool vector samples)
-#'    Whether observation is real and non-zero.
+#' Whether observation is real and non-zero.
 #' 
 #' @return vecZ  (numeric vector samples)
-#'    Posterior probability of observation not being generated 
-#'    by drop-out.
-#'    
+#' Posterior probability of observation not being generated 
+#' by drop-out.
+#' 
 #' @author David Sebastian Fischer
 calcPostDrop_Vector <- function( 
     vecMu,

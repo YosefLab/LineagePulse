@@ -22,13 +22,13 @@
 #'    
 #' @author David Sebastian Fischer
 evalDropoutModel <- function(vecPiModel, 
-  vecPiPredictors){
-  
-  # Set offset parameter
-  scaOffset <- 0.001
-  scaDropoutRate <- scaOffset+(1-2*scaOffset)*1/(1+exp(-(vecPiPredictors %*% vecPiModel )))
-  
-  return(scaDropoutRate)
+                             vecPiPredictors){
+    
+    # Set offset parameter
+    scaOffset <- 0.001
+    scaDropoutRate <- scaOffset+(1-2*scaOffset)*1/(1+exp(-(vecPiPredictors %*% vecPiModel )))
+    
+    return(scaDropoutRate)
 }
 
 #' Compiled function: evalDropoutModel

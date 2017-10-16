@@ -27,8 +27,8 @@ Dispersion parameter estimates for given gene
 (one per cell for given gene).
 }
 \description{
-Takes the model type and computes one dispersion parameter for each cell for one
-gene.
+Takes the model type and computes one dispersion parameter 
+for each cell for one gene.
 }
 \seealso{
 Called by \code{fitZINB}.

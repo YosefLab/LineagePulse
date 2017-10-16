@@ -98,7 +98,7 @@ simulateContinuousDataSet <- function(
     if(!is.null(vecDispExternal)) {
         if(scaNConst + scaNLin + scaNImp != length(vecDispExternal)){
             stop(paste0("scaNConst + scaNLin + scaNImp has to be",
-                 " length(vecDispExternal)"))
+                        " length(vecDispExternal)"))
         }
     }
     if(!is.null(vecGeneWiseDropoutRates)) {

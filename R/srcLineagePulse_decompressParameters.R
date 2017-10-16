@@ -1,6 +1,6 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-#++++++++    Decompress parameters: Compute parameter values from model  ++++++#
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#++++++++    Decompress parameters: Compute parameter values from model  +++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 #' Compute mean parameter estimates from mean parameter model for a gene
 #' 
@@ -50,7 +50,8 @@ decompressMeansByGene <- function(
             vecMu <- exp(as.vector(lsMuModelGlobal$matSplineBasis[
                 vecInterval,,drop=FALSE] %*% vecMuModel))
         } else { 
-            vecMu <- exp(as.vector(lsMuModelGlobal$matSplineBasis %*% vecMuModel))
+            vecMu <- exp(as.vector(
+                lsMuModelGlobal$matSplineBasis %*% vecMuModel))
         }
     } else if(lsMuModelGlobal$strMuModel=="groups"){
         if(!is.null(vecInterval)){ 
@@ -74,7 +75,8 @@ decompressMeansByGene <- function(
         for(conf in seq(1,lsMuModelGlobal$scaNConfounders, by=1)){
             if(!is.null(vecInterval)){
                 vecMu <- vecMu*(lsvecBatchModel[[conf]][
-                    (lsMuModelGlobal$lsvecidxBatchAssign[[conf]])[vecInterval]])
+                    (lsMuModelGlobal$lsvecidxBatchAssign[[conf]])[
+                        vecInterval]])
             } else { 
                 vecMu <- vecMu*(lsvecBatchModel[[conf]][
                     lsMuModelGlobal$lsvecidxBatchAssign[[conf]]])
@@ -87,8 +89,8 @@ decompressMeansByGene <- function(
 
 #' Compute dispersion parameter estimates from mean parameter model for a gene
 #' 
-#' Takes the model type and computes one dispersion parameter for each cell for one
-#' gene.
+#' Takes the model type and computes one dispersion parameter 
+#' for each cell for one gene.
 #' 
 #' @seealso Called by \code{fitZINB}.
 #' 
@@ -124,11 +126,13 @@ decompressDispByGene <- function(
             vecDisp <- exp(as.vector(lsDispModelGlobal$matSplineBasis[
                 vecInterval,,drop=FALSE] %*% vecDispModel))
         } else { 
-            vecDisp <- exp(as.vector(lsDispModelGlobal$matSplineBasis %*% vecDispModel))
+            vecDisp <- exp(as.vector(lsDispModelGlobal$matSplineBasis %*% 
+                                         vecDispModel))
         }
     } else if(lsDispModelGlobal$strDispModel=="groups"){
         if(!is.null(vecInterval)){ 
-            vecDisp <- vecDispModel[lsDispModelGlobal$vecidxGroups[vecInterval]]
+            vecDisp <- vecDispModel[
+                lsDispModelGlobal$vecidxGroups[vecInterval]]
         } else { 
             vecDisp <- vecDispModel[lsDispModelGlobal$vecidxGroups]
         }
@@ -140,17 +144,22 @@ decompressDispByGene <- function(
             vecDisp <- rep(vecDispModel, lsDispModelGlobal$scaNumCells)
         }
     } else {
-        stop(paste0("ERROR decompressDispersions(): lsDispModelGlobal$strDispModel=", 
-                    lsDispModelGlobal$strDispModel, " not recognised."))
+        stop(paste0("ERROR decompressDispersions():",
+                    " lsDispModelGlobal$strDispModel=", 
+                    lsDispModelGlobal$strDispModel, 
+                    " not recognised."))
     }
     
     # Scale by batch factors
     if(!is.null(lsDispModelGlobal$lsvecidxBatchAssign)){
         for(conf in seq(1,lsDispModelGlobal$scaNConfounders, by=1)){
             if(!is.null(vecInterval)){
-                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][(lsDispModelGlobal$lsvecidxBatchAssign[[conf]])[vecInterval]])
+                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][
+                    (lsDispModelGlobal$lsvecidxBatchAssign[[conf]])[
+                        vecInterval]])
             } else { 
-                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][lsDispModelGlobal$lsvecidxBatchAssign[[conf]]])
+                vecDisp <- vecDisp*(lsvecBatchModel[[conf]][
+                    lsDispModelGlobal$lsvecidxBatchAssign[[conf]]])
             }
         }
     }
@@ -160,7 +169,8 @@ decompressDispByGene <- function(
 
 #' Compute dropout rate parameter estimates from dropout rate model for a gene
 #' 
-#' Compute dropout rate parameter estimates from dropout rate model for a gene.
+#' Compute dropout rate parameter estimates 
+#' from dropout rate model for a gene.
 #' 
 #' @seealso Called by \code{fitZINB}.
 #'
@@ -198,7 +208,8 @@ decompressDropoutRateByGene <- function(
     } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
         vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumCells), function(j){
             evalDropoutModel_comp(vecPiModel=matDropModel[j,], 
-                                  vecPiPredictors=c(1, log(vecMu[j]), vecPiConstPredictors))
+                                  vecPiPredictors=c(1, log(vecMu[j]), 
+                                                    vecPiConstPredictors))
         })
     } else {
         stop(paste0("ERROR IN decompressDropoutRateByGene: ",
@@ -212,7 +223,8 @@ decompressDropoutRateByGene <- function(
 
 #' Compute dropout rate parameter estimates from dropout rate model for a cell
 #' 
-#' Compute dropout rate parameter estimates from dropout rate model for a cell.
+#' Compute dropout rate parameter estimates 
+#' from dropout rate model for a cell.
 #' 
 #' @seealso Called by \code{fitZINB}.
 #'
@@ -244,13 +256,15 @@ decompressDropoutRateByCell <- function(
     
     if(lsDropModelGlobal$strDropModel=="logistic"){
         vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
-            evalDropoutModel_comp(vecPiModel=vecDropModel, 
-                                  vecPiPredictors=c(1, matPiConstPredictors[i,]))
+            evalDropoutModel_comp(vecPiModel = vecDropModel, 
+                                  vecPiPredictors = 
+                                      c(1, matPiConstPredictors[i,]))
         })
     } else if(lsDropModelGlobal$strDropModel=="logistic_ofMu"){
         vecPi <- sapply(seq(1,lsDropModelGlobal$scaNumGenes), function(i){
             evalDropoutModel_comp(vecPiModel=vecDropModel, 
-                                  vecPiPredictors=c(1, log(vecMu[i]), matPiConstPredictors[i,]))
+                                  vecPiPredictors=c(1, log(vecMu[i]), 
+                                                    matPiConstPredictors[i,]))
         })
     } else {
         stop(paste0("ERROR IN decompressDropoutRateByCell: ",

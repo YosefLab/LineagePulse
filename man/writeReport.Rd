@@ -9,7 +9,8 @@ writeReport(object, file = "")
 \arguments{
 \item{object}{(LineagePulseObject) Output object of LineagePulse.}
 
-\item{file}{(file) [DEFAULT ""] File to print report to. Default is stdout.}
+\item{file}{(file) [DEFAULT ""] 
+File to print report to. Default is stdout.}
 }
 \value{
 nothing to return

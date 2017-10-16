@@ -21,9 +21,11 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' Summary of fitting procedure and 
 #' differential expression results for each gene.
 #' @slot lsDispModelH1 (list)
-#' Object containing description of gene-wise dispersion parameter models of H1.
+#' Object containing description of 
+#' gene-wise dispersion parameter models of H1.
 #' @slot lsDispModelH0 (list)
-#' Object containing description of gene-wise dispersion parameter models of H0.
+#' Object containing description of 
+#' gene-wise dispersion parameter models of H0.
 #' @slot lsDispModelConst (list)
 #' Object containing description of gene-wise dispersion parameter models of
 #' constant model (necessary if H0 is not constant (mixture models)).
@@ -51,11 +53,13 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' @slot strReport (str) LineagePulse stdout report (log).
 #' @slot vecAllGenes  (vector of strings) 
 #' All genes originally supplied, including all zero genes.
-#' @slot vecConfoundersDisp (vector of strings number of confounders on  dispersion)
+#' @slot vecConfoundersDisp 
+#' (vector of strings number of confounders on  dispersion)
 #' Confounders to correct for in dispersion batch
 #' correction model, are subset of column names of
 #' dfAnnotation which describe condounding variables.
-#' @slot vecConfoundersMu (vector of strings number of confounders on  mean)
+#' @slot vecConfoundersMu 
+#' (vector of strings number of confounders on  mean)
 #' Confounders to correct for in mu batch
 #' correction model, are subset of column names of
 #' dfAnnotation which describe condounding variables.
@@ -79,32 +83,32 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #'   
 #' @author David Sebastian Fischer
 setClass(
-  'LineagePulseObject',
-  slots = c(
-    dfAnnotationProc    = "data.frameORNULL",
-    dfResults           = "data.frameORNULL",
-    lsDispModelH0       = "listORNULL",
-    lsDispModelH1       = "listORNULL",
-    lsDispModelConst    = "listORNULL",
-    lsDropModel         = "listORNULL",
-    lsMuModelH0         = "listORNULL",
-    lsMuModelH1         = "listORNULL",
-    lsMuModelConst      = "listORNULL",
-    lsFitZINBReporters  = "listORNULL",
-    matCountsProc       = "dgCMatrix",
-    matWeights          = "matrixORNULL",
-    scaDFSplinesDisp    = "numericORNULL",
-    scaDFSplinesMu      = "numericORNULL",
-    strReport           = "characterORNULL",
-    vecAllGenes         = "characterORNULL",
-    vecConfoundersDisp  = "characterORNULL",
-    vecConfoundersMu    = "characterORNULL",
-    scaOmega            = "numericORNULL",
-    boolFixedPopulations= "logical",
-    vecNCentroidsPerPop = "numericORNULL",
-    vecH0Pop            = "characterORNULL",
-    vecNormConst        = "numericORNULL",
-    strVersion          = "character")
+    'LineagePulseObject',
+    slots = c(
+        dfAnnotationProc    = "data.frameORNULL",
+        dfResults           = "data.frameORNULL",
+        lsDispModelH0       = "listORNULL",
+        lsDispModelH1       = "listORNULL",
+        lsDispModelConst    = "listORNULL",
+        lsDropModel         = "listORNULL",
+        lsMuModelH0         = "listORNULL",
+        lsMuModelH1         = "listORNULL",
+        lsMuModelConst      = "listORNULL",
+        lsFitZINBReporters  = "listORNULL",
+        matCountsProc       = "dgCMatrix",
+        matWeights          = "matrixORNULL",
+        scaDFSplinesDisp    = "numericORNULL",
+        scaDFSplinesMu      = "numericORNULL",
+        strReport           = "characterORNULL",
+        vecAllGenes         = "characterORNULL",
+        vecConfoundersDisp  = "characterORNULL",
+        vecConfoundersMu    = "characterORNULL",
+        scaOmega            = "numericORNULL",
+        boolFixedPopulations= "logical",
+        vecNCentroidsPerPop = "numericORNULL",
+        vecH0Pop            = "characterORNULL",
+        vecNormConst        = "numericORNULL",
+        strVersion          = "character")
 )
 
 ### 2. Enable accession of private elements via functions
@@ -114,8 +118,8 @@ setClass(
 #' 
 #' Get internal data of LineagePulse output object.
 #' 
-#' @param objLP (LineagePulse-Object)  A LineagePulse output object to extract
-#' object from.
+#' @param objLP (LineagePulse-Object)  
+#' A LineagePulse output object to extract from.
 #' 
 #' @return The internal data object specified by the function.
 #' 
@@ -331,7 +335,7 @@ get_strVersion <- function(objLP)
 #' 
 #' @export
 setMethod('names', 'LineagePulseObject', function(x) {
-  return( c("dfResults") )
+    return( c("dfResults") )
 })
 
 # b) Enable object[[ element ]] operator
@@ -375,10 +379,11 @@ setMethod('names', 'LineagePulseObject', function(x) {
 #' @author David Sebastian Fischer
 #' 
 #' @export
-setMethod('[[', c('LineagePulseObject', 'character', 'missing'), function(x, i, j, ...){
-  if(identical(i, "dfResults")){ return(x@dfResults)
-  } else { return(NULL) }
-})
+setMethod('[[', c('LineagePulseObject', 'character', 'missing'), 
+          function(x, i, j, ...){
+              if(identical(i, "dfResults")){ return(x@dfResults)
+              } else { return(NULL) }
+          })
 
 # c) Enable object$element operator, which relies on [[ ]]
 #' List-like accessor methods for LineagePulseObject: $
@@ -430,7 +435,8 @@ setMethod('$', 'LineagePulseObject', function(x, name) x[[name]] )
 #' Print LineagePulse report string to .txt file or stdout.
 #'
 #' @param object (LineagePulseObject) Output object of LineagePulse.
-#' @param file (file) [DEFAULT ""] File to print report to. Default is stdout.
+#' @param file (file) [DEFAULT ""] 
+#' File to print report to. Default is stdout.
 #' 
 #' @return nothing to return
 #'  

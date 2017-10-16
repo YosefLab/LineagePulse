@@ -286,20 +286,23 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
-#' @param vecMuModelGuess (numeric vector number of mean model parameters) 
+#' @param vecMuModelGuess 
+#' (numeric vector number of mean model parameters) 
 #' Initialisation for impulse model.
 #' @param lsvecBatchParamGuessMu (list) 
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess (numeric vector number of dispersion model parameters)
+#' @param vecDispGuess 
+#' (numeric vector number of dispersion model parameters)
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
 #' Object containing initialisation for 
 #' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param matDropoutLinModel (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel 
+#' (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
 #' @param vecPiConstPredictors 
@@ -525,17 +528,20 @@ fitContinuousZINB <- function(
 #' Object containing initialisation for mean parameter batch correction model.
 #' @param lsMuModelGlobal (list)
 #' Object containing meta-data of gene-wise mean parameter models.
-#' @param vecDispGuess (numeric vector number of dispersion model parameters)
+#' @param vecDispGuess 
+#' (numeric vector number of dispersion model parameters)
 #' Initialisation for dispersion model.
 #' @param lsvecBatchParamGuessDisp (list) 
 #' Object containing initialisation for 
 #' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
-#' @param matDropoutLinModel (matrix number of cells x number of predictors)
+#' @param matDropoutLinModel
+#' (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
-#' @param vecPiConstPredictors (numeric vector constant gene-wise coefficients)
+#' @param vecPiConstPredictors 
+#' (numeric vector constant gene-wise coefficients)
 #' Constant gene-wise coeffiecients, i.e. predictors which are not
 #' the offset and not the mean parameter.
 #' @param lsDropModelGlobal (list)

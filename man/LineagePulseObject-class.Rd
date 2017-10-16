@@ -18,10 +18,12 @@ Summary of fitting procedure and
 differential expression results for each gene.}
 
 \item{\code{lsDispModelH1}}{(list)
-Object containing description of gene-wise dispersion parameter models of H1.}
+Object containing description of 
+gene-wise dispersion parameter models of H1.}
 
 \item{\code{lsDispModelH0}}{(list)
-Object containing description of gene-wise dispersion parameter models of H0.}
+Object containing description of 
+gene-wise dispersion parameter models of H0.}
 
 \item{\code{lsDispModelConst}}{(list)
 Object containing description of gene-wise dispersion parameter models of

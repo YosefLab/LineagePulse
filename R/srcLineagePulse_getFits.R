@@ -74,8 +74,8 @@ getNormData <- function(matCounts,
             for(confounder in seq(1,scaNumConfounders)){
                 vecBatchParam <- vecBatchParam * 
                     (lsMuModel$lsmatBatchModel[[confounder]][id,][
-                    lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[
-                        confounder]]])
+                        lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[
+                            confounder]]])
             }
         }
         # Normalise counts by depth and/or batch factors as required

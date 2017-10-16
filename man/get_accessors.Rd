@@ -88,8 +88,8 @@ get_vecNormConst(objLP)
 get_strVersion(objLP)
 }
 \arguments{
-\item{objLP}{(LineagePulse-Object)  A LineagePulse output object to extract
-object from.}
+\item{objLP}{(LineagePulse-Object)
+A LineagePulse output object to extract from.}
 }
 \value{
 The internal data object specified by the function.

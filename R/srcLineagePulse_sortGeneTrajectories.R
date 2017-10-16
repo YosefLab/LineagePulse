@@ -62,8 +62,8 @@ sortGeneTrajectories <- function(
     matMuParam <- do.call(rbind, bplapply(vecIDs, function(id){
         round( decompressMeansByGene(
             vecMuModel=lsMuModel$matMuModel[id,],
-                                      lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
-                                      vecInterval=NULL ) )
+            lsMuModelGlobal=lsMuModel$lsMuModelGlobal,
+            vecInterval=NULL ) )
     }))
     rownames(matMuParam) <- vecIDs
     
