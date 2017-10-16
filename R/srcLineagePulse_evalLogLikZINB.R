@@ -182,7 +182,7 @@ evalLogLikGene <- function(
 #' @author David Sebastian Fischer
 evalLogLikGeneMM <- function(
     vecCounts,
-    vecMu,
+    matMuParam,
     vecNormConst,
     vecDisp, 
     vecPi,

@@ -13,6 +13,9 @@ fitMMZINB(vecCounts, vecMuGuess, lsvecBatchParamGuessMu, lsMuModelGlobal,
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
 
+\item{vecMuGuess}{(numeric vector number of mean model parameters) 
+Initialisation for impulse model.}
+
 \item{lsvecBatchParamGuessMu}{(list) 
 Object containing initialisation for mean parameter batch correction model.}
 
@@ -52,9 +55,6 @@ Maximum number of BFGS iterations handed to optim().}
 
 \item{RELTOL}{(scalar) 
 Cost function convergence criterium handed to optim().}
-
-\item{vecMuModelGuess}{(numeric vector number of mean model parameters) 
-Initialisation for impulse model.}
 }
 \value{
 list

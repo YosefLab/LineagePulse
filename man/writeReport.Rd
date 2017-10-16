@@ -11,6 +11,9 @@ writeReport(object, file = "")
 
 \item{file}{(file) [DEFAULT ""] File to print report to. Default is stdout.}
 }
+\value{
+nothing to return
+}
 \description{
 Print LineagePulse report string to .txt file or stdout.
 }

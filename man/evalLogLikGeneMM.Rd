@@ -5,12 +5,16 @@
 \title{Wrapper for log likelihood of zero-inflated negative binomial model
 for a vector of counts.}
 \usage{
-evalLogLikGeneMM(vecCounts, vecMu, vecNormConst, vecDisp, vecPi, vecidxNotZero,
-  vecidxZero, scaNCells)
+evalLogLikGeneMM(vecCounts, matMuParam, vecNormConst, vecDisp, vecPi,
+  vecidxNotZero, vecidxZero, scaNCells)
 }
 \arguments{
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
+
+\item{matMuParam}{(numeric matrix number of cells x number of mixtures) 
+Negative binomial mean parameter matrix with one mean per
+cell and per mixture.}
 
 \item{vecNormConst}{(numeric vector number of cells) 
 Model scaling factors, one per cell.}
@@ -29,10 +33,6 @@ Whether observation is zero.}
 
 \item{scaNCells}{(scalar)
 Number of cells (auxillary parameter, this is length of vecCounts).}
-
-\item{matMuParam}{(numeric matrix number of cells x number of mixtures) 
-Negative binomial mean parameter matrix with one mean per
-cell and per mixture.}
 }
 \value{
 NULL

@@ -733,7 +733,7 @@ fitImpulseZINB <- function(
 #' 
 #' @param vecCounts (count vector number of cells)
 #'Observed read counts, not observed are NA.
-#' @param vecMuModelGuess (numeric vector number of mean model parameters) 
+#' @param vecMuGuess (numeric vector number of mean model parameters) 
 #' Initialisation for impulse model.
 #' @param lsvecBatchParamGuessMu (list) 
 #' Object containing initialisation for mean parameter batch correction model.
