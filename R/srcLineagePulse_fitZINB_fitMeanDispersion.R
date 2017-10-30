@@ -382,9 +382,9 @@ fitContinuousZINB <- function(
                          fnscale=-1)
         )[c("par","value","convergence")] )
     }, error=function(strErrorMsg){
-        print(paste0("ERROR: Fitting impulse model: fitContinuousZINB()."))
-        print(strErrorMsg)
-        print(paste0("vecTheta ", paste0(vecTheta, collapse = " ")))
+        message(paste0("ERROR: Fitting impulse model: fitContinuousZINB()."))
+        message(strErrorMsg)
+        message(paste0("vecTheta ", paste0(vecTheta, collapse = " ")))
         stop(strErrorMsg)
     })
     
@@ -944,7 +944,7 @@ fitZINBMuDisp <- function(
             return(fitDispMu)
         } else {
             #  Not coded yet. Contact david.seb.fischer@gmail.com if desired.
-            print(paste0(
+            message(paste0(
                 "Mean parameter model not recognised for ",
                 "co-estimation with dispersion: ",
                 lsMuModel$lsMuModelGlobal$strMuModel, 

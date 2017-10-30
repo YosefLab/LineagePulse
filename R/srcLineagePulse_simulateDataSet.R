@@ -129,7 +129,7 @@ simulateContinuousDataSet <- function(
     )
     
     ### 2. Create underlying count matrix
-    print("Draw mean trajectories")
+    message("Draw mean trajectories")
     if(scaNConst>0) {
         vecConstIDs <- paste0(rep("gene_", scaNConst),
                               c(1:scaNConst))
@@ -212,10 +212,10 @@ simulateContinuousDataSet <- function(
     
     ## Add size factors
     if(is.null(vecNormConstExternal)){
-        print("Setting size factors uniformly =1")
+        message("Setting size factors uniformly =1")
         vecNormConstHidden <- array(1, dim(matMuHidden)[2])
     } else {
-        print("Use externally supplied size factors.")
+        message("Use externally supplied size factors.")
         if(length(vecNormConstExternal) != scaNCells){
             stop(paste0("vecNormConstExternal has to be",
                         " of the length of the number of cells scaNCells."))
@@ -229,7 +229,7 @@ simulateContinuousDataSet <- function(
                                       ncol=dim(matMuHidden)[2], byrow=TRUE)
     
     ## draw dispersions by gene
-    print("Draw dispersion")
+    message("Draw dispersion")
     if(is.null(vecDispExternal)) {
         vecDispHidden <- 3 + rnorm(n = dim(matMuHidden)[1], mean = 0, sd = 0.5)
         vecDispHidden[vecDispHidden < 0.05] <- 0.05
@@ -242,7 +242,7 @@ simulateContinuousDataSet <- function(
     colnames(matDispHidden) <- names(vecPT)
     
     ## add noise - draw from negative binomial
-    print("Simulate negative binomial noise")
+    message("Simulate negative binomial noise")
     matSampledDataHidden <- do.call(rbind, lapply(
         seq(1,dim(matMuHidden)[1]), function(gene){
             sapply(seq(1,scaNCells), function(cell){
@@ -253,7 +253,7 @@ simulateContinuousDataSet <- function(
     colnames(matSampledDataHidden) <- names(vecPT)
     
     ### 3. Apply drop out
-    print("Simulate drop-out")
+    message("Simulate drop-out")
     ## Generate underlying drop-out rate matrix
     if(!is.null(matDropoutModelExternal) & !is.null(vecGeneWiseDropoutRates)) {
         stop(paste0("Supply either matDropoutModelExternal",

@@ -23,7 +23,7 @@ calcNormConst <- function(objLP,
     if(!is.null(vecNormConstExternal)){
         vecNormConst <- vecNormConstExternal
     } else {
-        print("# All size factors are set to one.")
+        message("# All size factors are set to one.")
         vecNormConst <- array(1, dim(objLP@matCountsProc)[2])
         names(vecNormConst) <- colnames(objLP@matCountsProc)
     }

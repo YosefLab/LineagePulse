@@ -52,7 +52,7 @@ sortGeneTrajectories <- function(
     
     # Check IDs are in model matrix
     if(any(!(vecIDs %in% rownames(lsMuModel$matMuModel)))){
-        print(paste0("ERROR: Some IDs in vecIDs are not given",
+        message(paste0("ERROR: Some IDs in vecIDs are not given",
                      " in model lsMuModel$matMuModel."))
         return(NULL)
     }

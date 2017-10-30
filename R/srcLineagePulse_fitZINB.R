@@ -481,7 +481,7 @@ fitZINB <- function(
     strMessage <- paste0("#  .   Initialisation: ",
                          "ll ", scaLogLikNew)
     strReport <- paste0(strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     ### Iteration
     scaIter <- 1
@@ -520,21 +520,21 @@ fitZINB <- function(
                         paste(unique(vecboolPiEstConverged[
                             vecboolPiEstConverged!=0])), "].")
                     strReport <- paste0(strReport, strMessage, "\n")
-                    if(boolSuperVerbose) print(strMessage)
+                    if(boolSuperVerbose) message(strMessage)
                 }
                 if(any(vecboolPiEstConverged==1001)){
                     strMessage <- paste0(
                         "Fatal dropout estimation error in ", 
                         sum(vecboolPiEstConverged==1001), " cases.")
                     strReport <- paste0(strReport, strMessage, "\n")
-                    if(boolSuperVerbose) print(strMessage)
+                    if(boolSuperVerbose) message(strMessage)
                 }
                 strMessage <- paste0(
                     "# ",scaIter,".   Drop-out estimation: ",
                     "ll     ", sum(vecLL), " in ",
                     round(tm_pi["elapsed"]/60,2)," min.")
                 strReport <- paste0(strReport, strMessage, "\n")
-                if(boolSuperVerbose) print(strMessage)
+                if(boolSuperVerbose) message(strMessage)
             }
             
             ##### 2. Gene-wise parameter estimation:
@@ -584,7 +584,7 @@ fitZINB <- function(
                 paste(unique(vecboolDispEstConverged[
                     vecboolDispEstConverged!=0]), collapse=","), "].")
             strReport <- paste0(strReport, strMessage, "\n")
-            if(boolSuperVerbose) print(strMessage)
+            if(boolSuperVerbose) message(strMessage)
         }
         
         strMessage <- paste0(
@@ -592,13 +592,13 @@ fitZINB <- function(
             "ll ", scaLogLikNew, " in ",
             round(tm_mudisp["elapsed"]/60,2)," min.")
         strReport <- paste0(strReport, strMessage, "\n")
-        if(boolSuperVerbose) print(strMessage)
+        if(boolSuperVerbose) message(strMessage)
         
         strMessage <- paste0(
             "# ",scaIter, ".  Iteration with ",
             "ll   ", scaLogLikNew, " in ",
             round(tm_iter["elapsed"]/60,2)," min.")
-        if(boolVerbose & !boolSuperVerbose) print(strMessage)
+        if(boolVerbose & !boolSuperVerbose) message(strMessage)
         
         vecEMLogLikModel[scaIter] <- scaLogLikNew
         scaIter <- scaIter+1

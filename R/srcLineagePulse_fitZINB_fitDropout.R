@@ -293,8 +293,8 @@ fitPi_SingleCell <- function(
                          fnscale=-1)
         )[c("par","value","convergence")]
     }, error=function(strErrorMsg){
-        print(paste0("ERROR: Fitting logistic drop-out model: fitPi_SingleCell()."))
-        print(strErrorMsg)
+        message(paste0("ERROR: Fitting logistic drop-out model: fitPi_SingleCell()."))
+        message(strErrorMsg)
         stop()
     })
     
@@ -366,8 +366,8 @@ fitPi_ManyCells <- function(
                          fnscale=-1)
         )[c("par","value","convergence")]
     }, error=function(strErrorMsg){
-        print(paste0("ERROR: Fitting logistic drop-out model: fitPi_ManyCells()."))
-        print(strErrorMsg)
+        message(paste0("ERROR: Fitting logistic drop-out model: fitPi_ManyCells()."))
+        message(strErrorMsg)
         stop()
     })
     

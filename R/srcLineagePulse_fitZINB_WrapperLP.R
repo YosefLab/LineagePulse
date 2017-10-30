@@ -109,7 +109,7 @@ fitContinuousModels <- function(
     strMessage <- paste0("### a) Fit negative binomial model A (",
                          strNameModelA,") with noise model.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     tm_cycle <- system.time({
         lsFitsModelA <- fitZINB(
@@ -143,14 +143,14 @@ fitContinuousModels <- function(
         "model A with noise model in ", 
         round(tm_cycle["elapsed"]/60,2)," min.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     ####################################################
     # Fit model B
     strMessage <- paste0("### b) Fit negative binomial model B (",
                          strNameModelB,").")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     tm_cycleB <- system.time({
         lsFitsModelB <- fitZINB(
@@ -181,7 +181,7 @@ fitContinuousModels <- function(
         "Finished fitting zero-inflated negative binomial ",
         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     if(boolEstimateNoiseBasedOnH0){
         lsFitZINBReporters <- list(

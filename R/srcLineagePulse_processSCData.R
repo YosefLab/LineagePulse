@@ -297,11 +297,11 @@ processSCData <- function(
     strMessage <- paste0("LineagePulse for count data: v", 
                          STRVERSION)
     strReport <- paste0(strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     strMessage <- paste0("--- Data preprocessing")
     strReport <- paste0(strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     if(strMuModel=="impulse"){
         strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", 
@@ -309,7 +309,7 @@ processSCData <- function(
                              " cells did not have a pseudotime coordinate",
                              " and were excluded.")
         strReport <- paste0(strReport, strMessage, "\n")
-        if(boolVerbose) print(strMessage)
+        if(boolVerbose) message(strMessage)
     }
     
     strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", 
@@ -317,14 +317,14 @@ processSCData <- function(
                          " genes did not contain non-zero observations",
                          " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     strMessage <- paste0("# ", sum(!vecidxCells), " out of ", 
                          length(vecidxCells), 
                          " cells did not contain non-zero observations",
                          " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     # Reduce matPiConstPredictors to genes in counts
     matPiConstPredictorsProc <- 

@@ -302,7 +302,7 @@ runLineagePulse <- function(
     # 2. Compute normalisation constants
     strMessage <- paste0("--- Compute normalisation constants:")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     objLP <- calcNormConst(objLP=objLP,
                            vecNormConstExternal=vecNormConstExternalProc)
@@ -310,7 +310,7 @@ runLineagePulse <- function(
     # 3. Fit ZINB model for both H1 and H0.
     strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     tm_fitmm <- system.time({
         objLP <- fitContinuousModels(
@@ -329,13 +329,13 @@ runLineagePulse <- function(
     strMessage <- paste0("Time elapsed during ZINB fitting: ",
                          round(tm_fitmm["elapsed"]/60,2)," min")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     
     # 4. Differential expression analysis:
     strMessage <- paste0("--- Run differential expression analysis.")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     tm_deanalysis_mf <- system.time({
         objLP <- runDEAnalysis( objLP=objLP )
@@ -344,11 +344,11 @@ runLineagePulse <- function(
         "Time elapsed during differential expression analysis: ",
         round(tm_deanalysis_mf["elapsed"]/60,2)," min")
     objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     strMessage <- paste0("Finished runLineagePulse().")
     objLP@strReport <- paste0(objLP@strReport, strMessage)
-    if(boolVerbose) print(strMessage)
+    if(boolVerbose) message(strMessage)
     
     return(objLP)
 }
