@@ -38,7 +38,7 @@ objLP <- runLineagePulse(
 # Get dispersion parameter fits on alternative model:
 # Use H1 model fits.
 vecDispersionFits <- getFitsDispersion(
-     lsDispModel = get_lsDispModelH1(objLP),
+     lsDispModel = lsDispModelH1(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 
 }

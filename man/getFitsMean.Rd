@@ -38,7 +38,7 @@ objLP <- runLineagePulse(
 # Get mean parameter fits on alternative model:
 # Use H1 model fits.
 vecMeanFits <- getFitsMean(
-     lsMuModel = get_lsMuModelH1(objLP),
+     lsMuModel = lsMuModelH1(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #plot(lsSimulatedData$annot$pseudotime, vecMeanFits)     
 

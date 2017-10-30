@@ -50,7 +50,7 @@ objLP <- runLineagePulse(
 # Use H1 model fits.
 matNormData <- getNormData(
      matCounts = lsSimulatedData$counts,
-     lsMuModel = get_lsMuModelH1(objLP),
+     lsMuModel = lsMuModelH1(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1],
      boolDepth = TRUE, boolBatch = TRUE)
 

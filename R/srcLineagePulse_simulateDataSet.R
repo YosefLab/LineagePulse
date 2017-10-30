@@ -244,7 +244,7 @@ simulateContinuousDataSet <- function(
     ## add noise - draw from negative binomial
     message("Simulate negative binomial noise")
     matSampledDataHidden <- do.call(rbind, lapply(
-        seqlen(nrow(matMuHidden)), function(gene){
+        seq_len(nrow(matMuHidden)), function(gene){
             sapply(seq_len(scaNCells), function(cell){
                 rnbinom(n=1, mu=matMuHidden[gene,cell], size=vecDispHidden[gene])
             })

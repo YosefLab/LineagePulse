@@ -8,7 +8,7 @@
 \alias{function}
 \title{LineagePulse wrapper: Differential expression analysis in pseudotime}
 \usage{
-runLineagePulse(counts, dfAnnotation, vecConfoundersMu = NULL,
+runLineagePulse(counts, dfAnnotation = NULL, vecConfoundersMu = NULL,
   vecConfoundersDisp = NULL, strMuModel = "impulse",
   strDispModelFull = "constant", strDispModelRed = "constant",
   strDropModel = "logistic_ofMu", strDropFitGroup = "PerCell",
@@ -21,11 +21,17 @@ runLineagePulse(counts, dfAnnotation, vecConfoundersMu = NULL,
 \item{counts}{(matrix genes x cells (sparseMatrix or standard), 
 SummarizedExperiment or file)
 Matrix: Count data of all cells, unobserved entries are NA.
-SummarizedExperiment: Count data of all cells in assay(counts).
+SummarizedExperiment or SingleCellExperiment: 
+Count data of all cells in assay(counts)
+and annotation data can be supplied as colData(counts) or separately
+via dfAnnotation.
 file: .mtx file from which count matrix is to be read.}
 
 \item{dfAnnotation}{(data frame cells x meta characteristics)
+[Default NULL]
 Annotation table which contains meta data on cells.
+This data frame may be supplied as colData(counts) if
+counts is a SummerizedExperiment or SingleCellExperiment object.
 May contain the following columns
 cell: Cell IDs.
 pseudotime: Pseudotemporal coordinates of cells.
@@ -162,7 +168,9 @@ normalisation factors (such as factors accounting for sequencing depth)
 2. Supply cell meta data: Data frame (dfAnnotation) which contains
 all cell ids (the colnames of matCounts) in a column "cell",
 and cell-wise pseudotime coordinates (scalar) in a a column "pseudpotime".
-Rownames must be the ids in column "cell".
+Rownames must be the ids in column "cell". This object can also be supplied
+as the colData of counts if counts is SummerizedExperiment or 
+SingleCellExperiment object.
 3. Chose the model constraining mean (strMuModel) and dispersion 
 parameters (strDispModel) for each gene.
 

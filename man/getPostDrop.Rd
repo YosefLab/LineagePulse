@@ -50,9 +50,9 @@ objLP <- runLineagePulse(
 # Use H1 model fits.
 vecPosteriorDropoutFits <- getPostDrop(
      matCounts = lsSimulatedData$counts,
-     lsMuModel = get_lsMuModelH1(objLP),
-     lsDispModel = get_lsDispModelH1(objLP),
-     lsDropModel = get_lsDropModel(objLP),
+     lsMuModel = lsMuModelH1(objLP),
+     lsDispModel = lsDispModelH1(objLP),
+     lsDropModel = lsDropModel(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 
 }
