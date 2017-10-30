@@ -123,29 +123,30 @@ setClass(
 #' 
 #' @return The internal data object specified by the function.
 #' 
-#' @name get_accessors
-#' @rdname get_accessors
+#' @name accessors
+#' @rdname accessors
 #' @aliases
-#' get_lsMuModelH0
-#' get_lsMuModelH1
-#' get_lsMuModelConst
-#' get_lsDispModelH0
-#' get_lsDispModelH1
-#' get_lsDispModelConst
-#' get_lsDropModel
-#' get_matCountsProc
-#' get_matWeights
-#' get_scaDFSplinesDisp
-#' get_scaDFSplinesMu
-#' get_strReport
-#' get_vecAllGenes
-#' get_vecConfoundersDisp
-#' get_vecConfoundersMu
-#' get_scaOmega
-#' get_boolFixedPopulation
-#' get_vecH0Pop
-#' get_vecNormConst
-#' get_strVersion
+#' lsMuModelH0
+#' lsMuModelH1
+#' lsMuModelConst
+#' lsDispModelH0
+#' lsDispModelH1
+#' lsDispModelConst
+#' lsDropModel
+#' matCountsProc
+#' matWeights
+#' scaDFSplinesDisp
+#' scaDFSplinesMu
+#' strReport
+#' vecAllGenes
+#' vecConfoundersDisp
+#' vecConfoundersMu
+#' scaOmega
+#' boolFixedPopulation
+#' vecH0Pop
+#' vecNormConst
+#' strVersion
+#' strReport
 #' 
 #' @examples    
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -163,135 +164,146 @@ setClass(
 #'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
 #' # get hidden objects within LineagePulse object
-#' dfAnnotationProc <- get_dfAnnotationProc(objLP)
-#' lsMuModelH0 <- get_lsMuModelH0(objLP)
-#' lsMuModelH1 <- get_lsMuModelH1(objLP)
-#' lsMuModelConst <- get_lsMuModelConst(objLP)
-#' lsDispModelH0 <- get_lsDispModelH0(objLP)
-#' lsDispModelH1 <- get_lsDispModelH1(objLP)
-#' lsDispModelConst <- get_lsDispModelConst(objLP)
-#' lsDropModel <- get_lsDropModel(objLP)
-#' matCountDataProc <- get_matCountsProc(objLP)
-#' matWeights <- get_matWeights(objLP)
-#' scaDFSplinesDisp <- get_scaDFSplinesDisp(objLP) 
-#' scaDFSplinesMu <- get_scaDFSplinesMu(objLP) 
-#' strReport <- get_strReport(objLP) 
-#' vecAllGenes <- get_vecAllGenes(objLP) 
-#' vecConfoundersDisp <- get_vecConfoundersDisp(objLP) 
-#' vecConfoundersMu <- get_vecConfoundersMu(objLP) 
-#' scaOmega <- get_scaOmega(objLP) 
-#' boolFixedPopulations <- get_boolFixedPopulations(objLP)
-#' vecH0Pop <- get_vecH0Pop(objLP) 
-#' vecNormConst <- get_vecNormConst(objLP) 
-#' strVersion <- get_strVersion(objLP)
+#' dfAnnotationProc <- dfAnnotationProc(objLP)
+#' lsMuModelH0 <- lsMuModelH0(objLP)
+#' lsMuModelH1 <- lsMuModelH1(objLP)
+#' lsMuModelConst <- lsMuModelConst(objLP)
+#' lsDispModelH0 <- lsDispModelH0(objLP)
+#' lsDispModelH1 <- lsDispModelH1(objLP)
+#' lsDispModelConst <- lsDispModelConst(objLP)
+#' lsDropModel <- lsDropModel(objLP)
+#' matCountDataProc <- matCountsProc(objLP)
+#' matWeights <- matWeights(objLP)
+#' scaDFSplinesDisp <- scaDFSplinesDisp(objLP) 
+#' scaDFSplinesMu <- scaDFSplinesMu(objLP) 
+#' strReport <- strReport(objLP) 
+#' vecAllGenes <- vecAllGenes(objLP) 
+#' vecConfoundersDisp <- vecConfoundersDisp(objLP) 
+#' vecConfoundersMu <- vecConfoundersMu(objLP) 
+#' scaOmega <- scaOmega(objLP) 
+#' boolFixedPopulations <- boolFixedPopulations(objLP)
+#' vecH0Pop <- vecH0Pop(objLP) 
+#' vecNormConst <- vecNormConst(objLP) 
+#' strVersion <- strVersion(objLP)
+#' strReport <- strReport(objLP)
 #' 
 #' @author David Sebastian Fischer
 NULL
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_dfAnnotationProc <- function(objLP) 
+dfAnnotationProc <- function(objLP) 
     return(objLP@dfAnnotationProc)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsMuModelH0 <- function(objLP) 
+lsMuModelH0 <- function(objLP) 
     return(objLP@lsMuModelH0)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsMuModelH1 <- function(objLP) 
+lsMuModelH1 <- function(objLP) 
     return(objLP@lsMuModelH1)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsMuModelConst <- function(objLP) 
+lsMuModelConst <- function(objLP) 
     return(objLP@lsMuModelConst)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsDispModelH0 <- function(objLP) 
+lsDispModelH0 <- function(objLP) 
     return(objLP@lsDispModelH0)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsDispModelH1 <- function(objLP) 
+lsDispModelH1 <- function(objLP) 
     return(objLP@lsDispModelH1)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsDispModelConst <- function(objLP) 
+lsDispModelConst <- function(objLP) 
     return(objLP@lsDispModelConst)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_lsDropModel <- function(objLP) 
+lsDropModel <- function(objLP) 
     return(objLP@lsDropModel)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_matCountsProc <- function(objLP) 
+matCountsProc <- function(objLP) 
     return(objLP@matCountsProc)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_matWeights <- function(objLP) 
+matWeights <- function(objLP) 
     return(objLP@matWeights)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_scaDFSplinesDisp <- function(objLP) 
+scaDFSplinesDisp <- function(objLP) 
     return(objLP@scaDFSplinesDisp)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_scaDFSplinesMu <- function(objLP) 
+scaDFSplinesMu <- function(objLP) 
     return(objLP@scaDFSplinesMu)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_strReport <- function(objLP) 
+strReport <- function(objLP) 
     return(objLP@strReport)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_vecAllGenes <- function(objLP) 
+vecAllGenes <- function(objLP) 
     return(objLP@vecAllGenes)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_vecConfoundersDisp <- function(objLP) 
+vecConfoundersDisp <- function(objLP) 
     return(objLP@vecConfoundersDisp)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_vecConfoundersMu <- function(objLP) 
+vecConfoundersMu <- function(objLP) 
     return(objLP@vecConfoundersMu)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_scaOmega <- function(objLP) 
+scaOmega <- function(objLP) 
     return(objLP@scaOmega)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_boolFixedPopulations <- function(objLP) 
+boolFixedPopulations <- function(objLP) 
     return(objLP@boolFixedPopulations)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_vecH0Pop <- function(objLP) 
+vecH0Pop <- function(objLP) 
     return(objLP@vecH0Pop)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_vecNormConst <- function(objLP) 
+vecNormConst <- function(objLP) 
     return(objLP@vecNormConst)
 
-#' @rdname get_accessors
+#' @rdname accessors
 #' @export
-get_strVersion <- function(objLP) 
+strVersion <- function(objLP) 
     return(objLP@strVersion)
+
+#' @rdname accessors
+#' @export
+strReport <- function(objLP) 
+    return(objLP@strReport)
+
+#' @rdname accessors
+#' @export
+`strReport<-` <- function(objLP, strMessage)
+    paste0(objLP@strReport, strMessage, "\n")
 
 ### 2. Enable accession of public elements via list-like
 ### properties of LineagePulseObject.

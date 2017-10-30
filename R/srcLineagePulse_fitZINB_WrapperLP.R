@@ -136,7 +136,6 @@ fitContinuousModels <- function(
     vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
     objLP@strReport <- paste0(objLP@strReport,
                               lsFitsModelA$strReport)
-    rm(lsFitsModelA)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",
@@ -175,7 +174,6 @@ fitContinuousModels <- function(
     vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
     objLP@strReport <- paste0(objLP@strReport,
                               lsFitsModelB$strReport)
-    rm(lsFitsModelB)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",

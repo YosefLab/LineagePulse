@@ -80,7 +80,7 @@ evalLogLikPiZINB_SingleCell <- function(
         if(vecTheta[2] > -10^(-10)) vecTheta[2] <- -10^(-10)
     }
     
-    vecPiEst <- sapply(seq(1,dim(matPiAllPredictors)[1]), function(i){
+    vecPiEst <- sapply(seq_len(nrow(matPiAllPredictors)), function(i){
         evalDropoutModel_comp(
             vecPiModel=vecTheta, 
             vecPiPredictors=matPiAllPredictors[i,] )
@@ -173,7 +173,7 @@ evalLogLikPiZINB_ManyCells <- function(
     lsDispModel,
     lsDropModel){ 
     
-    scaNumGenes <- dim(matCounts)[1]
+    scaNumGenes <- nrow(matCounts)
     # (I) Linker functions
     # Force mean parameter to be negative
     if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
@@ -421,15 +421,15 @@ fitZINBPi <- function(
     lsDispModel,
     lsDropModel){
     
-    scaNumGenes <- dim(matCounts)[1]
-    scaNumCells <- dim(matCounts)[2]
+    scaNumGenes <- nrow(matCounts)
+    scaNumCells <- ncol(matCounts)
     if(lsDropModel$lsDropModelGlobal$strDropFitGroup=="PerCell"){
-        lsFitsPi <- bplapply(seq(1,scaNumCells), function(j){
+        lsFitsPi <- bplapply(seq_len(scaNumCells), function(j){
             # Decompress parameters
             if(lsMuModel$lsMuModelGlobal$strMuModel=="MM") {
-                stop(paste0("ERROR: fitZINBPi not adapted to strMuModel=MM yet. Talk to David."))
+                stop("ERROR: fitZINBPi not adapted to strMuModel=MM yet. Talk to David.")
             }
-            vecMuParam <- do.call(c, lapply(seq(1,scaNumGenes), function(i){
+            vecMuParam <- do.call(c, lapply(seq_len(scaNumGenes), function(i){
                 decompressMeansByGene(
                     vecMuModel=lsMuModel$matMuModel[i,],
                     lsvecBatchModel=lapply(lsMuModel$lsmatBatchModel, function(mat) mat[i,] ),
@@ -437,9 +437,9 @@ fitZINBPi <- function(
                     vecInterval=j)
             }))
             if(lsDispModel$lsDispModelGlobal$strDispModel=="MM") {
-                stop(paste0("ERROR: fitZINBPi not adapted to strDispModel=MM yet. Talk to David."))
+                stop("ERROR: fitZINBPi not adapted to strDispModel=MM yet. Talk to David.")
             }
-            vecDispParam <- do.call(c, lapply(seq(1,scaNumGenes), function(i){
+            vecDispParam <- do.call(c, lapply(seq_len(scaNumGenes), function(i){
                 decompressDispByGene(
                     vecDispModel=lsDispModel$matDispModel[i,],
                     lsvecBatchModel=lapply(lsDispModel$lsmatBatchModel, function(mat) mat[i,] ),
@@ -454,10 +454,10 @@ fitZINBPi <- function(
                 matPiAllPredictors<-cbind(rep(1,scaNumGenes),
                                           lsDropModel$matPiConstPredictors)
             } else {
-                stop(paste0("ERROR fitZINBPi: ",
-                            "lsDropModel$lsDropModelGlobal$strDropModel=",
-                            lsDropModel$lsDropModelGlobal$strDropModel,
-                            " not recognised."))
+                stop("ERROR fitZINBPi: ",
+                     "lsDropModel$lsDropModelGlobal$strDropModel=",
+                     lsDropModel$lsDropModelGlobal$strDropModel,
+                     " not recognised.")
             }
             # Initialise optimisation of linear model:
             vecParamGuess <- lsDropModel$matDropoutLinModel[j,]
@@ -498,10 +498,10 @@ fitZINBPi <- function(
         vecboolConverged <- lsFitPi$scaConvergence
         vecLL <- lsFitPi$scaLL
     } else {
-        stop(paste0("ERROR fitZINBPi: ",
-                    "lsDropModel$lsDropModelGlobal$strDropFitGroup=",
-                    lsDropModel$lsDropModelGlobal$strDropFitGroup,
-                    " not recognised."))
+        stop("ERROR fitZINBPi: ",
+             "lsDropModel$lsDropModelGlobal$strDropFitGroup=",
+             lsDropModel$lsDropModelGlobal$strDropFitGroup,
+             " not recognised.")
     }
     
     return(list(

@@ -101,9 +101,9 @@ plotGene <- function(
     ### 0. Check input
     ## Can only use one colour scale!
     if(boolLineageContour & boolColourByDropout){
-        warning(paste0("Only one colour scale can be used. ",
-                       "Set either boolLineageContour or",
-                       " boolColourByDropout to FALSE"))
+        warning("Only one colour scale can be used. ",
+                "Set either boolLineageContour or",
+                " boolColourByDropout to FALSE")
         boolColourByDropout <- FALSE
     }
     ### 1. Extract data and models
@@ -161,8 +161,7 @@ plotGene <- function(
         }
         
     } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
-        dfScatterCounts$x <- seq(
-            1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells, by=1)
+        dfScatterCounts$x <- seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells)
         dfScatterCounts$groups <- objLP@dfAnnotationProc$groups
         
         if(boolColourByDropout){
@@ -200,8 +199,7 @@ plotGene <- function(
         } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
                   c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq(
-                    1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 2),
+                x=rep(seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells), 2),
                 counts=c(vecMuParamH0,
                          vecMuParamH1),
                 model=c(rep("H0", length(vecMuParamH0)), 
@@ -221,8 +219,7 @@ plotGene <- function(
         } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
                   c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq(
-                    1, objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells,by=1), 3),
+                x=rep(seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells), 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecReferenceMuParam),

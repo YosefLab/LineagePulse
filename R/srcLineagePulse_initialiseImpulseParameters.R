@@ -57,7 +57,7 @@ initialiseImpulseParameters <- function(
         scaCellsPerGroup <- round(length(vecCounts)/scaGroups)
         vecidxGroups <- array(NA, length(vecCounts))
         scaidxNew <- 0
-        for(k in seq(1,scaGroups)){
+        for(k in seq_len(scaGroups)){
             # Define clusters as groups of cells of uniform size
             scaidxLast <- scaidxNew + 1
             scaidxNew <- scaidxLast + scaCellsPerGroup - 1
@@ -94,7 +94,7 @@ initialiseImpulseParameters <- function(
     indMinMiddleMean <- match(scaMinMiddleMean,
                               vecGroupExprMean[2:(nTimepts-1)]) + 1
     # Gradients between neighbouring points
-    vecGradients <- unlist( lapply(c(1:(nTimepts-1)),function(x){
+    vecGradients <- unlist( lapply(seq_len(nTimepts-1),function(x){
         (vecGroupExprMean[x+1]-vecGroupExprMean[x]) / 
             (vecGroupTimeCoord[x+1]-vecGroupTimeCoord[x])}) )
     vecGradients[is.na(vecGradients) | !is.finite(vecGradients)] <- 0
@@ -104,11 +104,11 @@ initialiseImpulseParameters <- function(
     # t1: Around first observed inflexion point, t2: 
     # Around second observed inflexion point
     indLowerInflexionPoint <- match(
-        max(vecGradients[1:(indMaxMiddleMean-1)], na.rm=TRUE), 
-        vecGradients[1:(indMaxMiddleMean-1)])
+        max(vecGradients[seq_len(indMaxMiddleMean-1)], na.rm=TRUE), 
+        vecGradients[seq_len(indMaxMiddleMean-1)])
     indUpperInflexionPoint <- indMaxMiddleMean - 1 + match(
-        min(vecGradients[indMaxMiddleMean:length(vecGradients)], na.rm=TRUE),
-        vecGradients[indMaxMiddleMean:length(vecGradients)])
+        min(vecGradients[seq(indMaxMiddleMean, length(vecGradients), by = 1)], na.rm=TRUE),
+        vecGradients[seq(indMaxMiddleMean, length(vecGradients), by = 1)])
     vecParamGuessPeak <- c(
         1,
         1,
@@ -125,11 +125,11 @@ initialiseImpulseParameters <- function(
     # t1: Around first observed inflexion point, t2: 
     # Around second observed inflexion point
     indLowerInflexionPoint <- match(
-        min(vecGradients[1:(indMinMiddleMean-1)], na.rm=TRUE), 
-        vecGradients[1:(indMinMiddleMean-1)])
+        min(vecGradients[seq_len(indMinMiddleMean-1)], na.rm=TRUE), 
+        vecGradients[seq_len(indMinMiddleMean-1)])
     indUpperInflexionPoint <- indMinMiddleMean - 1 + match(
-        max(vecGradients[indMinMiddleMean:(nTimepts-1)], na.rm=TRUE), 
-        vecGradients[indMinMiddleMean:(nTimepts-1)])
+        max(vecGradients[seq(indMinMiddleMean, nTimepts-1, by = 1)], na.rm=TRUE), 
+        vecGradients[seq(indMinMiddleMean, nTimepts-1, by = 1)])
     vecParamGuessValley <- c(
         1,
         1,

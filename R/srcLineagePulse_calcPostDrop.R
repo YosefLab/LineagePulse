@@ -31,25 +31,15 @@ calcPostDrop_Vector <- function(
     vecboolZero,
     vecboolNotZero ){
     
-    scaNumSamples <- length(vecMu)
-    
     # Compute probability of zero counts under 
     # negative binomial model.
-    vecNBZero <- (vecDisp/(vecDisp+vecMu))^vecDisp
-    # Compute posterior of drop-out.
-    vecZ <- sapply(seq(1,scaNumSamples), function(j){
-        if(vecboolNotZero[j]){
-            scaZ <- 0
-        } else if(vecboolZero[j]) {
-            scaZ <- sum(vecDrop[j]/(vecDrop[j] + 
-                                        (1-vecDrop[j])*vecNBZero[j])) *
-                1/length(j)
-        } else {
-            scaZ <- NA
-        }
-        return(scaZ)
-    })
-    
+    vecNB_zero <- (vecDisp/(vecDisp+vecMu))^vecDisp
+    # Compute posterior of drop-out
+    vecZ_zero <- vecDrop/(vecDrop + (1-vecDrop)*vecNB_zero)
+    vecZ <- rep(NA_real_, length(vecMu))
+    vecZ[vecboolNotZero] <- 0
+    vecZ[vecboolZero] <- vecZ_zero[vecboolZero]
+
     names(vecZ) <- names(vecMu)
     return(vecZ)
 }
@@ -83,8 +73,8 @@ calcPostDrop_Matrix <- function(
     lsDropModel,
     vecIDs=NULL){
     
-    scaNumGenes <- dim(matCounts)[1]
-    scaNumCells <- dim(matCounts)[2]
+    scaNumGenes <- nrow(matCounts)
+    scaNumCells <- ncol(matCounts)
     
     # Compute posterior of drop-out.
     if(!is.null(vecIDs)) {
@@ -117,21 +107,15 @@ calcPostDrop_Matrix <- function(
         
         # Compute probability of zero counts under 
         # negative binomial model.
-        vecNBZero <- (vecDispParam/(vecDispParam+vecMuParam))^vecDispParam
+        vecNB_zero <- (vecDispParam/(vecDispParam+vecMuParam))^vecDispParam
         
-        vecZ <- sapply(seq(1,scaNumCells), function(j){
-            if(!is.na(vecCounts[j]) & vecCounts[j]>0){
-                scaZ <- 0
-            } else if(!is.na(vecCounts[j]) & vecCounts[j]==0) {
-                scaZ <- sum(
-                    vecPiParam[j] / 
-                        (vecPiParam[j] + (1-vecPiParam[j])*vecNBZero[j])) *
-                    1/length(j)
-            } else {
-                scaZ <- NA
-            }
-            return(scaZ)
-        })
+        # Compute posterior of drop-out
+        vecZ_zero <- vecPiParam/(vecPiParam + (1-vecPiParam)*vecNB_zero)
+        vecZ <- rep(NA_real_, scaNumCells)
+        vecZ[which(!is.na(vecCounts) & vecCounts>0)] <- 0
+        vecidxZero <- which(!is.na(vecCounts) & vecCounts==0)
+        vecZ[vecidxZero] <- vecZ_zero[vecidxZero]
+
         return(vecZ)
     }))
     

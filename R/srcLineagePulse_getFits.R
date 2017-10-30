@@ -42,7 +42,7 @@
 #' # Use H1 model fits.
 #' matNormData <- getNormData(
 #'      matCounts = lsSimulatedData$counts,
-#'      lsMuModel = get_lsMuModelH1(objLP),
+#'      lsMuModel = lsMuModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1],
 #'      boolDepth = TRUE, boolBatch = TRUE)
 #' 
@@ -61,17 +61,17 @@ getNormData <- function(matCounts,
     }
     
     if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getNormData(): Not all vecGeneIDs were ",
-                    "rownames of lsMuModel$matMuModel"))
+        stop("ERROR getNormData(): Not all vecGeneIDs were ",
+                    "rownames of lsMuModel$matMuModel")
     }
     
-    scaNumCells <- dim(matCounts)[2]
+    scaNumCells <- ncol(matCounts)
     scaNumConfounders <- length(lsMuModel$lsmatBatchModel)
     matNormData <- do.call(rbind, bplapply(vecGeneIDs, function(id){
         # Extract batch parameters
         vecBatchParam <- array(1, scaNumCells)
         if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)){
-            for(confounder in seq(1,scaNumConfounders)){
+            for(confounder in seq_len(scaNumConfounders)){
                 vecBatchParam <- vecBatchParam * 
                     (lsMuModel$lsmatBatchModel[[confounder]][id,][
                         lsMuModel$lsMuModelGlobal$lsvecidxBatchAssign[[
@@ -124,7 +124,7 @@ getNormData <- function(matCounts,
 #' # Get mean parameter fits on alternative model:
 #' # Use H1 model fits.
 #' vecMeanFits <- getFitsMean(
-#'      lsMuModel = get_lsMuModelH1(objLP),
+#'      lsMuModel = lsMuModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' #plot(lsSimulatedData$annot$pseudotime, vecMeanFits)     
 #' 
@@ -137,8 +137,8 @@ getFitsMean <- function(
     
     ### Check input
     if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs ",
-                    "were rownames of lsMuModel$matMuModel"))
+        stop("ERROR getFitsDropout(): Not all vecGeneIDs ",
+                    "were rownames of lsMuModel$matMuModel")
     }
     
     ### Decompress models into parameter estimates
@@ -187,7 +187,7 @@ getFitsMean <- function(
 #' # Get dispersion parameter fits on alternative model:
 #' # Use H1 model fits.
 #' vecDispersionFits <- getFitsDispersion(
-#'      lsDispModel = get_lsDispModelH1(objLP),
+#'      lsDispModel = lsDispModelH1(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
@@ -199,8 +199,8 @@ getFitsDispersion <- function(
     
     ### Check input
     if(!all(vecGeneIDs %in% rownames(lsDispModel$matDispModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
-                    "rownames of lsDispModel$matDispModel"))
+        stop("ERROR getFitsDropout(): Not all vecGeneIDs were ",
+                    "rownames of lsDispModel$matDispModel")
     }
     
     ### Decompress models into parameter estimates
@@ -251,8 +251,8 @@ getFitsDispersion <- function(
 #' # Get drop-out rate fits on alternative model:
 #' # Use H1 model fits.
 #' vecDropoutFits <- getFitsDropout(
-#'      lsMuModel = get_lsMuModelH1(objLP),
-#'      lsDropModel = get_lsDropModel(objLP),
+#'      lsMuModel = lsMuModelH1(objLP),
+#'      lsDropModel = lsDropModel(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
@@ -265,8 +265,8 @@ getFitsDropout <- function(
     
     ### Check input
     if(!all(vecGeneIDs %in% rownames(lsMuModel$matMuModel))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
-                    "rownames of lsMuModel$matMuModel"))
+        stop("ERROR getFitsDropout(): Not all vecGeneIDs were ",
+                    "rownames of lsMuModel$matMuModel")
     }
     
     ### Decompress models into parameter estimates
@@ -329,9 +329,9 @@ getFitsDropout <- function(
 #' # Use H1 model fits.
 #' vecPosteriorDropoutFits <- getPostDrop(
 #'      matCounts = lsSimulatedData$counts,
-#'      lsMuModel = get_lsMuModelH1(objLP),
-#'      lsDispModel = get_lsDispModelH1(objLP),
-#'      lsDropModel = get_lsDropModel(objLP),
+#'      lsMuModel = lsMuModelH1(objLP),
+#'      lsDispModel = lsDispModelH1(objLP),
+#'      lsDropModel = lsDropModel(objLP),
 #'      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
 #' 
 #' @author David Sebastian Fischer
@@ -346,8 +346,8 @@ getPostDrop <- function(
     
     ### Check input
     if(!all(vecGeneIDs %in% rownames(matCounts))) {
-        stop(paste0("ERROR getFitsDropout(): Not all vecGeneIDs were ",
-                    "rownames of matCounts."))
+        stop("ERROR getFitsDropout(): Not all vecGeneIDs were ",
+                    "rownames of matCounts.")
     }
     
     ### Decompress models into parameter estimates

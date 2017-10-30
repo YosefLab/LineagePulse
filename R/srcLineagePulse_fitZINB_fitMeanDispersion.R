@@ -112,7 +112,7 @@ evalLogLikContinuousZINB <- function(
     
     # Extract batch factors
     if(!is.null(lsDispModelGlobal$vecConfounders)){
-        for(b in seq(1, lsDispModelGlobal$scaNConfounders, by=1)){
+        for(b in seq_len(lsDispModelGlobal$scaNConfounders)){
             vecBatchParamDisp <- c( 1, exp(vecTheta[
                 seq(from = scaNParamUsed+1, 
                     to = scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1, 
@@ -422,7 +422,7 @@ fitContinuousZINB <- function(
     # Extract batch factors
     if(!is.null(lsDispModelGlobal$vecConfounders)){
         lsvecBatchFactorsDisp <- list()
-        for(b in seq(1, lsDispModelGlobal$scaNConfounders, by=1)){
+        for(b in seq_len(lsDispModelGlobal$scaNConfounders)){
             vecBatchFactors <- c( 1, exp(fitDispMu[
                 seq(from = scaNParamUsed+1, 
                     to = scaNParamUsed + lsDispModelGlobal$vecNBatches[b] - 1,
@@ -480,7 +480,7 @@ fitContinuousZINB <- function(
     
     if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
         lsvecBatchFactorsMu <- list()
-        for(b in seq(1, lsMuModelGlobal$scaNConfounders, by=1)){
+        for(b in seq_len(lsMuModelGlobal$scaNConfounders)){
             vecBatchFactors <- c( 1, exp(fitDispMu[
                 seq(from = scaNParamUsed+1, 
                     to = scaNParamUsed + lsMuModelGlobal$vecNBatches[b] - 1,
@@ -804,8 +804,8 @@ fitMMZINB <- function(
     MAXIT,
     RELTOL) {
     
-    stop(paste0("LineagePulse ERROR: fitMMZINB() not yet supported.",
-                " Contact developer."))
+    stop("LineagePulse ERROR: fitMMZINB() not yet supported.",
+         " Contact developer.")
     return(NULL)
 }
 
@@ -861,10 +861,12 @@ fitZINBMuDisp <- function(
     lsDropModel,
     matWeights){
     
-    scaNumGenes <- dim(matCountsProc)[1]
-    scaNumCells <- dim(matCountsProc)[2]
+    scaNumGenes <- nrow(matCountsProc)
+    scaNumCells <- ncol(matCountsProc)
     
-    lsFitDispMu <- bplapply(seq(1,scaNumGenes), function(i){
+    # Parallelize fitting across gene.
+    lsFitDispMu <- bplapply(seq_len(scaNumGenes), function(i){
+        # Extract batch factors in format required for fitting.
         if(!is.null(lsMuModel$lsMuModelGlobal$vecConfounders)) {
             lsvecBatchParamGuessMu <- 
                 lapply(lsMuModel$lsmatBatchModel, function(mat) {
@@ -893,6 +895,7 @@ fitZINBMuDisp <- function(
                 lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
         } 
         
+        # Call fitting wrapper.
         if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
             fitDispMu <- fitMMZINB(
                 vecCounts=matCountsProc[as.double(i),], 
@@ -950,12 +953,11 @@ fitZINBMuDisp <- function(
                 lsMuModel$lsMuModelGlobal$strMuModel, 
                 ". Only constant and impulse model implemented. ",
                 "Use sequential estimation."))
-            stop(paste0(
-                "Mean parameter model not recognised for ",
-                " co-estimation with dispersion: ", 
-                lsMuModel$lsMuModelGlobal$strMuModel, 
-                ". Only constant and impulse model implemented. ",
-                "Use sequential estimation."))
+            stop("Mean parameter model not recognised for ",
+                 " co-estimation with dispersion: ", 
+                 lsMuModel$lsMuModelGlobal$strMuModel, 
+                 ". Only constant and impulse model implemented. ",
+                 "Use sequential estimation.")
         }  
     })
     
@@ -967,7 +969,7 @@ fitZINBMuDisp <- function(
     }))
     if(!is.null(lsMuModel$lsMuModelGlobal$scaNConfounders)) {
         lsmatBatchModelMu <- 
-            lapply(seq(1, lsMuModel$lsMuModelGlobal$scaNConfounders, by=1), 
+            lapply(seq_len(lsMuModel$lsMuModelGlobal$scaNConfounders), 
                    function(confounder){
                        do.call(rbind, lapply(lsFitDispMu,  function(i) {
                            i$lsvecBatchFactorsMu[[confounder]] 
@@ -978,7 +980,7 @@ fitZINBMuDisp <- function(
     }
     if(!is.null(lsDispModel$lsDispModelGlobal$scaNConfounders)) {
         lsmatBatchModelDisp <- 
-            lapply(seq(1, lsDispModel$lsDispModelGlobal$scaNConfounders, by=1),
+            lapply(seq_len(lsDispModel$lsDispModelGlobal$scaNConfounders),
                    function(confounder){
                        do.call(rbind, lapply(lsFitDispMu,  function(i) {
                            i$lsvecBatchFactorsDisp[[confounder]] 

@@ -105,9 +105,9 @@ processSCData <- function(
         strFormat <- unlist(strsplit(x = counts, split = "[.]"))
         strFormat <- strFormat[length(strFormat)]
         if(strFormat!="mtx"){
-            stop(paste0("ERROR IN INPUT DATA: ",
-                        "Input matrix file is not .mtx. ",
-                        "Supply counts as .mtx file or as R matrix object."))
+            stop("ERROR IN INPUT DATA: ",
+                 "Input matrix file is not .mtx. ",
+                 "Supply counts as .mtx file or as R matrix object.")
         }
         counts <- readMM(counts)
     }
@@ -115,15 +115,15 @@ processSCData <- function(
     # Check whether object was supplied (is not NULL).
     checkNull <- function(objectInput,strObjectInput){
         if(is.null(objectInput)){
-            stop(paste0( "ERROR: ", strObjectInput,
-                         " was not given as input." ))
+            stop( "ERROR: ", strObjectInput,
+                  " was not given as input." )
         }
     }
     # Checks whether elements are numeric
     checkNumeric <- function(matInput, strMatInput){
         if(any(!is.numeric(matInput))){
-            stop(paste0( "ERROR: ", strMatInput, 
-                         " contains non-numeric elements." ))
+            stop( "ERROR: ", strMatInput, 
+                  " contains non-numeric elements." )
         }
     }
     # Checks whether elements are count data: 
@@ -132,27 +132,27 @@ processSCData <- function(
     checkCounts <- function(matInput, strMatInput){
         checkNumeric(matInput, strMatInput)
         if(any(matInput[!is.na(matInput)] %% 1 != 0)){
-            stop(paste0( "ERROR: ", strMatInput, 
-                         " contains non-integer elements.",
-                         " Requires count data." ))
+            stop( "ERROR: ", strMatInput, 
+                  " contains non-integer elements.",
+                  " Requires count data." )
         }
         if(any(!is.finite(matInput[!is.na(matInput)]))){
-            stop(paste0( "ERROR: ", strMatInput, 
-                         " contains infinite elements.",
-                         " Requires count data." ))
+            stop( "ERROR: ", strMatInput, 
+                  " contains infinite elements.",
+                  " Requires count data." )
         }
         if(any(matInput[!is.na(matInput)]<0)){
-            stop(paste0( "ERROR: ", strMatInput, 
-                         " contains negative elements.",
-                         " Requires count data." ))
+            stop( "ERROR: ", strMatInput, 
+                  " contains negative elements.",
+                  " Requires count data." )
         }
     }
     # Checks whether elements are logical
     checkLogical <- function(boolElement, strBoolElement){
         if(!is.logical(boolElement)){
-            stop(paste0( "ERROR IN INPUT DATA CHECK: ", 
-                         strBoolElement, 
-                         " must be logical (TRUE or FALSE)." ))
+            stop( "ERROR IN INPUT DATA CHECK: ", 
+                  strBoolElement, 
+                  " must be logical (TRUE or FALSE)." )
         }
     }
     
@@ -165,8 +165,8 @@ processSCData <- function(
     if(!is.null(dfAnnotation)){
         # Check that all cells are mentioned in dfAnnotation
         if(!all(colnames(counts) %in% rownames(dfAnnotation))){
-            stop(paste0("Not all cells given in counts (colnames)",
-                        " are given in dfAnnotation (rownames)."))
+            stop("Not all cells given in counts (colnames)",
+                 " are given in dfAnnotation (rownames).")
         }
         # Check structure
         if(strMuModel=="impulse"){
@@ -174,25 +174,25 @@ processSCData <- function(
             checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
         }
         if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
-            stop(paste0("Cell IDs in rownames(dfAnnotation)",
-                        " are not the same as cell IDs",
-                        " in dfAnnotation$Samples."))
+            stop("Cell IDs in rownames(dfAnnotation)",
+                 " are not the same as cell IDs",
+                 " in dfAnnotation$Samples.")
         }
         if(!is.null(vecConfoundersMu)){
             if(!all(vecConfoundersMu %in% colnames(dfAnnotation))){
-                stop(paste0("Not all confounders given in",
-                            " vecConfoundersMu given in",
-                            " dfAnnotation (columns)."))
+                stop("Not all confounders given in",
+                     " vecConfoundersMu given in",
+                     " dfAnnotation (columns).")
             }
             if(any(is.null(dfAnnotation[,vecConfoundersMu]) | 
                    is.na(dfAnnotation[,vecConfoundersMu]))){
-                stop(paste0("Supply batch assignments for",
-                            " all cells and all confounders given",
-                            " in vecConfoundersMu"))
+                stop("Supply batch assignments for",
+                     " all cells and all confounders given",
+                     " in vecConfoundersMu")
             }
         }
     } else {
-        stop(paste0("Supply dfAnnotation."))
+        stop("Supply dfAnnotation.")
     }
     
     # 3. matPiConstPredictors
@@ -200,13 +200,13 @@ processSCData <- function(
         checkNumeric(as.matrix(matPiConstPredictors),"matPiConstPredictors")
         if(!is.null(rownames(counts))){
             if(any(!rownames(counts) %in% rownames(matPiConstPredictors))){
-                stop(paste0("ERROR: Some genes named in rows of counts do not ",
-                            "occur in rows of matPiConstPredictors."))   
+                stop("ERROR: Some genes named in rows of counts do not ",
+                     "occur in rows of matPiConstPredictors.")
             }
         } else {
             if(!is.null(rownames(matPiConstPredictors))){
-                stop(paste0("ERROR: Named genes in matPiConstPredictors",
-                            " but not in counts."))
+                stop("ERROR: Named genes in matPiConstPredictors",
+                     " but not in counts.")
             }
         }
     }
@@ -230,20 +230,20 @@ processSCData <- function(
     # (II) Check settings
     # 1. Check gene-wise models
     if(!(strMuModel %in% c("groups","impulse","splines","constant"))){
-        stop(paste0("strMuModel not recognised: ", strMuModel, 
-                    " Must be one of: groups, splines, impulse, constant."))
+        stop("strMuModel not recognised: ", strMuModel, 
+             " Must be one of: groups, splines, impulse, constant.")
     }
     if(!(strDispModelFull %in% c("groups","splines","constant"))){
-        stop(paste0("strDispModelFull not recognised: ", strDispModelFull, 
-                    " Must be one of: groups, splines, constant."))
+        stop("strDispModelFull not recognised: ", strDispModelFull, 
+             " Must be one of: groups, splines, constant.")
     }
     if(!(strDispModelRed %in% c("groups","splines","constant"))){
-        stop(paste0("strDispModelRed not recognised: ", strDispModelRed, 
-                    " Must be one of: groups, splines, constant."))
+        stop("strDispModelRed not recognised: ", strDispModelRed, 
+             " Must be one of: groups, splines, constant.")
     }
     if(!(strDispModelRed %in% c("groups","splines","constant"))){
-        stop(paste0("strDispModelRed not recognised: ", strDispModelRed, 
-                    " Must be one of: groups, splines, constant."))
+        stop("strDispModelRed not recognised: ", strDispModelRed, 
+             " Must be one of: groups, splines, constant.")
     }
     
     # (III) Process data
@@ -265,7 +265,7 @@ processSCData <- function(
     }
     # Name genes if names not given
     if(is.null(rownames(counts))){
-        rownames(counts) <- paste0("Gene_", seq(1, nrow(counts)))
+        rownames(counts) <- paste0("Gene_", seq_len(nrow(counts)))
         rownames(matPiConstPredictors) <- rownames(counts)
     }
     # Take out cells with NA pseudotime coordinate

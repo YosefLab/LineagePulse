@@ -170,8 +170,8 @@ fitZINB <- function(
     RELTOL_BFGS_Pi <- 10^(-4)
     ####################################################
     
-    scaNumGenes <- dim(matCounts)[1]
-    scaNumCells <- dim(matCounts)[2]  
+    scaNumGenes <- nrow(matCounts)
+    scaNumCells <- ncol(matCounts)
     boolFitDrop <- is.null(lsDropModel)
     if(!boolFitDrop) scaMaxEstimationCycles <- 1 
     # Do not need estimation cycle if drop-out model is fixed
@@ -230,7 +230,7 @@ fitZINB <- function(
             vecPTSpline <- ns(x = dfAnnotation$pseudotime, 
                               df = scaDFSplinesMu, intercept = TRUE)
             lsMuModel$matMuModel <- do.call(
-                rbind, lapply(seq(1,scaNumGenes) ,function(i){
+                rbind, lapply(seq_len(scaNumGenes) ,function(i){
                     vecCounts <- as.vector(log(matCounts[as.double(i),]+1))
                     lmFit <- lm(vecCounts ~ 0+vecPTSpline)
                     return(as.vector(lmFit$coef))
@@ -244,8 +244,8 @@ fitZINB <- function(
                 vecMuModelInit, nrow=scaNumGenes, 
                 ncol=dim(matWeights)[2], byrow=FALSE)
         } else {
-            stop(paste0("ERROR fitZINB(): strMuModel=", strMuModel, 
-                        " not recognised."))
+            stop("ERROR fitZINB(): strMuModel=", strMuModel, 
+                 " not recognised.")
         }
     } else {
         lsMuModel$matMuModel <- matMuModelInit
@@ -356,8 +356,8 @@ fitZINB <- function(
                 matrix(1, nrow=scaNumGenes, 
                        ncol=length(unique(dfAnnotation$groups)))
         } else {
-            stop(paste0("ERROR fitZINB(): strDispModel=", strDispModel, 
-                        " not recognised."))
+            stop("ERROR fitZINB(): strDispModel=", strDispModel, 
+                 " not recognised.")
         } 
     } else {
         lsDispModel$matDispModel <- matDispModelInit
@@ -552,7 +552,7 @@ fitZINB <- function(
             # Need this so that column names dont grow to par.par.par...
             lsDispModel$lsmatBatchModel <- lsFitMuDisp$lsmatBatchModelDisp
             if(!is.null(lsDispModel$lsmatBatchModel)) {
-                for(i in seq(1, length(lsDispModel$lsmatBatchModel))) {
+                for(i in seq_along(lsDispModel$lsmatBatchModel)) {
                     colnames(lsDispModel$lsmatBatchModel[[i]]) <- NULL 
                 }
                 # Need this so that column names dont grow to par.par.par...
@@ -562,7 +562,7 @@ fitZINB <- function(
             # Need this so that column names dont grow to par.par.par...
             lsMuModel$lsmatBatchModel <- lsFitMuDisp$lsmatBatchModelMu
             if(!is.null(lsMuModel$lsmatBatchModel)) {
-                for(i in seq(1, length(lsMuModel$lsmatBatchModel))) {
+                for(i in seq_along(lsMuModel$lsmatBatchModel)) {
                     colnames(lsMuModel$lsmatBatchModel[[i]]) <- NULL
                 } 
                 # Need this so that column names dont grow to par.par.par...
@@ -607,13 +607,13 @@ fitZINB <- function(
     # Name model matrix rows
     rownames(lsMuModel$matMuModel) <- rownames(matCounts)
     if(!is.null(lsMuModel$lsmatBatchModel)) {
-        for(i in seq(1, length(lsMuModel$lsmatBatchModel))) {
+        for(i in seq_along(lsMuModel$lsmatBatchModel)) {
             rownames(lsMuModel$lsmatBatchModel[[i]]) <- rownames(matCounts)
         }
     }
     rownames(lsDispModel$matDispModel) <- rownames(matCounts)
     if(!is.null(lsDispModel$lsmatBatchModel)) {
-        for(i in seq(1, length(lsDispModel$lsmatBatchModel))) {
+        for(i in seq_along(lsDispModel$lsmatBatchModel)) {
             rownames(lsDispModel$lsmatBatchModel[[i]]) <- rownames(matCounts)
         }
     }

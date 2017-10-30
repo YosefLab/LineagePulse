@@ -258,7 +258,7 @@ runLineagePulse <- function(
     
     # 1. Data preprocessing
     # Extract count matrix if handed SummarizedExperiment
-    if (class(counts) == "SummarizedExperiment"){ 
+    if (is(counts, "SummarizedExperiment")){ 
         counts <- assay(counts)
     }
     
@@ -283,13 +283,6 @@ runLineagePulse <- function(
     vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
     matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
     
-    # Clear memory
-    rm(counts)
-    rm(matPiConstPredictors)
-    rm(dfAnnotation)
-    rm(lsProcessedSCData)
-    gc()
-    
     # Inialise parallelisation
     # Set the parallelisation environment in BiocParallel:
     if(scaNProc > 1){
@@ -309,7 +302,7 @@ runLineagePulse <- function(
     
     # 3. Fit ZINB model for both H1 and H0.
     strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
-    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    strReport <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_fitmm <- system.time({

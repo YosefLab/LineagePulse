@@ -23,13 +23,15 @@
 evalImpulseModel <- function(vecImpulseParam,
                              vecTimepoints){
     
-    vecImpulseValue <- sapply(vecTimepoints, function(t){
+    t1 <- (vecTimepoints - vecImpulseParam[6])
+    t2 <- (vecTimepoints - vecImpulseParam[7])
+    
+    vecImpulseValue <- 
         (1/vecImpulseParam[4]) * 
-            (vecImpulseParam[3] + (vecImpulseParam[4]-vecImpulseParam[3])*
-                 (1/(1+exp(-vecImpulseParam[1]*(t-vecImpulseParam[6]))))) *
-            (vecImpulseParam[5] + (vecImpulseParam[4]-vecImpulseParam[5])*
-                 (1/(1+exp(vecImpulseParam[2]*(t-vecImpulseParam[7])))))
-    })
+        (vecImpulseParam[3] + (vecImpulseParam[4]-vecImpulseParam[3])*
+             (1/(1+exp(-vecImpulseParam[1]*t1)))) *
+        (vecImpulseParam[5] + (vecImpulseParam[4]-vecImpulseParam[5])*
+             (1/(1+exp(vecImpulseParam[2]*t2))))
     
     return(vecImpulseValue)
 }
