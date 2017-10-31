@@ -15,12 +15,14 @@
 #' @param lsMuModel (list)
 #' Object containing description of gene-wise mean parameter models.
 #' @param dirHeatmap (str directory) [Default NULL]
-#' Directory to which heatmap is saved to. Not 
-#' created if NULL. Need to have lsMuModel$lsMuModelGlobal$vecPseudotime
-#' defined.
+#' Directory to which heatmap is saved to. Return heatmap object if NULL.
 #' 
-#' @return vecSortedGenes (string vector number of IDs)
-#' IDs sorted by peak time in pseudotime.
+#' @return list (length 3)
+#' If dirHeatmap is not NULL, only vecSortedGenes is returned and the two
+#' heatmaps are printed to pdfs in the directory dirHeatmap.
+#' vecSortedGenes: (string vector number of IDs)
+#' hmGeneSorted: genes sorted by peak time in pseudotime
+#' hmGeneClusters: genes sorted by clustering
 #' 
 #' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -37,10 +39,11 @@
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
 #'     strMuModel = "impulse")
-#' #sortGeneTrajectories(
-#' #    vecIDs = rownames(objLP$objLP@lsMuModelH1$matMuModel),
-#' #    lsMuModel = objLP@lsMuModelH1,
-#' #    dirHeatmap = "your_target_directory"))
+#' lsHeatmaps <- sortGeneTrajectories(
+#'     vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
+#'     lsMuModel = lsMuModelH1(objLP),
+#'     dirHeatmap = NULL))
+#' #print(lsHeatmaps$hmGeneSorted)
 #' 
 #' @author David Sebastian Fischer
 #' 
@@ -48,12 +51,12 @@
 sortGeneTrajectories <- function(
     vecIDs,
     lsMuModel,
-    dirHeatmap){
+    dirHeatmap=NULL){
     
     # Check IDs are in model matrix
     if(any(!(vecIDs %in% rownames(lsMuModel$matMuModel)))){
         message(paste0("ERROR: Some IDs in vecIDs are not given",
-                     " in model lsMuModel$matMuModel."))
+                       " in model lsMuModel$matMuModel."))
         return(NULL)
     }
     
@@ -76,46 +79,47 @@ sortGeneTrajectories <- function(
     vecSortedGenes <- vecIDs[sort(vecindPeak, index.return=TRUE)$ix]
     
     # (III) Create heatmap of sorted genes.
+    # Row normalise expression values
+    matMuNorm <- do.call(rbind, lapply(vecSortedGenes, function(gene){
+        scaSD <- sd(matMuParam[gene,], na.rm=TRUE)
+        if(scaSD==0){ scaSD <- 1 }
+        (matMuParam[gene,]-mean(matMuParam[gene,], na.rm=TRUE))/scaSD
+    }))
+    # Set column names: Hack tick labeling of heatmap.2: Only
+    # shows columns as lables which are not names NA
+    scaCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
+    vecTicks <- array(NA, scaCells)
+    scaDistBetweenCells <- round(scaCells/10)
+    vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
+    vecindTicks[10] <- scaCells
+    vecTicks[vecindTicks] <- round(
+        lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
+    colnames(matMuNorm) <- vecTicks
+    # Set upper bounds of z-scores to visualise
+    scaMuNormLowBound <- max(min(matMuNorm, na.rm=TRUE), -5)
+    scaMuNormUpperBound <- min(max(matMuNorm, na.rm=TRUE), 5)
+    scaBreaks <- 50
+    breaks <- seq(scaMuNormLowBound,scaMuNormUpperBound,
+                  by=(scaMuNormUpperBound - scaMuNormLowBound) /
+                      (scaBreaks-1))
+    hm.colors <- colorpanel( length(breaks)-1, "red", "blue" )
+    
     if(!is.null(dirHeatmap)){
-        # Row normalise expression values
-        matMuNorm <- do.call(rbind, lapply(vecSortedGenes, function(gene){
-            scaSD <- sd(matMuParam[gene,], na.rm=TRUE)
-            if(scaSD==0){ scaSD <- 1 }
-            (matMuParam[gene,]-mean(matMuParam[gene,], na.rm=TRUE))/scaSD
-        }))
-        # Set column names: Hack tick labeling of heatmap.2: Only
-        # shows columns as lables which are not names NA
-        scaCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
-        vecTicks <- array(NA, scaCells)
-        scaDistBetweenCells <- round(scaCells/10)
-        vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
-        vecindTicks[10] <- scaCells
-        vecTicks[vecindTicks] <- round(
-            lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
-        colnames(matMuNorm) <- vecTicks
-        # Set upper bounds of z-scores to visualise
-        scaMuNormLowBound <- max(min(matMuNorm, na.rm=TRUE), -5)
-        scaMuNormUpperBound <- min(max(matMuNorm, na.rm=TRUE), 5)
-        scaBreaks <- 50
-        breaks <- seq(scaMuNormLowBound,scaMuNormUpperBound,
-                      by=(scaMuNormUpperBound - scaMuNormLowBound) /
-                          (scaBreaks-1))
-        hm.colors <- colorpanel( length(breaks)-1, "red", "blue" )
-        
         # Plot genes sorted by peak time
         pdf(paste0(dirHeatmap, "/LineagePulse_GenesSortedByPeakTime.pdf"))
-        heatmap.2(matMuNorm, 
-                  dendrogram="none", Rowv=FALSE, Colv=FALSE, 
-                  xlab = "pseudotime", ylab =  "genes",
-                  labRow=NA,# Supress gene names
-                  trace="none",
-                  density.info="none",
-                  lmat=rbind( c(3,4), c(2,1) ), lhei=c(1,3), lwid=c(1,3),
-                  key.title = "", key.xlab = "z-score", key.ylab = NULL,
-                  symkey=FALSE, 
-                  breaks=breaks, 
-                  col=hm.colors, 
-                  scale="none")
+        Heatmap(matMuNorm, 
+                cluster_rows = FALSE, cluster_columns = FALSE, 
+                heatmap_legend_param = list(
+                    title = "z-score", color_bar="continuous"),
+                col=colorRamp2(seq(min(matMuNorm, na.rm = TRUE), 
+                                   max(matMuNorm, na.rm = TRUE), 
+                                   length.out = 13), 
+                               c('grey75', rev(brewer.pal(11, "RdYlBu")), 
+                                 'black')),
+                show_heatmap_legend=TRUE,
+                row_title_gp = gpar(fontsize = 8),
+                column_names_gp = gpar(fontsize = 8),
+                row_names_gp = gpar(fontsize = 8))
         dev.off()
         graphics.off()
         
@@ -123,21 +127,55 @@ sortGeneTrajectories <- function(
         graphics.off()
         pdf(paste0(dirHeatmap, 
                    "/LineagePulse_GenesClusteredByTrajectory.pdf"))
-        heatmap.2(matMuNorm, 
-                  dendrogram="row", Rowv=TRUE, Colv=FALSE, 
-                  xlab = "pseudotime", ylab =  "genes",
-                  labRow=NA,# Supress gene names
-                  trace="none",
-                  density.info="none",
-                  lmat=rbind( c(3,4), c(2,1) ), lhei=c(1,3), lwid=c(1,3),
-                  key.title = "", key.xlab = "z-score", key.ylab = NULL,
-                  symkey=FALSE, 
-                  breaks=breaks, 
-                  col=hm.colors, 
-                  scale="none")
+        Heatmap(matMuNorm, 
+                cluster_rows = TRUE, cluster_columns = FALSE, 
+                heatmap_legend_param = list(
+                    title = "z-score", color_bar="continuous"),
+                col=colorRamp2(seq(min(matMuNorm, na.rm = TRUE), 
+                                   max(matMuNorm, na.rm = TRUE), 
+                                   length.out = 13), 
+                               c('grey75', rev(brewer.pal(11, "RdYlBu")), 
+                                 'black')),
+                show_heatmap_legend=TRUE,
+                row_title_gp = gpar(fontsize = 8),
+                column_names_gp = gpar(fontsize = 8),
+                row_names_gp = gpar(fontsize = 8))
         dev.off()
         graphics.off()
+        
+        return(vecSortedGenes)
+    } else {
+        return(list(vecSortedGenes = vecSortedGenes,
+                    hmGeneSorted = Heatmap(
+                        matMuNorm, 
+                        cluster_rows = FALSE, cluster_columns = FALSE, 
+                        heatmap_legend_param = list(
+                            title = "z-score", color_bar="continuous"),
+                        col=colorRamp2(
+                            seq(min(matMuNorm, na.rm = TRUE), 
+                                max(matMuNorm, na.rm = TRUE), 
+                                length.out = 13), 
+                            c('grey75', rev(brewer.pal(11, "RdYlBu")), 
+                              'black')),
+                        show_heatmap_legend=TRUE,
+                        row_title_gp = gpar(fontsize = 8),
+                        column_names_gp = gpar(fontsize = 8),
+                        row_names_gp = gpar(fontsize = 8)),
+                    hmGeneClusters = Heatmap(
+                        matMuNorm, 
+                        cluster_rows = TRUE, cluster_columns = FALSE, 
+                        heatmap_legend_param = list(
+                            title = "z-score", color_bar="continuous"),
+                        col=colorRamp2(
+                            seq(min(matMuNorm, na.rm = TRUE), 
+                                max(matMuNorm, na.rm = TRUE), 
+                                length.out = 13), 
+                            c('grey75', rev(brewer.pal(11, "RdYlBu")), 
+                              'black')),
+                        show_heatmap_legend=TRUE,
+                        row_title_gp = gpar(fontsize = 8),
+                        column_names_gp = gpar(fontsize = 8),
+                        row_names_gp = gpar(fontsize = 8))
+        ))
     }
-    
-    return(vecSortedGenes)
 }

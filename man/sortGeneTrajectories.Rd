@@ -4,7 +4,7 @@
 \alias{sortGeneTrajectories}
 \title{Cluster expression mean trajectories}
 \usage{
-sortGeneTrajectories(vecIDs, lsMuModel, dirHeatmap)
+sortGeneTrajectories(vecIDs, lsMuModel, dirHeatmap = NULL)
 }
 \arguments{
 \item{vecIDs}{(vector of strings)
@@ -14,13 +14,15 @@ Names of genes to cluster.}
 Object containing description of gene-wise mean parameter models.}
 
 \item{dirHeatmap}{(str directory) [Default NULL]
-Directory to which heatmap is saved to. Not 
-created if NULL. Need to have lsMuModel$lsMuModelGlobal$vecPseudotime
-defined.}
+Directory to which heatmap is saved to. Return heatmap object if NULL.}
 }
 \value{
-vecSortedGenes (string vector number of IDs)
-IDs sorted by peak time in pseudotime.
+list (length 3)
+If dirHeatmap is not NULL, only vecSortedGenes is returned and the two
+heatmaps are printed to pdfs in the directory dirHeatmap.
+vecSortedGenes: (string vector number of IDs)
+hmGeneSorted: genes sorted by peak time in pseudotime
+hmGeneClusters: genes sorted by clustering
 }
 \description{
 Sorts inferred gene trajectories by peak time in pseudotime. Optional: Can
@@ -42,10 +44,11 @@ objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
     dfAnnotation = lsSimulatedData$annot,
     strMuModel = "impulse")
-#sortGeneTrajectories(
-#    vecIDs = rownames(objLP$objLP@lsMuModelH1$matMuModel),
-#    lsMuModel = objLP@lsMuModelH1,
-#    dirHeatmap = "your_target_directory"))
+lsHeatmaps <- sortGeneTrajectories(
+    vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
+    lsMuModel = lsMuModelH1(objLP),
+    dirHeatmap = NULL))
+#print(lsHeatmaps$hmGeneSorted)
 
 }
 \seealso{

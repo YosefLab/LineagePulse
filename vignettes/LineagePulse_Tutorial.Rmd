@@ -1,36 +1,20 @@
 ---
 title: "LineagePulse Tutorial"
 author: "David Sebastian Fischer"
-date: "`r Sys.Date()`"
-output:
-BiocStyle::html_document:
-toc: true
+package: LineagePulse
+output: 
+  BiocStyle::html_document
 vignette: >
-  %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{LineagePulse}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
 ---
 
 <!--
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{LineagePulse Vignette}
 -->
-
-```{r options, cache=FALSE, include=FALSE, results='hide', message=FALSE, warning=FALSE}
-
-knitr::opts_chunk$set(fig.align="center", 
-                      cache=FALSE,
-                      error=FALSE,
-                      fig.width=6,fig.height=6,
-                      autodep=TRUE,
-                      out.width="600px", 
-                      out.height="600px",
-                      message=FALSE,
-                      warning=FALSE,
-                      results="hide", 
-                      echo=TRUE, 
-                      eval=TRUE)
-
-options(getClass.msg=FALSE)
-```
 
 # Introduction
 
@@ -59,6 +43,7 @@ Additionally, one can provide:
 * boolSuperVerbose output detailed progress reports for each step of the wrapper function.
 
 Lastly, the experienced user who has a solid grasp of the mathematical and algorithmic basis of LineagePulse may change the defaults of these advanced input options:
+
 * vecConfoundersDisp batch variables to be used to correct the dispersion (variance).
 * strDispModelFull the dispersion model to be used for the full model.
 * strDispModelRed the dispersion model to be used for the reduced model.
@@ -70,10 +55,11 @@ Lastly, the experienced user who has a solid grasp of the mathematical and algor
 
 # Differential expression analysis
 
-Here, we present a differential expression analysis scenario on a longitudinal ordering with batch effects.
-The differential expression results are in a data frame which can be accessed from the output object via list like properties ($)
+Here, we present a differential expression analysis scenario on a longitudinal ordering.
+The differential expression results are in a data frame which can be accessed from the output object via list like properties ($).
+The core differential expression analysis result are p-value and false-discovery-rate corrected p-value of differential expression which are the result of a gene-wise hypothesis test of a non-constant expression model (impulse, splines or groups) versus a constant expression model.
 
-```{r case-only}
+```{r de analysis}
 library(LineagePulse)
 lsSimulatedData <- simulateContinuousDataSet(
     scaNCells = 100,
@@ -89,13 +75,16 @@ objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
     dfAnnotation = lsSimulatedData$annot,
     strMuModel = "impulse")
-```
-```{r case-only-annotation, results='markdown'}
 head(objLP$dfResults)
 ```
 
+In addition to the raw p-values, one may be interested in further details of the expression models such as shape of the expression mean as a function of pseudotime, log fold changes (LFC) and global expression trends as function of pseudotime. 
+We address each of these follow-up questions with separate sections in the following.
+Note that all of these follow-up questions are answered based on the model that were fit to compute the p-value of differential expression. 
+Therefore, once runLineagePulse() was called once, no further model fitting is required.
 
-# Plot gene-wise trajectories
+# Further inspection of results
+## Plot gene-wise trajectories
 
 Multiple options are available for gene-wise expression trajectory plotting:
 Observations can be coloured by the posterior probability of drop-out (boolColourByDropout).
@@ -107,11 +96,44 @@ In any case, the output object of the gene-wise expression trajectors plotting f
 is a ggplot2 object which can then be printed or modified.
 
 ```{r plot-genes}
+# plot the gene with the lowest p-value of differential expression
 gplotExprProfile <- plotGene(
     objLP = objLP, boolLogPlot = FALSE,
-    strGeneID = rownames(lsSimulatedData$counts)[1],
+    strGeneID = objLP$dfResults[which.min(objLP$dfResults$p),]$gene,
     boolLineageContour = FALSE)
 gplotExprProfile
+```
+
+## Fold changes
+
+Given a discrete population structure, such as tSNE cluster or experimental conditions, a fold change is the ratio of the mean expression value of both groups. 
+The definition of a fold change is less clear if a continous expression trajector is considered:
+Of interest may be for example the fold change from the first to the last  beginning
+
+## Manual analysis of expression trajectories
+
+LineagePulse provides the user with parameter extraction functions that allow the user to interact directly with the raw model fits for analytic tasks or questions not addressed above.
+
+```{r manual-analysis-parameter-fits}
+# extract the mean parameter fits per cell of the gene with the lowest p-value.
+matMeanParamFit <- getFitsMean(lsMuModel = lsMuModelH1(objLP),
+                               vecGeneIDs = objLP$dfResults[which.min(objLP$dfResults$p),]$gene)
+print(paste0("Minimum fitted mean parameter: ", min(matMeanParamFit)))
+print(paste0("Mean fitted mean parameter: ", mean(matMeanParamFit)))
+```
+
+## Global expression profiles
+Global expression profiles or expression profiles across large groups of genes can be visualised via heatmaps of expression z-scores.
+One could extract the expression mean parameter fits as described above and create such heatmaps from scratch.
+LineaegePulse also offers a wrapper for creating such a heatmap:
+
+```{r heatmap}
+# create heatmap with all differentially expressed genes
+lsHeatmaps <- sortGeneTrajectories(
+    vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
+    lsMuModel = lsMuModelH1(objLP),
+    dirHeatmap=NULL)
+print(lsHeatmaps$hmGeneSorted)
 ```
 
 # Session information

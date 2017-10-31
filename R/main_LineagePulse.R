@@ -1,11 +1,15 @@
 #' @import BiocParallel
+#' @import circlize
 #' @importFrom compiler cmpfun
+#' @import ComplexHeatmap
 #' @import gplots
 #' @import ggplot2
 #' @importFrom grDevices dev.off graphics.off pdf
+#' @importFrom grid gpar
 #' @import knitr
 #' @import Matrix
 #' @import methods
+#' @import RColorBrewer
 #' @import SingleCellExperiment
 #' @import splines
 #' @importFrom stats dnbinom median optim p.adjust pchisq 
