@@ -88,7 +88,7 @@ sortGeneTrajectories <- function(
     # Set column names: Hack tick labeling of heatmap.2: Only
     # shows columns as lables which are not names NA
     scaCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
-    vecTicks <- array(NULL, scaCells)
+    vecTicks <- array(" ", scaCells)
     scaDistBetweenCells <- round(scaCells/4)
     vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
     vecindTicks[10] <- scaCells
