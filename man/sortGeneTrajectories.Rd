@@ -47,12 +47,12 @@ objLP <- runLineagePulse(
 lsHeatmaps <- sortGeneTrajectories(
     vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
     lsMuModel = lsMuModelH1(objLP),
-    dirHeatmap = NULL))
+    dirHeatmap = NULL)
 #print(lsHeatmaps$hmGeneSorted)
 
 }
 \seealso{
-Called by \code{LineagePulse_main} or by user.
+Called by user.
 }
 \author{
 David Sebastian Fischer
