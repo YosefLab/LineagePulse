@@ -146,7 +146,6 @@ setClass(
 #' vecH0Pop
 #' vecNormConst
 #' strVersion
-#' strReport
 #' 
 #' @examples    
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -300,10 +299,21 @@ strVersion <- function(objLP)
 strReport <- function(objLP) 
     return(objLP@strReport)
 
-#' @rdname accessors
-#' @export
-`strReport<-` <- function(objLP, strMessage)
-    paste0(objLP@strReport, strMessage, "\n")
+#' LineagePulseObject strReport setter
+#' 
+#' Add string to strReport LineagePulse-Object. 
+#' 
+#' @param objLP (LineagePulse-Object)  
+#' A LineagePulse output object to write into.
+#' @param value (str) The string to add to strReport.
+#' 
+#' @return The LineagePulse output object with updated strReport.
+#' 
+#' @author David Sebastian Fischer
+`strReport<-` <- function(objLP, value) {
+    objLP@strReport <- value
+    objLP
+}
 
 ### 2. Enable accession of public elements via list-like
 ### properties of LineagePulseObject.

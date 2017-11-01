@@ -44,7 +44,6 @@
 \alias{vecNormConst}
 \alias{strVersion}
 \alias{strReport}
-\alias{strReport<-}
 \title{LineagePulseObject accession methods}
 \usage{
 dfAnnotationProc(objLP)
@@ -90,8 +89,6 @@ vecNormConst(objLP)
 strVersion(objLP)
 
 strReport(objLP)
-
-strReport(objLP, strMessage) <- value
 }
 \arguments{
 \item{objLP}{(LineagePulse-Object)

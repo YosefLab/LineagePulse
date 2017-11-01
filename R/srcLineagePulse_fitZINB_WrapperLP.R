@@ -108,7 +108,7 @@ fitContinuousModels <- function(
     # Fit model A
     strMessage <- paste0("### a) Fit negative binomial model A (",
                          strNameModelA,") with noise model.")
-    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_cycle <- system.time({
@@ -134,21 +134,21 @@ fitContinuousModels <- function(
     lsDropModel <- lsFitsModelA$lsDropModel
     boolConvergenceModelA <- lsFitsModelA$boolConvergenceModel
     vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
-    objLP@strReport <- paste0(objLP@strReport,
+    strReport(objLP) <- paste0(objLP@strReport,
                               lsFitsModelA$strReport)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",
         "model A with noise model in ", 
         round(tm_cycle["elapsed"]/60,2)," min.")
-    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     ####################################################
     # Fit model B
     strMessage <- paste0("### b) Fit negative binomial model B (",
                          strNameModelB,").")
-    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_cycleB <- system.time({
@@ -172,13 +172,13 @@ fitContinuousModels <- function(
     lsDispModelB <- lsFitsModelB$lsDispModel
     boolConvergenceModelB <- lsFitsModelB$boolConvergenceModel
     vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
-    objLP@strReport <- paste0(objLP@strReport,
+    strReport(objLP) <- paste0(objLP@strReport,
                               lsFitsModelB$strReport)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",
         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
-    objLP@strReport <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     if(boolEstimateNoiseBasedOnH0){
