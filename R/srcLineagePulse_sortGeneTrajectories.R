@@ -8,7 +8,7 @@
 #' create a heatmap of the gene trajectories sorted according to peak time.
 #' The heatmap is based on z-scores.
 #' 
-#' @seealso Called by \code{LineagePulse_main} or by user.
+#' @seealso Called by user.
 #'
 #' @param vecIDs (vector of strings)
 #' Names of genes to cluster.
@@ -42,7 +42,7 @@
 #' lsHeatmaps <- sortGeneTrajectories(
 #'     vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
 #'     lsMuModel = lsMuModelH1(objLP),
-#'     dirHeatmap = NULL))
+#'     dirHeatmap = NULL)
 #' #print(lsHeatmaps$hmGeneSorted)
 #' 
 #' @author David Sebastian Fischer
@@ -87,13 +87,13 @@ sortGeneTrajectories <- function(
     }))
     # Set column names: Hack tick labeling of heatmap.2: Only
     # shows columns as lables which are not names NA
-    scaCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
-    vecTicks <- array(" ", scaCells)
-    scaDistBetweenCells <- round(scaCells/4)
-    vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
-    vecindTicks[10] <- scaCells
+    scaNCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
+    vecTicks <- array(" ", scaNCells)
+    scaDistBetweenCells <- round(scaNCells/4)
+    vecindTicks <- sapply(seq(0,4), function(i) 1+i*scaDistBetweenCells)
+    vecindTicks[length(vecindTicks)] <- scaNCells
     vecTicks[vecindTicks] <- round(
-        lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
+        lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 2)
     colnames(matMuNorm) <- vecTicks
     
     if(!is.null(dirHeatmap)){
