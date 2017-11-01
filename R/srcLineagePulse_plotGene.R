@@ -264,7 +264,7 @@ plotGene <- function(
         })
         dfExpectObsCI <- data.frame(
             pseudotime = rep(objLP@dfAnnotationProc$pseudotime,3), 
-            contour = c(
+            trajectory_contour = c(
                 qnbinom(p = 1 - sapply(
                     vecObsInBin, function(x) min(x,1) ) / vecObsInBin,
                     size=vecDispParamH1, mu = vecMuParamH1_nonlog),
@@ -281,10 +281,11 @@ plotGene <- function(
             stringsAsFactors = FALSE
         )
         if(boolLogPlot){
-            dfExpectObsCI$contour <- log(dfExpectObsCI$contour)/log(10)
+            dfExpectObsCI$trajectory_contour <- 
+                log(dfExpectObsCI$trajectory_contour)/log(10)
         }
         gplotGene <- gplotGene + geom_line(data = dfExpectObsCI, aes(
-            x = pseudotime, y = contour, colour = ncells)) +
+            x = pseudotime, y = trajectory_contour, colour = ncells)) +
             scale_colour_manual(values = cbbPalette, name = "contours")
         scale_alpha_continuous(guide=FALSE)
     } 

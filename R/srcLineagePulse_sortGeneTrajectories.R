@@ -73,10 +73,10 @@ sortGeneTrajectories <- function(
     # (II) Sort genes based on peak time.
     # Find peak time (cell index) of each gene.
     vecindPeak <- apply(matMuParam, 1, function(gene){
-        (sort(gene, index.return=TRUE)$ix)[1]
+        which.max(gene)
     })
     # Sort genes based on peak time
-    vecSortedGenes <- vecIDs[sort(vecindPeak, index.return=TRUE)$ix]
+    vecSortedGenes <- vecIDs[order(vecindPeak, decreasing=FALSE)]
     
     # (III) Create heatmap of sorted genes.
     # Row normalise expression values
@@ -88,21 +88,13 @@ sortGeneTrajectories <- function(
     # Set column names: Hack tick labeling of heatmap.2: Only
     # shows columns as lables which are not names NA
     scaCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
-    vecTicks <- array(NA, scaCells)
-    scaDistBetweenCells <- round(scaCells/10)
+    vecTicks <- array(NULL, scaCells)
+    scaDistBetweenCells <- round(scaCells/4)
     vecindTicks <- sapply(seq(0,9), function(i) 1+i*scaDistBetweenCells)
     vecindTicks[10] <- scaCells
     vecTicks[vecindTicks] <- round(
         lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 0)
     colnames(matMuNorm) <- vecTicks
-    # Set upper bounds of z-scores to visualise
-    scaMuNormLowBound <- max(min(matMuNorm, na.rm=TRUE), -5)
-    scaMuNormUpperBound <- min(max(matMuNorm, na.rm=TRUE), 5)
-    scaBreaks <- 50
-    breaks <- seq(scaMuNormLowBound,scaMuNormUpperBound,
-                  by=(scaMuNormUpperBound - scaMuNormLowBound) /
-                      (scaBreaks-1))
-    hm.colors <- colorpanel( length(breaks)-1, "red", "blue" )
     
     if(!is.null(dirHeatmap)){
         # Plot genes sorted by peak time

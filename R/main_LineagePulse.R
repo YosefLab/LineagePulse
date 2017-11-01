@@ -12,7 +12,7 @@
 #' @import RColorBrewer
 #' @import SingleCellExperiment
 #' @import splines
-#' @importFrom stats dnbinom median optim p.adjust pchisq 
+#' @importFrom stats density dnbinom median optim p.adjust pchisq
 #' rnbinom rnorm runif sd lm qnbinom rbinom
 #' @import SummarizedExperiment
 #' @importFrom utils packageDescription
