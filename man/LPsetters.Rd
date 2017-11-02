@@ -2,6 +2,8 @@
 % Please edit documentation in R/srcLineagePulse_classLineagePulseObject.R
 \name{LPsetters}
 \alias{LPsetters}
+\alias{`dfAnnotationProc<-`}
+\alias{`dfResults<-`}
 \alias{`lsMuModelH0<-`}
 \alias{`lsMuModelH1<-`}
 \alias{`lsMuModelConst<-`}
@@ -9,6 +11,7 @@
 \alias{`lsDispModelH1<-`}
 \alias{`lsDispModelConst<-`}
 \alias{`lsDropModel<-`}
+\alias{`lsFitZINBReporters<-`}
 \alias{`matCountsProc<-`}
 \alias{`matWeights<-`}
 \alias{`scaDFSplinesDisp<-`}
@@ -22,6 +25,8 @@
 \alias{`vecH0Pop<-`}
 \alias{`vecNormConst<-`}
 \alias{`strVersion<-`}
+\alias{dfAnnotationProc<-}
+\alias{dfResults<-}
 \alias{lsMuModelH0<-}
 \alias{lsMuModelH1<-}
 \alias{lsMuModelConst<-}
@@ -29,6 +34,7 @@
 \alias{lsDispModelH1<-}
 \alias{lsDispModelConst<-}
 \alias{lsDropModel<-}
+\alias{lsFitZINBReporters<-}
 \alias{matCountsProc<-}
 \alias{matWeights<-}
 \alias{scaDFSplinesDisp<-}
@@ -44,6 +50,10 @@
 \alias{strVersion<-}
 \title{LineagePulseObject setters}
 \usage{
+dfAnnotationProc(objLP) <- value
+
+dfResults(objLP) <- value
+
 lsMuModelH0(objLP) <- value
 
 lsMuModelH1(objLP) <- value
@@ -57,6 +67,8 @@ lsDispModelH1(objLP) <- value
 lsDispModelConst(objLP) <- value
 
 lsDropModel(objLP) <- value
+
+lsFitZINBReporters(objLP) <- value
 
 matCountsProc(objLP) <- value
 

@@ -126,6 +126,8 @@ setClass(
 #' @name accessors
 #' @rdname accessors
 #' @aliases
+#' dfAnnotationProc
+#' dfResults
 #' lsMuModelH0
 #' lsMuModelH1
 #' lsMuModelConst
@@ -133,6 +135,7 @@ setClass(
 #' lsDispModelH1
 #' lsDispModelConst
 #' lsDropModel
+#' lsFitZINBReporters
 #' matCountsProc
 #' matWeights
 #' scaDFSplinesDisp
@@ -164,6 +167,7 @@ setClass(
 #'     strMuModel = "impulse")
 #' # get hidden objects within LineagePulse object
 #' dfAnnotationProc <- dfAnnotationProc(objLP)
+#' dfResults <- dfResults(objLP)
 #' lsMuModelH0 <- lsMuModelH0(objLP)
 #' lsMuModelH1 <- lsMuModelH1(objLP)
 #' lsMuModelConst <- lsMuModelConst(objLP)
@@ -171,6 +175,7 @@ setClass(
 #' lsDispModelH1 <- lsDispModelH1(objLP)
 #' lsDispModelConst <- lsDispModelConst(objLP)
 #' lsDropModel <- lsDropModel(objLP)
+#' lsFitZINBReporters <- lsFitZINBReporters(objLP)
 #' matCountDataProc <- matCountsProc(objLP)
 #' matWeights <- matWeights(objLP)
 #' scaDFSplinesDisp <- scaDFSplinesDisp(objLP) 
@@ -192,6 +197,11 @@ NULL
 #' @export
 dfAnnotationProc <- function(objLP) 
     return(objLP@dfAnnotationProc)
+
+#' @rdname accessors
+#' @export
+dfResults <- function(objLP) 
+    return(objLP@dfResults)
 
 #' @rdname accessors
 #' @export
@@ -227,6 +237,11 @@ lsDispModelConst <- function(objLP)
 #' @export
 lsDropModel <- function(objLP) 
     return(objLP@lsDropModel)
+
+#' @rdname accessors
+#' @export
+lsFitZINBReporters <- function(objLP) 
+    return(objLP@lsFitZINBReporters)
 
 #' @rdname accessors
 #' @export
@@ -312,6 +327,8 @@ strReport <- function(objLP)
 #' @name LPsetters
 #' @rdname LPsetters
 #' @aliases
+#' `dfAnnotationProc<-`
+#' `dfResults<-`
 #' `lsMuModelH0<-`
 #' `lsMuModelH1<-`
 #' `lsMuModelConst<-`
@@ -319,6 +336,7 @@ strReport <- function(objLP)
 #' `lsDispModelH1<-`
 #' `lsDispModelConst<-`
 #' `lsDropModel<-`
+#' `lsFitZINBReporters<-`
 #' `matCountsProc<-`
 #' `matWeights<-`
 #' `scaDFSplinesDisp<-`
@@ -335,6 +353,20 @@ strReport <- function(objLP)
 #' 
 #' @author David Sebastian Fischer
 NULL
+
+#' @rdname LPsetters
+#' @export
+`dfAnnotationProc<-` <- function(objLP, value) {
+    objLP@dfAnnotationProc <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`dfResults<-` <- function(objLP, value) {
+    objLP@dfResults <- value
+    objLP
+}
 
 #' @rdname LPsetters
 #' @export
@@ -382,6 +414,13 @@ NULL
 #' @export
 `lsDropModel<-` <- function(objLP, value) {
     objLP@lsDropModel <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsFitZINBReporters<-` <- function(objLP, value) {
+    objLP@lsFitZINBReporters <- value
     objLP
 }
 

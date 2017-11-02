@@ -2,6 +2,8 @@
 % Please edit documentation in R/srcLineagePulse_classLineagePulseObject.R
 \name{accessors}
 \alias{accessors}
+\alias{dfAnnotationProc}
+\alias{dfResults}
 \alias{lsMuModelH0}
 \alias{lsMuModelH1}
 \alias{lsMuModelConst}
@@ -9,6 +11,7 @@
 \alias{lsDispModelH1}
 \alias{lsDispModelConst}
 \alias{lsDropModel}
+\alias{lsFitZINBReporters}
 \alias{matCountsProc}
 \alias{matWeights}
 \alias{scaDFSplinesDisp}
@@ -23,6 +26,7 @@
 \alias{vecNormConst}
 \alias{strVersion}
 \alias{dfAnnotationProc}
+\alias{dfResults}
 \alias{lsMuModelH0}
 \alias{lsMuModelH1}
 \alias{lsMuModelConst}
@@ -30,6 +34,7 @@
 \alias{lsDispModelH1}
 \alias{lsDispModelConst}
 \alias{lsDropModel}
+\alias{lsFitZINBReporters}
 \alias{matCountsProc}
 \alias{matWeights}
 \alias{scaDFSplinesDisp}
@@ -48,6 +53,8 @@
 \usage{
 dfAnnotationProc(objLP)
 
+dfResults(objLP)
+
 lsMuModelH0(objLP)
 
 lsMuModelH1(objLP)
@@ -61,6 +68,8 @@ lsDispModelH1(objLP)
 lsDispModelConst(objLP)
 
 lsDropModel(objLP)
+
+lsFitZINBReporters(objLP)
 
 matCountsProc(objLP)
 
@@ -118,6 +127,7 @@ objLP <- runLineagePulse(
     strMuModel = "impulse")
 # get hidden objects within LineagePulse object
 dfAnnotationProc <- dfAnnotationProc(objLP)
+dfResults <- dfResults(objLP)
 lsMuModelH0 <- lsMuModelH0(objLP)
 lsMuModelH1 <- lsMuModelH1(objLP)
 lsMuModelConst <- lsMuModelConst(objLP)
@@ -125,6 +135,7 @@ lsDispModelH0 <- lsDispModelH0(objLP)
 lsDispModelH1 <- lsDispModelH1(objLP)
 lsDispModelConst <- lsDispModelConst(objLP)
 lsDropModel <- lsDropModel(objLP)
+lsFitZINBReporters <- lsFitZINBReporters(objLP)
 matCountDataProc <- matCountsProc(objLP)
 matWeights <- matWeights(objLP)
 scaDFSplinesDisp <- scaDFSplinesDisp(objLP) 
