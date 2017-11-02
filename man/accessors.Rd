@@ -138,7 +138,6 @@ boolFixedPopulations <- boolFixedPopulations(objLP)
 vecH0Pop <- vecH0Pop(objLP) 
 vecNormConst <- vecNormConst(objLP) 
 strVersion <- strVersion(objLP)
-strReport <- strReport(objLP)
 
 }
 \author{

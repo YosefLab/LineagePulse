@@ -311,15 +311,15 @@ runLineagePulse <- function(
     
     # 2. Compute normalisation constants
     strMessage <- paste0("--- Compute normalisation constants:")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
-    objLP <- calcNormConst(objLP=objLP,
+    vecNormConst(objLP) <- calcNormConst(objLP=objLP,
                            vecNormConstExternal=vecNormConstExternalProc)
     
     # 3. Fit ZINB model for both H1 and H0.
     strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_fitmm <- system.time({
@@ -338,13 +338,13 @@ runLineagePulse <- function(
     })
     strMessage <- paste0("Time elapsed during ZINB fitting: ",
                          round(tm_fitmm["elapsed"]/60,2)," min")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     
     # 4. Differential expression analysis:
     strMessage <- paste0("--- Run differential expression analysis.")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_deanalysis_mf <- system.time({
@@ -353,11 +353,11 @@ runLineagePulse <- function(
     strMessage <- paste0(
         "Time elapsed during differential expression analysis: ",
         round(tm_deanalysis_mf["elapsed"]/60,2)," min")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     strMessage <- paste0("Finished runLineagePulse().")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage)
+    strReport(objLP) <- paste0(strReport(objLP), strMessage)
     if(boolVerbose) message(strMessage)
     
     return(objLP)

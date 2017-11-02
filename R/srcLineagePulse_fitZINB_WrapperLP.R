@@ -108,23 +108,23 @@ fitContinuousModels <- function(
     # Fit model A
     strMessage <- paste0("### a) Fit negative binomial model A (",
                          strNameModelA,") with noise model.")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_cycle <- system.time({
         lsFitsModelA <- fitZINB(
-            matCounts=objLP@matCountsProc,
-            dfAnnotation=objLP@dfAnnotationProc,
-            vecConfoundersMu=objLP@vecConfoundersMu,
-            vecConfoundersDisp=objLP@vecConfoundersDisp,
-            vecNormConst=objLP@vecNormConst,
+            matCounts=matCountsProc(objLP),
+            dfAnnotation=dfAnnotationProc(objLP),
+            vecConfoundersMu=vecConfoundersMu(objLP),
+            vecConfoundersDisp=vecConfoundersDisp(objLP),
+            vecNormConst=vecNormConst(objLP),
             lsDropModel=NULL,
             strMuModel=strMuModelA,
             strDispModel=strDispModelA,
             strDropModel=strDropModel,
             strDropFitGroup=strDropFitGroup,
-            scaDFSplinesDisp=objLP@scaDFSplinesDisp,
-            scaDFSplinesMu=objLP@scaDFSplinesMu,
+            scaDFSplinesDisp=scaDFSplinesDisp(objLP),
+            scaDFSplinesMu=scaDFSplinesMu(objLP),
             matPiConstPredictors=matPiConstPredictors,
             boolVerbose=boolVerbose,
             boolSuperVerbose=boolSuperVerbose)
@@ -134,36 +134,36 @@ fitContinuousModels <- function(
     lsDropModel <- lsFitsModelA$lsDropModel
     boolConvergenceModelA <- lsFitsModelA$boolConvergenceModel
     vecEMLogLikModelA <- lsFitsModelA$vecEMLogLikModel
-    strReport(objLP) <- paste0(objLP@strReport,
+    strReport(objLP) <- paste0(strReport(objLP),
                               lsFitsModelA$strReport)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",
         "model A with noise model in ", 
         round(tm_cycle["elapsed"]/60,2)," min.")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     ####################################################
     # Fit model B
     strMessage <- paste0("### b) Fit negative binomial model B (",
                          strNameModelB,").")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     tm_cycleB <- system.time({
         lsFitsModelB <- fitZINB(
-            matCounts=objLP@matCountsProc,
-            dfAnnotation=objLP@dfAnnotationProc,
-            vecConfoundersMu=objLP@vecConfoundersMu,
-            vecConfoundersDisp=objLP@vecConfoundersDisp,
-            vecNormConst=objLP@vecNormConst,
+            matCounts=matCountsProc(objLP),
+            dfAnnotation=dfAnnotationProc(objLP),
+            vecConfoundersMu=vecConfoundersMu(objLP),
+            vecConfoundersDisp=vecConfoundersDisp(objLP),
+            vecNormConst=vecNormConst(objLP),
             lsDropModel=lsDropModel,
             strMuModel=strMuModelB,
             strDispModel=strDispModelB,
             strDropFitGroup=strDropFitGroup,
-            scaDFSplinesDisp=objLP@scaDFSplinesDisp,
-            scaDFSplinesMu=objLP@scaDFSplinesMu,
+            scaDFSplinesDisp=scaDFSplinesDisp(objLP),
+            scaDFSplinesMu=scaDFSplinesMu(objLP),
             matPiConstPredictors=matPiConstPredictors,
             boolVerbose=boolVerbose,
             boolSuperVerbose=boolSuperVerbose)
@@ -172,13 +172,13 @@ fitContinuousModels <- function(
     lsDispModelB <- lsFitsModelB$lsDispModel
     boolConvergenceModelB <- lsFitsModelB$boolConvergenceModel
     vecEMLogLikModelB <- lsFitsModelB$vecEMLogLikModel
-    strReport(objLP) <- paste0(objLP@strReport,
+    strReport(objLP) <- paste0(strReport(objLP),
                               lsFitsModelB$strReport)
     
     strMessage <- paste0(
         "Finished fitting zero-inflated negative binomial ",
         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
-    strReport(objLP) <- paste0(objLP@strReport, strMessage, "\n")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
     if(boolEstimateNoiseBasedOnH0){
@@ -187,23 +187,23 @@ fitContinuousModels <- function(
             boolConvergenceH0=boolConvergenceModelA,
             vecEMLogLikH1=vecEMLogLikModelB,
             vecEMLogLikH0=vecEMLogLikModelA)
-        objLP@lsMuModelH1 <- lsMuModelB
-        objLP@lsDispModelH1 <- lsDispModelB
-        objLP@lsMuModelH0 <- lsMuModelA
-        objLP@lsDispModelH0 <- lsDispModelA
+        lsMuModelH1(objLP) <- lsMuModelB
+        lsDispModelH1(objLP) <- lsDispModelB
+        lsMuModelH0(objLP) <- lsMuModelA
+        lsDispModelH0(objLP) <- lsDispModelA
     } else {
         lsFitZINBReporters <- list(
             boolConvergenceH1=boolConvergenceModelA,
             boolConvergenceH0=boolConvergenceModelB,
             vecEMLogLikH1=vecEMLogLikModelA,
             vecEMLogLikH0=vecEMLogLikModelB)
-        objLP@lsMuModelH1 <- lsMuModelA
-        objLP@lsDispModelH1 <- lsDispModelA
-        objLP@lsMuModelH0 <- lsMuModelB
-        objLP@lsDispModelH0 <- lsDispModelB
+        lsMuModelH1(objLP) <- lsMuModelA
+        lsDispModelH1(objLP) <- lsDispModelA
+        lsMuModelH0(objLP) <- lsMuModelB
+        lsDispModelH0(objLP) <- lsDispModelB
     }
-    objLP@lsDropModel <- lsDropModel
-    objLP@lsFitZINBReporters <- lsFitZINBReporters
+    lsDropModel(objLP) <- lsDropModel
+    lsFitZINBReporters(objLP) <- lsFitZINBReporters
     
     return(objLP)
 }

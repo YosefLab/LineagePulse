@@ -50,23 +50,26 @@
 runDEAnalysis <- function(objLP){
     
     # (I) Compute log likelihoods
-    vecLogLikFull <- evalLogLikMatrix(matCounts=objLP@matCountsProc,
-                                      lsMuModel=objLP@lsMuModelH1,
-                                      lsDispModel=objLP@lsDispModelH1, 
-                                      lsDropModel=objLP@lsDropModel,
-                                      matWeights=objLP@matWeights)
-    vecLogLikRed <- evalLogLikMatrix(matCounts=objLP@matCountsProc,
-                                     lsMuModel=objLP@lsMuModelH0,
-                                     lsDispModel=objLP@lsDispModelH0, 
-                                     lsDropModel=objLP@lsDropModel,
-                                     matWeights=objLP@matWeights)
+    vecLogLikFull <- evalLogLikMatrix(
+        matCounts=matCountsProc(objLP),
+        lsMuModel=lsMuModelH1(objLP),
+        lsDispModel=lsDispModelH1(objLP), 
+        lsDropModel=lsDropModel(objLP),
+        matWeights=matWeights(objLP))
+    vecLogLikRed <- evalLogLikMatrix(
+        matCounts=matCountsProc(objLP),
+        lsMuModel=lsMuModelH0(objLP),
+        lsDispModel=lsDispModelH0(objLP), 
+        lsDropModel=lsDropModel(objLP),
+        matWeights=matWeights(objLP))
     
     # (II) Differential expression analysis
-    # Compute difference in degrees of freedom between null model and alternative model.
-    scaDFbyGeneH1 <- objLP@lsMuModelH1$lsMuModelGlobal$scaDegFreedom + 
-        objLP@lsDispModelH1$lsDispModelGlobal$scaDegFreedom
-    scaDFbyGeneH0 <- objLP@lsMuModelH0$lsMuModelGlobal$scaDegFreedom + 
-        objLP@lsDispModelH0$lsDispModelGlobal$scaDegFreedom
+    # Compute difference in degrees of freedom 
+    # between null model and alternative model.
+    scaDFbyGeneH1 <- lsMuModelH1(objLP)$lsMuModelGlobal$scaDegFreedom + 
+        lsDispModelH1(objLP)$lsDispModelGlobal$scaDegFreedom
+    scaDFbyGeneH0 <- lsMuModelH0(objLP)$lsMuModelGlobal$scaDegFreedom + 
+        lsDispModelH0(objLP)$lsDispModelGlobal$scaDegFreedom
     scaDeltaDegFreedom <- scaDFbyGeneH1 - scaDFbyGeneH0
     # Compute test statistic: Deviance
     vecDeviance <- 2*(vecLogLikFull - vecLogLikRed)
@@ -75,13 +78,13 @@ runDEAnalysis <- function(objLP){
     # Multiple testing correction (Benjamini-Hochberg)
     vecPvalueBH <- p.adjust(vecPvalue, method = "BH")
     
-    if(objLP@lsMuModelH0$lsMuModelGlobal$strMuModel=="constant"){
-        vecMu <- as.vector(objLP@lsMuModelH0$matMuModel)
+    if(lsMuModelH0(objLP)$lsMuModelGlobal$strMuModel=="constant"){
+        vecMu <- as.vector(lsMuModelH0(objLP)$matMuModel)
     } else {
-        vecMu <- as.vector(objLP@lsMuModelConst$matMuModel)
+        vecMu <- as.vector(lsMuModelConst(objLP)$matMuModel)
     }
     dfResults <- data.frame(
-        gene=rownames(objLP@matCountsProc),
+        gene=rownames(matCountsProc(objLP)),
         p=as.numeric(vecPvalue),
         adj.p=as.numeric(vecPvalueBH),
         mean_H0=vecMu,
@@ -93,11 +96,11 @@ runDEAnalysis <- function(objLP){
         stringsAsFactors=FALSE)
     rownames(dfResults) <- dfResults$gene
     
-    dfResults <- dfResults[match(objLP@vecAllGenes,dfResults$gene),]
-    rownames(dfResults) <- objLP@vecAllGenes
-    vecboolAllZero <- !(objLP@vecAllGenes %in% rownames(objLP@matCountsProc))
+    dfResults <- dfResults[match(vecAllGenes(objLP), dfResults$gene),]
+    rownames(dfResults) <- vecAllGenes(objLP)
+    vecboolAllZero <- !(vecAllGenes(objLP) %in% rownames(matCountsProc(objLP)))
     dfResults$allZero <- vecboolAllZero
     
-    objLP@dfResults <- dfResults
+    dfResults(objLP) <- dfResults
     return(objLP)
 }

@@ -184,7 +184,6 @@ setClass(
 #' vecH0Pop <- vecH0Pop(objLP) 
 #' vecNormConst <- vecNormConst(objLP) 
 #' strVersion <- strVersion(objLP)
-#' strReport <- strReport(objLP)
 #' 
 #' @author David Sebastian Fischer
 NULL
@@ -299,19 +298,181 @@ strVersion <- function(objLP)
 strReport <- function(objLP) 
     return(objLP@strReport)
 
-#' LineagePulseObject strReport setter
+#' LineagePulseObject setters
 #' 
-#' Add string to strReport LineagePulse-Object. 
+#' Setters for LineagePulse-Object. Set the entry defined by the function
+#' name to in objLP to value.
 #' 
 #' @param objLP (LineagePulse-Object)  
 #' A LineagePulse output object to write into.
-#' @param value (str) The string to add to strReport.
+#' @param value (str) The value to be set.
 #' 
-#' @return The LineagePulse output object with updated strReport.
+#' @return The LineagePulse output object with updated entry.
+#' 
+#' @name LPsetters
+#' @rdname LPsetters
+#' @aliases
+#' `lsMuModelH0<-`
+#' `lsMuModelH1<-`
+#' `lsMuModelConst<-`
+#' `lsDispModelH0<-`
+#' `lsDispModelH1<-`
+#' `lsDispModelConst<-`
+#' `lsDropModel<-`
+#' `matCountsProc<-`
+#' `matWeights<-`
+#' `scaDFSplinesDisp<-`
+#' `scaDFSplinesMu<-`
+#' `strReport<-`
+#' `vecAllGenes<-`
+#' `vecConfoundersDisp<-`
+#' `vecConfoundersMu<-`
+#' `scaOmega<-`
+#' `boolFixedPopulation<-`
+#' `vecH0Pop<-`
+#' `vecNormConst<-`
+#' `strVersion<-`
 #' 
 #' @author David Sebastian Fischer
+NULL
+
+#' @rdname LPsetters
+#' @export
+`lsMuModelH0<-` <- function(objLP, value) {
+    objLP@lsMuModelH0 <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsMuModelH1<-` <- function(objLP, value) {
+    objLP@lsMuModelH1 <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsMuModelConst<-` <- function(objLP, value) {
+    objLP@lsMuModelConst <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsDispModelH0<-` <- function(objLP, value) {
+    objLP@lsDispModelH0 <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsDispModelH1<-` <- function(objLP, value) {
+    objLP@lsDispModelH1 <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsDispModelConst<-` <- function(objLP, value) {
+    objLP@lsDispModelConst <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsDropModel<-` <- function(objLP, value) {
+    objLP@lsDropModel <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`matCountsProc<-` <- function(objLP, value) {
+    objLP@matCountsProc <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`matWeights<-` <- function(objLP, value) {
+    objLP@matWeights <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`scaDFSplinesDisp<-` <- function(objLP, value) {
+    objLP@scaDFSplinesDisp <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`scaDFSplinesMu<-` <- function(objLP, value) {
+    objLP@scaDFSplinesMu <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
 `strReport<-` <- function(objLP, value) {
     objLP@strReport <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`vecAllGenes<-` <- function(objLP, value) {
+    objLP@vecAllGenes <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`vecConfoundersDisp<-` <- function(objLP, value) {
+    objLP@vecConfoundersDisp <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`vecConfoundersMu<-` <- function(objLP, value) {
+    objLP@vecConfoundersMu <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`scaOmega<-` <- function(objLP, value) {
+    objLP@scaOmega <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`boolFixedPopulation<-` <- function(objLP, value) {
+    objLP@boolFixedPopulation <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`vecH0Pop<-` <- function(objLP, value) {
+    objLP@vecH0Pop <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`vecNormConst<-` <- function(objLP, value) {
+    objLP@vecNormConst <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`strVersion<-` <- function(objLP, value) {
+    objLP@strVersion <- value
     objLP
 }
 

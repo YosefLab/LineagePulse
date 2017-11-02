@@ -24,8 +24,8 @@ calcNormConst <- function(objLP,
         vecNormConst <- vecNormConstExternal
     } else {
         message("# All size factors are set to one.")
-        vecNormConst <- array(1, dim(objLP@matCountsProc)[2])
-        names(vecNormConst) <- colnames(objLP@matCountsProc)
+        vecNormConst <- array(1, dim(matCountsProc(objLP))[2])
+        names(vecNormConst) <- colnames(matCountsProc(objLP))
     }
     
     if(any(vecNormConst==0)){
@@ -34,6 +34,5 @@ calcNormConst <- function(objLP,
         vecNormConst[vecNormConst==0] <- 1
     }
     
-    objLP@vecNormConst <- as.vector(vecNormConst)
-    return(objLP)
+    return(as.vector(vecNormConst))
 }

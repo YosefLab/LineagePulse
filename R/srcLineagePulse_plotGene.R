@@ -107,31 +107,31 @@ plotGene <- function(
         boolColourByDropout <- FALSE
     }
     ### 1. Extract data and models
-    vecCounts <- objLP@matCountsProc[strGeneID,,sparse=FALSE]
+    vecCounts <- matCountsProc(objLP)[strGeneID,,sparse=FALSE]
     matCountsGene <- t(as.matrix(vecCounts))
     rownames(matCountsGene) <- strGeneID
     if(boolH1NormCounts){
         vecCountsToPlot <- as.vector(getNormData(
             matCounts=matCountsGene,
-            lsMuModel=objLP@lsMuModelH1))
+            lsMuModel=lsMuModelH1(objLP)))
     } else {
         vecCountsToPlot <- vecCounts
     }
     vecMuParamH0 <- decompressMeansByGene(
-        vecMuModel=objLP@lsMuModelH0$matMuModel[strGeneID,],
+        vecMuModel=lsMuModelH0(objLP)$matMuModel[strGeneID,],
         lsvecBatchModel=NULL,
-        lsMuModelGlobal=objLP@lsMuModelH0$lsMuModelGlobal,
+        lsMuModelGlobal=lsMuModelH0(objLP)$lsMuModelGlobal,
         vecInterval=NULL )
     vecMuParamH1 <- decompressMeansByGene(
-        vecMuModel=objLP@lsMuModelH1$matMuModel[strGeneID,],
+        vecMuModel=lsMuModelH1(objLP)$matMuModel[strGeneID,],
         lsvecBatchModel=NULL,
-        lsMuModelGlobal=objLP@lsMuModelH1$lsMuModelGlobal,
+        lsMuModelGlobal=lsMuModelH1(objLP)$lsMuModelGlobal,
         vecInterval=NULL )
     vecDropPosterior <- as.vector(calcPostDrop_Matrix(
         matCounts=matCountsGene,
-        lsMuModel=objLP@lsMuModelH1,
-        lsDispModel=objLP@lsDispModelH1, 
-        lsDropModel=objLP@lsDropModel,
+        lsMuModel=lsMuModelH1(objLP),
+        lsDispModel=lsDispModelH1(objLP), 
+        lsDropModel=lsDropModel(objLP),
         vecIDs=strGeneID))
     if(boolLogPlot){
         vecCountsToPlot <- log(vecCountsToPlot+1)/log(10)
@@ -142,9 +142,9 @@ plotGene <- function(
     ### 2. Data scatter plot
     # Set drop-out rates as constant for visualistion if not given.
     dfScatterCounts <- data.frame( counts=vecCountsToPlot )
-    if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+    if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
        c("splines", "impulse")){
-        dfScatterCounts$x <- objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime
+        dfScatterCounts$x <- lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
@@ -160,9 +160,9 @@ plotGene <- function(
                     alpha = scaGgplot2Alpha, show.legend=TRUE)
         }
         
-    } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% c("groups")){
-        dfScatterCounts$x <- seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells)
-        dfScatterCounts$groups <- objLP@dfAnnotationProc$groups
+    } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% c("groups")){
+        dfScatterCounts$x <- seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells)
+        dfScatterCounts$groups <- dfAnnotationProc(objLP)$groups
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
@@ -188,38 +188,38 @@ plotGene <- function(
     vecMuParamH0[vecMuParamH0 > scaMaxPlot] <- NA
     vecMuParamH1[vecMuParamH1 > scaMaxPlot] <- NA
     if(is.null(vecReferenceMuParam)){
-        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+        if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
            c("splines", "impulse")){
             dfLineImpulse <- data.frame(
-                x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 2),
+                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 2),
                 counts=c(vecMuParamH0,
                          vecMuParamH1),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1))) )
-        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+        } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
                   c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells), 2),
+                x=rep(seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells), 2),
                 counts=c(vecMuParamH0,
                          vecMuParamH1),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1))) )
         }
     } else {
-        if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+        if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
            c("splines", "impulse")){
             dfLineImpulse <- data.frame(
-                x=rep(objLP@lsMuModelH1$lsMuModelGlobal$vecPseudotime, 3),
+                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecReferenceMuParam),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1)),
                         rep("Reference", length(vecReferenceMuParam))) )
-        } else if(objLP@lsMuModelH1$lsMuModelGlobal$strMuModel %in% 
+        } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
                   c("groups")){
             dfLineImpulse <- data.frame(
-                x=rep(seq_len(objLP@lsMuModelH1$lsMuModelGlobal$scaNumCells), 3),
+                x=rep(seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells), 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecReferenceMuParam),
@@ -244,26 +244,26 @@ plotGene <- function(
             vecMuParamH1_nonlog <- vecMuParamH1
         }
         vecDispParamH1 <- decompressDispByGene(
-            vecDispModel=objLP@lsDispModelH1$matDispModel[strGeneID,],
+            vecDispModel=lsDispModelH1(objLP)$matDispModel[strGeneID,],
             lsvecBatchModel=NULL,
-            lsDispModelGlobal=objLP@lsDispModelH1$lsDispModelGlobal,
+            lsDispModelGlobal=lsDispModelH1(objLP)$lsDispModelGlobal,
             vecInterval=NULL )
         # copmute density estimate of cells in pseudotime
         if(is.null(bwDensity)) {
             bwDensity <- "nrd0"
         }
-        lsDensity <- density(x = objLP@dfAnnotationProc$pseudotime, bw=bwDensity, 
-                             n = length(objLP@dfAnnotationProc$pseudotime))
+        lsDensity <- density(x = dfAnnotationProc(objLP)$pseudotime, bw=bwDensity, 
+                             n = length(dfAnnotationProc(objLP)$pseudotime))
         scaNKDEbin <- 10
-        scaWindowRadPT <- (max(objLP@dfAnnotationProc$pseudotime, 
+        scaWindowRadPT <- (max(dfAnnotationProc(objLP)$pseudotime, 
                                na.rm = TRUE) - 
-                               min(objLP@dfAnnotationProc$pseudotime, 
+                               min(dfAnnotationProc(objLP)$pseudotime, 
                                    na.rm = TRUE)) / (2*scaNKDEbin)
-        vecObsInBin <- sapply(objLP@dfAnnotationProc$pseudotime, function(pt) {
-            sum(abs(pt-objLP@dfAnnotationProc$pseudotime) <= scaWindowRadPT)
+        vecObsInBin <- sapply(dfAnnotationProc(objLP)$pseudotime, function(pt) {
+            sum(abs(pt-dfAnnotationProc(objLP)$pseudotime) <= scaWindowRadPT)
         })
         dfExpectObsCI <- data.frame(
-            pseudotime = rep(objLP@dfAnnotationProc$pseudotime,3), 
+            pseudotime = rep(dfAnnotationProc(objLP)$pseudotime,3), 
             trajectory_contour = c(
                 qnbinom(p = 1 - sapply(
                     vecObsInBin, function(x) min(x,1) ) / vecObsInBin,
@@ -293,7 +293,7 @@ plotGene <- function(
     gplotGene <- gplotGene + 
         labs(title=paste0(
             strGeneID, "\nlog10 q-value=", 
-            round(log(objLP@dfResults[strGeneID,]$adj.p,2)/log(10)) )) +
+            round(log(dfResults(objLP)[strGeneID,]$adj.p,2)/log(10)) )) +
         xlab(paste0("pseudotime")) +
         theme(axis.text=element_text(size=14),
               axis.title=element_text(size=14,face="bold"),
@@ -340,7 +340,7 @@ plotGene <- function(
 #' @export
 plotCellDensity <- function(objLP){
     
-    gplotKDE <- ggplot() + geom_density(data = objLP@dfAnnotationProc, aes(
+    gplotKDE <- ggplot() + geom_density(data = dfAnnotationProc(objLP), aes(
         x = pseudotime))
     
     return(gplotKDE)
