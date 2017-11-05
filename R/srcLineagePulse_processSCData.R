@@ -338,7 +338,7 @@ processSCData <- function(
         lsDispModelH1       = NULL,
         lsDispModelConst    = NULL,
         lsDropModel         = NULL,
-        lsFitZINBReporters  = NULL,
+        lsFitConvergence    = NULL,
         lsMuModelH1         = NULL,
         lsMuModelH0         = NULL,
         lsMuModelConst      = NULL,

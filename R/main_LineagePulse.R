@@ -41,12 +41,17 @@ NULL
 #source("srcLineagePulse_decompressParameters.R")
 #source("srcLineagePulse_evalDropoutModel.R")
 #source("srcLineagePulse_evalImpulseModel.R")
+#source("srcLineagePulse_evalLogLikNB.R")
+#source("srcLineagePulse_evalLogLikZINB.R")
+#source("srcLineagePulse_fitNB_fitMeanDispersion.R")
+#source("srcLineagePulse_fitNB.R")
 #source("srcLineagePulse_fitZINB_fitMeanDispersion.R")
 #source("srcLineagePulse_fitZINB_fitDropout.R")
 #source("srcLineagePulse_fitZINB.R")
 #source("srcLineagePulse_fitZINB_WrapperLP.R")
 #source("srcLineagePulse_getFits.R")
 #source("srcLineagePulse_initialiseImpulseParameters.R")
+#source("srcLineagePulse_initialiseImpulseParametersNB.R")
 #source("srcLineagePulse_plotGene.R")
 #source("srcLineagePulse_processSCData.R")
 #source("srcLineagePulse_runDEAnalysis.R")
@@ -341,7 +346,6 @@ runLineagePulse <- function(
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
-    
     # 4. Differential expression analysis:
     strMessage <- paste0("--- Run differential expression analysis.")
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
@@ -350,11 +354,6 @@ runLineagePulse <- function(
     tm_deanalysis_mf <- system.time({
         objLP <- runDEAnalysis( objLP=objLP )
     })
-    strMessage <- paste0(
-        "Time elapsed during differential expression analysis: ",
-        round(tm_deanalysis_mf["elapsed"]/60,2)," min")
-    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
-    if(boolVerbose) message(strMessage)
     
     strMessage <- paste0("Finished runLineagePulse().")
     strReport(objLP) <- paste0(strReport(objLP), strMessage)

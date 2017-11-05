@@ -29,6 +29,12 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' @slot lsDispModelConst (list)
 #' Object containing description of gene-wise dispersion parameter models of
 #' constant model (necessary if H0 is not constant (mixture models)).
+#' @slot lsDispModelH1_NB (list)
+#' Object containing description of 
+#' gene-wise dispersion parameter models of H1 with NB noise model.
+#' @slot lsDispModelH0_NB (list)
+#' Object containing description of 
+#' gene-wise dispersion parameter models of H0 with NB noise model.
 #' @slot lsDropModel (list)
 #' @slot lsMuModelH0 (list)
 #' Object containing description of gene-wise mean parameter models of H0.
@@ -37,7 +43,13 @@ setClassUnion('data.frameORNULL', members=c('data.frame', 'NULL'))
 #' @slot lsMuModelConst (list)
 #' Object containing description of gene-wise means parameter models of
 #' constant model (necessary if H0 is not constant (mixture models)).
-#' @slot lsFitZINBReporters (list)
+#' @slot lsMuModelH0_NB (list)
+#' Object containing description of gene-wise mean parameter models of H0
+#' with NB noise model.
+#' @slot lsMuModelH1_NB (list)
+#' Object containing description of gene-wise mean parameter models of H1.
+#' with NB noise model.
+#' @slot lsFitConvergence (list)
 #' Fitting reporter summary.
 #' @slot matCountsProc (count matrix genes x cells)
 #' Sparse matrix of counts, non-observed values are NA.
@@ -90,11 +102,15 @@ setClass(
         lsDispModelH0       = "listORNULL",
         lsDispModelH1       = "listORNULL",
         lsDispModelConst    = "listORNULL",
+        lsDispModelH0_NB    = "listORNULL",
+        lsDispModelH1_NB    = "listORNULL",
         lsDropModel         = "listORNULL",
         lsMuModelH0         = "listORNULL",
         lsMuModelH1         = "listORNULL",
         lsMuModelConst      = "listORNULL",
-        lsFitZINBReporters  = "listORNULL",
+        lsMuModelH0_NB      = "listORNULL",
+        lsMuModelH1_NB      = "listORNULL",
+        lsFitConvergence    = "listORNULL",
         matCountsProc       = "dgCMatrix",
         matWeights          = "matrixORNULL",
         scaDFSplinesDisp    = "numericORNULL",
@@ -131,11 +147,13 @@ setClass(
 #' lsMuModelH0
 #' lsMuModelH1
 #' lsMuModelConst
+#' lsMuModelH0_NB
+#' lsMuModelH1_NB
 #' lsDispModelH0
 #' lsDispModelH1
 #' lsDispModelConst
 #' lsDropModel
-#' lsFitZINBReporters
+#' lsFitConvergence
 #' matCountsProc
 #' matWeights
 #' scaDFSplinesDisp
@@ -171,11 +189,13 @@ setClass(
 #' lsMuModelH0 <- lsMuModelH0(objLP)
 #' lsMuModelH1 <- lsMuModelH1(objLP)
 #' lsMuModelConst <- lsMuModelConst(objLP)
+#' lsMuModelH0_NB <- lsMuModelH0_NB(objLP)
+#' lsMuModelH1_NB <- lsMuModelH1_NB(objLP)
 #' lsDispModelH0 <- lsDispModelH0(objLP)
 #' lsDispModelH1 <- lsDispModelH1(objLP)
 #' lsDispModelConst <- lsDispModelConst(objLP)
 #' lsDropModel <- lsDropModel(objLP)
-#' lsFitZINBReporters <- lsFitZINBReporters(objLP)
+#' lsFitConvergence <- lsFitConvergence(objLP)
 #' matCountDataProc <- matCountsProc(objLP)
 #' matWeights <- matWeights(objLP)
 #' scaDFSplinesDisp <- scaDFSplinesDisp(objLP) 
@@ -220,6 +240,16 @@ lsMuModelConst <- function(objLP)
 
 #' @rdname accessors
 #' @export
+lsMuModelH0_NB <- function(objLP) 
+    return(objLP@lsMuModelH0_NB)
+
+#' @rdname accessors
+#' @export
+lsMuModelH1_NB <- function(objLP) 
+    return(objLP@lsMuModelH1_NB)
+
+#' @rdname accessors
+#' @export
 lsDispModelH0 <- function(objLP) 
     return(objLP@lsDispModelH0)
 
@@ -235,13 +265,23 @@ lsDispModelConst <- function(objLP)
 
 #' @rdname accessors
 #' @export
+lsDispModelH0_NB <- function(objLP) 
+    return(objLP@lsDispModelH0_NB)
+
+#' @rdname accessors
+#' @export
+lsDispModelH1_NB <- function(objLP) 
+    return(objLP@lsDispModelH1_NB)
+
+#' @rdname accessors
+#' @export
 lsDropModel <- function(objLP) 
     return(objLP@lsDropModel)
 
 #' @rdname accessors
 #' @export
-lsFitZINBReporters <- function(objLP) 
-    return(objLP@lsFitZINBReporters)
+lsFitConvergence <- function(objLP) 
+    return(objLP@lsFitConvergence)
 
 #' @rdname accessors
 #' @export
@@ -332,11 +372,15 @@ strReport <- function(objLP)
 #' `lsMuModelH0<-`
 #' `lsMuModelH1<-`
 #' `lsMuModelConst<-`
+#' `lsMuModelH0_NB<-`
+#' `lsMuModelH1_NB<-`
 #' `lsDispModelH0<-`
 #' `lsDispModelH1<-`
 #' `lsDispModelConst<-`
+#' `lsDispModelH0_NB<-`
+#' `lsDispModelH1_NB<-`
 #' `lsDropModel<-`
-#' `lsFitZINBReporters<-`
+#' `lsFitConvergence<-`
 #' `matCountsProc<-`
 #' `matWeights<-`
 #' `scaDFSplinesDisp<-`
@@ -391,6 +435,20 @@ NULL
 
 #' @rdname LPsetters
 #' @export
+`lsMuModelH0_NB<-` <- function(objLP, value) {
+    objLP@lsMuModelH0_NB <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsMuModelH1_NB<-` <- function(objLP, value) {
+    objLP@lsMuModelH1_NB <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
 `lsDispModelH0<-` <- function(objLP, value) {
     objLP@lsDispModelH0 <- value
     objLP
@@ -412,6 +470,20 @@ NULL
 
 #' @rdname LPsetters
 #' @export
+`lsDispModelH0_NB<-` <- function(objLP, value) {
+    objLP@lsDispModelH0_NB <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
+`lsDispModelH1_NB<-` <- function(objLP, value) {
+    objLP@lsDispModelH1_NB <- value
+    objLP
+}
+
+#' @rdname LPsetters
+#' @export
 `lsDropModel<-` <- function(objLP, value) {
     objLP@lsDropModel <- value
     objLP
@@ -419,8 +491,8 @@ NULL
 
 #' @rdname LPsetters
 #' @export
-`lsFitZINBReporters<-` <- function(objLP, value) {
-    objLP@lsFitZINBReporters <- value
+`lsFitConvergence<-` <- function(objLP, value) {
+    objLP@lsFitConvergence <- value
     objLP
 }
 

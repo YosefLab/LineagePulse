@@ -7,11 +7,15 @@
 \alias{`lsMuModelH0<-`}
 \alias{`lsMuModelH1<-`}
 \alias{`lsMuModelConst<-`}
+\alias{`lsMuModelH0_NB<-`}
+\alias{`lsMuModelH1_NB<-`}
 \alias{`lsDispModelH0<-`}
 \alias{`lsDispModelH1<-`}
 \alias{`lsDispModelConst<-`}
+\alias{`lsDispModelH0_NB<-`}
+\alias{`lsDispModelH1_NB<-`}
 \alias{`lsDropModel<-`}
-\alias{`lsFitZINBReporters<-`}
+\alias{`lsFitConvergence<-`}
 \alias{`matCountsProc<-`}
 \alias{`matWeights<-`}
 \alias{`scaDFSplinesDisp<-`}
@@ -30,11 +34,15 @@
 \alias{lsMuModelH0<-}
 \alias{lsMuModelH1<-}
 \alias{lsMuModelConst<-}
+\alias{lsMuModelH0_NB<-}
+\alias{lsMuModelH1_NB<-}
 \alias{lsDispModelH0<-}
 \alias{lsDispModelH1<-}
 \alias{lsDispModelConst<-}
+\alias{lsDispModelH0_NB<-}
+\alias{lsDispModelH1_NB<-}
 \alias{lsDropModel<-}
-\alias{lsFitZINBReporters<-}
+\alias{lsFitConvergence<-}
 \alias{matCountsProc<-}
 \alias{matWeights<-}
 \alias{scaDFSplinesDisp<-}
@@ -60,15 +68,23 @@ lsMuModelH1(objLP) <- value
 
 lsMuModelConst(objLP) <- value
 
+lsMuModelH0_NB(objLP) <- value
+
+lsMuModelH1_NB(objLP) <- value
+
 lsDispModelH0(objLP) <- value
 
 lsDispModelH1(objLP) <- value
 
 lsDispModelConst(objLP) <- value
 
+lsDispModelH0_NB(objLP) <- value
+
+lsDispModelH1_NB(objLP) <- value
+
 lsDropModel(objLP) <- value
 
-lsFitZINBReporters(objLP) <- value
+lsFitConvergence(objLP) <- value
 
 matCountsProc(objLP) <- value
 

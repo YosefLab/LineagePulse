@@ -4,7 +4,8 @@
 \alias{initialiseImpulseParameters}
 \title{Estimate impulse model parameter initialisations}
 \usage{
-initialiseImpulseParameters(vecCounts, lsMuModelGlobal, vecMu, vecDisp, vecDrop)
+initialiseImpulseParameters(vecCounts, lsMuModelGlobal, vecMu, vecDisp,
+  vecDrop = NULL)
 }
 \arguments{
 \item{vecCounts}{(count vector number of samples) Count data.}
@@ -18,8 +19,10 @@ mean parameter estimates.}
 \item{vecDisp}{(vector number of cells) Negative binomial
 dispersion parameter estimates.}
 
-\item{vecDrop}{(vector number of cells) Dropout parameter
-estimates.}
+\item{vecDrop}{(vector number of cells) [Default NULL]
+Dropout parameter estimates. Are set to a vector of zeros
+if not supplied (i.e. if impulse model is initialised under
+negative binomial noise model).}
 }
 \value{
 list (length 2)

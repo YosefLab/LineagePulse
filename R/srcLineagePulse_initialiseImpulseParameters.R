@@ -17,8 +17,10 @@
 #' mean parameter estimates.
 #' @param vecDisp (vector number of cells) Negative binomial
 #' dispersion parameter estimates.
-#' @param vecDrop (vector number of cells) Dropout parameter
-#' estimates. 
+#' @param vecDrop (vector number of cells) [Default NULL]
+#' Dropout parameter estimates. Are set to a vector of zeros
+#' if not supplied (i.e. if impulse model is initialised under
+#' negative binomial noise model).
 #' 
 #' @return list (length 2)
 #' \itemize{
@@ -36,15 +38,19 @@ initialiseImpulseParameters <- function(
     lsMuModelGlobal,
     vecMu,
     vecDisp,
-    vecDrop){
+    vecDrop=NULL){
     
-    # Compute posterior of drop-out
-    vecPostNB <- 1 - calcPostDrop_Vector(
-        vecMu=vecMu,
-        vecDisp=vecDisp,
-        vecDrop=vecDrop,
-        vecboolZero= !is.na(vecCounts) & vecCounts==0,
-        vecboolNotZero= !is.na(vecCounts) & vecCounts>0 )
+    if(!is.null(vecDrop)){
+        # Compute posterior of drop-out
+        vecPostNB <- 1 - calcPostDrop_Vector(
+            vecMu=vecMu,
+            vecDisp=vecDisp,
+            vecDrop=vecDrop,
+            vecboolZero= !is.na(vecCounts) & vecCounts==0,
+            vecboolNotZero= !is.na(vecCounts) & vecCounts>0 )
+    } else {
+        vecPostNB <- rep(1, length(vecMu))
+    }
     
     # Observations are pooled to give rough estimates of expression
     # levels in local environment. The pooling are either the clusters
@@ -80,7 +86,6 @@ initialiseImpulseParameters <- function(
         vecGroupTimeCoord[k] <- mean(lsMuModelGlobal$vecPseudotime[vecidxK],
                                      na.rm=TRUE)  
     }
-    # Catch exception: sum(vecPostNB[vecTimepointAssign==tp])==0
     vecGroupExprMean[is.na(vecGroupExprMean)] <- 0
     
     # Comute characteristics of the expression trajectory in groups.

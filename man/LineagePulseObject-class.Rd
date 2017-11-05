@@ -29,6 +29,14 @@ gene-wise dispersion parameter models of H0.}
 Object containing description of gene-wise dispersion parameter models of
 constant model (necessary if H0 is not constant (mixture models)).}
 
+\item{\code{lsDispModelH1_NB}}{(list)
+Object containing description of 
+gene-wise dispersion parameter models of H1 with NB noise model.}
+
+\item{\code{lsDispModelH0_NB}}{(list)
+Object containing description of 
+gene-wise dispersion parameter models of H0 with NB noise model.}
+
 \item{\code{lsDropModel}}{(list)}
 
 \item{\code{lsMuModelH0}}{(list)
@@ -41,7 +49,15 @@ Object containing description of gene-wise mean parameter models of H1.}
 Object containing description of gene-wise means parameter models of
 constant model (necessary if H0 is not constant (mixture models)).}
 
-\item{\code{lsFitZINBReporters}}{(list)
+\item{\code{lsMuModelH0_NB}}{(list)
+Object containing description of gene-wise mean parameter models of H0
+with NB noise model.}
+
+\item{\code{lsMuModelH1_NB}}{(list)
+Object containing description of gene-wise mean parameter models of H1.
+with NB noise model.}
+
+\item{\code{lsFitConvergence}}{(list)
 Fitting reporter summary.}
 
 \item{\code{matCountsProc}}{(count matrix genes x cells)

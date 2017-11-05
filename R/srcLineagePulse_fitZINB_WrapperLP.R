@@ -106,7 +106,7 @@ fitContinuousModels <- function(
     
     ####################################################
     # Fit model A
-    strMessage <- paste0("### a) Fit negative binomial model A (",
+    strMessage <- paste0("### a) Fit ZINB model A (",
                          strNameModelA,") with noise model.")
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
@@ -146,7 +146,7 @@ fitContinuousModels <- function(
     
     ####################################################
     # Fit model B
-    strMessage <- paste0("### b) Fit negative binomial model B (",
+    strMessage <- paste0("### b) Fit ZINB model B (",
                          strNameModelB,").")
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
@@ -180,30 +180,108 @@ fitContinuousModels <- function(
         "model B in ", round(tm_cycleB["elapsed"]/60,2)," min.")
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)
+
+    ####################################################
+    # Fit model C
+    strMessage <- paste0("### c) Fit NB model A (",
+                         strNameModelA,").")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
+    if(boolVerbose) message(strMessage)
     
+    tm_cycleA_NB <- system.time({
+        lsFitsModelA_NB <- fitNB(
+            matCounts=matCountsProc(objLP),
+            dfAnnotation=dfAnnotationProc(objLP),
+            vecConfoundersMu=vecConfoundersMu(objLP),
+            vecConfoundersDisp=vecConfoundersDisp(objLP),
+            vecNormConst=vecNormConst(objLP),
+            strMuModel=strMuModelA,
+            strDispModel=strDispModelA,
+            scaDFSplinesDisp=scaDFSplinesDisp(objLP),
+            scaDFSplinesMu=scaDFSplinesMu(objLP),
+            boolVerbose=boolVerbose,
+            boolSuperVerbose=boolSuperVerbose)
+    })
+    lsMuModelA_NB <- lsFitsModelA_NB$lsMuModel
+    lsDispModelA_NB <- lsFitsModelA_NB$lsDispModel
+    boolConvergenceModelA_NB <- lsFitsModelA_NB$boolConvergenceModel
+    strReport(objLP) <- paste0(strReport(objLP),
+                               lsFitsModelA_NB$strReport)
+    
+    strMessage <- paste0(
+        "Finished fitting NB ",
+        "model B in ", round(tm_cycleA_NB["elapsed"]/60,2)," min.")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
+    if(boolVerbose) message(strMessage)
+    
+    ####################################################
+    # Fit model D
+    strMessage <- paste0("### d) Fit NB model B (",
+                         strNameModelB,").")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
+    if(boolVerbose) message(strMessage)
+    
+    tm_cycleB_NB <- system.time({
+        lsFitsModelB_NB <- fitNB(
+            matCounts=matCountsProc(objLP),
+            dfAnnotation=dfAnnotationProc(objLP),
+            vecConfoundersMu=vecConfoundersMu(objLP),
+            vecConfoundersDisp=vecConfoundersDisp(objLP),
+            vecNormConst=vecNormConst(objLP),
+            strMuModel=strMuModelB,
+            strDispModel=strDispModelB,
+            scaDFSplinesDisp=scaDFSplinesDisp(objLP),
+            scaDFSplinesMu=scaDFSplinesMu(objLP),
+            boolVerbose=boolVerbose,
+            boolSuperVerbose=boolSuperVerbose)
+    })
+    lsMuModelB_NB <- lsFitsModelB_NB$lsMuModel
+    lsDispModelB_NB <- lsFitsModelB_NB$lsDispModel
+    boolConvergenceModelB_NB <- lsFitsModelB_NB$boolConvergenceModel
+    strReport(objLP) <- paste0(strReport(objLP),
+                              lsFitsModelB_NB$strReport)
+    
+    strMessage <- paste0(
+        "Finished fitting NB ",
+        "model B in ", round(tm_cycleB_NB["elapsed"]/60,2)," min.")
+    strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
+    if(boolVerbose) message(strMessage)
+        
     if(boolEstimateNoiseBasedOnH0){
-        lsFitZINBReporters <- list(
+        lsFitConvergence <- list(
             boolConvergenceH1=boolConvergenceModelB,
             boolConvergenceH0=boolConvergenceModelA,
             vecEMLogLikH1=vecEMLogLikModelB,
-            vecEMLogLikH0=vecEMLogLikModelA)
+            vecEMLogLikH0=vecEMLogLikModelA,
+            boolConvergenceH1_NB=boolConvergenceModelB_NB,
+            boolConvergenceH0_NB=boolConvergenceModelA_NB)
         lsMuModelH1(objLP) <- lsMuModelB
         lsDispModelH1(objLP) <- lsDispModelB
         lsMuModelH0(objLP) <- lsMuModelA
         lsDispModelH0(objLP) <- lsDispModelA
+        lsMuModelH1_NB(objLP) <- lsMuModelB_NB
+        lsDispModelH1_NB(objLP) <- lsDispModelB_NB
+        lsMuModelH0_NB(objLP) <- lsMuModelA_NB
+        lsDispModelH0_NB(objLP) <- lsDispModelA_NB
     } else {
-        lsFitZINBReporters <- list(
+        lsFitConvergence <- list(
             boolConvergenceH1=boolConvergenceModelA,
             boolConvergenceH0=boolConvergenceModelB,
             vecEMLogLikH1=vecEMLogLikModelA,
-            vecEMLogLikH0=vecEMLogLikModelB)
+            vecEMLogLikH0=vecEMLogLikModelB,
+            boolConvergenceH1_NB=boolConvergenceModelA_NB,
+            boolConvergenceH0_NB=boolConvergenceModelB_NB)
         lsMuModelH1(objLP) <- lsMuModelA
         lsDispModelH1(objLP) <- lsDispModelA
         lsMuModelH0(objLP) <- lsMuModelB
         lsDispModelH0(objLP) <- lsDispModelB
+        lsMuModelH1_NB(objLP) <- lsMuModelA_NB
+        lsDispModelH1_NB(objLP) <- lsDispModelA_NB
+        lsMuModelH0_NB(objLP) <- lsMuModelB_NB
+        lsDispModelH0_NB(objLP) <- lsDispModelB_NB
     }
     lsDropModel(objLP) <- lsDropModel
-    lsFitZINBReporters(objLP) <- lsFitZINBReporters
+    lsFitConvergence(objLP) <- lsFitConvergence
     
     return(objLP)
 }

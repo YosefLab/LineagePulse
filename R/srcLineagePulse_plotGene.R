@@ -127,6 +127,11 @@ plotGene <- function(
         lsvecBatchModel=NULL,
         lsMuModelGlobal=lsMuModelH1(objLP)$lsMuModelGlobal,
         vecInterval=NULL )
+    vecMuParamH1_NB <- decompressMeansByGene(
+        vecMuModel=lsMuModelH1_NB(objLP)$matMuModel[strGeneID,],
+        lsvecBatchModel=NULL,
+        lsMuModelGlobal=lsMuModelH1_NB(objLP)$lsMuModelGlobal,
+        vecInterval=NULL )
     vecDropPosterior <- as.vector(calcPostDrop_Matrix(
         matCounts=matCountsGene,
         lsMuModel=lsMuModelH1(objLP),
@@ -137,6 +142,7 @@ plotGene <- function(
         vecCountsToPlot <- log(vecCountsToPlot+1)/log(10)
         vecMuParamH0 <- log(vecMuParamH0+1)/log(10)
         vecMuParamH1 <- log(vecMuParamH1+1)/log(10)
+        vecMuParamH1_NB <- log(vecMuParamH1_NB+1)/log(10)
     }
     
     ### 2. Data scatter plot
@@ -187,44 +193,53 @@ plotGene <- function(
     ### 3. Add models to plot
     vecMuParamH0[vecMuParamH0 > scaMaxPlot] <- NA
     vecMuParamH1[vecMuParamH1 > scaMaxPlot] <- NA
+    vecMuParamH1_NB[vecMuParamH1_NB > scaMaxPlot] <- NA
     if(is.null(vecReferenceMuParam)){
-        if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
-           c("splines", "impulse")){
-            dfLineImpulse <- data.frame(
-                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 2),
-                counts=c(vecMuParamH0,
-                         vecMuParamH1),
-                model=c(rep("H0", length(vecMuParamH0)), 
-                        rep("H1", length(vecMuParamH1))) )
-        } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
-                  c("groups")){
-            dfLineImpulse <- data.frame(
-                x=rep(seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells), 2),
-                counts=c(vecMuParamH0,
-                         vecMuParamH1),
-                model=c(rep("H0", length(vecMuParamH0)), 
-                        rep("H1", length(vecMuParamH1))) )
-        }
-    } else {
         if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
            c("splines", "impulse")){
             dfLineImpulse <- data.frame(
                 x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
-                         vecReferenceMuParam),
+                         vecMuParamH1_NB),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1)),
-                        rep("Reference", length(vecReferenceMuParam))) )
+                        rep("H1(NB)", length(vecMuParamH1_NB))) )
         } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
                   c("groups")){
             dfLineImpulse <- data.frame(
                 x=rep(seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells), 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
+                         vecMuParamH1_NB),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1)),
+                        rep("H1(NB)", length(vecMuParamH1_NB))) )
+        }
+    } else {
+        if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
+           c("splines", "impulse")){
+            dfLineImpulse <- data.frame(
+                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 4),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1,
+                         vecMuParamH1_NB,
+                         vecReferenceMuParam),
+                model=c(rep("H0", length(vecMuParamH0)), 
+                        rep("H1", length(vecMuParamH1)),,
+                        rep("H1(NB)", length(vecMuParamH1_NB)),
+                        rep("Reference", length(vecReferenceMuParam))) )
+        } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
+                  c("groups")){
+            dfLineImpulse <- data.frame(
+                x=rep(seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells), 4),
+                counts=c(vecMuParamH0,
+                         vecMuParamH1,
+                         vecMuParamH1_NB,
                          vecReferenceMuParam),
                 model=c(rep("H0", length(vecMuParamH0)), 
                         rep("H1", length(vecMuParamH1)),
+                        rep("H1(NB)", length(vecMuParamH1)),
                         rep("Reference", length(vecReferenceMuParam))) )
         }
     }
