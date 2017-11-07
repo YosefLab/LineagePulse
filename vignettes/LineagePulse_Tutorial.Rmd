@@ -142,7 +142,7 @@ LineaegePulse also offers a wrapper for creating such a heatmap:
 ```{r heatmap}
 # create heatmap with all differentially expressed genes
 lsHeatmaps <- sortGeneTrajectories(
-    vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
+    vecIDs = objLP$dfResults[which(objLP$dfResults$padj < 0.01),]$gene,
     lsMuModel = lsMuModelH1(objLP),
     dirHeatmap=NULL)
 print(lsHeatmaps$hmGeneSorted)

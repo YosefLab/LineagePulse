@@ -132,6 +132,8 @@
 #' \item strReport: (str) Log of model estimation to be added to 
 #' overall log.
 #' }
+#' 
+#' @author David Sebastian Fischer
 fitModel <- function(
     matCounts,
     dfAnnotation,

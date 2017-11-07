@@ -1,3 +1,45 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++     Dropout model container object    +++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+#' Initialise drop-out model container object
+#' 
+#' Either use supplied fits from previous fitting or initialise 
+#' from count data.
+#' 
+#' @seealso Called by \code{fitModel}. 
+#' 
+#' @param matCounts (matrix genes x cells)
+#' Count data of all cells, unobserved entries are NA.
+#' @param matPiConstPredictors (numeric matrix genes x number of constant
+#' gene-wise drop-out predictors) [Default NULL]
+#' Predictors for logistic drop-out 
+#' fit other than offset and mean parameter (i.e. parameters which
+#' are constant for all observations in a gene and externally supplied.)
+#' Is null if no constant predictors are supplied.
+#' @param lsDropModel (list) [Default NULL]
+#' @param strDropModel (str) {"logistic_ofMu", "logistic", "none"}
+#' [Default "logistic_ofMu"] Definition of drop-out model.
+#' "logistic_ofMu" - include the fitted mean in the linear model
+#' of the drop-out rate and use offset and matPiConstPredictors.
+#' "logistic" - only use offset and matPiConstPredictors.
+#' "none" - negative binomial noise model without zero-inflation.
+#' @param strDropFitGroup (str) {"PerCell", "AllCells"}
+#' [Defaul "PerCell"] Definition of groups on cells on which
+#' separate drop-out model parameterisations are fit.
+#' "PerCell" - one parametersiation (fit) per cell
+#' "ForAllCells" - one parametersiation (fit) for all cells
+#' @param MAXIT_BFGS_Pi (sca)
+#' Maximum number of iterations in BFGS estimation of dropout models.
+#' This is a control parameter to optim().
+#' @param RELTOL_BFGS_Pi (sca) 
+#' Relative tolerance of BFGS estimation of dropout models.
+#' This is a control parameter to optim().
+#' 
+#' @return lsDropModel (list)
+#' Initialisation of drop-out model object.
+#' 
+#' @author David Sebastian Fischer
 initDropModel <- function(
     matCounts,
     matPiConstPredictors,

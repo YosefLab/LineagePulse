@@ -166,3 +166,6 @@ Calls parameter estimation wrappers:
 \code{fitPiZINB}, \code{fitZINBMuDisp}.
 Calls \code{evalLogLikMatrix} to follow convergence.
 }
+\author{
+David Sebastian Fischer
+}

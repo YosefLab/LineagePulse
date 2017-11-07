@@ -1,3 +1,55 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++     Dispersion model container object    ++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+#' Initialise dispersion model container object
+#' 
+#' Either use supplied fits from previous fitting or initialise 
+#' from count data.
+#' 
+#' @seealso Called by \code{fitModel}. 
+#' 
+#' @param matCounts (matrix genes x cells)
+#' Count data of all cells, unobserved entries are NA.
+#' @param dfAnnotation (data frame cells x meta characteristics)
+#' Annotation table which contains meta data on cells.
+#' @param vecConfoundersDisp 
+#' (vector of strings number of confounders on dispersion)
+#' [Default NULL] Confounders to correct for in dispersion batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @param scaDFSplinesDisp (sca) [Default NULL] 
+#' If strDispModelFull=="splines" or strDispModelRed=="splines", 
+#' the degrees of freedom of the natural
+#' cubic spline to be used as a dispersion parameter model.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param matDispModelInit (numeric matrix genes x disp model parameters)
+#' [Default NULL]
+#' Contains initialisation of dispersion model parameters 
+#' according to the used model.
+#' @param lsmatBatchModelInitDisp (list) [Default NULL]
+#' Initialisation of batch correction models for dispersion parameter.
+#' @param strMuModel (str) {"constant", "groups", "MM",
+#' "splines","impulse"}
+#' [Default "impulse"] Model according to which the mean
+#' parameter is fit to each gene as a function of 
+#' population structure in the alternative model (H1).
+#' @param strDispModel (str) {"constant", "groups", "splines"}
+#' [Default "constant"] Model according to which dispersion
+#' parameter is fit to each gene as a function of 
+#' population structure in the given model.
+#' @param MAXIT_BFGS_MuDisp (sca)
+#' Maximum number of iterations in BFGS estimation of Mu/Disp models.
+#' This is a control parameter to optim().
+#' @param RELTOL_BFGS_MuDisp (sca) 
+#' Relative tolerance of BFGS estimation of Mu/Disp models.
+#' This is a control parameter to optim().
+#' 
+#' @return lsDispModel (list)
+#' Initialisation of dispersion model object.
+#' 
+#' @author David Sebastian Fischer
 initDispModel <- function(
     matCounts,
     dfAnnotation,

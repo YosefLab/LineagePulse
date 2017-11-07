@@ -1,3 +1,52 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#+++++++++++++++++++     Mean model container object    ++++++++++++++++++++++#
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+#' Initialise mean model container object
+#' 
+#' Either use supplied fits from previous fitting or initialise 
+#' from count data.
+#' 
+#' @seealso Called by \code{fitModel}. 
+#' 
+#' @param matCounts (matrix genes x cells)
+#' Count data of all cells, unobserved entries are NA.
+#' @param dfAnnotation (data frame cells x meta characteristics)
+#' Annotation table which contains meta data on cells.
+#' @param vecConfoundersMu (vector of strings number of confounders on  mean)
+#' [Default NULL] Confounders to correct for in mu batch
+#' correction model, must be subset of column names of
+#' dfAnnotation which describe condounding variables.
+#' @param vecNormConst (numeric vector number of cells) 
+#' Model scaling factors, one per cell. These factors linearly 
+#' scale the mean model for evaluation of the loglikelihood.
+#' @param scaDFSplinesMu (sca) [Default NULL] 
+#' If strMuModel=="splines", the degrees of freedom of the natural
+#' cubic spline to be used as a mean parameter model.
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param matMuModelInit (numeric matrix genes x mu model parameters)
+#' [Default NULL]
+#' Contains initialisation of mean model parameters 
+#' according to the used model.
+#' @param lsmatBatchModelInitMu (list) [Default NULL]
+#' Initialisation of batch correction models for mean parameter.
+#' @param strMuModel (str) {"constant", "groups", "MM",
+#' "splines","impulse"}
+#' [Default "impulse"] Model according to which the mean
+#' parameter is fit to each gene as a function of 
+#' population structure in the alternative model (H1).
+#' @param MAXIT_BFGS_MuDisp (sca)
+#' Maximum number of iterations in BFGS estimation of Mu/Disp models.
+#' This is a control parameter to optim().
+#' @param RELTOL_BFGS_MuDisp (sca) 
+#' Relative tolerance of BFGS estimation of Mu/Disp models.
+#' This is a control parameter to optim().
+#' 
+#' @return lsMuModel (list)
+#' Initialisation of mean model object.
+#' 
+#' @author David Sebastian Fischer
 initMuModel <- function(
     matCounts,
     dfAnnotation,
