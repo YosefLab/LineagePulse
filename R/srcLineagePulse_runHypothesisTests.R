@@ -93,10 +93,10 @@ runDEAnalysis <- function(objLP){
     scaDeltaDegFreedom_NB <- scaDFbyGeneH1_NB - scaDFbyGeneH0_NB
     vecDeviance_NB <- 2*(vecLogLikFull_NB - vecLogLikRed_NB)
     vecPvalue_NB <- pchisq(vecDeviance_NB, 
-                             df=scaDeltaDegFreedom_NB, lower.tail=FALSE)
+                           df=scaDeltaDegFreedom_NB, lower.tail=FALSE)
     vecPvalueBH_NB <- p.adjust(vecPvalue_NB, method = "BH")
     
-    ### (IV) Summarise results
+    ### (III) Summarise results
     if(lsMuModelH0(objLP)$lsMuModelGlobal$strMuModel=="constant"){
         vecMu <- as.vector(lsMuModelH0_NB(objLP)$matMuModel)
     } else {
@@ -109,8 +109,10 @@ runDEAnalysis <- function(objLP){
         mean_H0=vecMu,
         p_nb=vecPvalue_ZINB,
         padj_nb=vecPvalueBH_NB,
-        df_full=scaDFbyGeneH1_ZINB,
-        df_red=scaDFbyGeneH0_ZINB,
+        df_full_zinb=scaDFbyGeneH1_ZINB,
+        df_red_zinb=scaDFbyGeneH0_ZINB,
+        df_full_nb=scaDFbyGeneH1_NB,
+        df_red_nb=scaDFbyGeneH0_NB,
         loglik_full_zinb=vecLogLikFull_ZINB,
         loglik_red_zinb=vecLogLikRed_ZINB,
         loglik_full_nb=vecLogLikFull_NB,
@@ -125,4 +127,84 @@ runDEAnalysis <- function(objLP){
     
     dfResults(objLP) <- dfResults
     return(objLP)
+}
+
+#' Test for existance of drop-out with log-likelihood ratio test
+#' 
+#' Performs one test for entire data set.
+#' 
+#' @seealso Called by user.
+#' 
+#' @param objLP (LineagePulseObject)
+#' LineagePulseObject with fitted null and alternative models.
+#' 
+#' @return  (data frame)
+#' Summary of hypothesis test
+#' \itemize{
+#' \item Gene: Gene ID.
+#' \item p: P-value for existance of drop-out in data set. If high, the
+#' data can be explained with models based on NB noise and zero-inflation
+#' is not necessary: The null hypothesis of no zero-inflation cannot be
+#' rejected.
+#' \item loglik_zinb: Loglikelihood of full model with ZINB noise (all genes).
+#' \item loglik_nb: Loglikelihood of reduced model with NB noise (all genes).
+#' \item df_full: Degrees of freedom of full model with ZINB noise (all genes).
+#' \item df_red: Degrees of freedom of reduced model with NB noise (all genes).
+#' }
+#' 
+#' @examples
+#' lsSimulatedData <- simulateContinuousDataSet(
+#'     scaNCells = 100,
+#'     scaNConst = 10,
+#'     scaNLin = 10,
+#'     scaNImp = 10,
+#'     scaMumax = 100,
+#'     scaSDMuAmplitude = 3,
+#'     vecNormConstExternal=NULL,
+#'     vecDispExternal=rep(20, 30),
+#'     vecGeneWiseDropoutRates = rep(0.1, 30))
+#' objLP <- runLineagePulse(
+#'     counts = lsSimulatedData$counts,
+#'     dfAnnotation = lsSimulatedData$annot,
+#'     strMuModel = "impulse")
+#' testDropout(objLP)$p
+#' 
+#' @author David Sebastian Fischer
+#' 
+#' @export
+testDropout <- function(objLP){
+    
+    ## Degrees of freedom used in mean, dispersion and drop-out models:
+    # mean and dispersion models:
+    scaDF_ZINB <- sum(objLP$dfResults$df_full_zinb)
+    scaDF_NB <- sum(objLP$dfResults$df_full_nb)
+    # drop-out models:
+    if(lsDropModel(objLP)$lsDropModelGlobal$strDropFitGroup == "PerCell") {
+        # one model per cell
+        scaDF_ZINB <- scaDF_ZINB +
+            dim(lsDropModel(objLP)$matDropoutLinModel)[1] * 
+            dim(lsDropModel(objLP)$matDropoutLinModel)[2]
+    } else if(lsDropModel(objLP)$lsDropModelGlobal$strDropFitGroup == "AllCells"){
+        # one model shared across all cells
+        scaDF_ZINB <- scaDF_ZINB +
+            dim(lsDropModel(objLP)$matDropoutLinModel)[2]
+    }
+    scaDeltaDegFreedom_dropout <- scaDF_ZINB - scaDF_NB
+    ## The likelihood considered is the likelihood across the entire data set
+    scaLogLikAllGenes_ZINB <- sum(objLP$dfResults$loglik_full_zinb)
+    scaLogLikAllGenes_NB <- sum(objLP$dfResults$loglik_full_nb)
+    scaDeviance_dropout <- 2*(scaLogLikAllGenes_ZINB - scaLogLikAllGenes_NB)
+    scaPvalue_dropout <- pchisq(scaDeviance_dropout, 
+                                df=scaDeltaDegFreedom_dropout, lower.tail=FALSE)
+    
+    return(data.frame(
+        p=scaPvalue_dropout,
+        df_delta=scaDeltaDegFreedom_dropout,
+        deviance=scaDeviance_dropout,
+        df_full=scaDF_ZINB,
+        df_red=scaDF_NB,
+        loglik_full=scaLogLikAllGenes_ZINB,
+        loglik_red=scaLogLikAllGenes_NB,
+        stringsAsFactors=FALSE)
+    )
 }

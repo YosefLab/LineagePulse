@@ -58,7 +58,7 @@ Collate:
     'srcLineagePulse_initialiseMuModel.R'
     'srcLineagePulse_plotGene.R'
     'srcLineagePulse_processSCData.R'
-    'srcLineagePulse_runDEAnalysis.R'
+    'srcLineagePulse_runHypothesisTests.R'
     'srcLineagePulse_simulateDataSet.R'
     'srcLineagePulse_sortGeneTrajectories.R'
 RoxygenNote: 6.0.1
