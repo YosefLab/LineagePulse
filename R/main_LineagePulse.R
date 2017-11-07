@@ -161,7 +161,7 @@ NULL
 #' dfAnnotation which describe condounding variables.
 #' @param strMuModel (str) {"constant", "groups", "MM",
 #' "splines","impulse"}
-#' [Default "impulse"] Model according to which the mean
+#' [Default "splines"] Model according to which the mean
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
 #' @param strDispModelRed (str) {"constant", "groups", "splines"}
@@ -173,7 +173,7 @@ NULL
 #' parameter is fit to each gene as a function of 
 #' population structure in the alternative model (H1).
 #' @param strDropModel (str) {"logistic_ofMu", "logistic"}
-#' [Default "logistic_ofMu"] Definition of drop-out model.
+#' [Default "logistic"] Definition of drop-out model.
 #' "logistic_ofMu" - include the fitted mean in the linear model
 #' of the drop-out rate and use offset and matPiConstPredictors.
 #' "logistic" - only use offset and matPiConstPredictors.
@@ -182,7 +182,7 @@ NULL
 #' separate drop-out model parameterisations are fit.
 #' "PerCell" - one parametersiation (fit) per cell
 #' "ForAllCells" - one parametersiation (fit) for all cells
-#' @param scaDFSplinesMu (sca) [Default 3] 
+#' @param scaDFSplinesMu (sca) [Default 6] 
 #' If strMuModel=="splines", the degrees of freedom of the natural
 #' cubic spline to be used as a mean parameter model.
 #' @param scaDFSplinesDisp (sca) [Default 3] 
@@ -252,10 +252,14 @@ NULL
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
 #'     vecGeneWiseDropoutRates = rep(0.1, 30))
+#' matDropoutPredictors <- as.matrix(data.frame(
+#'     log_means = log(rowMeans(lsSimulatedData$counts)+1) ))
 #' objLP <- runLineagePulse(
 #'     counts = lsSimulatedData$counts,
 #'     dfAnnotation = lsSimulatedData$annot,
-#'     strMuModel = "impulse")
+#'     strMuModel = "splines", scaDFSplinesMu = 6,
+#'     strDropModel = "logistic", 
+#'     matPiConstPredictors = matDropoutPredictors)
 #' tail(objLP$dfResults)
 #' 
 #' @author David Sebastian Fischer
