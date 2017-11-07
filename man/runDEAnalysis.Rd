@@ -16,31 +16,21 @@ LineagePulseObject with analysis summary table (dfResults)
 added.
 \itemize{
 \item Gene: Gene ID.
-\item p: P-value for differential expression.
+\item p: P-value for differential expression with ZINB noise.
+\item mean: Inferred mean parameter of constant model of first batch.
 \item padj: Benjamini-Hochberg false-discovery rate corrected p-value
-for differential expression analysis.
-\item loglik_full: Loglikelihood of full model.
-\item loglik_red: Loglikelihood of reduced model.
+for differential expression analysis with NB noise.
+\item p_nb: P-value for differential expression with ZINB noise.
+\item padj_nb: Benjamini-Hochberg false-discovery rate corrected p-value
+for differential expression analysis with NB noise.
+\item loglik_full_zinb: Loglikelihood of full model with ZINB noise.
+\item loglik_red_zinb: Loglikelihood of reduced model with ZINB noise.
+\item loglik_full_nb: Loglikelihood of full model with NB noise.
+\item loglik_red_nb: Loglikelihood of reduced model with NB noise.
 \item df_full: Degrees of freedom of full model.
 \item df_red: Degrees of freedom of reduced model
-\item mean: Inferred mean parameter of constant model of first batch.
-From combined samples in case-ctrl. 
 \item allZero (bool) Whether there were no observed non-zero observations of this gene.
 If TRUE, fitting and DE analsysis were skipped and entry is NA.
-}
-Entries only present in case-only DE analysis:
-\itemize{
-\item converge_impulse: Convergence status of optim for 
-impulse model fit (full model).
-\item converge_const: Convergence status of optim for 
-constant model fit (reduced model).
-}
-Entries only present in mixture model DE analysis:
-\itemize{
-\item converge_mixture: Convergence status of optim for 
-mixture model fit (full model).
-\item converge_const: Convergence status of optim for 
-constant model fit (reduced model).
 }
 }
 \description{

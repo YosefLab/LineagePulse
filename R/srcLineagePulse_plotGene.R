@@ -308,7 +308,7 @@ plotGene <- function(
     gplotGene <- gplotGene + 
         labs(title=paste0(
             strGeneID, "\nlog10 q-value=", 
-            round(log(dfResults(objLP)[strGeneID,]$adj.p,2)/log(10)) )) +
+            round(log(dfResults(objLP)[strGeneID,]$padj,2)/log(10)) )) +
         xlab(paste0("pseudotime")) +
         theme(axis.text=element_text(size=14),
               axis.title=element_text(size=14,face="bold"),

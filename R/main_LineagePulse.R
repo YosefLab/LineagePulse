@@ -222,15 +222,24 @@ NULL
 #' 
 #' @return dfDEAnalysis (data frame genes x reported variables) 
 #' Summary of differential expression analysis:
-#' gene: gene ID,
-#' p: raw p-value, 
-#' adj.p: BH corrected p-value, 
-#' loglik_full: loglikelihood of alternative model H1,
-#' loglik_red: loglikelihood of null model H0,
-#' deviance: loglikelihood ratio test statistic (the deviance),
-#' mean_H0: inferred gene-wise mean parameter (constant null model),
-#' dispersion_H0: inferred gene-wise dispersion parameter 
-#' (constant null model)
+#' \itemize{
+#' \item Gene: Gene ID.
+#' \item p: P-value for differential expression with ZINB noise.
+#' \item mean: Inferred mean parameter of constant model of first batch.
+#' \item padj: Benjamini-Hochberg false-discovery rate corrected p-value
+#' for differential expression analysis with NB noise.
+#' \item p_nb: P-value for differential expression with ZINB noise.
+#' \item padj_nb: Benjamini-Hochberg false-discovery rate corrected p-value
+#' for differential expression analysis with NB noise.
+#' \item loglik_full_zinb: Loglikelihood of full model with ZINB noise.
+#' \item loglik_red_zinb: Loglikelihood of reduced model with ZINB noise.
+#' \item loglik_full_nb: Loglikelihood of full model with NB noise.
+#' \item loglik_red_nb: Loglikelihood of reduced model with NB noise.
+#' \item df_full: Degrees of freedom of full model.
+#' \item df_red: Degrees of freedom of reduced model
+#' \item allZero (bool) Whether there were no observed non-zero observations of this gene.
+#' If TRUE, fitting and DE analsysis were skipped and entry is NA.
+#' }
 #' 
 #' @examples
 #' lsSimulatedData <- simulateContinuousDataSet(
@@ -257,12 +266,12 @@ runLineagePulse <- function(
     dfAnnotation=NULL,
     vecConfoundersMu=NULL,
     vecConfoundersDisp=NULL,
-    strMuModel="impulse",
+    strMuModel="splines",
     strDispModelFull="constant",
     strDispModelRed="constant",
-    strDropModel="logistic_ofMu",
+    strDropModel="logistic",
     strDropFitGroup="PerCell",
-    scaDFSplinesMu=3,
+    scaDFSplinesMu=6,
     scaDFSplinesDisp=3,
     matPiConstPredictors=NULL,
     vecNormConstExternal=NULL,
@@ -328,7 +337,7 @@ runLineagePulse <- function(
     if(boolVerbose) message(strMessage)
     
     tm_fitmm <- system.time({
-        objLP <- fitContinuousModels(
+        objLP <- fitLPModels(
             objLP=objLP,
             matPiConstPredictors=matPiConstPredictorsProc,
             boolEstimateNoiseBasedOnH0=boolEstimateNoiseBasedOnH0,

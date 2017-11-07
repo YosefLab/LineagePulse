@@ -17,10 +17,10 @@
 # (I) Fitting cost function
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Cost function zero-inflated negative binomial model for mean and
+#' Cost function (zero-inflated) negative binomial model for mean and
 #' dispersion model fitting
 #' 
-#' Log likelihood of zero inflated  negative binomial model. 
+#' Log likelihood of (zero inflated) negative binomial model. 
 #' This function is designed to allow numerical optimisation
 #' of mean and dispersion paramater model on single gene given
 #' the drop-out model.
@@ -59,7 +59,7 @@
 #' Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
-evalLogLikContinuousZINB <- function(
+evalLogLikMuDispGeneFit <- function(
     vecTheta,
     vecCounts,
     lsMuModelGlobal,
@@ -107,7 +107,7 @@ evalLogLikContinuousZINB <- function(
         vecDispParam <- exp(as.vector(lsDispModelGlobal$matSplineBasis %*% 
                                           vecDispModel))
     } else {
-        stop("evalLogLikImpulseZINB()")
+        stop("evalLogLikMuDispGeneFit()")
     }
     
     # Extract batch factors
@@ -200,7 +200,7 @@ evalLogLikContinuousZINB <- function(
     }
     
     # (III) Compute drop-out rates
-    if(is.null(vecPiParam)){
+    if(is.null(vecPiParam) & lsDropModelGlobal$strDropModel != "none"){
         vecPiParam <- decompressDropoutRateByGene(
             matDropModel=matDropoutLinModel,
             vecMu=vecMuParam,
@@ -221,12 +221,12 @@ evalLogLikContinuousZINB <- function(
     return(scaLogLik)
 }
 
-#' Compiled function: evalLogLikContinuousZINB
+#' Compiled function: evalLogLikMuDispGeneFit
 #' 
 #' Pre-compile heavily used functions.
-#' Refer to \link{evalLogLikContinuousZINB}.
+#' Refer to \link{evalLogLikMuDispGeneFit}.
 #' 
-#' @seealso \link{evalLogLikContinuousZINB}
+#' @seealso \link{evalLogLikMuDispGeneFit}
 #' 
 #' @param vecTheta (numeric vector dispersion (1) and impulse parameters (6)) 
 #' Dispersion and mean parameter estimates.
@@ -261,7 +261,7 @@ evalLogLikContinuousZINB <- function(
 #' @return scaLogLik (scalar) Value of cost function (likelihood) for given gene.
 #'
 #' @author David Sebastian Fischer
-evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
+evalLogLikMuDispGeneFit_comp <- compiler::cmpfun(evalLogLikMuDispGeneFit)
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # (II) Optim wrappers
@@ -333,7 +333,7 @@ evalLogLikContinuousZINB_comp <- compiler::cmpfun(evalLogLikContinuousZINB)
 #'}
 #'
 #' @author David Sebastian Fischer
-fitContinuousZINB <- function(
+fitMuDispGene <- function(
     vecCounts,
     vecMuModelGuess,
     lsvecBatchParamGuessMu,
@@ -366,7 +366,7 @@ fitContinuousZINB <- function(
     fitDispMu <- tryCatch({
         unlist(optim(
             par=vecTheta,			
-            fn=evalLogLikContinuousZINB_comp, 
+            fn=evalLogLikMuDispGeneFit_comp, 
             vecCounts=vecCounts,
             lsMuModelGlobal=lsMuModelGlobal,
             lsDispModelGlobal=lsDispModelGlobal,
@@ -475,7 +475,7 @@ fitContinuousZINB <- function(
         vecMuModel[vecMuModel < -10^(10)] <- -10^(10)
         vecMuModel[vecMuModel > 10^(10)] <- 10^(10)
     } else {
-        stop("fitImpulseOneInitZINB()")
+        stop("fitMuDispGene()")
     }
     
     if(!is.null(lsMuModelGlobal$lsvecidxBatchAssign)){
@@ -567,7 +567,7 @@ fitContinuousZINB <- function(
 #'}
 #'
 #' @author David Sebastian Fischer
-fitImpulseZINB <- function(
+fitMuDispGeneImpulse <- function(
     vecCounts, 
     vecImpulseParamGuess,
     lsvecBatchParamGuessMu,
@@ -597,7 +597,7 @@ fitImpulseZINB <- function(
         lsvecBatchModel=lsvecBatchParamGuessDisp,
         lsDispModelGlobal=lsDispModelGlobal,
         vecInterval=NULL )
-    if(is.null(vecPiParam)){
+    if(is.null(vecPiParam) & lsDropModelGlobal$strDropModel != "none"){
         vecPiParamInit <- decompressDropoutRateByGene(
             matDropModel=matDropoutLinModel,
             vecMu=vecMuParam,
@@ -612,10 +612,7 @@ fitImpulseZINB <- function(
     # Compute initialisations for peak and valley
     lsParamGuesses <- initialiseImpulseParameters(
         vecCounts=vecCounts,
-        lsMuModelGlobal=lsMuModelGlobal,
-        vecMu=vecMuParam,
-        vecDisp=vecDispParam,
-        vecDrop=vecPiParamInit)
+        lsMuModelGlobal=lsMuModelGlobal)
     vecParamGuessPeak <- lsParamGuesses$peak
     vecParamGuessValley <- lsParamGuesses$valley
     
@@ -623,7 +620,7 @@ fitImpulseZINB <- function(
     # 1. Initialisation: Prior best fit
     vecParamGuessPrior <- vecImpulseParamGuess
     vecParamGuessPrior[3:5] <- log(vecParamGuessPrior[3:5])
-    lsFitPrior <- fitContinuousZINB(
+    lsFitPrior <- fitMuDispGene(
         vecCounts=vecCounts,
         vecMuModelGuess=vecParamGuessPrior,
         lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -637,7 +634,7 @@ fitImpulseZINB <- function(
         vecPiParam=vecPiParam)
     if(boolUseNewInits){
         # 2. Initialisation: Peak
-        lsFitPeak <- fitContinuousZINB(
+        lsFitPeak <- fitMuDispGene(
             vecCounts=vecCounts,
             vecMuModelGuess=vecParamGuessPeak,
             lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -650,7 +647,7 @@ fitImpulseZINB <- function(
             lsDropModelGlobal=lsDropModelGlobal,
             vecPiParam=vecPiParam)
         # 3. Initialisation: Valley
-        lsFitValley <- fitContinuousZINB(
+        lsFitValley <- fitMuDispGene(
             vecCounts=vecCounts,
             vecMuModelGuess=vecParamGuessValley,
             lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -788,7 +785,7 @@ fitImpulseZINB <- function(
 #'}
 #'
 #' @author David Sebastian Fischer
-fitMMZINB <- function(
+fitMuDispGeneMM <- function(
     vecCounts,
     vecMuGuess,
     lsvecBatchParamGuessMu,
@@ -820,7 +817,7 @@ fitMMZINB <- function(
 #' function has to be coded for each combination of mean and dispersion
 #' models.
 #' 
-#' @seealso Called by \code{fitZINB}. Calls fitting wrappers:
+#' @seealso Called by \code{fitModel}. Calls fitting wrappers:
 #' \code{fitImpulseZINB},
 #' \code{fitContinuousZINB}.
 #' 
@@ -853,7 +850,7 @@ fitMMZINB <- function(
 #'}
 #'
 #' @author David Sebastian Fischer
-fitZINBMuDisp <- function(
+fitMuDisp <- function(
     matCountsProc,
     vecNormConst,
     lsMuModel,
@@ -887,17 +884,19 @@ fitZINBMuDisp <- function(
         # Decompress drop-out rates if not function of mean
         if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
             vecPiParam <- NULL
-        } else {
+        } else if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic") {
             vecPiParam <- decompressDropoutRateByGene(
                 matDropModel=lsDropModel$matDropoutLinModel,
                 vecMu=NULL,
                 vecPiConstPredictors=lsDropModel$matPiConstPredictors[i,],
                 lsDropModelGlobal=lsDropModel$lsDropModelGlobal)
-        } 
+        } else if (lsDropModel$lsDropModelGlobal$strDropModel == "none") {
+            vecPiParam <- NULL
+        }
         
         # Call fitting wrapper.
         if(lsMuModel$lsMuModelGlobal$strMuModel=="MM"){
-            fitDispMu <- fitMMZINB(
+            fitDispMu <- fitMuDispGeneMM(
                 vecCounts=matCountsProc[as.double(i),], 
                 vecMuGuess=lsMuModel$matMuModel[i,], 
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -916,7 +915,7 @@ fitZINBMuDisp <- function(
             return(fitDispMu)
         } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse"){      
             # Estimate mean parameters
-            fitDispMu <- fitImpulseZINB(
+            fitDispMu <- fitMuDispGeneImpulse(
                 vecCounts=matCountsProc[as.double(i),], 
                 vecImpulseParamGuess=lsMuModel$matMuModel[i,], 
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -932,7 +931,7 @@ fitZINBMuDisp <- function(
         } else if(lsMuModel$lsMuModelGlobal$strMuModel %in% 
                   c("splines", "groups", "constant")){      
             # Estimate mean parameters
-            fitDispMu <- fitContinuousZINB(
+            fitDispMu <- fitMuDispGene(
                 vecCounts=matCountsProc[as.double(i),], 
                 vecMuModelGuess=lsMuModel$matMuModel[i,],
                 lsvecBatchParamGuessMu=lsvecBatchParamGuessMu,
@@ -961,6 +960,7 @@ fitZINBMuDisp <- function(
         }  
     })
     
+    # Extract model matrices from fit list
     matDispModel <- do.call(rbind, lapply(lsFitDispMu,  function(i) { 
         i$vecDispModel 
     }))
@@ -989,6 +989,43 @@ fitZINBMuDisp <- function(
     } else {
         lsmatBatchModelDisp <- NULL
     }
+    
+    ## name model matrices dimensions
+    # rows
+    rownames(matMuModel) <- rownames(matCountsProc)
+    if(!is.null(lsmatBatchModelMu)) {
+        for(i in seq_along(lsmatBatchModelMu)) {
+            rownames(lsmatBatchModelMu[[i]]) <- rownames(matCountsProc)
+        }
+    }
+    rownames(matDispModel) <- rownames(matCountsProc)
+    if(!is.null(lsmatBatchModelDisp)) {
+        for(i in seq_along(lsmatBatchModelDisp)) {
+            rownames(lsmatBatchModelDisp[[i]]) <- rownames(matCountsProc)
+        }
+    }
+    # columns
+    if(lsMuModel$lsMuModelGlobal$strMuModel=="groups") {
+        colnames(lsMuModel$matMuModel) <- unique(dfAnnotation$groups)
+    } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse") {
+        colnames(lsMuModel$matMuModel) <- 
+            c("beta1", "beta2", "h0", "h1", "h2", "t1", "t2")
+    } else {
+        colnames(lsMuModel$matMuModel) <- NULL
+    }
+    if(!is.null(lsmatBatchModelMu)) {
+        for(i in seq_along(lsmatBatchModelMu)) {
+            colnames(lsmatBatchModelMu) <- NULL
+        } 
+    }
+    colnames(matDispModel) <- NULL 
+    if(!is.null(lsmatBatchModelDisp)) {
+        for(i in seq_along(lsmatBatchModelDisp)) {
+            colnames(lsmatBatchModelDisp[[i]]) <- NULL 
+        }
+    }
+    
+            
     vecConvergence <- sapply(lsFitDispMu,  function(i) i$scaConvergence)
     vecLL <- sapply(lsFitDispMu,  function(i) i$scaLL)
     

@@ -399,7 +399,7 @@ fitPi_ManyCells <- function(
 #' 
 #' This function fits all drop-out models required on this data set.
 #'
-#' @seealso Called by ZINB fitting wrapper \code{fitZINB}.
+#' @seealso Called by ZINB fitting wrapper \code{fitModel}.
 #' Calls optim wrapper \code{fitPi_ManyCells} or \code{fitPi_SingleCell}.
 #' 
 #' @param matCounts (count matrix genes x cells)
@@ -415,7 +415,7 @@ fitPi_ManyCells <- function(
 #' Linear model for drop-out rate in logit space for given cell.
 #' 
 #' @author David Sebastian Fischer
-fitZINBPi <- function(
+fitPi <- function(
     matCounts,
     lsMuModel,
     lsDispModel,
@@ -475,7 +475,7 @@ fitZINBPi <- function(
             return(lsFitPi)
         })
         matDropoutLinModel <- do.call(rbind, lapply(lsFitsPi, function(cell) cell$vecLinModel))
-        vecboolConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)
+        vecConverged <- sapply(lsFitsPi, function(cell) cell$scaConvergence)
         vecLL <- sapply(lsFitsPi, function(cell) cell$scaLL) 
     } else if(lsDropModel$lsDropModelGlobal$strDropFitGroup=="ForAllCells"){
         # Initialise optimisation of linear model:
@@ -495,7 +495,7 @@ fitZINBPi <- function(
             nrow=scaNumCells,
             ncol=length(lsFitPi$vecLinModel),
             byrow = TRUE)
-        vecboolConverged <- lsFitPi$scaConvergence
+        vecConverged <- lsFitPi$scaConvergence
         vecLL <- lsFitPi$scaLL
     } else {
         stop("ERROR fitZINBPi: ",
@@ -504,9 +504,12 @@ fitZINBPi <- function(
              " not recognised.")
     }
     
+    # Name model matrix dimensions
+     rownames(matDropoutLinModel) <- colnames(matCounts)
+    
     return(list(
         matDropoutLinModel = matDropoutLinModel,
-        vecboolConverged   = vecboolConverged,
+        vecConverged       = vecConverged,
         vecLL              = vecLL 
     ))
 }

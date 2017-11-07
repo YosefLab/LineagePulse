@@ -2,17 +2,17 @@
 #+++++++++++++++     Fit full and alternative model    +++++++++++++++++++++++#
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-#' Fit zero-inflated negative binomial models necessary for LineagePulse
-#' hypothesis test to data
+#' Fit all models necessary for LineagePulse
 #' 
-#' Fit alternative H1 and null H0 zero-inflated negative binomial model 
+#' Fit alternative H1 and null H0 on both ZINB and NB noise model
 #' to a data set using cycles of coordinate ascent. The algorithm first
-#' fits the either H1 or H0 together with the logistic dropout model by
+#' fits the either H1 or H0 together with the dropout model by
 #' iterating over cell-wise (dropout models) and gene-wise (negative 
 #' binomial models) parameters. Subsequently, the remaining model (H0 
 #' or H1) is estimated by iterating over zero-inflated negative binomial
 #' mean and dispersion parameter estimation condition on the previously
-#' estimated logistic drop-out model.
+#' estimated logistic drop-out model. The NB noise model based models are
+#' estimated in parallel across genes.
 #' 
 #' @seealso Called by \code{runLineagePulse}. 
 #' Calls model estimation wrappers: \code{fitContinuousModels}.
@@ -71,7 +71,7 @@
 #' LineagePulseObject with models with and fitting reporters added.
 #' 
 #' @author David Sebastian Fischer
-fitContinuousModels <- function(
+fitLPModels <- function(
     objLP,
     matPiConstPredictors,
     strMuModel="constant",
@@ -112,7 +112,7 @@ fitContinuousModels <- function(
     if(boolVerbose) message(strMessage)
     
     tm_cycle <- system.time({
-        lsFitsModelA <- fitZINB(
+        lsFitsModelA <- fitModel(
             matCounts=matCountsProc(objLP),
             dfAnnotation=dfAnnotationProc(objLP),
             vecConfoundersMu=vecConfoundersMu(objLP),
@@ -152,7 +152,7 @@ fitContinuousModels <- function(
     if(boolVerbose) message(strMessage)
     
     tm_cycleB <- system.time({
-        lsFitsModelB <- fitZINB(
+        lsFitsModelB <- fitModel(
             matCounts=matCountsProc(objLP),
             dfAnnotation=dfAnnotationProc(objLP),
             vecConfoundersMu=vecConfoundersMu(objLP),
@@ -161,6 +161,7 @@ fitContinuousModels <- function(
             lsDropModel=lsDropModel,
             strMuModel=strMuModelB,
             strDispModel=strDispModelB,
+            strDropModel=strDropModel,
             strDropFitGroup=strDropFitGroup,
             scaDFSplinesDisp=scaDFSplinesDisp(objLP),
             scaDFSplinesMu=scaDFSplinesMu(objLP),
@@ -189,14 +190,16 @@ fitContinuousModels <- function(
     if(boolVerbose) message(strMessage)
     
     tm_cycleA_NB <- system.time({
-        lsFitsModelA_NB <- fitNB(
+        lsFitsModelA_NB <- fitModel(
             matCounts=matCountsProc(objLP),
             dfAnnotation=dfAnnotationProc(objLP),
             vecConfoundersMu=vecConfoundersMu(objLP),
             vecConfoundersDisp=vecConfoundersDisp(objLP),
             vecNormConst=vecNormConst(objLP),
+            lsDropModel=NULL,
             strMuModel=strMuModelA,
             strDispModel=strDispModelA,
+            strDropModel="none",
             scaDFSplinesDisp=scaDFSplinesDisp(objLP),
             scaDFSplinesMu=scaDFSplinesMu(objLP),
             boolVerbose=boolVerbose,
@@ -222,14 +225,16 @@ fitContinuousModels <- function(
     if(boolVerbose) message(strMessage)
     
     tm_cycleB_NB <- system.time({
-        lsFitsModelB_NB <- fitNB(
+        lsFitsModelB_NB <- fitModel(
             matCounts=matCountsProc(objLP),
             dfAnnotation=dfAnnotationProc(objLP),
             vecConfoundersMu=vecConfoundersMu(objLP),
             vecConfoundersDisp=vecConfoundersDisp(objLP),
             vecNormConst=vecNormConst(objLP),
+            lsDropModel=NULL,
             strMuModel=strMuModelB,
             strDispModel=strDispModelB,
+            strDropModel="none",
             scaDFSplinesDisp=scaDFSplinesDisp(objLP),
             scaDFSplinesMu=scaDFSplinesMu(objLP),
             boolVerbose=boolVerbose,

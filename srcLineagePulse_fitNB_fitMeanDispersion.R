@@ -259,6 +259,8 @@ evalLogLikContinuousNB_comp <- compiler::cmpfun(evalLogLikContinuousNB)
 #' @param lsvecBatchParamGuessDisp (list) 
 #' Object containing initialisation for 
 #' dispersion parameter batch correction model.
+#' @param lsDispModelGlobal (list)
+#' Object containing meta-data of gene-wise dispersion parameter models.
 #' 
 #' @return list
 #'\itemize{
@@ -523,9 +525,7 @@ fitImpulseNB <- function(
     # Compute initialisations for peak and valley
     lsParamGuesses <- initialiseImpulseParameters(
         vecCounts=vecCounts,
-        lsMuModelGlobal=lsMuModelGlobal,
-        vecMu=vecMuParam,
-        vecDisp=vecDispParam)
+        lsMuModelGlobal=lsMuModelGlobal)
     vecParamGuessPeak <- lsParamGuesses$peak
     vecParamGuessValley <- lsParamGuesses$valley
     
@@ -648,6 +648,8 @@ fitImpulseNB <- function(
 #' dispersion parameter batch correction model.
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
+#' Assignments of cells to mixtures (for strMuModel="MM").
+#' @param matWeights (numeric matrix cells x mixtures) [Default NULL]
 #' Assignments of cells to mixtures (for strMuModel="MM").
 #' @param MAXIT (scalar) 
 #' Maximum number of BFGS iterations handed to optim().

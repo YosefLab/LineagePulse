@@ -45,7 +45,7 @@ objLP <- runLineagePulse(
     dfAnnotation = lsSimulatedData$annot,
     strMuModel = "impulse")
 lsHeatmaps <- sortGeneTrajectories(
-    vecIDs = objLP$dfResults[which(objLP$dfResults$adj.p < 0.01),]$gene,
+    vecIDs = objLP$dfResults[which(objLP$dfResults$padj < 0.01),]$gene,
     lsMuModel = lsMuModelH1(objLP),
     dirHeatmap = NULL)
 #print(lsHeatmaps$hmGeneSorted)
