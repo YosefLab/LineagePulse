@@ -55,7 +55,7 @@
 #' @param boolTime (bool) [Default TRUE]
 #' Whether continuous covariate is time, this simplifies the scatter
 #' plot strongly. Show mean expression per time point as orange point
-#' and 25% and 75% quantile of observations per time point as error bars.
+#' and 25\% and 75\% quantile of observations per time point as error bars.
 #' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in continuous covariate 

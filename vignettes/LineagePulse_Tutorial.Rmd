@@ -70,8 +70,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecGeneWiseDropoutRates = rep(0.1, 30))
 objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
-    dfAnnotation = lsSimulatedData$annot,
-    strMuModel = "impulse")
+    dfAnnotation = lsSimulatedData$annot)
 head(objLP$dfResults)
 ```
 
@@ -100,6 +99,8 @@ gplotExprProfile <- plotGene(
     boolLineageContour = FALSE)
 gplotExprProfile
 ```
+
+The function plotGene also shows the H1 model fit under a negative binomial noise model ("H1(NB)") as a reference to show what the model fit looks like if drop-out is not accounted for.
 
 ## Manual analysis of expression trajectories
 

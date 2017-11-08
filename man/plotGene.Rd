@@ -35,7 +35,8 @@ Whether to the "lineage contour" lines to the scatter plot.}
 
 \item{boolTime}{(bool) [Default TRUE]
 Whether continuous covariate is time, this simplifies the scatter
-plot strongly.}
+plot strongly. Show mean expression per time point as orange point
+and 25\% and 75\% quantile of observations per time point as error bars.}
 
 \item{bwDensity}{(bandwith numeric or string) [Default NULL]
 Bandwith to be used to kernel density smooting
