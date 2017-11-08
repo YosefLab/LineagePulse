@@ -54,7 +54,8 @@
 #' Whether to the "lineage contour" lines to the scatter plot.
 #' @param boolTime (bool) [Default TRUE]
 #' Whether continuous covariate is time, this simplifies the scatter
-#' plot strongly.
+#' plot strongly. Show mean expression per time point as orange point
+#' and 25% and 75% quantile of observations per time point as error bars.
 #' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in continuous covariate 
@@ -118,6 +119,13 @@ plotGene <- function(
                 " boolColourByDropout to FALSE")
         boolColourByDropout <- FALSE
     }
+    if(!lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
+       c("splines", "impulse") & boolTime) {
+        stop("Selecting the time simplification for",
+             "continuous models (boolTime=TRUE) does",
+             "not make sense if strMuModel is not either",
+             "splines or impulse.")
+    }
     ### 1. Extract data and models
     vecCounts <- matCountsProc(objLP)[strGeneID,,sparse=FALSE]
     matCountsGene <- t(as.matrix(vecCounts))
@@ -151,6 +159,9 @@ plotGene <- function(
         lsDropModel=lsDropModel(objLP),
         vecIDs=strGeneID))
     if(boolLogPlot){
+        vecCountsToPlotForTime <- vecCountsToPlot 
+        # Keep as log these as mean has to be taken before log transform
+        # if boolTime=TRUE is used.
         vecCountsToPlot <- log(vecCountsToPlot+1)/log(10)
         vecMuParamH0 <- log(vecMuParamH0+1)/log(10)
         vecMuParamH1 <- log(vecMuParamH1+1)/log(10)
@@ -159,44 +170,72 @@ plotGene <- function(
     
     ### 2. Data scatter plot
     # Set drop-out rates as constant for visualistion if not given.
-    dfScatterCounts <- data.frame( counts=vecCountsToPlot )
-    if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
-       c("splines", "impulse")){
-        dfScatterCounts$x <- lsMuModelH1(objLP)$lsMuModelGlobal$vecContinuousCovar
-        
-        if(boolColourByDropout){
-            dfScatterCounts$dropout_posterior <- vecDropPosterior
-            gplotGene <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, colour=dropout_posterior), 
-                    size = scaGgplot2Size, alpha = scaGgplot2Alpha, 
-                    show.legend=TRUE)
-        } else {
-            gplotGene <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts), size = scaGgplot2Size,  
-                    alpha = scaGgplot2Alpha, show.legend=TRUE)
+    if(!boolTime) {
+        dfScatterCounts <- data.frame( counts=vecCountsToPlot )
+        if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
+           c("splines", "impulse")){
+            dfScatterCounts$x <- lsMuModelH1(objLP)$lsMuModelGlobal$vecContinuousCovar
+            
+            if(boolColourByDropout){
+                dfScatterCounts$dropout_posterior <- vecDropPosterior
+                gplotGene <- ggplot() +
+                    geom_point(data=dfScatterCounts, aes(
+                        x=x, y=counts, colour=dropout_posterior), 
+                        size = scaGgplot2Size, alpha = scaGgplot2Alpha, 
+                        show.legend=TRUE)
+            } else {
+                gplotGene <- ggplot() +
+                    geom_point(data=dfScatterCounts, aes(
+                        x=x, y=counts), size = scaGgplot2Size,  
+                        alpha = scaGgplot2Alpha, show.legend=TRUE)
+            }
+            
+        } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% c("groups")){
+            dfScatterCounts$x <- seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells)
+            dfScatterCounts$groups <- dfAnnotationProc(objLP)$groups
+            
+            if(boolColourByDropout){
+                dfScatterCounts$dropout_posterior <- vecDropPosterior
+                gplotGene <- ggplot() +
+                    geom_point(data=dfScatterCounts, aes(
+                        x=x, y=counts, colour=dropout_posterior, shape = groups), 
+                        size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
+                        show.legend=TRUE) +
+                    scale_colour_gradient(high="red",low="green",limits=c(0, 1)) 
+            } else {
+                gplotGene <- ggplot() +
+                    geom_point(data=dfScatterCounts, aes(
+                        x=x, y=counts, shape = groups), 
+                        size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
+                        show.legend=TRUE)
+            }
         }
-        
-    } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% c("groups")){
-        dfScatterCounts$x <- seq_len(lsMuModelH1(objLP)$lsMuModelGlobal$scaNumCells)
-        dfScatterCounts$groups <- dfAnnotationProc(objLP)$groups
-        
-        if(boolColourByDropout){
-            dfScatterCounts$dropout_posterior <- vecDropPosterior
-            gplotGene <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, colour=dropout_posterior, shape = groups), 
-                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
-                    show.legend=TRUE) +
-                scale_colour_gradient(high="red",low="green",limits=c(0, 1)) 
-        } else {
-            gplotGene <- ggplot() +
-                geom_point(data=dfScatterCounts, aes(
-                    x=x, y=counts, shape = groups), 
-                    size = scaGgplot2Size,  alpha = scaGgplot2Alpha, 
-                    show.legend=TRUE)
+    } else {
+        # simplify scatter plot if time is continuous covariate
+        # because many observatinos falls on the same covariate 
+        # value.
+        matQuantilesByTp <- do.call(rbind, tapply(
+            vecCountsToPlotForTime, dfAnnot$continuous, quantile))
+        vecMeanCount <- tapply(vecCountsToPlotForTime, dfAnnot$continuous, 
+                               mean, na.rm=TRUE)
+        if(boolLogPlot) {
+            vecMeanCount <- log(vecMeanCount + 1)
+            matQuantilesByTp <- log(matQuantilesByTp + 1)
         }
+        vecTime <- tapply(dfAnnot$continuous, dfAnnot$continuous, 
+                               unique)
+        dfScatterCounts <- data.frame( 
+            mean_count=vecMeanCount,
+            time=vecTime,
+            quantile_0=matQuantilesByTp[,1],
+            quantile_25=matQuantilesByTp[,2],
+            quantile_50=matQuantilesByTp[,3],
+            quantile_75=matQuantilesByTp[,4],
+            quantile_100=matQuantilesByTp[,5])
+        gplotGene <- ggplot() + geom_point(data=dfScatterCounts, aes(
+            x=time, y=mean_count), colour="orange") +
+            geom_errorbar(data = dfScatterCounts, aes(
+                   x=time, ymin=quantile_25, ymax=quantile_75))
     }
     
     # Set plotting threshold based on observed data
