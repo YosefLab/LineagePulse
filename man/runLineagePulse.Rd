@@ -167,51 +167,7 @@ which performs differential expression analysis in pseudotime.
 Note that LineagePulse has many input parameters but
 only few will be relevant for you and you will be able to leave the 
 remaining ones as their defaults. Read up on specific input parameters
-in the input parameter annotation of this function or follow this short
-guide:
-
-MINIMAL INPUT
-1. Supply data: Count data (matCounts). 
-You may decide to also provide cell-wise
-normalisation factors (such as factors accounting for sequencing depth)
-(vecNormConstExternal).
-2. Supply cell meta data: Data frame (dfAnnotation) which contains
-all cell ids (the colnames of matCounts) in a column "cell",
-and cell-wise pseudotime or time coordinates (scalar) 
-in a a column "continuous".
-Rownames must be the ids in column "cell". This object can also be supplied
-as the colData of counts if counts is SummerizedExperiment or 
-SingleCellExperiment object.
-3. Chose the model constraining mean (strMuModel) and dispersion 
-parameters (strDispModel) for each gene.
-
-ADDITIONAL FACULTATIVE SETTINGS
-5. Supply gene-specific drop-out predictors if wanted 
-(matPiConstPredictors).
-6. Set optimisation parameters (boolEstimateNoiseBasedOnH0,
-scaMaxEstimationCycles).
-7. Chose the number of processes you want to use (scaNProc), LineagePulse
-is parallelised on all computation intensive steps. Note that
-the current parallelisation scheme runs on Unix (MacOS) and Linux but
-not on Windows. Set scaNProc to NA and start a BiocParallel environment
-before the call to this function to use parallelisation on Windows.
-8. Set the level of detail with which you want to follow
-progress through text printed on the console during a run
-(boolVerbose, boolSuperVerbose).
-
-Finally, after running LineagePulse, you may continue to work
-on your data set by:
-A) Regenerating observation-wise parameters,
-such as the mean parameter matrix which represents the hidden
-expression states, with the functions
-\link{getFitsMean}, \link{getFitsDispersion}, \link{getFitsDropout}.
-B) You can also compute the observation-wise probability of 
-dropout with \link{getPostDrop}.
-C) You can extract LineagePulse model normalised and/or
-batch corrected data with \link{getNormData}, 
-D) You can have a closer look at the global expression
-trajecotries of the genes with \link{sortGeneTrajectories}.
-E) You can look at gene-wise model fits with \link{plotGene}.
+in the input parameter annotation of this function in the vignette.
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(
