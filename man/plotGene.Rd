@@ -6,8 +6,8 @@
 \usage{
 plotGene(objLP, strGeneID, vecReferenceMuParam = NULL,
   strTitleSuffix = NULL, boolLogPlot = TRUE, boolColourByDropout = TRUE,
-  boolH1NormCounts = FALSE, boolLineageContour = FALSE, bwDensity = NULL,
-  scaGgplot2Size = 0.5, scaGgplot2Alpha = 0.5)
+  boolH1NormCounts = FALSE, boolLineageContour = FALSE, boolTime = FALSE,
+  bwDensity = NULL, scaGgplot2Size = 0.5, scaGgplot2Alpha = 0.5)
 }
 \arguments{
 \item{objLP}{(LineagePulseObject) LineagePulseObject
@@ -20,16 +20,22 @@ base plot on.}
 
 \item{strTitleSuffix}{(str) String to be added to title.}
 
-\item{boolLogPlot}{(bool) Whether to log transform y-axis.}
+\item{boolLogPlot}{(bool) [Default TRUE]
+Whether to log transform y-axis.}
 
-\item{boolColourByDropout}{(bool) Whether to colour scatter
-plot by posterior of drop-out.}
+\item{boolColourByDropout}{(bool) [Default TRUE]
+Whether to colour scatter plot by posterior of drop-out.}
 
-\item{boolH1NormCounts}{(bool) Whether to show normalised counts
+\item{boolH1NormCounts}{(bool) [Default FALSE] 
+Whether to show normalised counts
 (size factors and H1 batch factor estimates) as oppose to raw counts.}
 
 \item{boolLineageContour}{(bool) [Default FALSE]
 Whether to the "lineage contour" lines to the scatter plot.}
+
+\item{boolTime}{(bool) [Default TRUE]
+Whether continuous covariate is time, this simplifies the scatter
+plot strongly.}
 
 \item{bwDensity}{(bandwith numeric or string) [Default NULL]
 Bandwith to be used to kernel density smooting

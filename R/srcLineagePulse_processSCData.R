@@ -168,7 +168,7 @@ processSCData <- function(
                  " are given in dfAnnotation (rownames).")
         }
         # Check structure
-        if(strMuModel=="impulse"){
+        if(strMuModel %in% c("splines", "impulse")){
             checkNull(dfAnnotation$continuous,"dfAnnotation$continuous")
             checkNumeric(dfAnnotation$continuous,"dfAnnotation$continuous")
         }
@@ -251,6 +251,11 @@ processSCData <- function(
     if(is.list(counts)){
         counts <- data.matrix(counts)
     }
+    # sort count matrix according to dfAnnotation
+    if(!all(colnames(counts) == dfAnnotation$cell)) {
+        counts <- counts[,as.double(match(colnames(counts), 
+                                          dfAnnotation$cell))]
+    }
     # make sparse if is not sparse
     if(!is(object = counts, class2 = "sparseMatrix")){
         counts <- sparseMatrix(
@@ -268,23 +273,20 @@ processSCData <- function(
         rownames(matPiConstPredictors) <- rownames(counts)
     }
     # Take out cells with NA continuous covariate
-    if(strMuModel=="impulse"){
-        vecidxPTnotNA <- !is.na(dfAnnotation$continuous)
-        dfAnnotationProc <- dfAnnotation[vecidxPTnotNA,]
-        vecidxPTsort <- sort(dfAnnotationProc$continuous,
-                             decreasing=FALSE, index.return=TRUE)$ix
-        dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
-        counts <- counts[,dfAnnotationProc$cell]
+    if(strMuModel %in% c("splines", "impulse")){
+        vecboolPTnotNA <- !is.na(dfAnnotation$continuous)
+        dfAnnotationProc <- dfAnnotation[vecboolPTnotNA,]
+        counts <- counts[,as.double(which(vecboolPTnotNA))]
     } else {
         dfAnnotationProc <- dfAnnotation
     }
     # Remove all zero or NA genes/cells
     vecAllGenes <- rownames(counts)
-    vecidxGenes <- which(Matrix::rowSums(counts, na.rm = TRUE) > 0)
-    vecidxCells <- which(Matrix::colSums(counts, na.rm = TRUE) > 0)
-    dfAnnotationProc <- dfAnnotationProc[vecidxCells,]
-    counts <- counts[as.double(vecidxGenes), as.double(vecidxCells)]
-    
+    vecboolGenes <- Matrix::rowSums(counts, na.rm = TRUE) > 0
+    vecboolCells <- Matrix::colSums(counts, na.rm = TRUE) > 0
+    dfAnnotationProc <- dfAnnotationProc[which(vecboolCells),]
+    counts <- counts[as.double(which(vecboolGenes)), 
+                     as.double(which(vecboolCells))]
     # Keep target normalisation constants
     if(!is.null(vecNormConstExternal)) {
         vecNormConstExternalProc <- vecNormConstExternal[colnames(counts)]
@@ -303,24 +305,24 @@ processSCData <- function(
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
-    if(strMuModel=="impulse"){
-        strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", 
-                             length(vecidxPTnotNA), 
+    if(strMuModel %in% c("splines","impulse")){
+        strMessage <- paste0("# ", sum(!vecboolPTnotNA), " out of ", 
+                             length(vecboolPTnotNA), 
                              " cells did not have a continuous covariate",
                              " and were excluded.")
         strReport <- paste0(strReport, strMessage, "\n")
         if(boolVerbose) message(strMessage)
     }
     
-    strMessage <- paste0("# ", sum(!vecidxGenes), " out of ", 
-                         length(vecidxGenes), 
+    strMessage <- paste0("# ", sum(!vecboolGenes), " out of ", 
+                         length(vecboolGenes), 
                          " genes did not contain non-zero observations",
                          " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
-    strMessage <- paste0("# ", sum(!vecidxCells), " out of ", 
-                         length(vecidxCells), 
+    strMessage <- paste0("# ", sum(!vecboolCells), " out of ", 
+                         length(vecboolCells), 
                          " cells did not contain non-zero observations",
                          " and are excluded from analysis.")
     strReport <- paste0(strReport, strMessage, "\n")

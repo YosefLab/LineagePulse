@@ -43,13 +43,18 @@
 #' @param vecReferenceMuParam (numeric vector length number of cells)
 #' [Default NULL] Reference mean trajectory which can be plotted
 #' @param strTitleSuffix (str) String to be added to title.
-#' @param boolLogPlot (bool) Whether to log transform y-axis.
-#' @param boolColourByDropout (bool) Whether to colour scatter
-#' plot by posterior of drop-out.
-#' @param boolH1NormCounts (bool) Whether to show normalised counts
+#' @param boolLogPlot (bool) [Default TRUE]
+#' Whether to log transform y-axis.
+#' @param boolColourByDropout (bool) [Default TRUE]
+#' Whether to colour scatter plot by posterior of drop-out.
+#' @param boolH1NormCounts (bool) [Default FALSE] 
+#' Whether to show normalised counts
 #' (size factors and H1 batch factor estimates) as oppose to raw counts.
 #' @param boolLineageContour (bool) [Default FALSE]
 #' Whether to the "lineage contour" lines to the scatter plot.
+#' @param boolTime (bool) [Default TRUE]
+#' Whether continuous covariate is time, this simplifies the scatter
+#' plot strongly.
 #' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
 #' of cell density in continuous covariate 
@@ -98,6 +103,7 @@ plotGene <- function(
     boolColourByDropout=TRUE,
     boolH1NormCounts=FALSE,
     boolLineageContour=FALSE,
+    boolTime=FALSE,
     bwDensity = NULL,
     scaGgplot2Size = 0.5,
     scaGgplot2Alpha = 0.5){
@@ -232,7 +238,7 @@ plotGene <- function(
                          vecMuParamH1_NB,
                          vecReferenceMuParam),
                 model=c(rep("H0", length(vecMuParamH0)), 
-                        rep("H1", length(vecMuParamH1)),,
+                        rep("H1", length(vecMuParamH1)),
                         rep("H1(NB)", length(vecMuParamH1_NB)),
                         rep("Reference", length(vecReferenceMuParam))) )
         } else if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
