@@ -88,10 +88,14 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecNormConstExternal=NULL,
     vecDispExternal=rep(20, 30),
     vecGeneWiseDropoutRates = rep(0.1, 30))
+matDropoutPredictors <- as.matrix(data.frame(
+    log_means = log(rowMeans(lsSimulatedData$counts)+1) ))
 objLP <- runLineagePulse(
     counts = lsSimulatedData$counts,
     dfAnnotation = lsSimulatedData$annot,
-    strMuModel = "impulse")
+    strMuModel = "splines", scaDFSplinesMu = 6,
+    strDropModel="logistic", 
+    matPiConstPredictors = matDropoutPredictors)
 gplotExprProfile <- plotGene(
     objLP = objLP,
     strGeneID = rownames(lsSimulatedData$counts)[1],

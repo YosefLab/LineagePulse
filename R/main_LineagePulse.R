@@ -285,8 +285,6 @@ runLineagePulse <- function(
     boolVerbose=TRUE,
     boolSuperVerbose=FALSE ){
     
-    STRVERSION <- packageDescription("LineagePulse", fields = "Version")
-    
     # 1. Data preprocessing
     # Extract count matrix if handed SummarizedExperiment
     # or SingleCellExperiment which extends SummarizedExperiment
@@ -312,8 +310,7 @@ runLineagePulse <- function(
         scaDFSplinesDisp=scaDFSplinesDisp,
         scaMaxEstimationCycles=scaMaxEstimationCycles,
         boolVerbose=boolVerbose,
-        boolSuperVerbose=boolSuperVerbose,
-        STRVERSION=STRVERSION)
+        boolSuperVerbose=boolSuperVerbose)
     objLP <- lsProcessedSCData$objLP
     vecNormConstExternalProc <- lsProcessedSCData$vecNormConstExternalProc
     matPiConstPredictorsProc <- lsProcessedSCData$matPiConstPredictorsProc
@@ -335,7 +332,7 @@ runLineagePulse <- function(
     vecNormConst(objLP) <- calcNormConst(objLP=objLP,
                            vecNormConstExternal=vecNormConstExternalProc)
     
-    # 3. Fit ZINB model for both H1 and H0.
+    # 3. Fit ZINB and NB models for both H1 and H0.
     strMessage <- paste0("--- Fit ZINB model for both H1 and H0.")
     strReport(objLP) <- paste0(strReport(objLP), strMessage, "\n")
     if(boolVerbose) message(strMessage)

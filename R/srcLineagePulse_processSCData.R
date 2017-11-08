@@ -69,7 +69,6 @@
 #' @param boolSuperVerbose (bool) Whether to follow convergence of the 
 #' iterative parameter estimation in high detail with local 
 #' convergence flags and step-by-step loglikelihood computation.
-#' @param STRVERSION (str) Version of LineagePulse that is run.
 #'
 #' @return list (length 3)
 #' \itemize{
@@ -96,8 +95,7 @@ processSCData <- function(
     scaDFSplinesMu,
     scaMaxEstimationCycles,
     boolVerbose,
-    boolSuperVerbose,
-    STRVERSION){
+    boolSuperVerbose){
     
     # read count object from file if supplied as string
     if(is(counts, "character")) {
@@ -295,7 +293,8 @@ processSCData <- function(
     
     # Print summary of processing
     strMessage <- paste0("LineagePulse for count data: v", 
-                         STRVERSION)
+                         packageDescription("LineagePulse", 
+                                            fields = "Version"))
     strReport <- paste0(strReport, strMessage, "\n")
     if(boolVerbose) message(strMessage)
     
@@ -354,7 +353,8 @@ processSCData <- function(
         vecNCentroidsPerPop = NULL,
         vecH0Pop            = NULL,
         vecNormConst        = NULL,
-        strVersion          = STRVERSION)
+        strVersion          = packageDescription("LineagePulse", 
+                                                 fields = "Version"))
     
     return(list(objLP=objLP,
                 vecNormConstExternalProc=vecNormConstExternalProc,

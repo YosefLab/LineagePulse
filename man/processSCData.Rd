@@ -7,7 +7,7 @@
 processSCData(counts, dfAnnotation, vecConfoundersDisp, vecConfoundersMu,
   matPiConstPredictors, vecNormConstExternal, strDispModelFull, strDispModelRed,
   strMuModel, scaDFSplinesDisp, scaDFSplinesMu, scaMaxEstimationCycles,
-  boolVerbose, boolSuperVerbose, STRVERSION)
+  boolVerbose, boolSuperVerbose)
 }
 \arguments{
 \item{counts}{(matrix genes x samples)
@@ -75,8 +75,6 @@ iterative parameter estimation with one report per cycle.}
 \item{boolSuperVerbose}{(bool) Whether to follow convergence of the 
 iterative parameter estimation in high detail with local 
 convergence flags and step-by-step loglikelihood computation.}
-
-\item{STRVERSION}{(str) Version of LineagePulse that is run.}
 }
 \value{
 list (length 3)
