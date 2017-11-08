@@ -77,7 +77,8 @@ initDropModel <- function(
         if(lsDropModel$lsDropModelGlobal$strDropModel=="logistic_ofMu"){
             scaPiLinModelMuParam <- -1
             scaPiLinModelOffset <- log(scaPiTarget) - log(1-scaPiTarget) - 
-                scaPiLinModelMuParam*log(min(vecMuModelInit, na.rm=TRUE))
+                scaPiLinModelMuParam*log(min(Matrix::rowMeans(matCounts), 
+                                             na.rm=TRUE))
             lsDropModel$matDropoutLinModel <- cbind(
                 rep(scaPiLinModelOffset, scaNumCells), 
                 rep(scaPiLinModelMuParam, scaNumCells),

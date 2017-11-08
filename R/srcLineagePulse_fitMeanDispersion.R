@@ -1006,7 +1006,8 @@ fitMuDisp <- function(
     }
     # columns
     if(lsMuModel$lsMuModelGlobal$strMuModel=="groups") {
-        colnames(lsMuModel$matMuModel) <- vecGroups
+        colnames(lsMuModel$matMuModel) <- 
+            lsMuModel$lsMuModelGlobal$vecGroups
     } else if(lsMuModel$lsMuModelGlobal$strMuModel=="impulse") {
         colnames(lsMuModel$matMuModel) <- 
             c("beta1", "beta2", "h0", "h1", "h2", "t1", "t2")

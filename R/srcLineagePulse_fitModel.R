@@ -268,7 +268,7 @@ fitModel <- function(
                 if(any(vecPiEstConverged != 0)){
                     strMessage <- paste0(
                         "Dropout estimation did not converge in ", 
-                        sum(vecPiEstConvergede != 0), " cases [codes: ",
+                        sum(vecPiEstConverged != 0), " cases [codes: ",
                         paste(unique(vecPiEstConverged[
                             vecPiEstConverged!=0])), "].")
                     strReport <- paste0(strReport, strMessage, "\n")
