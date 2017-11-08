@@ -83,8 +83,9 @@ list (length 3)
     Initialisation of LineagePulseObject.
     \item matCountsProcFull (matrix genes x samples)
 Processed count data of all cells, unobserved entries are NA.
-    \item vecPseudotimeProc (numerical vector length number of cells)
-Names of elements are cell names.
+    \item matPiConstPredictorsProc 
+(numeric matrix genes x number of constant gene-wise 
+drop-out predictors) Processed version of matPiConstPredictors.
 }
 }
 \description{

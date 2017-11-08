@@ -33,7 +33,8 @@ Whether to the "lineage contour" lines to the scatter plot.}
 
 \item{bwDensity}{(bandwith numeric or string) [Default NULL]
 Bandwith to be used to kernel density smooting
-of cell density in pseudotime (used if boolLineageContour=TRUE).
+of cell density in continuous covariate 
+(used if boolLineageContour=TRUE).
 If not set, defaults to stats:density() default.}
 
 \item{scaGgplot2Size}{(scalar) size in ggplot2 scatter}
@@ -46,32 +47,32 @@ Model rajectories and scatter plot for given gene.
 }
 \description{
 Plot counts and model for one gene as a scatter plot with model trajectories:
-Both as counts or log10 counts vs pseudotime.
+Both as counts or log10 counts vs continuous covariate .
 Dropout rates can be given and are visualised as the colour of the observation
 points.
 A reference model trajectory can be added.
 Contour plots: 
 A contour plot aids the interpretation of the model trajectory
 in context of the observed data if local overplotting occurs 
-because of a non-uniform distribution of cells in pseudotime 
-(a very common scenario).
-In such a case, one might mistake cells with high counts from a pseudotime
+because of a non-uniform distribution of cells in the
+continuous covariate (a very common scenario in pseudotime for example).
+In such a case, one might mistake cells with high counts from an
 interval with high cellular intensity as a indication of increased
 expression in this interval. 
 Instead, one can explain such local maxima based on the 
 simple phenomenom that more samples were taken from the underyling 
-distribution in that pseudotime interval which increases the 
-probability of sampling far in the tail of the distribution. 
+distribution in that continuous covariate interval 
+distribution. 
 To migitate this visually, we added the option to add "contours": 
 A contour is an alternative to a confidence interval
 which includes information on the local sampling density. 
 The contour is specific to a number of cells n. 
-It is an expression trajectory in pseudotime which lies
+It is an expression trajectory in continuous covariate which lies
 at the line above which n cells are expected within 
-a local pseudotime bin given its sampling density and 
+a local continuous covariate bin given its sampling density and 
 the H1 non-constant expression model. 
 Contours therefore quantify the increase in maximum observed 
-counts in pseudotime intervals due to sampling density, 
+counts in continuous covariate intervals due to sampling density, 
 which is not due to the expression model. 
 Note that this effect is corrected for in the model fitting and 
 that the contour plots just aids visual interpretation of 

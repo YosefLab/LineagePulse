@@ -27,16 +27,13 @@
 #' @param strMuModel (str) {"constant", "groups", "MM",
 #' "splines","impulse"}
 #' [Default "impulse"] Model according to which the mean
-#' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
+#' parameter is fit to each gene in the alternative model (H1).
 #' @param strDispModelRed (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
-#' parameter is fit to each gene as a function of 
-#' pseudotime in the null model (H0).
+#' parameter is fit to each gene in the null model (H0).
 #' @param strDispModelFull (str) {"constant", "groups", "splines"}
 #' [Default "constant"] Model according to which dispersion
-#' parameter is fit to each gene as a function of 
-#' pseudotime in the alternative model (H1).
+#' parameter is fit to each gene in the alternative model (H1).
 #' @param strDropModel (str) {"logistic_ofMu", "logistic"}
 #' [Default "logistic_ofMu"] Definition of drop-out model.
 #' "logistic_ofMu" - include the fitted mean in the linear model

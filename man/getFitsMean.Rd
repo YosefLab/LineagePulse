@@ -40,7 +40,7 @@ objLP <- runLineagePulse(
 vecMeanFits <- getFitsMean(
      lsMuModel = lsMuModelH1(objLP),
      vecGeneIDs = rownames(lsSimulatedData$counts)[1])
-#plot(lsSimulatedData$annot$pseudotime, vecMeanFits)     
+#plot(lsSimulatedData$annot$continuous, vecMeanFits)     
 
 }
 \author{

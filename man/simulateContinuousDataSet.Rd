@@ -7,10 +7,10 @@ Simulates a data set with genes with constant and impulse
 expression traces. Expression strength and variation in impulse
 like traces are parameterised and random. All temporary files
 are saved into dirOutSimulation and only the objects necessary
-for running LineagePulse (the count matrix and the pseudotime
+for running LineagePulse (the count matrix and the continuous covariate
 vector are returned). The remaining objects representing hidden
 parameters can be used to evaluate parameter estimates. Cells
-are distributed uniformly in pseudotime.}
+are distributed uniformly in the continuous covariate.}
 \usage{
 simulateContinuousDataSet(scaNCells, scaNConst, scaNLin, scaNImp,
   scaMumax = 100, scaSDMuAmplitude = 1, vecNormConstExternal = NULL,
@@ -55,8 +55,9 @@ one row for each simulated cell.}
 \value{
 list (length 2)
 \itemize{
-\item pseudotime (numerical vector length number of cells)
-Pseudotime coordinates (1D) of cells. One scalar per cell.
+\item continuous (numerical vector length number of cells)
+Continuous covariates (1D) of cells. One scalar per cell.
+This covariate could be pseudotime for example.'
 \item counts (matrix genes x cells)
 Sampled count data of all cells after drop-out.
 }
@@ -75,7 +76,7 @@ lsSimulatedData <- simulateContinuousDataSet(
     vecNormConstExternal=NULL,
     vecDispExternal=rep(20, 30),
     vecGeneWiseDropoutRates = rep(0.1, 30))
-plot(lsSimulatedData$annot$pseudotime, lsSimulatedData$counts[1,])
+plot(lsSimulatedData$annot$continuous, lsSimulatedData$counts[1,])
 
 }
 \seealso{

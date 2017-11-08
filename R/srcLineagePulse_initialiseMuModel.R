@@ -72,7 +72,7 @@ initMuModel <- function(
             strMuModel=strMuModel,
             vecNormConst=vecNormConst,
             scaNumCells=scaNumCells,
-            vecPseudotime=dfAnnotation$pseudotime, # continuos models
+            vecContinuousCovar=dfAnnotation$continuous, # continuos models
             scaNSplines=NULL, # spline models
             matSplineBasis=NULL,
             vecidxGroups=NULL, # group models
@@ -108,7 +108,7 @@ initMuModel <- function(
             # on this problem with gaussian noise 
             # (linear model optimised with RSS and without intercept: 
             # notation ylm(~0+x)).
-            vecPTSpline <- ns(x = dfAnnotation$pseudotime, 
+            vecPTSpline <- ns(x = dfAnnotation$continuous, 
                               df = scaDFSplinesMu, intercept = TRUE)
             lsMuModel$matMuModel <- do.call(
                 rbind, lapply(seq_len(scaNumGenes) ,function(i){
@@ -143,19 +143,19 @@ initMuModel <- function(
     }
     if(strMuModel=="splines"){
         lsMuModel$lsMuModelGlobal$vecTimepoints <- 
-            sort(unique(dfAnnotation$pseudotime ))
+            sort(unique(dfAnnotation$continuous ))
         lsMuModel$lsMuModelGlobal$vecindTimepointAssign <- match(
-            dfAnnotation$pseudotime, lsMuModel$lsMuModelGlobal$vecTimepoints)
+            dfAnnotation$continuous, lsMuModel$lsMuModelGlobal$vecTimepoints)
         lsMuModel$lsMuModelGlobal$scaNSplines <- scaDFSplinesMu
         lsMuModel$lsMuModelGlobal$matSplineBasis <- 
-            ns(x = dfAnnotation$pseudotime, 
+            ns(x = dfAnnotation$continuous, 
                df = scaDFSplinesMu, intercept = TRUE)[,,drop=FALSE]
     }
     if(strMuModel=="impulse"){
         lsMuModel$lsMuModelGlobal$vecTimepoints <- 
-            sort(unique(dfAnnotation$pseudotime ))
+            sort(unique(dfAnnotation$continuous ))
         lsMuModel$lsMuModelGlobal$vecindTimepointAssign <- match(
-            dfAnnotation$pseudotime, lsMuModel$lsMuModelGlobal$vecTimepoints)
+            dfAnnotation$continuous, lsMuModel$lsMuModelGlobal$vecTimepoints)
     }
     if(is.null(lsmatBatchModelInitMu)){
         # Initialise batch model parameters

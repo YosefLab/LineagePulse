@@ -5,32 +5,33 @@
 #' Plot counts and model for one gene
 #' 
 #' Plot counts and model for one gene as a scatter plot with model trajectories:
-#' Both as counts or log10 counts vs pseudotime.
+#' Both as counts or log10 counts vs continuous covariate .
 #' Dropout rates can be given and are visualised as the colour of the observation
 #' points.
 #' A reference model trajectory can be added.
 #' Contour plots: 
 #' A contour plot aids the interpretation of the model trajectory
 #' in context of the observed data if local overplotting occurs 
-#' because of a non-uniform distribution of cells in pseudotime 
-#' (a very common scenario).
-#' In such a case, one might mistake cells with high counts from a pseudotime
+#' because of a non-uniform distribution of cells in the
+#' continuous covariate (a very common scenario in pseudotime for example).
+#' In such a case, one might mistake cells with high counts from an
 #' interval with high cellular intensity as a indication of increased
 #' expression in this interval. 
 #' Instead, one can explain such local maxima based on the 
 #' simple phenomenom that more samples were taken from the underyling 
-#' distribution in that pseudotime interval which increases the 
-#' probability of sampling far in the tail of the distribution. 
+#' distribution in that continuous covariate interval 
+#  which increases the probability of sampling far in the tail of the 
+#' distribution. 
 #' To migitate this visually, we added the option to add "contours": 
 #' A contour is an alternative to a confidence interval
 #' which includes information on the local sampling density. 
 #' The contour is specific to a number of cells n. 
-#' It is an expression trajectory in pseudotime which lies
+#' It is an expression trajectory in continuous covariate which lies
 #' at the line above which n cells are expected within 
-#' a local pseudotime bin given its sampling density and 
+#' a local continuous covariate bin given its sampling density and 
 #' the H1 non-constant expression model. 
 #' Contours therefore quantify the increase in maximum observed 
-#' counts in pseudotime intervals due to sampling density, 
+#' counts in continuous covariate intervals due to sampling density, 
 #' which is not due to the expression model. 
 #' Note that this effect is corrected for in the model fitting and 
 #' that the contour plots just aids visual interpretation of 
@@ -51,7 +52,8 @@
 #' Whether to the "lineage contour" lines to the scatter plot.
 #' @param bwDensity (bandwith numeric or string) [Default NULL]
 #' Bandwith to be used to kernel density smooting
-#' of cell density in pseudotime (used if boolLineageContour=TRUE).
+#' of cell density in continuous covariate 
+#' (used if boolLineageContour=TRUE).
 #' If not set, defaults to stats:density() default.
 #' @param scaGgplot2Size (scalar) size in ggplot2 scatter
 #' @param scaGgplot2Alpha (scalar) alpha in ggplot2 scatter
@@ -154,7 +156,7 @@ plotGene <- function(
     dfScatterCounts <- data.frame( counts=vecCountsToPlot )
     if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
        c("splines", "impulse")){
-        dfScatterCounts$x <- lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime
+        dfScatterCounts$x <- lsMuModelH1(objLP)$lsMuModelGlobal$vecContinuousCovar
         
         if(boolColourByDropout){
             dfScatterCounts$dropout_posterior <- vecDropPosterior
@@ -202,7 +204,7 @@ plotGene <- function(
         if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
            c("splines", "impulse")){
             dfLineImpulse <- data.frame(
-                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 3),
+                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecContinuousCovar, 3),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecMuParamH1_NB),
@@ -224,7 +226,7 @@ plotGene <- function(
         if(lsMuModelH1(objLP)$lsMuModelGlobal$strMuModel %in% 
            c("splines", "impulse")){
             dfLineImpulse <- data.frame(
-                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecPseudotime, 4),
+                x=rep(lsMuModelH1(objLP)$lsMuModelGlobal$vecContinuousCovar, 4),
                 counts=c(vecMuParamH0,
                          vecMuParamH1,
                          vecMuParamH1_NB,
@@ -267,22 +269,22 @@ plotGene <- function(
             lsvecBatchModel=NULL,
             lsDispModelGlobal=lsDispModelH1(objLP)$lsDispModelGlobal,
             vecInterval=NULL )
-        # copmute density estimate of cells in pseudotime
+        # copmute density estimate of cells in continuous covariate
         if(is.null(bwDensity)) {
             bwDensity <- "nrd0"
         }
-        lsDensity <- density(x = dfAnnotationProc(objLP)$pseudotime, bw=bwDensity, 
-                             n = length(dfAnnotationProc(objLP)$pseudotime))
+        lsDensity <- density(x = dfAnnotationProc(objLP)$continuous, bw=bwDensity, 
+                             n = length(dfAnnotationProc(objLP)$continuous))
         scaNKDEbin <- 10
-        scaWindowRadPT <- (max(dfAnnotationProc(objLP)$pseudotime, 
+        scaWindowRadPT <- (max(dfAnnotationProc(objLP)$continuous, 
                                na.rm = TRUE) - 
-                               min(dfAnnotationProc(objLP)$pseudotime, 
+                               min(dfAnnotationProc(objLP)$continuous, 
                                    na.rm = TRUE)) / (2*scaNKDEbin)
-        vecObsInBin <- sapply(dfAnnotationProc(objLP)$pseudotime, function(pt) {
-            sum(abs(pt-dfAnnotationProc(objLP)$pseudotime) <= scaWindowRadPT)
+        vecObsInBin <- sapply(dfAnnotationProc(objLP)$continuous, function(pt) {
+            sum(abs(pt-dfAnnotationProc(objLP)$continuous) <= scaWindowRadPT)
         })
         dfExpectObsCI <- data.frame(
-            pseudotime = rep(dfAnnotationProc(objLP)$pseudotime,3), 
+            continuous = rep(dfAnnotationProc(objLP)$continuous,3), 
             trajectory_contour = c(
                 qnbinom(p = 1 - sapply(
                     vecObsInBin, function(x) min(x,1) ) / vecObsInBin,
@@ -304,7 +306,7 @@ plotGene <- function(
                 log(dfExpectObsCI$trajectory_contour)/log(10)
         }
         gplotGene <- gplotGene + geom_line(data = dfExpectObsCI, aes(
-            x = pseudotime, y = trajectory_contour, colour = ncells)) +
+            x = continuous, y = trajectory_contour, colour = ncells)) +
             scale_colour_manual(values = cbbPalette, name = "contours")
         scale_alpha_continuous(guide=FALSE)
     } 
@@ -313,7 +315,7 @@ plotGene <- function(
         labs(title=paste0(
             strGeneID, "\nlog10 q-value=", 
             round(log(dfResults(objLP)[strGeneID,]$padj,2)/log(10)) )) +
-        xlab(paste0("pseudotime")) +
+        xlab(paste0("continuous covariate")) +
         theme(axis.text=element_text(size=14),
               axis.title=element_text(size=14,face="bold"),
               title=element_text(size=14,face="bold"),
@@ -327,7 +329,7 @@ plotGene <- function(
     return(gplotGene)
 }
 
-#' Plot density of cells in pseudotime
+#' Plot density of cells in continuous covariate
 #' 
 #' Uses kernel density estimate.
 #' 
@@ -360,7 +362,7 @@ plotGene <- function(
 plotCellDensity <- function(objLP){
     
     gplotKDE <- ggplot() + geom_density(data = dfAnnotationProc(objLP), aes(
-        x = pseudotime))
+        x = continuous))
     
     return(gplotKDE)
 }

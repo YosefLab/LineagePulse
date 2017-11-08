@@ -34,10 +34,10 @@
 #' @param lsDispModelGlobal (list)
 #' Object containing meta-data of gene-wise dispersion parameter models.
 #' @param vecTimepoints (numerical vector number of unique time coordinates)
-#'Unique (pseudo)time coordinates of cells.
+#' Unique (pseudo)time coordinates of cells.
 #' @param vecindTimepointAssign (numeric vector number samples) 
-#'Index of time point assigned to cell in list of sorted
-#'time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
+#' Index of time point assigned to cell in list of sorted
+#' time points. 
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.
@@ -174,7 +174,7 @@ evalLogLikMuDispGeneFit <- function(
         
         vecMuParam <- evalImpulseModel_comp(
             vecImpulseParam=vecImpulseParam,
-            vecTimepoints=lsMuModelGlobal$vecPseudotime)
+            vecTimepoints=lsMuModelGlobal$vecContinuousCovar)
     } else {
         stop("evalLogLikImpulseZINB()")
     }
@@ -240,7 +240,7 @@ evalLogLikMuDispGeneFit <- function(
 #'Unique (pseudo)time coordinates of cells.
 #' @param vecindTimepointAssign (numeric vector number samples) 
 #'Index of time point assigned to cell in list of sorted
-#'time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime
+#'time points. 
 #' @param matDropoutLinModel (matrix number of cells x number of predictors)
 #' Logistic linear model parameters of the dropout rate 
 #' as a function of the mean and constant gene-wise coefficients.

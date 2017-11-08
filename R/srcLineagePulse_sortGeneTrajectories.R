@@ -4,9 +4,9 @@
 
 #' Cluster expression mean trajectories
 #' 
-#' Sorts inferred gene trajectories by peak time in pseudotime. Optional: Can
-#' create a heatmap of the gene trajectories sorted according to peak time.
-#' The heatmap is based on z-scores.
+#' Sorts inferred gene trajectories by peak time in continuous covariate.
+#' Optional: Can create a heatmap of the gene trajectories 
+#' sorted according to peak time. The heatmap is based on z-scores.
 #' 
 #' @seealso Called by user.
 #'
@@ -21,7 +21,7 @@
 #' If dirHeatmap is not NULL, only vecSortedGenes is returned and the two
 #' heatmaps are printed to pdfs in the directory dirHeatmap.
 #' vecSortedGenes: (string vector number of IDs)
-#' hmGeneSorted: genes sorted by peak time in pseudotime
+#' hmGeneSorted: genes sorted by peak time in continuous covariate
 #' hmGeneClusters: genes sorted by clustering
 #' 
 #' @examples
@@ -91,13 +91,13 @@ sortGeneTrajectories <- function(
     }))
     # Set column names: Hack tick labeling of heatmap.2: Only
     # shows columns as lables which are not names NA
-    scaNCells <- length(lsMuModel$lsMuModelGlobal$vecPseudotime)
+    scaNCells <- length(lsMuModel$lsMuModelGlobal$vecContinuousCovar)
     vecTicks <- array(" ", scaNCells)
     scaDistBetweenCells <- round(scaNCells/4)
     vecindTicks <- sapply(seq(0,4), function(i) 1+i*scaDistBetweenCells)
     vecindTicks[length(vecindTicks)] <- scaNCells
     vecTicks[vecindTicks] <- round(
-        lsMuModel$lsMuModelGlobal$vecPseudotime[vecindTicks], 2)
+        lsMuModel$lsMuModelGlobal$vecContinuousCovar[vecindTicks], 2)
     colnames(matMuNorm) <- vecTicks
     
     if(!is.null(dirHeatmap)){

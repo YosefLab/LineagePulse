@@ -28,7 +28,7 @@ Unique (pseudo)time coordinates of cells.}
 
 \item{vecindTimepointAssign}{(numeric vector number samples) 
 Index of time point assigned to cell in list of sorted
-time points. vecTimepoints[vecindTimepointAssign]==vecPseudotime}
+time points.}
 
 \item{matDropoutLinModel}{(matrix number of cells x number of predictors)
 Logistic linear model parameters of the dropout rate 

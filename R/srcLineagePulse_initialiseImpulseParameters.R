@@ -31,10 +31,10 @@ initialiseImpulseParameters <- function(
     lsMuModelGlobal){
     
     # Estimate via natural cubic spline fit and initialise based on that fit
-    vecPseudotimeSpline <- ns(x = lsMuModelGlobal$vecPseudotime, 
+    vecContinuousCovarSpline <- ns(x = lsMuModelGlobal$vecContinuousCovar, 
                               df = 4, intercept = TRUE)
     vecSplineFit <- exp(lm( log(vecCounts/lsMuModelGlobal$vecNormConst+1) ~ 
-                                0+vecPseudotimeSpline)$fitted.values)
+                                0+vecContinuousCovarSpline)$fitted.values)
     
     # Compute peak initialisation
     # Beta: Has to be negative, Theta1: Low, Theta2: High, Theta3: Low
@@ -50,26 +50,26 @@ initialiseImpulseParameters <- function(
     # => b1 = -(2*log(3))/(tmin-t1)
     # => b1 = (2*log(3))/(t1-tmin)
     # and similar for t2
-    scaT1Peak <- mean(lsMuModelGlobal$vecPseudotime[
+    scaT1Peak <- mean(lsMuModelGlobal$vecContinuousCovar[
         c(1, which.max(vecSplineFit[seq(2,length(vecSplineFit))])+1)])
-    scaT2Peak <- mean(lsMuModelGlobal$vecPseudotime[
+    scaT2Peak <- mean(lsMuModelGlobal$vecContinuousCovar[
         c(which.max(vecSplineFit[seq(1,length(vecSplineFit)-1)]), 
           length(vecSplineFit))])
-    # Catch exception that pseudotime values are not unique and inflexion
-    # point falls on boundary of pseudotime space:
+    # Catch exception that continuous covariate values are not unique and 
+    # inflexion point falls on boundary of space:
     # Set inflexion points on first unique value next to boundary.
-    if(scaT1Peak == lsMuModelGlobal$vecPseudotime[1]) {
-        scaT1Peak <- min(lsMuModelGlobal$vecPseudotime[
-            lsMuModelGlobal$vecPseudotime != scaT1Peak])
+    if(scaT1Peak == lsMuModelGlobal$vecContinuousCovar[1]) {
+        scaT1Peak <- min(lsMuModelGlobal$vecContinuousCovar[
+            lsMuModelGlobal$vecContinuousCovar != scaT1Peak])
     }
-    if(scaT2Peak == lsMuModelGlobal$vecPseudotime[
-        length(lsMuModelGlobal$vecPseudotime)]) {
-        scaT1Peak <- max(lsMuModelGlobal$vecPseudotime[
-            lsMuModelGlobal$vecPseudotime != scaT2Peak])
+    if(scaT2Peak == lsMuModelGlobal$vecContinuousCovar[
+        length(lsMuModelGlobal$vecContinuousCovar)]) {
+        scaT1Peak <- max(lsMuModelGlobal$vecContinuousCovar[
+            lsMuModelGlobal$vecContinuousCovar != scaT2Peak])
     }
     vecParamGuessPeak <- c(
-        2*log(3)/(scaT1Peak-min(lsMuModelGlobal$vecPseudotime)), # beta 1
-        2*log(3)/(max(lsMuModelGlobal$vecPseudotime)-scaT2Peak), # beta 2
+        2*log(3)/(scaT1Peak-min(lsMuModelGlobal$vecContinuousCovar)), # beta 1
+        2*log(3)/(max(lsMuModelGlobal$vecContinuousCovar)-scaT2Peak), # beta 2
         log(vecSplineFit[1]+1), # h0
         log(max(vecSplineFit)+1), # h1
         log(vecSplineFit[length(vecSplineFit)]+1), # h2
@@ -80,26 +80,26 @@ initialiseImpulseParameters <- function(
     # Beta: Has to be negative, Theta1: High, Theta2: Low, Theta3: High
     # t1: Around first observed inflexion point, t2: 
     # Around second observed inflexion point
-    scaT1Valley <- mean(lsMuModelGlobal$vecPseudotime[
+    scaT1Valley <- mean(lsMuModelGlobal$vecContinuousCovar[
             c(1, which.min(vecSplineFit[seq(2,length(vecSplineFit))])+1)])
-    scaT2Valley <- mean(lsMuModelGlobal$vecPseudotime[
+    scaT2Valley <- mean(lsMuModelGlobal$vecContinuousCovar[
             c(which.min(vecSplineFit[seq(1,length(vecSplineFit)-1)]), 
               length(vecSplineFit))])
-    # Catch exception that pseudotime values are not unique and inflexion
-    # point falls on boundary of pseudotime space:
+    # Catch exception that continuous covariate values are not unique and 
+    # inflexion point falls on boundary of space:
     # Set inflexion points on first unique value next to boundary.
-    if(scaT1Valley == lsMuModelGlobal$vecPseudotime[1]) {
-        scaT1Valley <- min(lsMuModelGlobal$vecPseudotime[
-            lsMuModelGlobal$vecPseudotime != scaT1Valley])
+    if(scaT1Valley == lsMuModelGlobal$vecContinuousCovar[1]) {
+        scaT1Valley <- min(lsMuModelGlobal$vecContinuousCovar[
+            lsMuModelGlobal$vecContinuousCovar != scaT1Valley])
     }
-    if(scaT2Valley == lsMuModelGlobal$vecPseudotime[
-        length(lsMuModelGlobal$vecPseudotime)]) {
-        scaT2Valley <- max(lsMuModelGlobal$vecPseudotime[
-            lsMuModelGlobal$vecPseudotime != scaT2Valley])
+    if(scaT2Valley == lsMuModelGlobal$vecContinuousCovar[
+        length(lsMuModelGlobal$vecContinuousCovar)]) {
+        scaT2Valley <- max(lsMuModelGlobal$vecContinuousCovar[
+            lsMuModelGlobal$vecContinuousCovar != scaT2Valley])
     }
     vecParamGuessValley <- c(
-        2*log(3)/(scaT1Valley-min(lsMuModelGlobal$vecPseudotime)), # beta 1
-        2*log(3)/(max(lsMuModelGlobal$vecPseudotime)-scaT2Valley), # beta 2
+        2*log(3)/(scaT1Valley-min(lsMuModelGlobal$vecContinuousCovar)), # beta 1
+        2*log(3)/(max(lsMuModelGlobal$vecContinuousCovar)-scaT2Valley), # beta 2
         log(vecSplineFit[1]+1), # h0
         log(min(vecSplineFit)+1), # h1
         log(vecSplineFit[length(vecSplineFit)]+1), # h2

@@ -74,7 +74,7 @@ initDispModel <- function(
                             scaDegFreedom=NULL, # general parameters
                             strDispModel=strDispModel,
                             scaNumCells=scaNumCells,
-                            vecPseudotime=dfAnnotation$pseudotime,
+                            vecPseudotime=dfAnnotation$continuous,
                             scaNSplines=NULL, # spline models
                             matSplineBasis=NULL,
                             vecidxGroups=NULL, # group models
@@ -139,13 +139,13 @@ initDispModel <- function(
     }
     if(strDispModel=="splines"){
         lsDispModel$lsDispModelGlobal$vecTimepoints <- 
-            sort(unique(dfAnnotation$pseudotime ))
+            sort(unique(dfAnnotation$continuous ))
         lsDispModel$lsDispModelGlobal$vecindTimepointAssign <- match(
-            dfAnnotation$pseudotime, 
+            dfAnnotation$continuous, 
             lsDispModel$lsDispModelGlobal$vecTimepoints)
         lsDispModel$lsDispModelGlobal$scaNSplines <- scaDFSplinesDisp
         lsDispModel$lsDispModelGlobal$matSplineBasis <- 
-            ns(x = dfAnnotation$pseudotime, 
+            ns(x = dfAnnotation$continuous, 
                df = scaDFSplinesDisp, intercept = TRUE)[,,drop=FALSE]
     }
     if(strMuModel=="MM"){ # Also have to fill this in if only strMuModel is MM

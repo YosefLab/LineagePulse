@@ -39,11 +39,11 @@ decompressMeansByGene <- function(
         if(!is.null(vecInterval)){
             vecMu <- evalImpulseModel_comp(
                 vecImpulseParam=vecMuModel, 
-                vecTimepoints=lsMuModelGlobal$vecPseudotime[vecInterval])
+                vecTimepoints=lsMuModelGlobal$vecContinuousCovar[vecInterval])
         } else { 
             vecMu <- evalImpulseModel_comp(
                 vecImpulseParam=vecMuModel, 
-                vecTimepoints=lsMuModelGlobal$vecPseudotime) 
+                vecTimepoints=lsMuModelGlobal$vecContinuousCovar) 
         }
     } else if(lsMuModelGlobal$strMuModel=="splines"){
         if(!is.null(vecInterval)){

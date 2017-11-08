@@ -2,7 +2,7 @@
 % Please edit documentation in R/srcLineagePulse_plotGene.R
 \name{plotCellDensity}
 \alias{plotCellDensity}
-\title{Plot density of cells in pseudotime}
+\title{Plot density of cells in continuous covariate}
 \usage{
 plotCellDensity(objLP)
 }

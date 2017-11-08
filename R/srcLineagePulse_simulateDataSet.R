@@ -8,10 +8,10 @@
 #' expression traces. Expression strength and variation in impulse
 #' like traces are parameterised and random. All temporary files
 #' are saved into dirOutSimulation and only the objects necessary
-#' for running LineagePulse (the count matrix and the pseudotime
+#' for running LineagePulse (the count matrix and the continuous covariate
 #' vector are returned). The remaining objects representing hidden
 #' parameters can be used to evaluate parameter estimates. Cells
-#' are distributed uniformly in pseudotime.
+#' are distributed uniformly in the continuous covariate.
 #' 
 #' Set either vecGeneWiseDropoutRates or matDropoutModelExternal.
 #' 
@@ -44,8 +44,9 @@
 #' 
 #' @return list (length 2)
 #' \itemize{
-#' \item pseudotime (numerical vector length number of cells)
-#' Pseudotime coordinates (1D) of cells. One scalar per cell.
+#' \item continuous (numerical vector length number of cells)
+#' Continuous covariates (1D) of cells. One scalar per cell.
+#' This covariate could be pseudotime for example.'
 #' \item counts (matrix genes x cells)
 #' Sampled count data of all cells after drop-out.
 #' }
@@ -61,7 +62,7 @@
 #'     vecNormConstExternal=NULL,
 #'     vecDispExternal=rep(20, 30),
 #'     vecGeneWiseDropoutRates = rep(0.1, 30))
-#' plot(lsSimulatedData$annot$pseudotime, lsSimulatedData$counts[1,])
+#' plot(lsSimulatedData$annot$continuous, lsSimulatedData$counts[1,])
 #' 
 #' @author David Sebastian Fischer
 #' 
@@ -118,12 +119,12 @@ simulateContinuousDataSet <- function(
         }
     }
     
-    ### 1. Distribute cells across pseudotime
+    ### 1. Distribute cells across continuous covariate
     vecPT <- seq(0, 1, by=1/(scaNCells-1))
     names(vecPT) <- paste0("cell_",seq(1,scaNCells))
     dfAnnot <- data.frame(
         cell = names(vecPT),
-        pseudotime = vecPT,
+        continuous = vecPT,
         row.names = names(vecPT),
         stringsAsFactors = FALSE
     )

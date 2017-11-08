@@ -76,8 +76,9 @@
 #'     Initialisation of LineagePulseObject.
 #'     \item matCountsProcFull (matrix genes x samples)
 #' Processed count data of all cells, unobserved entries are NA.
-#'     \item vecPseudotimeProc (numerical vector length number of cells)
-#' Names of elements are cell names.
+#'     \item matPiConstPredictorsProc 
+#' (numeric matrix genes x number of constant gene-wise 
+#' drop-out predictors) Processed version of matPiConstPredictors.
 #' }
 #' 
 #' @author David Sebastian Fischer
@@ -168,8 +169,8 @@ processSCData <- function(
         }
         # Check structure
         if(strMuModel=="impulse"){
-            checkNull(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
-            checkNumeric(dfAnnotation$pseudotime,"dfAnnotation$pseudotime")
+            checkNull(dfAnnotation$continuous,"dfAnnotation$continuous")
+            checkNumeric(dfAnnotation$continuous,"dfAnnotation$continuous")
         }
         if(any(rownames(dfAnnotation)!=dfAnnotation$cell)){
             stop("Cell IDs in rownames(dfAnnotation)",
@@ -266,11 +267,11 @@ processSCData <- function(
         rownames(counts) <- paste0("Gene_", seq_len(nrow(counts)))
         rownames(matPiConstPredictors) <- rownames(counts)
     }
-    # Take out cells with NA pseudotime coordinate
+    # Take out cells with NA continuous covariate
     if(strMuModel=="impulse"){
-        vecidxPTnotNA <- !is.na(dfAnnotation$pseudotime)
+        vecidxPTnotNA <- !is.na(dfAnnotation$continuous)
         dfAnnotationProc <- dfAnnotation[vecidxPTnotNA,]
-        vecidxPTsort <- sort(dfAnnotationProc$pseudotime,
+        vecidxPTsort <- sort(dfAnnotationProc$continuous,
                              decreasing=FALSE, index.return=TRUE)$ix
         dfAnnotationProc <- dfAnnotation[vecidxPTsort,]
         counts <- counts[,dfAnnotationProc$cell]
@@ -305,7 +306,7 @@ processSCData <- function(
     if(strMuModel=="impulse"){
         strMessage <- paste0("# ", sum(!vecidxPTnotNA), " out of ", 
                              length(vecidxPTnotNA), 
-                             " cells did not have a pseudotime coordinate",
+                             " cells did not have a continuous covariate",
                              " and were excluded.")
         strReport <- paste0(strReport, strMessage, "\n")
         if(boolVerbose) message(strMessage)

@@ -6,7 +6,7 @@
 \alias{wrapper,}
 \alias{main}
 \alias{function}
-\title{LineagePulse wrapper: Differential expression analysis in pseudotime}
+\title{LineagePulse wrapper: Differential expression analysis on scRNA-seq}
 \usage{
 runLineagePulse(counts, dfAnnotation = NULL, vecConfoundersMu = NULL,
   vecConfoundersDisp = NULL, strMuModel = "splines",
@@ -34,7 +34,7 @@ This data frame may be supplied as colData(counts) if
 counts is a SummerizedExperiment or SingleCellExperiment object.
 May contain the following columns
 cell: Cell IDs.
-pseudotime: Pseudotemporal coordinates of cells.
+continuous: Pseudotemporal coordinates of cells.
 Confounder1: Batch labels of cells with respect 
 to first confounder. Name is arbitrary: Could
 for example be "patient" with batch labels
@@ -157,8 +157,9 @@ If TRUE, fitting and DE analsysis were skipped and entry is NA.
 }
 }
 \description{
-This function performs all steps of longitudinal differential
-expression analysis in pseudotime for you.
+This function performs all steps of longitudinal or discrete differential
+expression analysis in a continuous covariate (such as pseudotime) 
+or according to a grouping (such as clusters or dconditions).
 }
 \details{
 This function is the wrapper function for the LineagePulse algorithm
@@ -170,13 +171,14 @@ in the input parameter annotation of this function or follow this short
 guide:
 
 MINIMAL INPUT
-1. Supply data: Count data (matCounts) and pseudotime coordinates
-of the cells (vecPseudotime). You may decide to also provide cell-wise
+1. Supply data: Count data (matCounts). 
+You may decide to also provide cell-wise
 normalisation factors (such as factors accounting for sequencing depth)
 (vecNormConstExternal).
 2. Supply cell meta data: Data frame (dfAnnotation) which contains
 all cell ids (the colnames of matCounts) in a column "cell",
-and cell-wise pseudotime coordinates (scalar) in a a column "pseudpotime".
+and cell-wise pseudotime or time coordinates (scalar) 
+in a a column "continuous".
 Rownames must be the ids in column "cell". This object can also be supplied
 as the colData of counts if counts is SummerizedExperiment or 
 SingleCellExperiment object.

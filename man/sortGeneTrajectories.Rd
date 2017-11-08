@@ -21,13 +21,13 @@ list (length 3)
 If dirHeatmap is not NULL, only vecSortedGenes is returned and the two
 heatmaps are printed to pdfs in the directory dirHeatmap.
 vecSortedGenes: (string vector number of IDs)
-hmGeneSorted: genes sorted by peak time in pseudotime
+hmGeneSorted: genes sorted by peak time in continuous covariate
 hmGeneClusters: genes sorted by clustering
 }
 \description{
-Sorts inferred gene trajectories by peak time in pseudotime. Optional: Can
-create a heatmap of the gene trajectories sorted according to peak time.
-The heatmap is based on z-scores.
+Sorts inferred gene trajectories by peak time in continuous covariate.
+Optional: Can create a heatmap of the gene trajectories 
+sorted according to peak time. The heatmap is based on z-scores.
 }
 \examples{
 lsSimulatedData <- simulateContinuousDataSet(
