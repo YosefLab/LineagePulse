@@ -226,16 +226,16 @@ plotGene <- function(
                                unique)
         dfScatterCounts <- data.frame( 
             mean_count=vecMeanCount,
-            time=vecTime,
+            x=vecTime,
             quantile_0=matQuantilesByTp[,1],
             quantile_25=matQuantilesByTp[,2],
             quantile_50=matQuantilesByTp[,3],
             quantile_75=matQuantilesByTp[,4],
             quantile_100=matQuantilesByTp[,5])
         gplotGene <- ggplot() + geom_point(data=dfScatterCounts, aes(
-            x=time, y=mean_count), colour="orange") +
+            x=x, y=mean_count), colour="orange") +
             geom_errorbar(data = dfScatterCounts, aes(
-                   x=time, ymin=quantile_25, ymax=quantile_75))
+                   x=x, ymin=quantile_25, ymax=quantile_75))
     }
     
     # Set plotting threshold based on observed data

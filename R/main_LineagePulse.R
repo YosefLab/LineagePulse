@@ -278,7 +278,6 @@ runLineagePulse <- function(
     if(scaNProc > 1){
         register(MulticoreParam(workers=scaNProc)) 
     } else if(scaNProc == 1) {
-        # For debugging in serial mode
         register(SerialParam())
     }
     
