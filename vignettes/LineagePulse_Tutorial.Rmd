@@ -7,96 +7,96 @@ vignette: >
   %\VignetteIndexEntry{LineagePulse}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
-  ---
+---
   
   
-  # Introduction
+# Introduction
   
-  LineagePulse is a differential expression algorithm for single-cell RNA-seq (scRNA-seq) data.
-  LineagePulse is based on zero-inflated negative binomial noise model and can capture both discrete and continuous population structures:
-  Discrete population structures are groups of cells (e.g. condition of an experiment or tSNE clusters).
-  Continous population structures can for example be pseudotemporal orderings of cells or temporal orderings of cells.
-  The main use and novelty of LineagePulse lies in its ability to fit gene expression trajectories on pseudotemporal orderings of cells well.
-  Note that LineagePulse does not infer a pseudotemporal ordering but is a downstream analytic tool to analyse gene expression trajectories on a given pseudotemporal ordering (such as from diffusion pseudotime or monocle2).
-  
-  To run LineagPulse on scRNA-seq data, the user needs to use a minimal input parameter set for 
-  the wrapper function runLineagePulse, which then performs all normalisation, model fitting and differential expression analysis steps without any more user interaction required:
-  
-  * counts the count matrix (genes x cells) which MUST NOT be normalised in any way. A valid input option is expected counts from an aligner. Note that TPM or depth normalised expected counts are NOT count data. The statistical framework of LineagePulse rests on the assumption that matCounts contain count data. The count matrix can also be supplied as the path to a .mtx file (sparse matrix format file) or as a SummarizedExperiment or SingleCellExperiment object.
-  * dfAnnotation data frame that contains cell-wise annotation. The rownames of dfAnnotation must be equal to the column names of matCounts as both correspond to cells. Note that if counts is a SummarizedExperiment or SingleCellExperiment object, the annotation data frame is taken to be colData(counts) if dfAnnotation is NULL. dfAnnotation must contain 
-  * a column named "continuous" if a continuous model is fit (e.g. strMuModel is impulse or splines and expression is fit as a function of time or pseudotime coordinates) 
-  * a column named "groups" if a discrete population model is fit (e.g. strMuModel is groups and expression is fit as a function of group assignment, e.g. clusters or experimental conditions) that contains the assignemnt of cells to these groups as strings
-  * columns that describe the batch structure (if any).
-  
-  Additionally, one can provide:
-  
-  * matPiConstPredictors a matrix of gene-specific predictors of the drop-out rate (genes x predictors). We suggest to use the log average expression (unless strDropModel is "logistic_ofMu") and potentially parameters which may affect sequencing efficiency such as GC content of the gene. 
-  * strMuModel the type of expression model to use as an alternative model for differential expression analysis: "impulse" for an impulse model and "splines" for a natural cubic spline model.
-  * vecConfoundersMu a vector of strings which corresond to column names in dfAnnotation which describe the batch structure to be corrected for.
-  * scaDFSplinesMu the degrees of freedom of the spline-based model for the mean parameter if strMuModel was set to "splines".
-  * vecNormConstExternal cell-wise normalisation constants to be used (e.g. sequencing depth correction factors). the names of the elements have to be the column names of matCounts (cells).
-  * scaNProc to set the number of processes for parallelization.
-  * boolVerbose output basic progress reports while the wrapper functions runs.
-  * boolSuperVerbose output detailed progress reports for each step of the wrapper function.
-  
-  Lastly, the experienced user who has a solid grasp of the mathematical and algorithmic basis of LineagePulse may change the defaults of these advanced input options:
-  
-  * vecConfoundersDisp batch variables to be used to correct the dispersion (variance).
-  * strDispModelFull the dispersion model to be used for the full model.
-  * strDispModelRed the dispersion model to be used for the reduced model.
-  * strDropModel the drop-out model to be used.
-  * strDropFitGroup the groups of cells which receive one parameterisation of the drop-out model.
-  * scaDFSplinesDisp the degrees of freedom of the spline-based model for the dispersion parameter if strDispModel was set to "splines".
-  * boolEstimateNoiseBasedOnH0 whether to estimate the drop-out model on the null or alternative expression model. Note that setting this to FALSE strongly increases the run time.
-  * scaMaxEstimationCycles maximum number of drop-out and expression model estimation iteration cycles.
-  
-  # Differential expression analysis
-  
-  Here, we present a differential expression analysis scenario on a longitudinal ordering.
-  The differential expression results are in a data frame which can be accessed from the output object via list like properties ($).
-  The core differential expression analysis result are p-value and false-discovery-rate corrected p-value of differential expression which are the result of a gene-wise hypothesis test of a non-constant expression model (impulse, splines or groups) versus a constant expression model.
-  
-  ```{r de analysis}
+LineagePulse is a differential expression algorithm for single-cell RNA-seq (scRNA-seq) data.
+LineagePulse is based on zero-inflated negative binomial noise model and can capture both discrete and continuous population structures:
+Discrete population structures are groups of cells (e.g. condition of an experiment or tSNE clusters).
+Continous population structures can for example be pseudotemporal orderings of cells or temporal orderings of cells.
+The main use and novelty of LineagePulse lies in its ability to fit gene expression trajectories on pseudotemporal orderings of cells well.
+Note that LineagePulse does not infer a pseudotemporal ordering but is a downstream analytic tool to analyse gene expression trajectories on a given pseudotemporal ordering (such as from diffusion pseudotime or monocle2).
+
+To run LineagPulse on scRNA-seq data, the user needs to use a minimal input parameter set for 
+the wrapper function runLineagePulse, which then performs all normalisation, model fitting and differential expression analysis steps without any more user interaction required:
+
+* counts the count matrix (genes x cells) which MUST NOT be normalised in any way. A valid input option is expected counts from an aligner. Note that TPM or depth normalised expected counts are NOT count data. The statistical framework of LineagePulse rests on the assumption that matCounts contain count data. The count matrix can also be supplied as the path to a .mtx file (sparse matrix format file) or as a SummarizedExperiment or SingleCellExperiment object.
+* dfAnnotation data frame that contains cell-wise annotation. The rownames of dfAnnotation must be equal to the column names of matCounts as both correspond to cells. Note that if counts is a SummarizedExperiment or SingleCellExperiment object, the annotation data frame is taken to be colData(counts) if dfAnnotation is NULL. dfAnnotation must contain 
+* a column named "continuous" if a continuous model is fit (e.g. strMuModel is impulse or splines and expression is fit as a function of time or pseudotime coordinates) 
+* a column named "groups" if a discrete population model is fit (e.g. strMuModel is groups and expression is fit as a function of group assignment, e.g. clusters or experimental conditions) that contains the assignemnt of cells to these groups as strings
+* columns that describe the batch structure (if any).
+
+Additionally, one can provide:
+
+* matPiConstPredictors a matrix of gene-specific predictors of the drop-out rate (genes x predictors). We suggest to use the log average expression (unless strDropModel is "logistic_ofMu") and potentially parameters which may affect sequencing efficiency such as GC content of the gene. 
+* strMuModel the type of expression model to use as an alternative model for differential expression analysis: "impulse" for an impulse model and "splines" for a natural cubic spline model.
+* vecConfoundersMu a vector of strings which corresond to column names in dfAnnotation which describe the batch structure to be corrected for.
+* scaDFSplinesMu the degrees of freedom of the spline-based model for the mean parameter if strMuModel was set to "splines".
+* vecNormConstExternal cell-wise normalisation constants to be used (e.g. sequencing depth correction factors). the names of the elements have to be the column names of matCounts (cells).
+* scaNProc to set the number of processes for parallelization.
+* boolVerbose output basic progress reports while the wrapper functions runs.
+* boolSuperVerbose output detailed progress reports for each step of the wrapper function.
+
+Lastly, the experienced user who has a solid grasp of the mathematical and algorithmic basis of LineagePulse may change the defaults of these advanced input options:
+
+* vecConfoundersDisp batch variables to be used to correct the dispersion (variance).
+* strDispModelFull the dispersion model to be used for the full model.
+* strDispModelRed the dispersion model to be used for the reduced model.
+* strDropModel the drop-out model to be used.
+* strDropFitGroup the groups of cells which receive one parameterisation of the drop-out model.
+* scaDFSplinesDisp the degrees of freedom of the spline-based model for the dispersion parameter if strDispModel was set to "splines".
+* boolEstimateNoiseBasedOnH0 whether to estimate the drop-out model on the null or alternative expression model. Note that setting this to FALSE strongly increases the run time.
+* scaMaxEstimationCycles maximum number of drop-out and expression model estimation iteration cycles.
+
+# Differential expression analysis
+
+Here, we present a differential expression analysis scenario on a longitudinal ordering.
+The differential expression results are in a data frame which can be accessed from the output object via list like properties ($).
+The core differential expression analysis result are p-value and false-discovery-rate corrected p-value of differential expression which are the result of a gene-wise hypothesis test of a non-constant expression model (impulse, splines or groups) versus a constant expression model.
+
+```{r de analysis}
 library(LineagePulse)
 lsSimulatedData <- simulateContinuousDataSet(
-scaNCells = 100,
-scaNConst = 10,
-scaNLin = 10,
-scaNImp = 10,
-scaMumax = 100,
-scaSDMuAmplitude = 3,
-vecNormConstExternal=NULL,
-vecDispExternal=rep(20, 30),
-vecGeneWiseDropoutRates = rep(0.1, 30))
+  scaNCells = 100,
+  scaNConst = 10,
+  scaNLin = 10,
+  scaNImp = 10,
+  scaMumax = 100,
+  scaSDMuAmplitude = 3,
+  vecNormConstExternal=NULL,
+  vecDispExternal=rep(20, 30),
+  vecGeneWiseDropoutRates = rep(0.1, 30))
 objLP <- runLineagePulse(
-counts = lsSimulatedData$counts,
-dfAnnotation = lsSimulatedData$annot)
+  counts = lsSimulatedData$counts,
+  dfAnnotation = lsSimulatedData$annot)
 head(objLP$dfResults)
 ```
-
-In addition to the raw p-values, one may be interested in further details of the expression models such as shape of the expression mean as a function of pseudotime, log fold changes (LFC) and global expression trends as function of pseudotime. 
-We address each of these follow-up questions with separate sections in the following.
-Note that all of these follow-up questions are answered based on the model that were fit to compute the p-value of differential expression. 
-Therefore, once runLineagePulse() was called once, no further model fitting is required.
-
-# Further inspection of results
-## Plot gene-wise trajectories
-
-Multiple options are available for gene-wise expression trajectory plotting:
-Observations can be coloured by the posterior probability of drop-out (boolColourByDropout).
-Observations can be normalized based on the alternative expression model 
-or taken as raw observerations for the scatter plot (boolH1NormCounts).
-Lineage contours can be added to aid visual interpretation of non-uniform population density in pseudotime related effects (boolLineageContour).
-Log counts can be displayed instead of counts if the fold changes are large (boolLogPlot).
-In any case, the output object of the gene-wise expression trajectors plotting function plotGene
-is a ggplot2 object which can then be printed or modified.
-
-```{r plot-genes}
+  
+  In addition to the raw p-values, one may be interested in further details of the expression models such as shape of the expression mean as a function of pseudotime, log fold changes (LFC) and global expression trends as function of pseudotime. 
+  We address each of these follow-up questions with separate sections in the following.
+  Note that all of these follow-up questions are answered based on the model that were fit to compute the p-value of differential expression. 
+  Therefore, once runLineagePulse() was called once, no further model fitting is required.
+  
+  # Further inspection of results
+  ## Plot gene-wise trajectories
+  
+  Multiple options are available for gene-wise expression trajectory plotting:
+  Observations can be coloured by the posterior probability of drop-out (boolColourByDropout).
+  Observations can be normalized based on the alternative expression model 
+  or taken as raw observerations for the scatter plot (boolH1NormCounts).
+  Lineage contours can be added to aid visual interpretation of non-uniform population density in pseudotime related effects (boolLineageContour).
+  Log counts can be displayed instead of counts if the fold changes are large (boolLogPlot).
+  In any case, the output object of the gene-wise expression trajectors plotting function plotGene
+  is a ggplot2 object which can then be printed or modified.
+  
+  ```{r plot-genes}
 # plot the gene with the lowest p-value of differential expression
 gplotExprProfile <- plotGene(
-    objLP = objLP, boolLogPlot = FALSE,
-    strGeneID = objLP$dfResults[which.min(objLP$dfResults$p),]$gene,
-    boolLineageContour = FALSE)
+objLP = objLP, boolLogPlot = FALSE,
+strGeneID = objLP$dfResults[which.min(objLP$dfResults$p),]$gene,
+boolLineageContour = FALSE)
 gplotExprProfile
 ```
 
@@ -111,8 +111,8 @@ LineagePulse provides the user with parameter extraction functions that allow th
 matMeanParamFit <- getFitsMean(
     lsMuModel = lsMuModelH1(objLP),
     vecGeneIDs = objLP$dfResults[which.min(objLP$dfResults$p),]$gene)
-print(paste0("Minimum fitted mean parameter: ", round(min(matMeanParamFit),1) ))
-print(paste0("Mean fitted mean parameter: ", round(mean(matMeanParamFit),1) ))
+cat("Minimum fitted mean parameter: ", round(min(matMeanParamFit),1) )
+cat("Mean fitted mean parameter: ", round(mean(matMeanParamFit),1) )
 ```
 
 ## Fold changes
@@ -129,13 +129,13 @@ vecMeanParamFit <- getFitsMean(
 # compute log2-fold change from first to last cell on trajectory
 idxFirstCell <- which.min(dfAnnotationProc(objLP)$pseudotime)
 idxLastCell <- which.max(dfAnnotationProc(objLP)$pseudotime)
-print(paste0("LFC first to last cell on trajectory: ",
-             round( (log(vecMeanParamFit[idxLastCell]) - 
-                         log(vecMeanParamFit[idxFirstCell])) / log(2) ,1) ))
+cat("LFC first to last cell on trajectory: ",
+    round( (log(vecMeanParamFit[idxLastCell]) - 
+                log(vecMeanParamFit[idxFirstCell])) / log(2) ,1) )
 # compute log2-fold change from minimum to maximum value of expression trajectory
-print(paste0("LFC minimum to maximum expression value of model fit: ", 
-             round( (log(max(vecMeanParamFit)) - 
-                         log(min(vecMeanParamFit))) / log(2),1) ))
+cat("LFC minimum to maximum expression value of model fit: ", 
+    round( (log(max(vecMeanParamFit)) - 
+                log(min(vecMeanParamFit))) / log(2),1) )
 ```
 
 ## Global expression profiles
