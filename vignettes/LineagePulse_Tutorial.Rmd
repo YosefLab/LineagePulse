@@ -111,8 +111,8 @@ LineagePulse provides the user with parameter extraction functions that allow th
 matMeanParamFit <- getFitsMean(
     lsMuModel = lsMuModelH1(objLP),
     vecGeneIDs = objLP$dfResults[which.min(objLP$dfResults$p),]$gene)
-print("Minimum fitted mean parameter:", round(min(matMeanParamFit),1) )
-print("Mean fitted mean parameter:", round(mean(matMeanParamFit),1) )
+print(paste0("Minimum fitted mean parameter: ", round(min(matMeanParamFit),1) ))
+print(paste0("Mean fitted mean parameter: ", round(mean(matMeanParamFit),1) ))
 ```
 
 ## Fold changes
@@ -133,9 +133,9 @@ print(paste0("LFC first to last cell on trajectory: ",
              round( (log(vecMeanParamFit[idxLastCell]) - 
                          log(vecMeanParamFit[idxFirstCell])) / log(2) ,1) ))
 # compute log2-fold change from minimum to maximum value of expression trajectory
-print("LFC minimum to maximum expression value of model fit:", 
-      round( (log(max(vecMeanParamFit)) - 
-                  log(min(vecMeanParamFit))) / log(2),1) )
+print(paste0("LFC minimum to maximum expression value of model fit: ", 
+             round( (log(max(vecMeanParamFit)) - 
+                         log(min(vecMeanParamFit))) / log(2),1) ))
 ```
 
 ## Global expression profiles
