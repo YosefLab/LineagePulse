@@ -14,9 +14,6 @@ Imports:
     BiocParallel,
     circlize,
     compiler,
-    gplots,
-    grDevices,
-    knitr,
     Matrix,
     methods,
     splines,
@@ -25,7 +22,10 @@ Imports:
 Suggests:
     ComplexHeatmap,
     ggplot2,
+    gplots,
+    grDevices,
     grid,
+    knitr,
     RColorBrewer,
     SingleCellExperiment,
     SummarizedExperiment
