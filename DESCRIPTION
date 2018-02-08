@@ -22,12 +22,7 @@ Imports:
 Suggests:
     ComplexHeatmap,
     ggplot2,
-    gplots,
-    grDevices,
-    grid,
     knitr,
-    RColorBrewer,
-    SingleCellExperiment,
     SummarizedExperiment
 biocViews: Software,
     StatisticalMethod,
