@@ -74,15 +74,15 @@ objLP <- runLineagePulse(
 head(objLP$dfResults)
 ```
   
-  In addition to the raw p-values, one may be interested in further details of the expression models such as shape of the expression mean as a function of pseudotime, log fold changes (LFC) and global expression trends as function of pseudotime. 
+In addition to the raw p-values, one may be interested in further details of the expression models such as shape of the expression mean as a function of pseudotime, log fold changes (LFC) and global expression trends as function of pseudotime. 
   We address each of these follow-up questions with separate sections in the following.
   Note that all of these follow-up questions are answered based on the model that were fit to compute the p-value of differential expression. 
   Therefore, once runLineagePulse() was called once, no further model fitting is required.
   
-  # Further inspection of results
-  ## Plot gene-wise trajectories
+# Further inspection of results
+## Plot gene-wise trajectories
   
-  Multiple options are available for gene-wise expression trajectory plotting:
+Multiple options are available for gene-wise expression trajectory plotting:
   Observations can be coloured by the posterior probability of drop-out (boolColourByDropout).
   Observations can be normalized based on the alternative expression model 
   or taken as raw observerations for the scatter plot (boolH1NormCounts).
@@ -91,7 +91,7 @@ head(objLP$dfResults)
   In any case, the output object of the gene-wise expression trajectors plotting function plotGene
   is a ggplot2 object which can then be printed or modified.
   
-  ```{r plot-genes}
+```{r plot-genes}
 # plot the gene with the lowest p-value of differential expression
 gplotExprProfile <- plotGene(
 objLP = objLP, boolLogPlot = FALSE,
