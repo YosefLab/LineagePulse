@@ -94,6 +94,11 @@
 #' 
 #' @author David Sebastian Fischer
 #' 
+#' @import gplots
+#' @import ggplot2
+#' @importFrom grDevices dev.off graphics.off pdf
+#' @import RColorBrewer
+#' 
 #' @export
 plotGene <- function(
     objLP,
@@ -402,6 +407,11 @@ plotGene <- function(
 #' #print(gplotCellDensity)
 #' 
 #' @author David Sebastian Fischer
+#' 
+#' @import gplots
+#' @import ggplot2
+#' @importFrom grDevices dev.off graphics.off pdf
+#' @import RColorBrewer
 #' 
 #' @export
 plotCellDensity <- function(objLP){

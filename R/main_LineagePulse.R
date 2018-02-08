@@ -1,20 +1,13 @@
 #' @import BiocParallel
 #' @import circlize
 #' @importFrom compiler cmpfun
-#' @import ComplexHeatmap
-#' @import gplots
-#' @import ggplot2
-#' @importFrom grDevices dev.off graphics.off pdf
-#' @importFrom grid gpar
-#' @import knitr
 #' @import Matrix
 #' @import methods
-#' @import RColorBrewer
-#' @import SingleCellExperiment
+# #' @import SingleCellExperiment
 #' @import splines
 #' @importFrom stats density dnbinom median optim p.adjust pchisq
 #' quantile rnbinom rnorm runif sd lm qnbinom rbinom
-#' @import SummarizedExperiment
+# #' @import SummarizedExperiment
 #' @importFrom utils packageDescription
 NULL
 
