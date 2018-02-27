@@ -180,8 +180,8 @@ testDropout <- function(objLP){
     
     ## Degrees of freedom used in mean, dispersion and drop-out models:
     # mean and dispersion models:
-    scaDF_ZINB <- sum(objLP$dfResults$df_full_zinb)
-    scaDF_NB <- sum(objLP$dfResults$df_full_nb)
+    scaDF_ZINB <- sum(objLP$dfResults$df_full_zinb, na.rm=TRUE)
+    scaDF_NB <- sum(objLP$dfResults$df_full_nb, na.rm=TRUE)
     # drop-out models:
     if(lsDropModel(objLP)$lsDropModelGlobal$strDropFitGroup == "PerCell") {
         # one model per cell
