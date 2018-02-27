@@ -195,8 +195,8 @@ testDropout <- function(objLP){
     }
     scaDeltaDegFreedom_dropout <- scaDF_ZINB - scaDF_NB
     ## The likelihood considered is the likelihood across the entire data set
-    scaLogLikAllGenes_ZINB <- sum(objLP$dfResults$loglik_full_zinb)
-    scaLogLikAllGenes_NB <- sum(objLP$dfResults$loglik_full_nb)
+    scaLogLikAllGenes_ZINB <- sum(objLP$dfResults$loglik_full_zinb, na.rm=TRUE)
+    scaLogLikAllGenes_NB <- sum(objLP$dfResults$loglik_full_nb, na.rm=TRUE)
     scaDeviance_dropout <- 2*(scaLogLikAllGenes_ZINB - scaLogLikAllGenes_NB)
     scaPvalue_dropout <- pchisq(scaDeviance_dropout, 
                                 df=scaDeltaDegFreedom_dropout, lower.tail=FALSE)
