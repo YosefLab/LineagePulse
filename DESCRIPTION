@@ -32,7 +32,8 @@ biocViews: Software,
     GeneExpression,
     CellBiology,
     CellBasedAssays,
-    SingleCell
+    SingleCell,
+    ImmunoOncology
 Collate:
     'srcLineagePulse_classUnions.R'
     'main_LineagePulse.R'
