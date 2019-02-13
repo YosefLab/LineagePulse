@@ -8,7 +8,6 @@
 #' to correct model. The drop-out magnitude boundary parameter scaOffset is
 #' set in here.
 #' 
-#' @seealso \link{evalDropoutModel_comp}
 #' 
 #' @param vecPiModel (numeric vector length linear model) Linear model
 #'    for drop-out rate in logit space.
@@ -30,23 +29,3 @@ evalDropoutModel <- function(vecPiModel,
     
     return(scaDropoutRate)
 }
-
-#' Compiled function: evalDropoutModel
-#' 
-#' Pre-compile heavily used functions.
-#' Refer to \link{evalDropoutModel}.
-#' 
-#' @seealso \link{evalDropoutModel_comp}
-#' 
-#' @param vecPiModel (numeric vector length linear model) Linear model
-#'    for drop-out rate in logit space.
-#' @param vecPiPredictors (vector length of predictors) Predictors of
-#'    the drop-out rate in the linear model. Minimum are a constant
-#'    offset and log of the negative binomial mean parameter. 
-#'    Other gene-specific predictors can be added.
-#' 
-#' @return scaDropoutRate (scalar) 
-#'    Drop-out rate estimate.
-#' 
-#' @author David Sebastian Fischer
-evalDropoutModel_comp <- compiler::cmpfun(evalDropoutModel)
