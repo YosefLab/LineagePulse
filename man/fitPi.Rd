@@ -20,7 +20,7 @@ Object containing description of gene-wise dispersion parameter models.}
 Object containing description of cell-wise drop-out parameter models.}
 }
 \value{
-vecLinModel (numeric vector length linear model) 
+vecLinModel (numeric vector length linear model)
 Linear model for drop-out rate in logit space for given cell.
 }
 \description{

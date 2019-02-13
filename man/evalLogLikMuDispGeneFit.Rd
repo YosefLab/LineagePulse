@@ -5,10 +5,10 @@
 \title{Cost function (zero-inflated) negative binomial model for mean and
 dispersion model fitting}
 \usage{
-evalLogLikMuDispGeneFit(vecTheta, vecCounts, lsMuModelGlobal, lsDispModelGlobal,
-  vecTimepoints, vecindTimepointAssign, matDropoutLinModel,
-  vecPiConstPredictors, lsDropModelGlobal, vecPiParam = NULL, vecidxNotZero,
-  vecidxZero)
+evalLogLikMuDispGeneFit(vecTheta, vecCounts, lsMuModelGlobal,
+  lsDispModelGlobal, vecTimepoints, vecindTimepointAssign,
+  matDropoutLinModel, vecPiConstPredictors, lsDropModelGlobal,
+  vecPiParam = NULL, vecidxNotZero, vecidxZero)
 }
 \arguments{
 \item{vecTheta}{(numeric vector dispersion (1) and impulse parameters (6))
@@ -26,12 +26,12 @@ Object containing meta-data of gene-wise dispersion parameter models.}
 \item{vecTimepoints}{(numerical vector number of unique time coordinates)
 Unique (pseudo)time coordinates of cells.}
 
-\item{vecindTimepointAssign}{(numeric vector number samples) 
+\item{vecindTimepointAssign}{(numeric vector number samples)
 Index of time point assigned to cell in list of sorted
 time points.}
 
 \item{matDropoutLinModel}{(matrix number of cells x number of predictors)
-Logistic linear model parameters of the dropout rate 
+Logistic linear model parameters of the dropout rate
 as a function of the mean and constant gene-wise coefficients.}
 
 \item{vecPiConstPredictors}{(numeric vector constant gene-wise coefficients)
@@ -52,11 +52,11 @@ Observation which are larger than zero.}
 Observation which are zero.}
 }
 \value{
-scaLogLik (scalar) 
+scaLogLik (scalar)
 Value of cost function (likelihood) for given gene.
 }
 \description{
-Log likelihood of (zero inflated) negative binomial model. 
+Log likelihood of (zero inflated) negative binomial model.
 This function is designed to allow numerical optimisation
 of mean and dispersion paramater model on single gene given
 the drop-out model.

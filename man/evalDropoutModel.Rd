@@ -24,9 +24,6 @@ Computes value of logistic function for one observation and uses offset
 to correct model. The drop-out magnitude boundary parameter scaOffset is
 set in here.
 }
-\seealso{
-\link{evalDropoutModel_comp}
-}
 \author{
 David Sebastian Fischer
 }

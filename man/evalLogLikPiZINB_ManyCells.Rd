@@ -9,7 +9,7 @@ evalLogLikPiZINB_ManyCells(vecTheta, matCounts, lsMuModel, lsDispModel,
   lsDropModel)
 }
 \arguments{
-\item{vecTheta}{(numeric vector length linear model) 
+\item{vecTheta}{(numeric vector length linear model)
 Parameter estimates for logit linear model for drop-out rate.}
 
 \item{matCounts}{(count matrix genes x cells)
@@ -29,7 +29,7 @@ scaLogLik (scalar) Value of cost function:
 zero-inflated negative binomial likelihood.
 }
 \description{
-Log likelihood of zero inflated  negative binomial model. 
+Log likelihood of zero inflated  negative binomial model.
 This function is designed to allow numerical optimisation
 of logistic drop-out paramater model on multiple cells given
 the negative binomial mean and dispersion parameters.
@@ -41,7 +41,6 @@ are evaluated within the cost function.
 \seealso{
 Called by fitting wrapper: \code{fitPi_ManyCells}.
 Calls \code{evalLogLikMatrix}.
-Compiled version: \link{evalLogLikPiZINB_ManyCells_comp}.
 }
 \author{
 David Sebastian Fischer

@@ -5,9 +5,10 @@
 \title{Plot counts and model for one gene}
 \usage{
 plotGene(objLP, strGeneID, vecReferenceMuParam = NULL,
-  strTitleSuffix = NULL, boolLogPlot = TRUE, boolColourByDropout = TRUE,
-  boolH1NormCounts = FALSE, boolLineageContour = FALSE, boolTime = FALSE,
-  bwDensity = NULL, scaGgplot2Size = 0.5, scaGgplot2Alpha = 0.5)
+  strTitleSuffix = NULL, boolLogPlot = TRUE,
+  boolColourByDropout = TRUE, boolH1NormCounts = FALSE,
+  boolLineageContour = FALSE, boolTime = FALSE, bwDensity = NULL,
+  scaGgplot2Size = 0.5, scaGgplot2Alpha = 0.5)
 }
 \arguments{
 \item{objLP}{(LineagePulseObject) LineagePulseObject

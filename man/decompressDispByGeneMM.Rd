@@ -2,7 +2,7 @@
 % Please edit documentation in R/srcLineagePulse_decompressParameters.R
 \name{decompressDispByGeneMM}
 \alias{decompressDispByGeneMM}
-\title{Compute mean parameter estimate matrix from mean parameter model 
+\title{Compute mean parameter estimate matrix from mean parameter model
 for a gene (strDispModel == "MM")}
 \usage{
 decompressDispByGeneMM(vecDispModel, lsvecBatchModel = NULL,
@@ -12,14 +12,14 @@ decompressDispByGeneMM(vecDispModel, lsvecBatchModel = NULL,
 \item{vecDispModel}{(numerical vector number of model parameters)
 Parameters of dispersion model for given gene.}
 
-\item{lsvecBatchModel}{(list) [Defaul NULL] 
+\item{lsvecBatchModel}{(list) [Defaul NULL]
 List of vectors of batch correction models for dispersion parameter.}
 
-\item{lsDispModelGlobal}{(list) 
+\item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
 \item{vecInterval}{(integer vector length target cells) [Default NULL]
-Positions of cells in ordering, for which parameters are to be 
+Positions of cells in ordering, for which parameters are to be
 computed. Default all cells.}
 }
 \value{
@@ -27,7 +27,7 @@ matDisp (matrix number of cells x number of mixtures)
 Dispersion parameter estimates for given gene given the mean model.
 }
 \description{
-Compute mean parameter estimate matrix from mean parameter model 
+Compute mean parameter estimate matrix from mean parameter model
 for a gene (strDispModel == "MM")
 }
 \author{

@@ -5,8 +5,8 @@
 \title{Initialise mean model container object}
 \usage{
 initMuModel(matCounts, dfAnnotation, vecConfoundersMu, vecNormConst,
-  scaDFSplinesMu, matWeights, matMuModelInit, lsmatBatchModelInitMu, strMuModel,
-  MAXIT_BFGS_MuDisp, RELTOL_BFGS_MuDisp)
+  scaDFSplinesMu, matWeights, matMuModelInit, lsmatBatchModelInitMu,
+  strMuModel, MAXIT_BFGS_MuDisp, RELTOL_BFGS_MuDisp)
 }
 \arguments{
 \item{matCounts}{(matrix genes x cells)

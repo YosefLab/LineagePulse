@@ -23,9 +23,6 @@ Compute value of impulse function given parameters.
 Enforces lower bound on value of function to avoid numerical
 errors during model fitting.
 }
-\seealso{
-Compiled version: \link{evalImpulseModel_comp}
-}
 \author{
 David Sebastian Fischer
 }

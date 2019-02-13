@@ -4,36 +4,36 @@
 \alias{fitMuDispGeneMM}
 \title{Optim wrapper for gene-wise models other than mixture model.}
 \usage{
-fitMuDispGeneMM(vecCounts, vecMuGuess, lsvecBatchParamGuessMu, lsMuModelGlobal,
-  vecDispGuess, lsvecBatchParamGuessDisp, lsDispModelGlobal, matDropoutLinModel,
-  vecPiConstPredictors, lsDropModelGlobal, vecPiParam, matWeights, MAXIT,
-  RELTOL)
+fitMuDispGeneMM(vecCounts, vecMuGuess, lsvecBatchParamGuessMu,
+  lsMuModelGlobal, vecDispGuess, lsvecBatchParamGuessDisp,
+  lsDispModelGlobal, matDropoutLinModel, vecPiConstPredictors,
+  lsDropModelGlobal, vecPiParam, matWeights, MAXIT, RELTOL)
 }
 \arguments{
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
 
-\item{vecMuGuess}{(numeric vector number of mean model parameters) 
+\item{vecMuGuess}{(numeric vector number of mean model parameters)
 Initialisation for impulse model.}
 
-\item{lsvecBatchParamGuessMu}{(list) 
+\item{lsvecBatchParamGuessMu}{(list)
 Object containing initialisation for mean parameter batch correction model.}
 
 \item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
 
-\item{vecDispGuess}{(numeric vector number of dispersion model parameters) 
+\item{vecDispGuess}{(numeric vector number of dispersion model parameters)
 Initialisation for dispersion model.}
 
-\item{lsvecBatchParamGuessDisp}{(list) 
-Object containing initialisation for 
+\item{lsvecBatchParamGuessDisp}{(list)
+Object containing initialisation for
 dispersion parameter batch correction model.}
 
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
 \item{matDropoutLinModel}{(matrix number of cells x number of predictors)
-Logistic linear model parameters of the dropout rate 
+Logistic linear model parameters of the dropout rate
 as a function of the mean and constant gene-wise coefficients.}
 
 \item{vecPiConstPredictors}{(numeric vector constant gene-wise coefficients)
@@ -50,10 +50,10 @@ parameter to be fit.}
 \item{matWeights}{(numeric matrix cells x mixtures) [Default NULL]
 Assignments of cells to mixtures (for strMuModel="MM").}
 
-\item{MAXIT}{(scalar) 
+\item{MAXIT}{(scalar)
 Maximum number of BFGS iterations handed to optim().}
 
-\item{RELTOL}{(scalar) 
+\item{RELTOL}{(scalar)
 Cost function convergence criterium handed to optim().}
 }
 \value{
@@ -61,15 +61,15 @@ list
 \itemize{
 \item vecMuModel (numeric vector number of mu model parameters)
 Contains the mean model parameters according to the used model.
-\item lsvecBatchModelMu (list) 
+\item lsvecBatchModelMu (list)
 Fit of batch correction models for mean parameter to given gene.
 \item vecDispModel (numeric vector number of dispersion model parameters)
 Contains the dispersion model parameters according to the used model.
-\item lsvecBatchModelDisp (list) 
+\item lsvecBatchModelDisp (list)
 Fit of batch correction models for dispersion parameter to given gene.
-\item scaConvergence (numeric vector number of genes) 
+\item scaConvergence (numeric vector number of genes)
 Convergence status of optim for given gene.
-\item scaLL (numeric vector number of genes) 
+\item scaLL (numeric vector number of genes)
 Likelihood of model fit for given gene.
 }
 }
@@ -78,13 +78,13 @@ NOT YET SUPPORTED.
 LINEAGEPULSE CODE WILL BE EXTENDED BY MODULAR FUNCTIONALITIES
 AND THIS IS ONE INSTANCE OF A PLACEHOLDER USED FOR DEVELOPING.
 Given a parameter initialisation, this function
-performs numerical optimisation using BFGS of the 
+performs numerical optimisation using BFGS of the
 likelihood function given the supplied mean and dispersion model.
 This is the wrapper that calls optim.
 }
 \details{
 This function performs error handling of the numerical fitting procedure.
-This function corrects for the likelihood sensitivity bounds used in the 
+This function corrects for the likelihood sensitivity bounds used in the
 cost function.
 }
 \author{
