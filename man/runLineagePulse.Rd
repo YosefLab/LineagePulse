@@ -12,10 +12,10 @@ runLineagePulse(counts, dfAnnotation = NULL, vecConfoundersMu = NULL,
   vecConfoundersDisp = NULL, strMuModel = "splines",
   strDispModelFull = "constant", strDispModelRed = "constant",
   strDropModel = "logistic", strDropFitGroup = "PerCell",
-  scaDFSplinesMu = 6, scaDFSplinesDisp = 3, matPiConstPredictors = NULL,
-  vecNormConstExternal = NULL, boolEstimateNoiseBasedOnH0 = TRUE,
-  scaMaxEstimationCycles = 20, scaNProc = 1, boolVerbose = TRUE,
-  boolSuperVerbose = FALSE)
+  scaDFSplinesMu = 6, scaDFSplinesDisp = 3,
+  matPiConstPredictors = NULL, vecNormConstExternal = NULL,
+  boolEstimateNoiseBasedOnH0 = TRUE, scaMaxEstimationCycles = 20,
+  scaNProc = 1, boolVerbose = TRUE, boolSuperVerbose = FALSE)
 }
 \arguments{
 \item{counts}{(matrix genes x cells (sparseMatrix or standard), 

@@ -52,29 +52,6 @@ evalLogLikNB <- function(
     return(sum(vecLogLikZeros) + sum(vecLogLikNonzeros))
 }
 
-#' Compiled function: evalLogLikNB
-#' 
-#' Pre-compile heavily used functions.
-#' Refer to \link{evalLogLikNB}
-#' 
-#' @seealso \link{evalLogLikNB}
-#'
-#' @param vecCounts (count vector number of samples)
-#' Observed read counts, not observed are NA.
-#' @param vecMu (vector number of samples) 
-#' Negative binomial mean parameter.
-#' @param vecDisp (scalar vector number of samples) 
-#' Negative binomial dispersion parameters.
-#' @param vecidxNotZero (bool vector number of samples)
-#' Whether observation is larger than zero.
-#' @param vecidxZero (bool vector number of samples)
-#' Whether observation is zero.
-#' 
-#' @return scaLogLik (scalar) Likelihood under zero-inflated
-#' negative binomial model.
-#' 
-#' @author David Sebastian Fischer
-evalLogLikNB_comp <- compiler::cmpfun(evalLogLikNB)
 
 #' Compute loglikelihood of zero-inflated negative binomial model
 #' for a vector of counts.
@@ -148,32 +125,6 @@ evalLogLikZINB <- function(
     return(scaLogLik)
 }
 
-#' Compiled function: evalLogLikZINB
-#' 
-#' Pre-compile heavily used functions.
-#' Refer to \link{evalLogLikZINB}
-#' 
-#' @seealso \link{evalLogLikZINB}
-#'
-#' @param vecCounts (count vector number of samples)
-#' Observed read counts, not observed are NA.
-#' @param vecMu (vector number of samples) 
-#' Negative binomial mean parameter.
-#' @param vecDisp (scalar vector number of samples) 
-#' Negative binomial dispersion parameters.
-#' @param vecPi (probability vector number of samples) 
-#' Drop-out rate estimates.
-#' @param vecidxNotZero (bool vector number of samples)
-#' Whether observation is larger than zero.
-#' @param vecidxZero (bool vector number of samples)
-#' Whether observation is zero.
-#' 
-#' @return scaLogLik (scalar) Likelihood under zero-inflated
-#' negative binomial model.
-#' 
-#' @author David Sebastian Fischer
-evalLogLikZINB_comp <- compiler::cmpfun(evalLogLikZINB)
-
 #' Wrapper for log likelihood of (zero-inflated) negative binomial model
 #' for a vector of counts.
 #'
@@ -209,7 +160,7 @@ evalLogLikGene <- function(
     vecidxZero ){
     
     if(!is.null(vecPi)){
-        scaLogLik <- evalLogLikZINB_comp(
+        scaLogLik <- evalLogLikZINB(
             vecCounts=vecCounts,
             vecMu=vecMu*vecNormConst,
             vecDisp=vecDisp, 
@@ -217,7 +168,7 @@ evalLogLikGene <- function(
             vecidxNotZero=vecidxNotZero, 
             vecidxZero=vecidxZero )
     } else {
-        scaLogLik <- evalLogLikNB_comp(
+        scaLogLik <- evalLogLikNB(
             vecCounts=vecCounts,
             vecMu=vecMu*vecNormConst,
             vecDisp=vecDisp, 

@@ -4,10 +4,11 @@
 \alias{fitPi_ManyCells}
 \title{Optim wrapper for drop-out model fitting on many cells}
 \usage{
-fitPi_ManyCells(vecParamGuess, matCounts, lsMuModel, lsDispModel, lsDropModel)
+fitPi_ManyCells(vecParamGuess, matCounts, lsMuModel, lsDispModel,
+  lsDropModel)
 }
 \arguments{
-\item{vecParamGuess}{(numeric vector length linear model) 
+\item{vecParamGuess}{(numeric vector length linear model)
 Initial parameter estimates for logit linear model for drop-out rate.}
 
 \item{matCounts}{(count matrix genes x cells)
@@ -23,7 +24,7 @@ Object containing description of gene-wise dispersion parameter models.}
 Object containing description of cell-wise drop-out parameter models.}
 }
 \value{
-vecLinModel (numeric vector length linear model) 
+vecLinModel (numeric vector length linear model)
 Linear model for drop-out rate in logit space for given cell.
 }
 \description{
@@ -35,7 +36,7 @@ likelihood based on the overall likelihood.
 \seealso{
 Called by drop-out estimation wrapper code in \code{fitPi}.
 Calls fitting cost function:
-\code{evalLogLikPiZINB_ManyCells_comp}.
+\code{evalLogLikPiZINB_ManyCells}.
 }
 \author{
 David Sebastian Fischer

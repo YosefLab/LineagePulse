@@ -5,8 +5,8 @@
 \title{Wrapper for log likelihood of (zero-inflated) negative binomial model
 for a vector of counts.}
 \usage{
-evalLogLikGene(vecCounts, vecMu, vecNormConst, vecDisp, vecPi, vecidxNotZero,
-  vecidxZero)
+evalLogLikGene(vecCounts, vecMu, vecNormConst, vecDisp, vecPi,
+  vecidxNotZero, vecidxZero)
 }
 \arguments{
 \item{vecCounts}{(count vector number of cells)

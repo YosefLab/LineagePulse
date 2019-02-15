@@ -16,23 +16,23 @@ Parameters of dropout rate model for given cell.}
 \item{vecMu}{(numerical vector number of genes)
 Mean parameter estimates of all genes for given cell.}
 
-\item{matPiConstPredictors}{(numerical matrix genes x number of 
+\item{matPiConstPredictors}{(numerical matrix genes x number of
 constant model predictors) Other model predictors than offset
 and the dynamically changing mean parameter. Examples are GC-
-content and other gene-specific properties. This would be the 
+content and other gene-specific properties. This would be the
 global parameters as listed in the other decompression
 function. Here those are not a list as there is only one object.}
 
-\item{lsDropModelGlobal}{(list) 
+\item{lsDropModelGlobal}{(list)
 Object containing meta-data of cell-wise dropout parameter models.}
 }
 \value{
 vecPi (numerical vector number of cells)
-Dispersion parameter estimates for given gene 
+Dispersion parameter estimates for given gene
 (one per cell for given gene).
 }
 \description{
-Compute dropout rate parameter estimates 
+Compute dropout rate parameter estimates
 from dropout rate model for a cell.
 }
 \seealso{

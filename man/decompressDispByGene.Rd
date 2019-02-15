@@ -4,30 +4,30 @@
 \alias{decompressDispByGene}
 \title{Compute dispersion parameter estimates from mean parameter model for a gene}
 \usage{
-decompressDispByGene(vecDispModel, lsvecBatchModel = NULL, lsDispModelGlobal,
-  vecInterval = NULL)
+decompressDispByGene(vecDispModel, lsvecBatchModel = NULL,
+  lsDispModelGlobal, vecInterval = NULL)
 }
 \arguments{
 \item{vecDispModel}{(numerical vector number of model parameters)
 Parameters of dispersion model for given gene.}
 
-\item{lsvecBatchModel}{(list) [Defaul NULL] 
+\item{lsvecBatchModel}{(list) [Defaul NULL]
 List of vectors of batch correction models for dispersion parameter.}
 
-\item{lsDispModelGlobal}{(list) 
+\item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
 \item{vecInterval}{(integer vector length target cells) [Default NULL]
-Positions of cells in ordering, for which parameters are to be 
+Positions of cells in ordering, for which parameters are to be
 computed. Default all cells.}
 }
 \value{
 vecDisp (numerical vector number of cells)
-Dispersion parameter estimates for given gene 
+Dispersion parameter estimates for given gene
 (one per cell for given gene).
 }
 \description{
-Takes the model type and computes one dispersion parameter 
+Takes the model type and computes one dispersion parameter
 for each cell for one gene.
 }
 \seealso{

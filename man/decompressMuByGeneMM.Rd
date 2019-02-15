@@ -2,7 +2,7 @@
 % Please edit documentation in R/srcLineagePulse_decompressParameters.R
 \name{decompressMuByGeneMM}
 \alias{decompressMuByGeneMM}
-\title{Compute mean parameter estimate matrix from mean parameter model 
+\title{Compute mean parameter estimate matrix from mean parameter model
 for a gene (strMuModel == "MM")}
 \usage{
 decompressMuByGeneMM(vecMuModel, lsvecBatchModel = NULL, lsMuModelGlobal,
@@ -12,14 +12,14 @@ decompressMuByGeneMM(vecMuModel, lsvecBatchModel = NULL, lsMuModelGlobal,
 \item{vecMuModel}{(numerical vector number of model parameters)
 Parameters of mean model for given gene (means by mixture).}
 
-\item{lsvecBatchModel}{(list) [Defaul NULL] 
+\item{lsvecBatchModel}{(list) [Defaul NULL]
 List of vectors of batch correction models for mean parameter.}
 
-\item{lsMuModelGlobal}{(list) 
+\item{lsMuModelGlobal}{(list)
 Object containing meta-data of gene-wise mean parameter models.}
 
 \item{vecInterval}{(integer vector length target cells) [Default NULL]
-Positions of cells in ordering, for which parameters are to be 
+Positions of cells in ordering, for which parameters are to be
 computed. Default all cells.}
 }
 \value{
@@ -27,7 +27,7 @@ matMu (matrix number of cells x number of mixtures)
 Mean parameter estimates for given gene given the mean model.
 }
 \description{
-Compute mean parameter estimate matrix from mean parameter model 
+Compute mean parameter estimate matrix from mean parameter model
 for a gene (strMuModel == "MM")
 }
 \author{

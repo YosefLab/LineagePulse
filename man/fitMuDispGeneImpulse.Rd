@@ -4,18 +4,19 @@
 \alias{fitMuDispGeneImpulse}
 \title{Multiple initilalisation wrapper for impulse mean model}
 \usage{
-fitMuDispGeneImpulse(vecCounts, vecImpulseParamGuess, lsvecBatchParamGuessMu,
-  lsMuModelGlobal, vecDispGuess, lsvecBatchParamGuessDisp, lsDispModelGlobal,
-  matDropoutLinModel, vecPiConstPredictors, lsDropModelGlobal, vecPiParam)
+fitMuDispGeneImpulse(vecCounts, vecImpulseParamGuess,
+  lsvecBatchParamGuessMu, lsMuModelGlobal, vecDispGuess,
+  lsvecBatchParamGuessDisp, lsDispModelGlobal, matDropoutLinModel,
+  vecPiConstPredictors, lsDropModelGlobal, vecPiParam)
 }
 \arguments{
 \item{vecCounts}{(count vector number of cells)
 Observed read counts, not observed are NA.}
 
-\item{vecImpulseParamGuess}{(numeric vector number of impulse model parameters) 
+\item{vecImpulseParamGuess}{(numeric vector number of impulse model parameters)
 Initialisation for impulse model.}
 
-\item{lsvecBatchParamGuessMu}{(list) 
+\item{lsvecBatchParamGuessMu}{(list)
 Object containing initialisation for mean parameter batch correction model.}
 
 \item{lsMuModelGlobal}{(list)
@@ -24,15 +25,15 @@ Object containing meta-data of gene-wise mean parameter models.}
 \item{vecDispGuess}{(numeric vector number of dispersion model parameters)
 Initialisation for dispersion model.}
 
-\item{lsvecBatchParamGuessDisp}{(list) 
-Object containing initialisation for 
+\item{lsvecBatchParamGuessDisp}{(list)
+Object containing initialisation for
 dispersion parameter batch correction model.}
 
 \item{lsDispModelGlobal}{(list)
 Object containing meta-data of gene-wise dispersion parameter models.}
 
 \item{matDropoutLinModel}{(matrix number of cells x number of predictors)
-Logistic linear model parameters of the dropout rate 
+Logistic linear model parameters of the dropout rate
 as a function of the mean and constant gene-wise coefficients.}
 
 \item{vecPiConstPredictors}{(numeric vector constant gene-wise coefficients)
@@ -51,15 +52,15 @@ list
 \itemize{
 \item vecMuModel (numeric vector number of mu model parameters)
 Contains the mean model parameters according to the used model.
-\item lsvecBatchModelMu (list) 
+\item lsvecBatchModelMu (list)
 Fit of batch correction models for mean parameter to given gene.
 \item vecDispModel (numeric vector number of dispersion model parameters)
 Contains the dispersion model parameters according to the used model.
-\item lsvecBatchModelDisp (list) 
+\item lsvecBatchModelDisp (list)
 Fit of batch correction models for dispersion parameter to given gene.
-\item scaConvergence (numeric vector number of genes) 
+\item scaConvergence (numeric vector number of genes)
 Convergence status of optim for given gene.
-\item scaLL (numeric vector number of genes) 
+\item scaLL (numeric vector number of genes)
 Likelihood of model fit for given gene.
 }
 }
@@ -69,9 +70,9 @@ this wrapper sits ontop of fitContinuousZINB() in the fitting hierarchy
 and wraps multiple initialisations at the level of one gene.
 }
 \seealso{
-Called by mean-dispersion co-estimation wrapper 
+Called by mean-dispersion co-estimation wrapper
 \code{fitZINBMuDisp}.
-Calls optimisation wrapper \code{fitContinuousZINB} 
+Calls optimisation wrapper \code{fitContinuousZINB}
 for each initialisation.
 }
 \author{

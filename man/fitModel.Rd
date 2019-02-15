@@ -6,12 +6,13 @@
 \usage{
 fitModel(matCounts, dfAnnotation, vecConfoundersMu = NULL,
   vecConfoundersDisp = NULL, vecNormConst, scaDFSplinesMu = NULL,
-  scaDFSplinesDisp = NULL, matWeights = NULL, matPiConstPredictors = NULL,
-  lsDropModel = NULL, matMuModelInit = NULL, lsmatBatchModelInitMu = NULL,
+  scaDFSplinesDisp = NULL, matWeights = NULL,
+  matPiConstPredictors = NULL, lsDropModel = NULL,
+  matMuModelInit = NULL, lsmatBatchModelInitMu = NULL,
   matDispModelInit = NULL, lsmatBatchModelInitDisp = NULL, strMuModel,
-  strDispModel, strDropModel = "logistic_ofMu", strDropFitGroup = "PerCell",
-  scaMaxEstimationCycles = 20, boolVerbose = TRUE,
-  boolSuperVerbose = TRUE)
+  strDispModel, strDropModel = "logistic_ofMu",
+  strDropFitGroup = "PerCell", scaMaxEstimationCycles = 20,
+  boolVerbose = TRUE, boolSuperVerbose = TRUE)
 }
 \arguments{
 \item{matCounts}{(matrix genes x cells)

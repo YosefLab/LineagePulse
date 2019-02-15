@@ -4,9 +4,9 @@
 \alias{initDispModel}
 \title{Initialise dispersion model container object}
 \usage{
-initDispModel(matCounts, dfAnnotation, vecConfoundersDisp, scaDFSplinesDisp,
-  matWeights, matDispModelInit, lsmatBatchModelInitDisp, strDispModel,
-  strMuModel, MAXIT_BFGS_MuDisp, RELTOL_BFGS_MuDisp)
+initDispModel(matCounts, dfAnnotation, vecConfoundersDisp,
+  scaDFSplinesDisp, matWeights, matDispModelInit, lsmatBatchModelInitDisp,
+  strDispModel, strMuModel, MAXIT_BFGS_MuDisp, RELTOL_BFGS_MuDisp)
 }
 \arguments{
 \item{matCounts}{(matrix genes x cells)

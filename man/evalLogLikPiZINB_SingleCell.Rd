@@ -4,11 +4,11 @@
 \alias{evalLogLikPiZINB_SingleCell}
 \title{Cost function zero-inflated negative binomial model for drop-out fitting}
 \usage{
-evalLogLikPiZINB_SingleCell(vecTheta, vecCounts, vecMu, scaNormConst, vecDisp,
-  matPiAllPredictors, strDropModel, vecidxNotZero, vecidxZero)
+evalLogLikPiZINB_SingleCell(vecTheta, vecCounts, vecMu, scaNormConst,
+  vecDisp, matPiAllPredictors, strDropModel, vecidxNotZero, vecidxZero)
 }
 \arguments{
-\item{vecTheta}{(numeric vector length linear model) 
+\item{vecTheta}{(numeric vector length linear model)
 Parameter estimates for logit linear model for drop-out rate.}
 
 \item{vecCounts}{(count vector number of genes)
@@ -17,7 +17,7 @@ Observed read counts, not observed are NA.}
 \item{vecMu}{(vector number of cells) Negative binomial
 mean parameter estimate.}
 
-\item{scaNormConst}{(scalar) 
+\item{scaNormConst}{(scalar)
 Model scaling factors, one per cell.}
 
 \item{vecDisp}{(vector number of cells) Negative binomial
@@ -25,7 +25,7 @@ dispersion parameter estimate.}
 
 \item{matPiAllPredictors}{(matrix genes x predictors) Predictors of
 the drop-out rate in the linear model. Minimum are a constant
-offset and log of the negative binomial mean parameter. 
+offset and log of the negative binomial mean parameter.
 Other gene-specific predictors can be added.}
 
 \item{strDropModel}{(str) {"logistic_ofMu", "logistic"}
@@ -45,7 +45,7 @@ scaLogLik (scalar) Value of cost function:
 zero-inflated negative binomial likelihood.
 }
 \description{
-Log likelihood of zero inflated  negative binomial model. 
+Log likelihood of zero inflated  negative binomial model.
 This function is designed to allow numerical optimisation
 of logistic drop-out paramater model on single gene given
 the negative binomial mean and dispersion parameters.
@@ -53,7 +53,6 @@ the negative binomial mean and dispersion parameters.
 \seealso{
 Called by fitting wrapper: \code{fitPi_SingleCell}.
 Calls \code{evalLogLikZINB}.
-Compiled version: \link{evalLogLikPiZINB_SingleCell_comp}.
 }
 \author{
 David Sebastian Fischer

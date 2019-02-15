@@ -5,9 +5,9 @@
 \title{Prepare single cell data for analysis}
 \usage{
 processSCData(counts, dfAnnotation, vecConfoundersDisp, vecConfoundersMu,
-  matPiConstPredictors, vecNormConstExternal, strDispModelFull, strDispModelRed,
-  strMuModel, scaDFSplinesDisp, scaDFSplinesMu, scaMaxEstimationCycles,
-  boolVerbose, boolSuperVerbose)
+  matPiConstPredictors, vecNormConstExternal, strDispModelFull,
+  strDispModelRed, strMuModel, scaDFSplinesDisp, scaDFSplinesMu,
+  scaMaxEstimationCycles, boolVerbose, boolSuperVerbose)
 }
 \arguments{
 \item{counts}{(matrix genes x samples)
